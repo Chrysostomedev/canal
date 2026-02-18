@@ -31,10 +31,10 @@ export const AssetService = {
     return response.data;
   },
 
-  async getAsset(id: number) {
-    const response = await axios.get(`/admin/asset/${id}`); // <-- corrigé ici
-    return response.data.data as CompanyAsset;
-  },
+  // async getAsset(id: number) {
+  //   const response = await axios.get(`/admin/asset/${id}`); // <-- corrigé ici
+  //   return response.data.data as CompanyAsset;
+  // },
 
   async createAsset(payload: {
     type_company_asset_id: number;

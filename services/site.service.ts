@@ -4,53 +4,68 @@ import axios from "../core/axios";
 export interface Site {
   id: number;
   nom: string;
-  localisation: string;
-  status: string;
-  email: string;
-  phone_responsable: string;
-  effectifs: number;
-  manager?: { id: number; name: string; email: string };
+  email?: string | null;
+  status: "active" | "inactive";
+  effectifs?: number | null;
+  loyer?: number | null;
+  ref_contrat: string;
+  phone_responsable?: string | null;
+  localisation?: string | null;
+  superficie?: string | null;
+  date_deb_contrat?: string | null;
+  date_fin_contrat?: string | null;
+  manager_id?: number | null;
+  manager?: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+  } | null;
 }
 
-export interface SiteStats {
-  sites_actifs: number;
-  sites_inactifs: number;
-  cout_moyen_par_site: number;
-  tickets_par_site: { site_id: number; en_cours: number; clos: number }[];
-  delai_moyen_par_site: number;
-  top_sites: string[];
+export interface SitesResponse {
+  items: Site[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 }
 
-const SiteService = {
-  getSites: async (page = 1, search = "") => {
-    const response = await axios.get("/site", { params: { page, search } });
-    return response.data;
-  },
+// 🔹 GET Sites (6 par page)
+export const getSites = async (
+  search?: string,
+  page: number = 1
+): Promise<SitesResponse> => {
+  const response = await axios.get("/admin/site", {
+    params: {
+      search,
+      page,
+      per_page: 6,
+    },
+  });
 
-  getSiteById: async (id: number) => {
-    const response = await axios.get(`/site/${id}`);
-    return response.data;
-  },
-
-  createSite: async (siteData: any) => {
-    const response = await axios.post("/site-with-manager", siteData);
-    return response.data;
-  },
-
-  updateSite: async (id: number, siteData: any) => {
-    const response = await axios.put(`/site/${id}`, siteData);
-    return response.data;
-  },
-
-  deleteSite: async (id: number) => {
-    const response = await axios.delete(`/site/${id}`);
-    return response.data;
-  },
-
-  getStats: async () => {
-    const response = await axios.get("/site/stats");
-    return response.data;
-  },
+  return {
+    items: response.data.data.items,
+    meta: response.data.data.meta,
+  };
 };
 
-export default SiteService;
+// 🔹 CREATE Site (conforme store())
+export const createSite = async (data: any): Promise<Site> => {
+  const response = await axios.post("/admin/site", data);
+  return response.data.data;
+};
+
+// 🔹 GET Stats
+export const getSiteStats = async () => {
+  const response = await axios.get("/admin/site/stats");
+  return response.data.data;
+};
+
+// 🔹 GET Managers (adapter si besoin)
+export const getManagers = async () => {
+  const response = await axios.get("/admin/users?role=manager");
+  return response.data.data;
+};
