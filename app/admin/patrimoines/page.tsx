@@ -124,9 +124,9 @@ export default function PatrimoinesPage() {
           hors_usage: "border-black text-black bg-slate-100",
         };
         return (
-          <span className={`px-4 py-1.5 rounded-xl border text-xs font-bold ${styles[row.status as keyof typeof styles] || ""}`}>
-            {row.status}
-          </span>
+          <span className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${styles[row.status as keyof typeof styles] || ""}`}>
+      {row.status}
+    </span>
         );
       },
     },
@@ -267,8 +267,13 @@ export default function PatrimoinesPage() {
             onClose={() => setIsDetailsOpen(false)}
             title={`${selectedPatrimoine?.designation} | ${selectedPatrimoine?.codification}` || ""}
             reference={selectedPatrimoine?.id}
-            fields={selectedPatrimoine ? columns.map(col => ({ label: col.header, value: (selectedPatrimoine as any)[col.key] })) : []}
-            descriptionContent={selectedPatrimoine?.description || ""}
+            fields={selectedPatrimoine ? columns.map(col => {
+              const raw = (selectedPatrimoine as any)[col.key];
+              const value = typeof raw === 'object' && raw !== null
+                ? raw.name ?? raw.code ?? ''
+                : String(raw ?? '');
+              return { label: col.header, value };
+            }) : []}
             onEdit={handleEdit}
           />
 

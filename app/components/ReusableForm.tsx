@@ -11,7 +11,7 @@ export interface FieldConfig {
   placeholder?: string;
   required?: boolean;
   gridSpan?: 1 | 2;
-  options?: { label: string; value: string }[];
+  options?: { label: string; value: string | number }[];
   icon?: any;
 }
 
@@ -60,11 +60,12 @@ export default function ReusableForm({
                 <FormField label={field.label} required={field.required}>
                   {field.type === "select" ? (
                     <Select
-                      name={field.name}
-                      required={field.required}
-                      icon={field.icon}
-                      defaultValue={initialValues[field.name] || ""}
-                    >
+                    name={field.name}
+                    required={field.required}
+                    icon={field.icon}
+                    defaultValue={String(initialValues[field.name] ?? "")}
+                  >
+                      
                       <option value="">Cliquez pour sélectionner</option>
                       {field.options?.map((opt, index) => (
                         <option key={`${opt.value}-${index}`} value={opt.value}>
@@ -77,21 +78,21 @@ export default function ReusableForm({
                       label={field.label}
                       name={field.name}
                       placeholder={field.placeholder}
-                      defaultValue={initialValues[field.name] || ""}
+                      defaultValue={initialValues[field.name] ?? ""}
                     />
                   ) : field.type === "password" ? (
                     <PasswordInput
                       name={field.name}
                       placeholder={field.placeholder}
                       required={field.required}
-                      defaultValue={initialValues[field.name] || ""}
+                      defaultValue={initialValues[field.name] ?? ""}
                     />
                   ) : field.type === "date" ? (
                     <DateInput
                       name={field.name}
                       required={field.required}
                       icon={field.icon}
-                      defaultValue={initialValues[field.name] || ""}
+                      defaultValue={initialValues[field.name] ?? ""}
                     />
                   ) : (
                     <Input
@@ -99,7 +100,7 @@ export default function ReusableForm({
                       type={field.type}
                       placeholder={field.placeholder}
                       required={field.required}
-                      defaultValue={initialValues[field.name] || ""}
+                      defaultValue={initialValues[field.name] ?? ""}
                     />
                   )}
                 </FormField>

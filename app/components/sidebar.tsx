@@ -50,7 +50,7 @@ const menuItems: MenuItem[] = [
   {
     label: "Gestionnaires",
     icon: <Grid size={20} />,
-    href: "/admin/gestionnaires",
+    href: "#",
     subItems: [{ label: "Vue globale", icon: <PieChart size={20} />, href: "#" }],
   },
   {
@@ -155,7 +155,7 @@ export default function Sidebar() {
             <Shield size={20} />
             <span>Gestion des roles</span>
           </Link>
-          <Link href="/parametres" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-all font-medium text-[15px]">
+          <Link href="/#" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-all font-medium text-[15px]">
             <Settings size={20} />
             <span>Paramètres</span>
           </Link>
@@ -178,7 +178,7 @@ export default function Sidebar() {
               <AlertTriangle className="text-red-500" size={38} strokeWidth={2.5} />
             </div>
             <div className="space-y-3">
-              <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Déconnexion</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Déconnexion de votre compte</h2>
               <p className="text-gray-500 text-lg leading-relaxed font-medium px-4">
               Souhaitez-vous vous déconnecter ?
               Cette action vous déconnectera de votre compte. Vous pourrez vous reconnecter facilement à tout moment en saisissant vos identifiants
@@ -189,7 +189,7 @@ export default function Sidebar() {
                 onClick={() => setShowLogoutModal(false)} 
                 className="flex-1 py-3 px-6 rounded-2xl bg-[#1A1A1A] text-white font-bold hover:bg-black transition-all"
               >
-                Annuler
+                Rester connecté
               </button>
               <button 
                 onClick={handleLogout} 

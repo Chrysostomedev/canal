@@ -16,6 +16,9 @@ export const useAssets = () => {
     try {
       const params = { page, per_page: 15, ...filters };
       const data = await AssetService.getAssets(params);
+      
+      console.log("🔍 RAW API RESPONSE:", JSON.stringify(data, null, 2)); // ← ICI
+  
       setAssets(data.items);
       setMeta(data.meta);
     } catch (err: any) {

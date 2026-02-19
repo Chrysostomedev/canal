@@ -26,9 +26,10 @@ export const AssetService = {
     type_id?: number;
     sub_type_id?: number;
     status?: string;
-  }) {
-    const response = await axios.get("/admin/asset", { params }); // <-- corrigé ici
-    return response.data;
+    site_id?: number;
+  }): Promise<{ items: CompanyAsset[]; meta: { current_page: number; last_page: number; per_page: number; total: number } }> {
+    const response = await axios.get("/admin/asset", { params });
+    return response.data.data;
   },
 
   // async getAsset(id: number) {

@@ -69,3 +69,9 @@ export const getManagers = async () => {
   const response = await axios.get("/admin/users?role=manager");
   return response.data.data;
 };
+//  fonction pour les details de chaque site
+export const getSiteById = async (id: number): Promise<Site> => {
+  const response = await axios.get(`/admin/site/${id}`);
+  return response.data.data;
+};
+

@@ -63,7 +63,6 @@ export default function SitesPage() {
     { name: "ref_contrat", label: "Référence contrat", type: "text", required: true },
     { name: "email", label: "Email du site", type: "email" },
     { name: "phone_responsable", label: "Téléphone responsable", type: "text" },
-
     {
       name: "status",
       label: "Statut",
@@ -74,21 +73,19 @@ export default function SitesPage() {
         { label: "Inactif", value: "inactive" },
       ],
     },
-
     {
       name: "manager_id",
       label: "Gestionnaire",
       type: "select",
       required: true,
-      options: [{ label: "Gestrionnaire temporaire", value: 1 }],
+      options: [{ label: "Gestionnaire temporaire", value: 1 }],
     },
-
     { name: "effectifs", label: "Effectifs", type: "number" },
     { name: "loyer", label: "Loyer", type: "number" },
     { name: "localisation", label: "Localisation", type: "text", gridSpan: 2 },
     { name: "superficie", label: "Superficie", type: "number" },
-    { name: "date_deb_contrat", label: "Date début", type: "date" },
-    { name: "date_fin_contrat", label: "Date fin", type: "date" },
+    { name: "date_deb_contrat", label: "Date de début de contrat", type: "date" },
+    { name: "date_fin_contrat", label: "Date de fin de contrat", type: "date" },
   ];
 
   const siteActions = [
@@ -112,18 +109,25 @@ export default function SitesPage() {
 
           {/* 🔹 STATS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard label="Sites actifs" value={stats?.sites_actifs ?? 0} />
-            <StatsCard label="Sites inactifs" value={stats?.sites_inactifs ?? 0} />
-            <StatsCard label="Coût moyen" value={stats?.cout_moyen_par_site ?? 0} />
-            {/* <StatsCard label="Tickets/site" value={stats?.tickets_par_site ?? 0} /> */}
-          </div>
+  <StatsCard label="Sites actifs" value={stats?.nombre_sites_actifs ?? 0} />
+  <StatsCard label="Sites inactifs" value={stats?.nombre_sites_inactifs ?? 0} />
+  <StatsCard label="Délai moyen d'intervention par site" value={"1 semaine"}  />
+  <StatsCard label="Nombre total de sites" value={stats?.nombre_total_sites ?? 0} />
+ 
+</div>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<StatsCard label="Coût moyen par site" value={stats?.cout_loyer_moyen_par_site ?? 0} />
+  <StatsCard label="Tickets en cours (total)" value={stats?.tickets_par_site?.reduce((acc: number, s: any) => acc + s.tickets_en_cours, 0) ?? 0} />
+  <StatsCard label="Tickets clôturés (total)" value={stats?.tickets_par_site?.reduce((acc: number, s: any) => acc + s.tickets_clos, 0) ?? 0} />
+  <StatsCard label="Site le plus visité" value={stats?.site_le_plus_visite?.nom ?? "-"} />
+</div>
 
           <div className="flex justify-end">
             <ActionGroup actions={siteActions} />
           </div>
 
           <div className="space-y-8 bg-white rounded-xl p-6">
-
             <div className="w-80">
               <SearchInput
                 onSearch={(value) => {
@@ -139,16 +143,7 @@ export default function SitesPage() {
                 <div className="col-span-full text-center py-10">Chargement...</div>
               ) : sites.length > 0 ? (
                 sites.map((site) => (
-                  <SiteCard
-                    key={site.id}
-                    name={site.nom}
-                    location={site.localisation || ""}
-                    status={site.status === "active" ? "actif" : "inactif"}
-                    responsibleName={site.manager?.name || "N/A"}
-                    phone={site.manager?.phone || site.phone_responsable || ""}
-                    email={site.manager?.email || site.email || ""}
-                    assetCount={site.effectifs || 0}
-                  />
+                  <SiteCard key={site.id} site={site} />
                 ))
               ) : (
                 <div className="col-span-full text-center text-slate-400 italic py-10">

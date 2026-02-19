@@ -34,6 +34,7 @@ export const useSites = () => {
     } catch {
       // fallback sécurisé
       setStats({
+        totalPages: 0,
         sites_actifs: 0,
         sites_inactifs: 0,
         cout_moyen_par_site: 0,

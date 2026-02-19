@@ -105,9 +105,9 @@ export default function Dashboard() {
           "Terminé": "bg-black text-white",
         };
         return (
-          <span className={`px-4 py-1.5 rounded-xl border text-xs font-bold ${styles[value as keyof typeof styles] || ""}`}>
-            {value}
-          </span>
+         <span className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${styles[value as keyof typeof styles] || ""}`}>
+      {value}
+    </span>
         );
       }
     },

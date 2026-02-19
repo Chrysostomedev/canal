@@ -57,10 +57,10 @@ export default function LoginPage() {
           />
         </div>
         <h1 className="text-3xl font-semibold text-gray-900 text-center mb-2">
-          Connexion
+          Bienvenue
         </h1>
         <p className="text-sm text-gray-500 text-center mb-8">
-          Plateforme de gestion 
+          saisissez vos infromations de connexion pour vous connecter à votre espace.
         </p>
 
         <form
