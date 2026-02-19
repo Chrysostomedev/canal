@@ -22,7 +22,7 @@
   "@/*": ["./app/*"],
   "@services/*": ["./services/*"],
   "@core/*": ["./core/*"],
-  "@lib/*": ["./lib/*"]
+  "@hooks/*": ["./hooks/*"]
 },
     "plugins": [
       {
