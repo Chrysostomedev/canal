@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { 
   Filter, Download, Upload, Building2, 
@@ -34,16 +34,15 @@ const ticketsData = [
   { id: "#8EFF5513", name: "Visite préventive", date: "28/12/2025", site: "Deux plateaux" , categorie:"maintenance" , status: "Terminé", description: "Contrôle de routine effectué avec succès." },
 ];
 
-
-export default function DetailsPage() {
-
+function DetailsContent() {
     const searchParams = useSearchParams();
     
 
   // On récupère les data de l'URL (avec des valeurs de secours si vide)
   const siteName = searchParams.get("name") || "Nom du site";
   const location = searchParams.get("location") || "Localisation";
-  const rating = searchParams.get("rating") || "../5";
+  const ratingStr = searchParams.get("rating") || "0";
+  const rating = parseFloat(ratingStr) || 0;
   const phone = searchParams.get("phone") || "N/A";
   const email = searchParams.get("email") || "N/A";
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -188,7 +187,7 @@ export default function DetailsPage() {
   {/* Section Note Grosse Taille */}
   <div className="flex items-center gap-4 mt-2">
     <span className="text-2xl font-black text-slate-900 leading-none">
-      {rating}
+      {rating > 0 ? rating + "/5" : rating}
     </span>
     
     <div className="flex gap-1">
@@ -236,7 +235,7 @@ export default function DetailsPage() {
         onClose={() => setIsDetailsOpen(false)}
             title={selectedTicket?.title || ""}
             reference={selectedTicket?.reference}
-            fields={siteFields?.fields || []}
+            fields={(siteFields as any)?.fields || []}
             descriptionContent={selectedTicket?.description}
       />
 
@@ -249,5 +248,13 @@ export default function DetailsPage() {
         onSubmit={() => setIsModalOpen(false)}
       />
     </div>
+  );
+}
+
+export default function DetailsPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <DetailsContent />
+    </Suspense>
   );
 }
