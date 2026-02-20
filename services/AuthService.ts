@@ -89,7 +89,7 @@ export const authService = {
       localStorage.removeItem("user_role");
       localStorage.removeItem("first_name");
       localStorage.removeItem("last_name");
-      window.location.href = "/login";
+      window.location.href = "/admin/login";
     }
   },
 

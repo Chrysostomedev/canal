@@ -48,7 +48,7 @@ export default function Home() {
         className="mt-12"
       >
         <button
-          onClick={() => router.push("/login")}
+          onClick={() => router.push("/admin/login")}
           className="relative flex items-center gap-3 bg-white text-black font-semibold rounded-full px-8 py-4 shadow-lg hover:bg-gray-200 transition-all duration-300"
         >
           Continuer

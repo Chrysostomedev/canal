@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface PrestCardProps {
+  id: number;           // ← id réel du prestataire pour construire le lien
   name: string;
   location: string;
   category: string;
@@ -18,6 +19,7 @@ interface PrestCardProps {
 }
 
 export default function PrestCard({
+  id,
   name,
   location,
   category,
@@ -29,25 +31,25 @@ export default function PrestCard({
   onProfilClick,
   onTicketsClick,
 }: PrestCardProps) {
-  
-  // On prépare l'URL avec les paramètres
-  const detailUrl = `/admin/prestataires/details?name=${encodeURIComponent(name)}&location=${encodeURIComponent(location)}&category=${encodeURIComponent(category)}&phone=${encodeURIComponent(phone)}&email=${encodeURIComponent(email)}`;
-  // Génération des étoiles
-  const renderStars = (note: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
+
+  // Lien vers la page details avec l'id réel — plus de query params
+  const detailUrl = `/admin/prestataires/details/${id}`;
+
+  const renderStars = (note: number) =>
+    Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
         size={24}
-        className={`${
-          i < Math.floor(note) ? "fill-yellow-400 text-yellow-400" : "fill-slate-100 text-slate-100"
-        }`}
+        className={i < Math.floor(note) ? "fill-yellow-400 text-yellow-400" : "fill-slate-100 text-slate-100"}
       />
     ));
-  };
+
+  // Première lettre sécurisée — évite le crash si name est null/vide
+  const initial = name?.charAt(0)?.toUpperCase() ?? "?";
 
   return (
     <div className="bg-white rounded-[32px] p-6 border border-slate-50 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-6">
-      
+
       {/* Header : Logo, Nom et Statut */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
@@ -55,7 +57,7 @@ export default function PrestCard({
             {logo ? (
               <Image src={logo} alt={name} width={64} height={64} className="object-cover" />
             ) : (
-              <div className="text-slate-400 font-bold text-xl">{name.charAt(0)}</div>
+              <div className="text-slate-400 font-bold text-xl">{initial}</div>
             )}
           </div>
           <div>
@@ -68,8 +70,7 @@ export default function PrestCard({
             </div>
           </div>
         </div>
-        
-        {/* Badge Statut */}
+
         <span className={`px-4 py-1 rounded-full text-[10px] font-bold tracking-wider ${
           status === "Actif" ? "bg-green-600 text-white" : "bg-slate-200 text-slate-500"
         }`}>
@@ -77,7 +78,7 @@ export default function PrestCard({
         </span>
       </div>
 
-      {/* Détails de contact */}
+      {/* Contact */}
       <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-50">
         <div className="flex items-center gap-3 text-slate-600 font-medium text-[14px]">
           <Briefcase size={16} className="text-slate-400" />
@@ -93,32 +94,32 @@ export default function PrestCard({
         </div>
       </div>
 
-      {/* Section Note */}
+      {/* Note */}
       <div className="bg-slate-50/30 p-4 rounded-2xl flex flex-col gap-2">
         <span className="text-slate-400 text-[13px] font-bold uppercase">Note obtenue</span>
         <div className="flex items-center gap-4">
-          <span className="text-5xl font-black text-slate-900 leading-none">{rating}</span>
-          <div className="flex gap-1">
-            {renderStars(rating)}
-          </div>
+          <span className="text-5xl font-black text-slate-900 leading-none">{rating ?? 0}</span>
+          <div className="flex gap-1">{renderStars(rating ?? 0)}</div>
         </div>
       </div>
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button 
+        {/* Profil → ouvre le ProfileModal */}
+        <button
           onClick={onProfilClick}
           className="flex-1 bg-white border-2 border-slate-900 text-slate-900 py-4 rounded-2xl font-bold hover:bg-slate-50 transition-colors"
         >
           Profil
         </button>
-        <Link 
-  href={detailUrl} 
-  className="flex-1 flex items-center justify-center bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-colors"
->
-  Tickets
-</Link>
 
+        {/* Tickets → navigue vers details/[id] */}
+        <Link
+          href={detailUrl}
+          className="flex-1 flex items-center justify-center bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-colors"
+        >
+          Tickets
+        </Link>
       </div>
     </div>
   );

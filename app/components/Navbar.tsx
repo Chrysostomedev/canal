@@ -21,11 +21,11 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await authService.logout(); // AuthService gère correctement la route /admin/logout
-      router.push("/login");
+      router.push("/admin/login");
     } catch (error) {
       console.error("Erreur de déconnexion", error);
       localStorage.clear();
-      window.location.href = "/login";
+      window.location.href = "/admin/login";
     }
   };
 

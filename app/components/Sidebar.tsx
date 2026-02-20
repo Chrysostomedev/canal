@@ -23,7 +23,7 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, href: "/dashboard" },
+  { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, href: "/admin/dashboard" },
   {
     label: "Administration",
     icon: <MapPinHouse size={20} />,
@@ -79,11 +79,11 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       await authService.logout();
-      router.push("/login");
+      router.push("/admin/login");
     } catch (error) {
       console.error("Erreur de déconnexion", error);
       localStorage.clear();
-      window.location.href = "/login";
+      window.location.href = "/admin/login";
     }
   };
 
@@ -151,11 +151,11 @@ export default function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-gray-100 space-y-2">
-          <Link href="/#" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-all font-medium text-[15px]">
+          <Link href="#" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-all font-medium text-[15px]">
             <Shield size={20} />
             <span>Gestion des roles</span>
           </Link>
-          <Link href="/#" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-all font-medium text-[15px]">
+          <Link href="#" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-all font-medium text-[15px]">
             <Settings size={20} />
             <span>Paramètres</span>
           </Link>

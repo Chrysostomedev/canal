@@ -235,7 +235,9 @@ export default function SiteDetailsPage() {
           )}
 
           {/* Header site */}
-          <div className="bg-white flex flex-col md:flex-row md:items-center justify-between gap-6">
+         {/* ── Header profil prestataire ── */}
+         <div className="bg-white flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl border border-slate-100 shadow-sm">
+           
             <div className="space-y-4">
               <Link href="/admin/sites" className="flex items-center gap-2 text-slate-500 hover:text-black transition-colors bg-white px-4 py-2 rounded-xl border border-slate-100 w-fit text-sm font-medium">
                 <ChevronLeft size={18} /> Retour
@@ -248,13 +250,24 @@ export default function SiteDetailsPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-white p-6 border border-slate-50 shadow-sm flex items-center gap-4 min-w-[320px]">
-              <div>
+                       {/* Bloc contact + note + bouton modifier */}
+              <div className="flex flex-col gap-4">
+              <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 flex flex-col gap-4 min-w-[320px]">
+            
                 <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>
-                <div className="flex flex-col text-sm text-slate-500 font-medium">
-                  <span className="flex items-center gap-1"><Phone size={14} /> {phone}</span>
-                  <span className="flex items-center gap-1"><Mail size={14} /> {email}</span>
-                </div>
+                <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
+                    <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+                      <Phone size={16} className="text-slate-900" />
+                    </div>
+                    {phone}
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
+                    <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+                      <Mail size={16} className="text-slate-900" />
+                    </div>
+                    {email}
+                  </div>
+               
               </div>
             </div>
           </div>

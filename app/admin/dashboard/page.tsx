@@ -12,7 +12,7 @@ import DataTable from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye } from "lucide-react";
 
-import { useDashboard } from "../../hooks/useDashboard";
+import { useDashboard } from "../../../hooks/useDashboard";
 
 const MOIS_LABELS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
 const DONUT_COLORS = ["#df1414", "#07ad07", "#606eee", "#050f6b", "#f97316"];

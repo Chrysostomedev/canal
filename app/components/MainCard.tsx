@@ -1,87 +1,135 @@
 "use client";
 
+// ============================================================
+// components/MainCard.tsx
+// Reçoit les plannings réels depuis PlanningPage via props
+// ============================================================
+
 import { useState } from "react";
 import SearchInput from "./SearchInput";
 import EventLegend from "./EventLegend";
 import CalendarGrid from "./CalendarGrid";
 import MiniCalendar from "./MiniCalendar";
-import SideDetailsPanel from "./SideDetailsPanel"; // Ton nouveau composant réutilisable
+import SideDetailsPanel from "./SideDetailsPanel";
+import { Planning } from "../../../services/planningService";
 
-export default function MainCard() {
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  // États pour la modale
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-  // Fonction pour ouvrir la modale au clic sur un événement
-  const handleEventClick = (event: any) => {
-    // On formate les données de l'événement pour qu'elles correspondent aux "fields" du SideDetailsPanel
-    const formattedEvent = {
-      title: event.label || "Maintenance",
-      reference: "#8139013", // Référence fictive ou event.id si tu l'as
-      description: "Retrouvez les détails de cette planification de maintenance ci-dessous.",
-      fields: [
-        { label: "Type de planification", value: event.label },
-        { label: "Heure prévue", value: event.time },
-        { label: "Date", value: "29/01/2026" }, // À dynamiser selon ton besoin
-        { label: "Prestataire", value: "Marvin TIC" },
-        { 
-          label: "Statut", 
-          value: event.status, 
-          isStatus: true, 
-          statusColor: event.color 
-        },
-      ]
-    };
+interface DetailField {
+  label: string;
+  value: string;
+  isStatus?: boolean;
+  statusColor?: string;
+}
 
-    setSelectedEvent(formattedEvent);
-    setIsPanelOpen(true);
-  };
+interface FormattedEvent {
+  title: string;
+  reference?: string;
+  description?: string;
+  fields: DetailField[];
+}
+
+interface MainCardProps {
+  plannings: Planning[];
+  isLoading?: boolean;
+  selectedEvent: FormattedEvent | null;
+  isPanelOpen: boolean;
+  onEventClick: (planning: Planning) => void;
+  onPanelClose: () => void;
+  onEditClick: () => void;
+  onDeleteClick?: () => void;
+}
+
+// ─── Composant ────────────────────────────────────────────────────────────────
+
+export default function MainCard({
+  plannings,
+  isLoading = false,
+  selectedEvent,
+  isPanelOpen,
+  onEventClick,
+  onPanelClose,
+  onEditClick,
+  onDeleteClick,
+}: MainCardProps) {
+  const [searchQuery, setSearchQuery]     = useState("");
+  const [activeMonth, setActiveMonth]     = useState(new Date());
+
+  // Filtre local par recherche (sur codification, responsable, site)
+  const filteredPlannings = plannings.filter((p) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      p.codification.toLowerCase().includes(q) ||
+      p.responsable_name.toLowerCase().includes(q) ||
+      (p.site?.name ?? "").toLowerCase().includes(q) ||
+      (p.provider?.user?.name ?? "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="w-full space-y-6">
       {/* 1. Top Bar */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 max-w-md">
-          <SearchInput 
-            onSearch={(q) => setSearchQuery(q)} 
-            placeholder="Rechercher un évènement" 
+          <SearchInput
+            onSearch={(q) => setSearchQuery(q)}
+            placeholder="Rechercher un planning, responsable, site..."
           />
         </div>
       </div>
 
-      {/* 2. Main Layout Container */}
+      {/* 2. Main Layout */}
       <div className="grid grid-cols-12 gap-6 items-start">
-        
+
         {/* Sidebar Gauche */}
         <div className="col-span-12 lg:col-span-3 space-y-6">
           <div className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm">
-            <MiniCalendar />
+            {/* MiniCalendar contrôle le mois affiché dans CalendarGrid */}
+            <MiniCalendar
+              activeMonth={activeMonth}
+              onMonthChange={setActiveMonth}
+              plannings={filteredPlannings}
+            />
           </div>
-          
+
           <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm space-y-8">
-            <EventLegend search={searchQuery} />
+            {/* EventLegend reçoit les plannings filtrés pour "à venir" */}
+            <EventLegend
+              search={searchQuery}
+              plannings={filteredPlannings}
+            />
           </div>
         </div>
 
         {/* Grille Calendrier */}
         <div className="col-span-12 lg:col-span-9 bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
-          <CalendarGrid 
-            search={searchQuery} 
-            onEventClick={handleEventClick} 
-          />
+          {isLoading ? (
+            // Skeleton loader
+            <div className="p-8 space-y-4 animate-pulse">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-slate-100 rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <CalendarGrid
+              search={searchQuery}
+              plannings={filteredPlannings}
+              activeMonth={activeMonth}
+              onEventClick={onEventClick}
+            />
+          )}
         </div>
       </div>
 
-      {/* 3. Le SidePanel corrigé avec les nouvelles props */}
-      <SideDetailsPanel 
-        isOpen={isPanelOpen} 
-        onClose={() => setIsPanelOpen(false)} 
+      {/* 3. SideDetailsPanel — données réelles */}
+      <SideDetailsPanel
+        isOpen={isPanelOpen}
+        onClose={onPanelClose}
         title={selectedEvent?.title || ""}
         reference={selectedEvent?.reference}
-        fields={selectedEvent?.fields || []} // Le tableau qui manquait
+        fields={selectedEvent?.fields || []}
         descriptionContent={selectedEvent?.description}
+        onEdit={onEditClick}
       />
     </div>
   );

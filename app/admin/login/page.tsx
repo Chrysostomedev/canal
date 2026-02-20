@@ -5,7 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 // CORRECTION 1 : Import avec accolades car c'est un export nommé
-import { authService } from "../../services/AuthService"; 
+import { authService } from "../../../services/AuthService"; 
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function LoginPage() {
 
       // CORRECTION 3 : Le token est déjà stocké dans localStorage par le service
       // Mais on redirige vers le dashboard
-      router.push("/dashboard"); 
+      router.push("/admin/dashboard"); 
       
     } catch (err: any) {
       console.error("Erreur détaillée:", err);
