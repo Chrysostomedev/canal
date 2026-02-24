@@ -97,8 +97,8 @@ export default function Dashboard() {
 
   // ── Colonnes DataTable ──
   const columns = [
-    { header: "ID", key: "id", render: (_: any, row: any) => `#${row.id}` },
-    { header: "Sujet", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
+    { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
+    { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
     { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom ?? "-" },
     { header: "Service", key: "service", render: (_: any, row: any) => row.service?.name ?? "-" },
     { header: "Type", key: "type", render: (_: any, row: any) => row.type === "curatif" ? "Curatif" : "Préventif" },
@@ -115,7 +115,7 @@ export default function Dashboard() {
       render: (_: any, row: any) => (
         <button onClick={() => handleOpenDetails(row)} className="font-bold text-slate-800 hover:text-blue-600 transition">
           <Eye size={18} />
-        </button>
+          </button>
       ),
     },
   ];
@@ -160,33 +160,56 @@ export default function Dashboard() {
           </div>
 
           {/* Graphiques */}
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch pb-4">
-            <BarChartCard
-              title="Tendance de l'année "
-              data={buildBarData()}
-              onYearChange={(year) => setSelectedYear(Number(year))}
-            />
-            <DonutChartCard
-              title="Sites les plus fréquentés(interventions)"
-              data={buildDonutData()}
-            />
-            {/* ListCard — header "Voir tous" → /admin/sites, chaque item → /admin/sites/details/[id] */}
-            <ListCard
-              title="Top sites"
-              items={buildListItems()}
-              viewAllHref="/admin/sites"
-              viewAllText="Voir tous"
-            />
-          </section>
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch pb-4">
+            {/* tendance de l'année en fonction des tickets */}
+  <div className="lg:col-span-5 flex">
+    <div className="w-full h-full">
+      <BarChartCard
+        title="Tendance de l'année "
+        data={buildBarData()}
+        onYearChange={(year) => setSelectedYear(Number(year))}
+      />
+    </div>
+  </div>
 
+  <div className="lg:col-span-4 flex">
+    <div className="w-full h-full">
+      <DonutChartCard
+        title="Sites les plus fréquentés(interventions)"
+        data={buildDonutData()}
+      />
+    </div>
+  </div>
+
+  <div className="lg:col-span-3 flex">
+    <div className="w-full h-full">
+      <ListCard
+        title="Listes des sites"
+        items={buildListItems()}
+        viewAllHref="/admin/sites"
+        viewAllText="Voir tous"
+      />
+    </div>
+  </div>
+</section>
           {/* Tickets récents avec lien voir tous */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <DataTable
-              columns={columns}
-              data={dashboard?.tickets_recents ?? []}
-              onViewAll={() => window.location.href = "/admin/tickets"}
-            />
-          </div>
+  {/* Header */}
+  <div className="px-6 py-4 bg-transparent">
+    <h3 className="text-base font-bold text-slate-800 ">
+      Listes tickets récents
+    </h3>
+  </div>
+
+  {/* Table */}
+  <div className="px-6 py-4">
+    <DataTable
+      columns={columns}
+      data={dashboard?.tickets_recents ?? []}
+      onViewAll={() => (window.location.href = "/admin/tickets")}
+    />
+  </div>
+</div>
 
         </main>
       </div>

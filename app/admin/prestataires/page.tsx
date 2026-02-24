@@ -73,9 +73,9 @@ export default function PrestatairesPage() {
     { name: "date_entree", label: "Date d'entrée", type: "date", required: true },
     { name: "description", label: "Description", type: "rich-text", gridSpan: 2 },
     // Infos utilisateur associé
-    { name: "users.first_name", label: "Prénom du contact", type: "text", required: true },
-    { name: "users.last_name", label: "Nom du contact", type: "text", required: true },
-    { name: "users.email", label: "Email du contact", type: "email", required: true },
+    
+    { name: "users.last_name", label: "Nom du responsable", type: "text", required: true },
+    { name: "users.email", label: "Email du responsable", type: "email", required: true },
     { name: "users.phone", label: "Téléphone", type: "text", required: true },
     { name: "users.password", label: "Mot de passe", type: "text", required: true },
   ];
@@ -91,7 +91,6 @@ export default function PrestatairesPage() {
         date_entree: formData.date_entree || undefined,
         description: formData.description || undefined,
         users: {
-          first_name: formData["users.first_name"],
           last_name: formData["users.last_name"],
           email: formData["users.email"],
           phone: formData["users.phone"],
@@ -126,12 +125,13 @@ export default function PrestatairesPage() {
 
   const prestActions = [
     {
-      label: "Filtrer",
+      label: "Filtrer par",
       icon: Filter,
       onClick: () => setFiltersOpen(!filtersOpen),
       variant: "secondary" as const,
     },
-    { label: "Export", icon: Upload, onClick: () => {}, variant: "secondary" as const },
+    { label: "Exporter", icon: Upload, onClick: () => {}, variant: "secondary" as const },
+    { label: "Importer", icon: Upload, onClick: () => {}, variant: "secondary" as const },
     {
       label: "Ajouter un prestataire",
       icon: PlusCircle,

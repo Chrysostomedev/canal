@@ -50,7 +50,7 @@ export default function BarChartCard({
   const yAxisMarkers = [maxValue, Math.round(maxValue * 0.66), Math.round(maxValue * 0.33), 0];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 relative z-10 overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 relative z-10 overflow-hidden h-full flex flex-col">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-8 relative z-20">
@@ -94,9 +94,9 @@ export default function BarChartCard({
       </div>
 
       {/* Zone graphique — padding bottom pour les labels des mois */}
-      <div className="w-full" style={{ paddingBottom: "28px" }}>
-        <div className="relative flex h-48">
-
+      <div className="w-full flex-1 pt-2 pb-8">
+      <div className="relative flex h-full">
+        
           {/* Axe Y — largeur fixe pour ne pas écraser les barres */}
           <div className="flex flex-col justify-between flex-shrink-0 w-8 text-slate-300 text-[9px] font-black text-right pr-1">
             {yAxisMarkers.map((marker) => (

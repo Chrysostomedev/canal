@@ -1,31 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, Download, Upload, Building2 } from "lucide-react";
+import { Eye, Download, Upload, Briefcase } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import DataTable from "@/components/DataTable";
 import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
-import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 
-import { useTypes } from "../../../../hooks/useTypes";
-import { TypeAssetService } from "../../../../services/type-asset.service";
+import { useServices } from "../../../hooks/useServices";
+import { ServiceService } from "../../../services/service.service";
 
-export default function PatrimoinesPage() {
+export default function ServicesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPatrimoine, setSelectedPatrimoine] = useState<any>(null);
+  const [selectedService, setSelectedService] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [editingData, setEditingData] = useState<Record<string, any> | null>(null);
   const [flashMessage, setFlashMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [importLoading, setImportLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
-  const { types, isLoading, fetchTypes, meta, setPage } = useTypes();
-
-  useEffect(() => { fetchTypes(); }, []);
+  const { services, isLoading, fetchServices } = useServices();
 
   useEffect(() => {
     if (!flashMessage) return;
@@ -37,44 +34,42 @@ export default function PatrimoinesPage() {
     setFlashMessage({ type, message });
 
   // ── Détails panel ──
-  const handleOpenDetails = (patrimoine: any) => {
-    setSelectedPatrimoine({
-      title: patrimoine.name,
-      reference: patrimoine.id,
+  const handleOpenDetails = (service: any) => {
+    setSelectedService({
+      title: service.name,
+      reference: service.id,
       fields: [
-        { label: "Famille / Type", value: patrimoine.name },
-        { label: "Codification", value: patrimoine.code },
-        { label: "Description", value: patrimoine.description || "-" },
-        { label: "Date d'ajout", value: patrimoine.created_at?.split("T")[0] || "-" },
+        { label: "Nom du service", value: service.name },
+        { label: "Description", value: service.description || "-" },
+        { label: "Date d'ajout", value: service.created_at?.split("T")[0] || "-" },
       ],
-      description: patrimoine.description,
-      rawData: patrimoine,
+      description: service.description,
+      rawData: service,
     });
     setIsDetailsOpen(true);
   };
 
   const handleEdit = () => {
-    if (!selectedPatrimoine?.rawData) return;
+    if (!selectedService?.rawData) return;
     setEditingData({
-      name: selectedPatrimoine.rawData.name,
-      code: selectedPatrimoine.rawData.code,
-      description: selectedPatrimoine.rawData.description,
+      name: selectedService.rawData.name,
+      description: selectedService.rawData.description,
     });
     setIsModalOpen(true);
     setIsDetailsOpen(false);
   };
 
   // ── CRUD ──
-  const handleCreateOrUpdateType = async (formData: Record<string, any>) => {
+  const handleCreateOrUpdate = async (formData: Record<string, any>) => {
     try {
-      if (editingData && selectedPatrimoine?.reference) {
-        await TypeAssetService.updateType(selectedPatrimoine.reference, formData);
-        showFlash("success", "Type de patrimoine mis à jour avec succès.");
+      if (editingData && selectedService?.reference) {
+        await ServiceService.updateService(selectedService.reference, formData);
+        showFlash("success", "Service mis à jour avec succès.");
       } else {
-        await TypeAssetService.createType(formData);
-        showFlash("success", "Type de patrimoine créé avec succès.");
+        await ServiceService.createService(formData);
+        showFlash("success", "Service créé avec succès.");
       }
-      await fetchTypes();
+      await fetchServices();
       setIsModalOpen(false);
       setEditingData(null);
     } catch (err: any) {
@@ -93,9 +88,9 @@ export default function PatrimoinesPage() {
     if (!file) return;
     setImportLoading(true);
     try {
-      // await TypeAssetService.importTypes(file); // décommenter quand endpoint dispo
-      showFlash("success", "Import réussi.");
-      await fetchTypes();
+      // await ServiceService.importServices(file); // décommenter quand endpoint dispo
+      showFlash( "error", "Fonctionnalité d'import en developpement.");
+      await fetchServices();
     } catch {
       showFlash("error", "Erreur lors de l'import.");
     } finally {
@@ -108,8 +103,8 @@ export default function PatrimoinesPage() {
   const handleExport = async () => {
     setExportLoading(true);
     try {
-      // await TypeAssetService.exportTypes(); // décommenter quand endpoint dispo
-      showFlash("success", "Export téléchargé.");
+      // await ServiceService.exportServices(); // décommenter quand endpoint dispo
+      showFlash( "error", "Fonctionnalité d'export en developpement, disponible très bientot.");
     } catch {
       showFlash("error", "Erreur lors de l'export.");
     } finally {
@@ -117,14 +112,19 @@ export default function PatrimoinesPage() {
     }
   };
 
-  const sortedTypes = [...types].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-
+  // ── Colonnes ──
   const columns = [
-    { header: "Type", key: "name" },
-    { header: "Codification", key: "code" },
-    { header: "Description", key: "description", render: (_: any, row: any) => row.description || "-" },
+    { header: "Nom du service", key: "name" },
+    {
+      header: "Description", key: "description",
+      render: (_: any, row: any) => (
+        <span className="text-slate-500 text-sm line-clamp-1">{row.description || "-"}</span>
+      ),
+    },
+    {
+      header: "Date d'ajout", key: "created_at",
+      render: (_: any, row: any) => row.created_at?.split("T")[0] || "-",
+    },
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
@@ -138,10 +138,23 @@ export default function PatrimoinesPage() {
     },
   ];
 
-  const typeFields: FieldConfig[] = [
-    { name: "name", label: "Famille / Type", type: "text", required: true },
-    { name: "code", label: "Codification", type: "text", placeholder: "ex: SD1245", required: true },
-    { name: "description", label: "Description", type: "rich-text", gridSpan: 2, placeholder: "Décrivez le patrimoine" },
+  // ── Champs formulaire ──
+  // Seulement name + description — conforme au validator Laravel
+  const serviceFields: FieldConfig[] = [
+    {
+      name: "name",
+      label: "Nom du service",
+      type: "text",
+      required: true,
+      placeholder: "ex: Maintenance électrique",
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "rich-text",
+      gridSpan: 2,
+      placeholder: "Décrivez le service proposé",
+    },
   ];
 
   return (
@@ -151,11 +164,11 @@ export default function PatrimoinesPage() {
         <Navbar />
         <main className="ml-64 mt-20 p-6 space-y-8">
           <PageHeader
-            title="Type de patrimoine"
-            subtitle="Ce menu vous permet de voir les différents patrimoines disponibles"
+            title="Services"
+            subtitle="Gestion des services disponibles pour les prestataires"
           />
 
-          {/* Barre d'actions — PAS de filtre sur cette vue */}
+          {/* Barre d'actions — pas de filtre pour les services */}
           <div className="shrink-0 flex justify-end items-center gap-3">
 
             {/* Import */}
@@ -180,41 +193,42 @@ export default function PatrimoinesPage() {
               onClick={() => { setEditingData(null); setIsModalOpen(true); }}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
             >
-              <Building2 size={16} /> Ajouter un type
+              <Briefcase size={16} /> Ajouter un service
             </button>
           </div>
 
+          {/* Table — pas de pagination (Services::all() retourne tout) */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <DataTable columns={columns} data={isLoading ? [] : sortedTypes} onViewAll={() => {}} />
-            <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
-              <Paginate
-                currentPage={meta?.current_page || 1}
-                totalPages={meta?.last_page || 1}
-                onPageChange={(p) => setPage(p)}
-              />
-            </div>
+            <DataTable
+              columns={columns}
+              data={isLoading ? [] : services}
+              onViewAll={() => {}}
+            />
           </div>
 
+          {/* Formulaire */}
           <ReusableForm
             isOpen={isModalOpen}
             onClose={() => { setIsModalOpen(false); setEditingData(null); }}
-            title={editingData ? "Modifier un type de patrimoine" : "Ajouter un nouveau type"}
+            title={editingData ? "Modifier un service" : "Ajouter un nouveau service"}
             subtitle="Remplissez les informations ci-dessous."
-            fields={typeFields}
-            onSubmit={handleCreateOrUpdateType}
+            fields={serviceFields}
+            onSubmit={handleCreateOrUpdate}
             initialValues={editingData || {}}
           />
 
+          {/* Détail panel */}
           <SideDetailsPanel
             isOpen={isDetailsOpen}
             onClose={() => setIsDetailsOpen(false)}
-            title={selectedPatrimoine?.title || ""}
-            reference={selectedPatrimoine?.reference}
-            fields={selectedPatrimoine?.fields || []}
-            descriptionContent={selectedPatrimoine?.description}
+            title={selectedService?.title || ""}
+            reference={selectedService?.reference}
+            fields={selectedService?.fields || []}
+            descriptionContent={selectedService?.description}
             onEdit={handleEdit}
           />
 
+          {/* Flash */}
           {flashMessage && (
             <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-medium border ${
               flashMessage.type === "success"

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReusableForm from "@/components/ReusableForm";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
@@ -47,6 +47,7 @@ export default function TicketsPage() {
   const { services } = useServices();
   const { assets } = useAssets();
   const { sites, fetchSites } = useSites();
+  const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (sites.length === 0) fetchSites();
@@ -206,7 +207,7 @@ export default function TicketsPage() {
   // ACTIONS
   // =========================
   const ticketActions = [
-    { label: "Filtrer", icon: Filter, onClick: () => setFiltersOpen(!filtersOpen), variant: "secondary" as const },
+    
     { label: "Exporter", icon: Upload, onClick: () => {}, variant: "secondary" as const },
     {
       label: "Nouveau Ticket", icon: TicketPlus,
@@ -214,6 +215,9 @@ export default function TicketsPage() {
       variant: "primary" as const,
     },
   ];
+
+// Calcul du nombre de filtres actifs
+const activeCount = [filters.status, filters.type, filters.priority].filter(Boolean).length;
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
@@ -246,51 +250,70 @@ export default function TicketsPage() {
             <StatsCard label="Délai maximal" value={formatHeures(stats?.delais_maximal_traitement_heures ?? null)} />
           </div>
 
-          {/* Actions + Filtres */}
-          <div className="flex justify-end relative">
-            <ActionGroup actions={ticketActions} />
-            {filtersOpen && (
-              <div className="absolute right-0 top-12 z-50 p-4 bg-black text-white shadow-lg rounded-lg border space-y-3 w-56">
-                <select
-                  className="w-full border border-white bg-black text-white rounded p-1"
-                  value={filters.status || ""}
-                  onChange={e => applyFilters({ ...filters, status: e.target.value || undefined })}
-                >
-                  <option value="">Tous les statuts</option>
-                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-                <select
-                  className="w-full border border-white bg-black text-white rounded p-1"
-                  value={filters.type || ""}
-                  onChange={e => applyFilters({ ...filters, type: e.target.value || undefined })}
-                >
-                  <option value="">Tous les types</option>
-                  <option value="curatif">Curatif</option>
-                  <option value="preventif">Préventif</option>
-                </select>
-                <select
-                  className="w-full border border-white bg-black text-white rounded p-1"
-                  value={filters.priority || ""}
-                  onChange={e => applyFilters({ ...filters, priority: e.target.value || undefined })}
-                >
-                  <option value="">Toutes les priorités</option>
-                  <option value="faible">Faible</option>
-                  <option value="moyenne">Moyenne</option>
-                  <option value="haute">Haute</option>
-                  <option value="critique">Critique</option>
-                </select>
-              </div>
-            )}
-          </div>
+        {/* Actions + Filtres */}
+<div className="flex justify-end relative" ref={filterRef}>
+  
+  <button
+    onClick={() => setFiltersOpen(!filtersOpen)}
+    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
+      filtersOpen || activeCount > 0
+        ? "bg-slate-900 text-white border-slate-900"
+        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+    }`}
+  >
+    <Filter size={16} /> Filtrer
+    {activeCount > 0 && (
+      <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+        {activeCount}
+      </span>
+    )}
+  </button>
+
+  {filtersOpen && (
+    <div className="absolute right-0 top-12 z-50 p-4 bg-white border border-slate-200 shadow-lg rounded-xl space-y-3 w-56">
+      <select
+        className="w-full border border-slate-200 rounded p-2 text-sm"
+        value={filters.status || ""}
+        onChange={e => applyFilters({ ...filters, status: e.target.value || undefined })}
+      >
+        <option value="">Tous les statuts</option>
+        {Object.entries(STATUS_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>{label}</option>
+        ))}
+      </select>
+
+      <select
+        className="w-full border border-slate-200 rounded p-2 text-sm"
+        value={filters.type || ""}
+        onChange={e => applyFilters({ ...filters, type: e.target.value || undefined })}
+      >
+        <option value="">Tous les types</option>
+        <option value="curatif">Curatif</option>
+        <option value="preventif">Préventif</option>
+      </select>
+
+      <select
+        className="w-full border border-slate-200 rounded p-2 text-sm"
+        value={filters.priority || ""}
+        onChange={e => applyFilters({ ...filters, priority: e.target.value || undefined })}
+      >
+        <option value="">Toutes les priorités</option>
+        <option value="faible">Faible</option>
+        <option value="moyenne">Moyenne</option>
+        <option value="haute">Haute</option>
+        <option value="critique">Critique</option>
+      </select>
+    </div>
+  )}
+  <ActionGroup actions={ticketActions} />
+</div>
 
           {/* Table */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
             {isLoading ? (
-              <div className="py-16 text-center text-slate-400 text-sm italic">Chargement...</div>
+              <div className="py-16 text-center text-slate-400 text-sm italic">Filtrage...</div>
             ) : (
-              <DataTable columns={columns} data={tickets} title="Liste des tickets" />
+              <DataTable columns={columns} data={tickets} />
             )}
             <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
               <Paginate currentPage={page} totalPages={meta?.last_page ?? 1} onPageChange={setPage} />

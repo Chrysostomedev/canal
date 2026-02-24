@@ -1,5 +1,5 @@
 // hooks/useSites.ts
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   getSites,
   createSite,
@@ -19,20 +19,27 @@ export const useSites = () => {
   const fetchSites = async (search?: string) => {
     try {
       setLoading(true);
-      const { items, meta } = await getSites(search, page);
+      // per_page élevé pour récupérer tous les sites dans les selects
+      const { items, meta } = await getSites(search, page, 100);
       setSites(items);
       setTotalPages(meta.last_page);
+    } catch {
+      setSites([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // ← Auto-fetch au montage — nécessaire pour alimenter les selects
+  useEffect(() => {
+    fetchSites();
+  }, []);
 
   const fetchStats = async () => {
     try {
       const data = await getSiteStats();
       setStats(data);
     } catch {
-      // fallback sécurisé
       setStats({
         totalPages: 0,
         sites_actifs: 0,
