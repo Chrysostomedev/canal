@@ -47,7 +47,7 @@ const menuItems: MenuItem[] = [
       { label: "Prestataires", icon: <Users size={20} />, href: "/admin/prestataires" },
       { label: "Devis", icon: <FileSignature size={20} />, href: "/admin/devis" },
       { label: "Factures", icon: <FileText size={20} />, href: "/admin/factures" },
-      { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "#" },
+      { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/admin/rapports" },
       { label: "Services", icon: <Layers size={20} />, href: "/admin/services" },
     ],
   },

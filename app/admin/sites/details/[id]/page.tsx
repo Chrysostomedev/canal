@@ -1,67 +1,343 @@
 "use client";
+
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { 
-  Filter, Download, Upload, Building2, 
-  Eye, ChevronLeft, MapPin, 
-  Phone, Mail, CalendarClock
+import {
+  Filter, Download, Upload, Building2,
+  Eye, ChevronLeft, MapPin,
+  Phone, Mail, CalendarClock, X, Copy, CheckCheck,
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Paginate from "@/components/Paginate";
 import StatsCard from "@/components/StatsCard";
-import ActionGroup from "@/components/ActionGroup";
 import ReusableForm from "@/components/ReusableForm";
 import DataTable from "@/components/DataTable";
-import SideDetailsPanel from "@/components/SideDetailsPanel";
+import { FieldConfig } from "@/components/ReusableForm";
 
 import { useSites } from "../../../../../hooks/useSites";
 import { useTypes } from "../../../../../hooks/useTypes";
 import { useSubTypeAssets } from "../../../../../hooks/useSubTypeAssets";
 import { AssetService, CompanyAsset } from "../../../../../services/asset.service";
-import { FieldConfig } from "@/components/ReusableForm";
+import axiosInstance from "../../../../../core/axios";
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+
+/** 100000 → "100K" · 1500000 → "1,5M" */
+const formatMontant = (v: number | null | undefined): string => {
+  if (!v && v !== 0) return "—";
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 !== 0 ? 1 : 0)}M FCFA`;
+  if (v >= 1_000)     return `${(v / 1_000).toFixed(v % 1_000 !== 0 ? 1 : 0)}K FCFA`;
+  return `${v} FCFA`;
+};
+
+const formatDate = (iso?: string | null): string => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return time === "00:00" ? date : `${date} à ${time}`;
+};
+
+// ═══════════════════════════════════════════════
+// COPY BUTTON
+// ═══════════════════════════════════════════════
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* fallback silencieux */
+    }
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copier l'ID"
+      className="ml-2 p-1 rounded-lg hover:bg-slate-200 transition text-slate-400 hover:text-slate-700"
+    >
+      {copied ? <CheckCheck size={13} className="text-emerald-500" /> : <Copy size={13} />}
+    </button>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// STATUT PATRIMOINE
+// ═══════════════════════════════════════════════
+
+const ASSET_STATUS_STYLES: Record<string, string> = {
+  actif:     "border-green-500  bg-green-50  text-green-700",
+  inactif:   "border-red-400    bg-red-50    text-red-600",
+  hors_usage:"border-slate-400  bg-slate-100 text-slate-700",
+};
+const ASSET_STATUS_LABELS: Record<string, string> = {
+  actif: "Actif", inactif: "Inactif", hors_usage: "Hors usage",
+};
+
+// ═══════════════════════════════════════════════
+// FILTER DROPDOWN CANAL+
+// ═══════════════════════════════════════════════
+
+interface AssetFilters { type_id?: number; sub_type_id?: number; status?: string; }
+
+function AssetFilterDropdown({
+  isOpen, onClose, filters, onApply, types, subTypes,
+}: {
+  isOpen: boolean; onClose: () => void;
+  filters: AssetFilters; onApply: (f: AssetFilters) => void;
+  types: any[]; subTypes: any[];
+}) {
+  const [local, setLocal] = useState<AssetFilters>(filters);
+  useEffect(() => { setLocal(filters); }, [filters]);
+  if (!isOpen) return null;
+
+  const Pill = ({ val, current, onClick, label }: { val: string; current?: string; onClick: () => void; label: string }) => (
+    <button
+      onClick={onClick}
+      className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
+        (current ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Filtres</span>
+        <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition">
+          <X size={16} className="text-slate-500" />
+        </button>
+      </div>
+
+      <div className="p-5 space-y-5 max-h-[60vh] overflow-y-auto">
+
+        {/* Statut */}
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
+          <div className="flex flex-col gap-1.5">
+            {[
+              { val: "",          label: "Tous" },
+              { val: "actif",     label: "Actif" },
+              { val: "inactif",   label: "Inactif" },
+              { val: "hors_usage",label: "Hors usage" },
+            ].map(o => (
+              <Pill key={o.val} val={o.val} current={local.status ?? ""} label={o.label}
+                onClick={() => setLocal({ ...local, status: o.val || undefined })} />
+            ))}
+          </div>
+        </div>
+
+        {/* Type */}
+        {types.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Type / Famille</p>
+            <div className="flex flex-col gap-1.5">
+              <Pill val="" current={String(local.type_id ?? "")} label="Tous les types"
+                onClick={() => setLocal({ ...local, type_id: undefined })} />
+              {types.map((t: any) => (
+                <Pill key={t.id} val={String(t.id)} current={String(local.type_id ?? "")} label={t.name}
+                  onClick={() => setLocal({ ...local, type_id: t.id })} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sous-type */}
+        {subTypes.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Sous-type</p>
+            <div className="flex flex-col gap-1.5">
+              <Pill val="" current={String(local.sub_type_id ?? "")} label="Tous les sous-types"
+                onClick={() => setLocal({ ...local, sub_type_id: undefined })} />
+              {subTypes.map((st: any) => (
+                <Pill key={st.id} val={String(st.id)} current={String(local.sub_type_id ?? "")} label={st.name}
+                  onClick={() => setLocal({ ...local, sub_type_id: st.id })} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
+        <button
+          onClick={() => { setLocal({}); onApply({}); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition"
+        >
+          Réinitialiser
+        </button>
+        <button
+          onClick={() => { onApply(local); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
+        >
+          Appliquer
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// ASSET SIDE PANEL CUSTOM
+// ═══════════════════════════════════════════════
+
+function AssetSidePanel({
+  patrimoine, onClose, onEdit,
+}: {
+  patrimoine: CompanyAsset | null; onClose: () => void; onEdit: () => void;
+}) {
+  if (!patrimoine) return null;
+
+  const infoRows = [
+    { label: "Famille / Type",  value: (patrimoine as any).type?.name     ?? (patrimoine as any).typeCompanyAsset?.name ?? "—" },
+    { label: "Sous-type",       value: (patrimoine as any).subType?.name  ?? (patrimoine as any).subTypeCompanyAsset?.name ?? "—" },
+    { label: "Codification",    value: patrimoine.codification },
+    { label: "Désignation",     value: patrimoine.designation },
+    { label: "Site",            value: (patrimoine as any).site?.nom ?? (patrimoine as any).site?.name ?? "—" },
+    { label: "Date d'entrée",   value: formatDate(patrimoine.date_entree) },
+    { label: "Valeur d'entrée", value: formatMontant(patrimoine.valeur_entree) },
+  ];
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
+      <div className="fixed right-0 top-0 h-full w-[440px] bg-white z-50 shadow-2xl flex flex-col rounded-l-3xl overflow-hidden">
+
+        {/* Croix haut gauche */}
+        <div className="flex items-start px-6 pt-6 pb-0 shrink-0">
+          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition -ml-1">
+            <X size={18} className="text-slate-500" />
+          </button>
+        </div>
+
+        {/* Header */}
+        <div className="px-7 pt-4 pb-5 shrink-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+              #{patrimoine.id}
+            </span>
+            <CopyButton text={String(patrimoine.id)} />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 leading-tight">
+            {patrimoine.designation}
+          </h2>
+          <p className="text-sm text-slate-500 mt-0.5 font-medium">{patrimoine.codification}</p>
+          {/* Badge statut */}
+          <div className="mt-2.5">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border ${ASSET_STATUS_STYLES[patrimoine.status] ?? ""}`}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{
+                backgroundColor:
+                  patrimoine.status === "actif"     ? "#22c55e" :
+                  patrimoine.status === "inactif"   ? "#ef4444" : "#94a3b8"
+              }} />
+              {ASSET_STATUS_LABELS[patrimoine.status] ?? patrimoine.status}
+            </span>
+          </div>
+        </div>
+
+        {/* Infos */}
+        <div className="flex-1 overflow-y-auto px-7 pb-7">
+          <div className="space-y-0">
+            {infoRows.map((row, i) => (
+              <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+                <p className="text-xs text-slate-400 font-medium">{row.label}</p>
+                <p className="text-sm font-bold text-slate-900 text-right max-w-[60%] truncate">{row.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Description */}
+          {patrimoine.description && (
+            <div className="mt-5">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Description</p>
+              <div
+                className="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-sm text-slate-700 leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: patrimoine.description }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-7 py-5 border-t border-slate-100 shrink-0">
+          <button
+            onClick={onEdit}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
+          >
+            Modifier le patrimoine
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// PAGE DÉTAILS SITE
+// ═══════════════════════════════════════════════
+
+const PER_PAGE = 10;
 
 export default function SiteDetailsPage() {
   const params = useParams();
-  const siteId = Number(params?.id);  // ← d'abord
+  const siteId = Number(params?.id);
 
-  const { sites, stats, fetchSites } = useSites();  // ← ensuite
-
-  // Maintenant seulement
-  const siteStats = stats?.tickets_par_site?.find((s: any) => s.site_id === siteId);
-  const { types } = useTypes();
+  const { sites, stats, fetchSites } = useSites();
+  const { types }    = useTypes();
   const { subTypes } = useSubTypeAssets();
 
-  const [site, setSite] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingData, setEditingData] = useState<CompanyAsset | null>(null);
-  const [selectedPatrimoine, setSelectedPatrimoine] = useState<any>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [patrimoines, setPatrimoines] = useState<CompanyAsset[]>([]);
-  const [loadingPatrimoines, setLoadingPatrimoines] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState<{ type_id?: number; sub_type_id?: number; status?: string }>({});
-  const [flashMessage, setFlashMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const siteStats = stats?.tickets_par_site?.find((s: any) => s.site_id === siteId);
 
-  // =========================
-  // FETCH
-  // =========================
+  const [site,               setSite]               = useState<any>(null);
+  const [isModalOpen,        setIsModalOpen]        = useState(false);
+  const [editingData,        setEditingData]        = useState<CompanyAsset | null>(null);
+  const [selectedPatrimoine, setSelectedPatrimoine] = useState<CompanyAsset | null>(null);
+  const [isDetailsOpen,      setIsDetailsOpen]      = useState(false);
+  const [patrimoines,        setPatrimoines]        = useState<CompanyAsset[]>([]);
+  const [loadingPatrimoines, setLoadingPatrimoines] = useState(false);
+  const [filtersOpen,        setFiltersOpen]        = useState(false);
+  const [filters,            setFilters]            = useState<AssetFilters>({});
+  const [currentPage,        setCurrentPage]        = useState(1);
+  const [flashMessage,       setFlashMessage]       = useState<{ type: "success"|"error"; message: string } | null>(null);
+  const [importLoading,      setImportLoading]      = useState(false);
+  const [exportLoading,      setExportLoading]      = useState(false);
+
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Ferme dropdown au clic extérieur
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node))
+        setFiltersOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
   useEffect(() => {
     if (sites.length === 0) fetchSites();
   }, []);
 
   useEffect(() => {
-    const foundSite = sites.find((s: any) => s.id === siteId);
-    setSite(foundSite || null);
+    const found = sites.find((s: any) => s.id === siteId);
+    setSite(found || null);
   }, [sites, siteId]);
 
   const fetchPatrimoines = async () => {
     if (!siteId) return;
     setLoadingPatrimoines(true);
     try {
-      const data = await AssetService.getAssets({ site_id: siteId, per_page: 100, ...filters });
+      const data = await AssetService.getAssets({ site_id: siteId, per_page: 1000, ...filters });
       setPatrimoines(data.items);
     } catch (err) {
       console.error(err);
@@ -70,36 +346,30 @@ export default function SiteDetailsPage() {
     }
   };
 
+  useEffect(() => { fetchPatrimoines(); }, [siteId, filters]);
+
   useEffect(() => {
-    fetchPatrimoines();
-  }, [siteId, filters]);
+    if (!flashMessage) return;
+    const t = setTimeout(() => setFlashMessage(null), 5000);
+    return () => clearTimeout(t);
+  }, [flashMessage]);
 
-  // =========================
-  // DETAILS PANEL
-  // =========================
-  const handleOpenDetails = (patrimoine: CompanyAsset) => {
-    const statusColor =
-      patrimoine.status === "actif" ? "#22c55e" :
-      patrimoine.status === "inactif" ? "#ef4444" : "#94a3b8";
+  // ── Pagination côté client
+  const totalPages   = Math.ceil(patrimoines.length / PER_PAGE) || 1;
+  const paginatedPatrimoines = patrimoines.slice(
+    (currentPage - 1) * PER_PAGE,
+    currentPage * PER_PAGE
+  );
 
-    const fields = [
-      { label: "Famille / Type", value: patrimoine.type?.name ?? "-" },
-      { label: "Sous-type", value: patrimoine.subType?.name ?? "-" },
-      { label: "Codification", value: patrimoine.codification },
-      { label: "Désignation", value: patrimoine.designation },
-      { label: "Site d'affectation", value: patrimoine.site?.name ?? "-" },
-      { label: "Date d'entrée", value: patrimoine.date_entree },
-      { label: "Valeur d'entrée", value: `${patrimoine.valeur_entree} FCFA` },
-      { label: "Statut", value: patrimoine.status, isStatus: true, statusColor },
-    ];
+  const activeFiltersCount = [filters.status, filters.type_id, filters.sub_type_id].filter(Boolean).length;
 
-    setSelectedPatrimoine({ ...patrimoine, fields, title: `${patrimoine.designation} | ${patrimoine.codification}` });
+  // ── Open details
+  const handleOpenDetails = (p: CompanyAsset) => {
+    setSelectedPatrimoine(p);
     setIsDetailsOpen(true);
   };
 
-  // =========================
-  // EDIT (depuis le panel details)
-  // =========================
+  // ── Edit
   const handleEdit = () => {
     if (!selectedPatrimoine) return;
     setEditingData(selectedPatrimoine);
@@ -107,139 +377,216 @@ export default function SiteDetailsPage() {
     setIsModalOpen(true);
   };
 
-  // =========================
-  // CREATE / UPDATE
-  // =========================
+  // ── Create / Update
   const handleCreateOrUpdate = async (formData: any) => {
     try {
       if (editingData) {
         await AssetService.updateAsset(editingData.id, formData);
-        setFlashMessage({ type: "success", message: "Patrimoine mis à jour avec succès" });
+        setFlashMessage({ type: "success", message: "Patrimoine mis à jour avec succès." });
       } else {
         await AssetService.createAsset({ ...formData, site_id: siteId });
-        setFlashMessage({ type: "success", message: "Patrimoine créé avec succès" });
+        setFlashMessage({ type: "success", message: "Patrimoine créé avec succès." });
       }
       await fetchPatrimoines();
       setIsModalOpen(false);
       setEditingData(null);
     } catch (err: any) {
-      setFlashMessage({ type: "error", message: err?.message || "Erreur serveur" });
-    } finally {
-      setTimeout(() => setFlashMessage(null), 5000);
+      setFlashMessage({ type: "error", message: err?.response?.data?.message ?? err?.message ?? "Erreur serveur." });
     }
   };
 
-  // =========================
-  // COLUMNS
-  // =========================
+  // ── Export patrimoines du site
+  const handleExport = async () => {
+    if (exportLoading) return;
+    setExportLoading(true);
+    try {
+      const response = await axiosInstance.get("/admin/asset/export", {
+        params: { site_id: siteId, ...filters },
+        responseType: "blob",
+      });
+      const blob  = new Blob([response.data], { type: response.headers["content-type"] ?? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url   = URL.createObjectURL(blob);
+      const link  = document.createElement("a");
+      link.href   = url;
+      const cd    = (response.headers["content-disposition"] as string) ?? "";
+      const m     = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      link.download = m?.[1]?.replace(/['"]/g, "") ?? `patrimoines_site_${siteId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setFlashMessage({ type: "success", message: "Export téléchargé." });
+    } catch {
+      setFlashMessage({ type: "error", message: "Erreur lors de l'exportation." });
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // ── Import patrimoines
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setImportLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("site_id", String(siteId));
+      await axiosInstance.post("/admin/asset/import", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      await fetchPatrimoines();
+      setFlashMessage({ type: "success", message: `"${file.name}" importé avec succès.` });
+    } catch (err: any) {
+      setFlashMessage({ type: "error", message: err?.response?.data?.message ?? "Erreur lors de l'import." });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  // ── Colonnes DataTable
+  // Fix : type?.name et subType?.name peuvent avoir différentes clés selon le eager loading
   const columns = [
-    { header: "ID", key: "id" },
-    { header: "Type", key: "type", render: (_: any, row: CompanyAsset) => row.type?.name ?? "-" },
-    { header: "Sous-type", key: "subType", render: (_: any, row: CompanyAsset) => row.subType?.name ?? "-" },
-    { header: "Codification", key: "codification" },
-    { header: "Désignation", key: "designation" },
-    { header: "Site", key: "site", render: (_: any, row: CompanyAsset) => row.site?.name ?? "-" },
+   
     {
-      header: "Statut",
-      key: "status",
+      // Fix : teste plusieurs clés pour le type
+      header: "Type", key: "type",
       render: (_: any, row: CompanyAsset) => {
-        const styles = {
-          actif: "border-green-600 bg-green-50 text-green-700",
-          inactif: "bg-red-100 border-red-500 text-red-600",
-          hors_usage: "border-black text-black bg-slate-100",
-        };
-        return (
-          <span className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${styles[row.status as keyof typeof styles] || ""}`}>
-            {row.status}
-          </span>
-        );
+        const name =
+          (row as any).type?.name             ??
+          (row as any).typeCompanyAsset?.name  ??
+          (row as any).asset_type?.name        ??
+          "—";
+        return <span className="text-sm text-slate-700">{name}</span>;
       },
     },
     {
-      header: "Actions",
-      key: "actions",
+      // Fix : teste plusieurs clés pour le sous-type
+      header: "Sous-type", key: "subType",
+      render: (_: any, row: CompanyAsset) => {
+        const name =
+          (row as any).subType?.name              ??
+          (row as any).subTypeCompanyAsset?.name   ??
+          (row as any).sub_type?.name              ??
+          "—";
+        return <span className="text-sm text-slate-700">{name}</span>;
+      },
+    },
+    {
+      header: "Codification", key: "codification",
+      render: (_: any, row: CompanyAsset) => (
+        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">
+          {row.codification}
+        </span>
+      ),
+    },
+    {
+      header: "Désignation", key: "designation",
+      render: (_: any, row: CompanyAsset) => (
+        <span className="font-medium text-slate-900 text-sm">{row.designation}</span>
+      ),
+    },
+    {
+      // Fix : site?.nom vs site?.name
+      header: "Site", key: "site",
+      render: (_: any, row: CompanyAsset) => {
+        const name =
+          (row as any).site?.nom  ??
+          (row as any).site?.name ??
+          site?.nom               ??
+          "—";
+        return <span className="text-sm text-slate-600">{name}</span>;
+      },
+    },
+    {
+      header: "Statut", key: "status",
+      render: (_: any, row: CompanyAsset) => (
+        <span className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${ASSET_STATUS_STYLES[row.status] ?? ""}`}>
+          {ASSET_STATUS_LABELS[row.status] ?? row.status}
+        </span>
+      ),
+    },
+    {
+      header: "Date entrée", key: "date_entree",
+      render: (_: any, row: CompanyAsset) => (
+        <span className="text-xs text-slate-500">{formatDate(row.date_entree)}</span>
+      ),
+    },
+    {
+      header: "Valeur", key: "valeur_entree",
+      render: (_: any, row: CompanyAsset) => (
+        <span className="text-sm font-bold text-slate-900">{formatMontant(row.valeur_entree)}</span>
+      ),
+    },
+    {
+      header: "Actions", key: "actions",
       render: (_: any, row: CompanyAsset) => (
         <button
           onClick={() => handleOpenDetails(row)}
-          className="flex items-center gap-2 font-bold text-slate-800 hover:text-blue-600 transition"
+          className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition"
         >
-          <Eye size={18} />
+          <Eye size={18} /> Aperçu
         </button>
       ),
     },
   ];
 
-  // =========================
-  // FORM FIELDS
-  // =========================
+  // ── Champs formulaire patrimoine
   const assetFields: FieldConfig[] = [
-    { name: "type_company_asset_id", label: "Famille / Type", type: "select", required: true, options: types.map((t: any) => ({ label: t.name, value: String(t.id) })) },
-    { name: "sub_type_company_asset_id", label: "Sous-type", type: "select", required: true, options: subTypes.map((st: any) => ({ label: st.name, value: String(st.id) })) },
-    { name: "designation", label: "Désignation", type: "text", required: true },
-    { name: "codification", label: "Codification", type: "text", placeholder: "ex: SD1245", required: true },
+    {
+      name: "type_company_asset_id", label: "Famille / Type", type: "select", required: true,
+      options: types.map((t: any) => ({ label: t.name, value: String(t.id) })),
+    },
+    {
+      name: "sub_type_company_asset_id", label: "Sous-type", type: "select", required: true,
+      options: subTypes.map((st: any) => ({ label: st.name, value: String(st.id) })),
+    },
+    { name: "designation",  label: "Désignation",      type: "text",   required: true },
+    { name: "codification", label: "Codification",     type: "text",   required: true, placeholder: "ex: SD1245" },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: [
-        { label: "Actif", value: "actif" },
-        { label: "Inactif", value: "inactif" },
-        { label: "Hors usage", value: "hors_usage" },
+        { label: "Actif",     value: "actif"     },
+        { label: "Inactif",   value: "inactif"   },
+        { label: "Hors usage",value: "hors_usage"},
       ],
     },
-    { name: "date_entree", label: "Date d'entrée", type: "date", required: true, icon: CalendarClock },
-    { name: "valeur_entree", label: "Valeur entrée", type: "number", required: true },
-    { name: "description", label: "Description", type: "rich-text", gridSpan: 2, placeholder: "Décrivez plus en détail le patrimoine" },
+    { name: "date_entree",   label: "Date d'entrée",    type: "date",   required: true, icon: CalendarClock },
+    { name: "valeur_entree", label: "Valeur d'entrée",  type: "number", required: true },
+    { name: "description",   label: "Description",      type: "rich-text", gridSpan: 2, placeholder: "Décrivez plus en détail le patrimoine" },
   ];
 
-  // =========================
-  // FILTERS
-  // =========================
-  const applyFilters = (newFilters: typeof filters) => {
-    setFilters(newFilters);
-    setFiltersOpen(false);
-  };
-
-  // =========================
-  // ACTIONS
-  // =========================
-  const siteActions = [
-    { label: "Filtrer par", icon: Filter, onClick: () => setFiltersOpen(!filtersOpen), variant: "secondary" as const },
-    { label: "Importer", icon: Download, onClick: () => {}, variant: "secondary" as const },
-    { label: "Exporter", icon: Upload, onClick: () => {}, variant: "secondary" as const },
-    {
-      label: "Ajouter un patrimoine",
-      icon: Building2,
-      onClick: () => { setEditingData(null); setIsModalOpen(true); },
-      variant: "primary" as const,
-    },
-  ];
-
-  // Infos site
-  const siteName = site?.nom || "Nom du site";
-  const location = site?.localisation || "Localisation";
-  const responsible = site?.manager?.name || "Responsable";
-  const phone = site?.manager?.phone || site?.phone_responsable || "N/A";
-  const email = site?.manager?.email || site?.email || "N/A";
+  // ── Infos du site
+  const siteName   = site?.nom            || "—";
+  const location   = site?.localisation   || "—";
+  const responsible= site?.responsable_name ?? site?.manager?.name ?? "—";
+  const phone      = site?.phone_responsable ?? site?.manager?.phone ?? "—";
+  const email      = site?.email          ?? site?.manager?.email ?? "—";
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 font-sans">
       <Sidebar />
       <div className="flex-1 flex flex-col pl-64">
         <Navbar />
+
         <main className="mt-20 p-8 space-y-8">
 
-          {/* Flash message */}
+          {/* Flash */}
           {flashMessage && (
-            <div className={`px-6 py-4 rounded-2xl text-sm font-semibold ${flashMessage.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
+              flashMessage.type === "success"
+                ? "text-green-700 bg-green-50 border-green-200"
+                : "text-red-600 bg-red-100 border-red-300"
+            }`}>
               {flashMessage.message}
             </div>
           )}
 
-          {/* Header site */}
-         {/* ── Header profil prestataire ── */}
-         <div className="bg-white flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl border border-slate-100 shadow-sm">
-           
+          {/* ── Header site ── */}
+          <div className="bg-white flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl border border-slate-100 shadow-sm">
             <div className="space-y-4">
-              <Link href="/admin/sites" className="flex items-center gap-2 text-slate-500 hover:text-black transition-colors bg-white px-4 py-2 rounded-xl border border-slate-100 w-fit text-sm font-medium">
+              <Link href="/admin/sites" className="flex items-center gap-2 text-slate-500 hover:text-black transition bg-white px-4 py-2 rounded-xl border border-slate-100 w-fit text-sm font-medium">
                 <ChevronLeft size={18} /> Retour
               </Link>
               <div>
@@ -250,102 +597,168 @@ export default function SiteDetailsPage() {
                 </div>
               </div>
             </div>
-                       {/* Bloc contact + note + bouton modifier */}
-              <div className="flex flex-col gap-4">
+
+            {/* Contact */}
+            <div className="flex flex-col gap-4">
               <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 flex flex-col gap-4 min-w-[320px]">
-            
                 <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>
                 <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
-                    <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
-                      <Phone size={16} className="text-slate-900" />
-                    </div>
-                    {phone}
+                  <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+                    <Phone size={16} className="text-slate-900" />
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
-                    <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
-                      <Mail size={16} className="text-slate-900" />
-                    </div>
-                    {email}
+                  {phone}
+                </div>
+                <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
+                  <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+                    <Mail size={16} className="text-slate-900" />
                   </div>
-               
+                  {email}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Stats */}
+          {/* ── KPIs ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-  <StatsCard label="Coût moyen par site" value={stats?.cout_loyer_moyen_par_site ?? 0} />
-  <StatsCard label="Tickets en cours" value={siteStats?.tickets_en_cours ?? 0} />
-  <StatsCard label="Tickets clôturés" value={siteStats?.tickets_clos ?? 0} />
-  <StatsCard label="Nombre total de patrimoines" value={patrimoines.length} />
-</div>
-
-          {/* Actions + Filtres */}
-          <div className="shrink-0 flex justify-end relative">
-            <ActionGroup actions={siteActions} />
-            {filtersOpen && (
-              <div className="absolute right-0 top-12 z-50 p-4 bg-black text-white shadow-lg rounded-lg border space-y-3 w-56">
-                <select
-                  className="w-full border border-white bg-black text-white rounded p-1"
-                  value={filters.type_id || ""}
-                  onChange={e => applyFilters({ ...filters, type_id: e.target.value ? Number(e.target.value) : undefined })}
-                >
-                  <option value="">Tous les types</option>
-                  {types.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-                <select
-                  className="w-full border border-white bg-black text-white rounded p-1"
-                  value={filters.sub_type_id || ""}
-                  onChange={e => applyFilters({ ...filters, sub_type_id: e.target.value ? Number(e.target.value) : undefined })}
-                >
-                  <option value="">Tous les sous-types</option>
-                  {subTypes.map((st: any) => <option key={st.id} value={st.id}>{st.name}</option>)}
-                </select>
-                <select
-                  className="w-full border border-white bg-black text-white rounded p-1"
-                  value={filters.status || ""}
-                  onChange={e => applyFilters({ ...filters, status: e.target.value || undefined })}
-                >
-                  <option value="">Tous les statuts</option>
-                  <option value="actif">Actif</option>
-                  <option value="inactif">Inactif</option>
-                  <option value="hors_usage">Hors usage</option>
-                </select>
-              </div>
-            )}
+            <StatsCard label="Coût moyen / site"   value={formatMontant(stats?.cout_loyer_moyen_par_site)} delta="+0%" trend="up" />
+            <StatsCard label="Tickets en cours"    value={siteStats?.tickets_en_cours ?? 0}               delta="+0%" trend="up" />
+            <StatsCard label="Tickets clôturés"    value={siteStats?.tickets_clos ?? 0}                   delta="+0%" trend="up" />
+            <StatsCard label="Total patrimoines"   value={patrimoines.length}                             delta="+0%" trend="up" />
           </div>
 
-          {/* Table patrimoines */}
-          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+          {/* ── Barre d'actions ── */}
+          <div className="flex items-center justify-between gap-3">
+
+            {/* Badges filtres actifs */}
+            <div className="flex items-center gap-2 flex-wrap min-h-[36px]">
+              {activeFiltersCount === 0 && (
+                <p className="text-xs text-slate-400 font-medium">Aucun filtre actif</p>
+              )}
+              {filters.status && (
+                <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {ASSET_STATUS_LABELS[filters.status] ?? filters.status}
+                  <button onClick={() => { setFilters(f => ({ ...f, status: undefined })); setCurrentPage(1); }} className="hover:opacity-70"><X size={11} /></button>
+                </span>
+              )}
+              {filters.type_id && (
+                <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {types.find((t: any) => t.id === filters.type_id)?.name ?? `Type #${filters.type_id}`}
+                  <button onClick={() => { setFilters(f => ({ ...f, type_id: undefined })); setCurrentPage(1); }} className="hover:opacity-70"><X size={11} /></button>
+                </span>
+              )}
+              {filters.sub_type_id && (
+                <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {subTypes.find((st: any) => st.id === filters.sub_type_id)?.name ?? `Sous-type #${filters.sub_type_id}`}
+                  <button onClick={() => { setFilters(f => ({ ...f, sub_type_id: undefined })); setCurrentPage(1); }} className="hover:opacity-70"><X size={11} /></button>
+                </span>
+              )}
+            </div>
+
+            {/* Boutons */}
+            <div className="flex items-center gap-3 shrink-0">
+
+              {/* Importer */}
+              <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
+                {importLoading
+                  ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                  : <Download size={16} />
+                }
+                Importer
+                <input type="file" accept=".xlsx,.xls,.csv" className="hidden" disabled={importLoading} onChange={handleImport} />
+              </label>
+
+              {/* Exporter */}
+              <button
+                onClick={handleExport} disabled={exportLoading}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
+              >
+                {exportLoading
+                  ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                  : <Upload size={16} />
+                }
+                Exporter
+              </button>
+
+              {/* Filtrer */}
+              <div className="relative" ref={filterRef}>
+                <button
+                  onClick={() => setFiltersOpen(!filtersOpen)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
+                    filtersOpen || activeFiltersCount > 0
+                      ? "bg-slate-900 text-white border-slate-900"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <Filter size={16} /> Filtrer
+                  {activeFiltersCount > 0 && (
+                    <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+                <AssetFilterDropdown
+                  isOpen={filtersOpen}
+                  onClose={() => setFiltersOpen(false)}
+                  filters={filters}
+                  onApply={(f) => { setFilters(f); setCurrentPage(1); setFiltersOpen(false); }}
+                  types={types}
+                  subTypes={subTypes}
+                />
+              </div>
+
+              {/* Ajouter patrimoine */}
+              <button
+                onClick={() => { setEditingData(null); setIsModalOpen(true); }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
+              >
+                <Building2 size={16} /> Ajouter un patrimoine
+              </button>
+            </div>
+          </div>
+
+          {/* ── DataTable patrimoines ── */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             {loadingPatrimoines ? (
-              <div className="py-16 text-center text-slate-400 text-sm italic">Chargement...</div>
+              <div className="py-16 text-center">
+                <span className="inline-block w-6 h-6 border-2 border-slate-200 border-t-slate-700 rounded-full animate-spin mb-3" />
+                <p className="text-slate-400 text-sm">Chargement des patrimoines...</p>
+              </div>
+            ) : paginatedPatrimoines.length === 0 ? (
+              <div className="py-16 text-center text-slate-400 text-sm">
+                Aucun patrimoine{activeFiltersCount > 0 ? " pour ces filtres" : ""}.
+              </div>
             ) : (
-              <DataTable columns={columns} data={patrimoines} title="Patrimoines du site" />
+              <DataTable
+                columns={columns}
+                data={paginatedPatrimoines}
+                title="Patrimoines du site"
+                onViewAll={() => {}}
+              />
             )}
-            <div className="p-6 border-t border-slate-50 flex justify-end">
+
+            {/* Pagination côté client */}
+            <div className="p-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
+              <p className="text-xs text-slate-400">
+                Page {currentPage} sur {totalPages} · {patrimoines.length} patrimoine{patrimoines.length > 1 ? "s" : ""}
+              </p>
               <Paginate
-                currentPage={1}
-                totalPages={patrimoines.length ? Math.ceil(patrimoines.length / 10) : 1}
-                onPageChange={() => {}}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
               />
             </div>
           </div>
-
         </main>
       </div>
 
-      {/* Details Panel */}
-      <SideDetailsPanel
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        title={selectedPatrimoine?.title || ""}
-        reference={selectedPatrimoine?.id}
-        fields={selectedPatrimoine?.fields || []}
-        descriptionContent={selectedPatrimoine?.description ?? ""}
+      {/* ── Asset Side Panel ── */}
+      <AssetSidePanel
+        patrimoine={isDetailsOpen ? selectedPatrimoine : null}
+        onClose={() => { setIsDetailsOpen(false); setSelectedPatrimoine(null); }}
         onEdit={handleEdit}
       />
 
-      {/* Modal Ajouter / Modifier */}
+      {/* ── Formulaire créer/modifier patrimoine ── */}
       <ReusableForm
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingData(null); }}
@@ -353,14 +766,14 @@ export default function SiteDetailsPage() {
         subtitle="Renseignez les informations du patrimoine"
         fields={assetFields}
         initialValues={editingData ? {
-          type_company_asset_id: String(editingData.type_company_asset_id),
-          sub_type_company_asset_id: String(editingData.sub_type_company_asset_id),
-          designation: editingData.designation,
-          codification: editingData.codification,
-          status: editingData.status,
-          date_entree: editingData.date_entree,
-          valeur_entree: editingData.valeur_entree,
-          description: editingData.description ?? "",
+          type_company_asset_id:     String((editingData as any).type_company_asset_id     ?? ""),
+          sub_type_company_asset_id: String((editingData as any).sub_type_company_asset_id ?? ""),
+          designation:   editingData.designation,
+          codification:  editingData.codification,
+          status:        editingData.status,
+          date_entree:   editingData.date_entree ?? "",
+          valeur_entree: editingData.valeur_entree ?? "",
+          description:   editingData.description ?? "",
         } : {}}
         onSubmit={handleCreateOrUpdate}
         submitLabel={editingData ? "Mettre à jour" : "Enregistrer"}

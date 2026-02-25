@@ -39,7 +39,7 @@ export default function SiteCard({ site }: SiteCardProps) {
 
       <div className="bg-white rounded-[20px] border border-slate-50 p-6 flex-grow">
         <h4 className="text-2xl font-bold text-slate-900 mb-4">
-          {site.manager?.name || "N/A"}
+          {site.responsable_name || "N/A"}
         </h4>
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-slate-500">

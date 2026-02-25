@@ -22,7 +22,7 @@ export const FormField = ({ label, required, children }: any) => (
 export const Input = (props: any) => (
   <input 
     {...props} 
-    className="w-full bg-slate-100 border-none rounded-2xl p-4 text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all outline-none"
+    className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all outline-none"
   />
 );
 
@@ -31,7 +31,7 @@ export const Select = ({ children, ...props }: any) => (
   <div className="relative">
     <select 
       {...props} 
-      className="w-full bg-slate-100 border-none rounded-2xl p-4 text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-slate-900"
+      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-slate-900"
     >
       {children}
     </select>
@@ -49,7 +49,7 @@ export const PasswordInput = (props: any) => {
       <input 
         {...props} 
         type={show ? "text" : "password"}
-        className="w-full bg-slate-100 border-none rounded-2xl p-4 pr-12 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all"
+        className="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all"
       />
       <button 
         type="button"
@@ -68,7 +68,7 @@ export const DateInput = (props: any) => (
     <input 
       {...props} 
       type="date"
-      className="w-full bg-slate-100 border-none rounded-2xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all appearance-none"
+      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all appearance-none"
     />
     <Calendar size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
   </div>
@@ -104,7 +104,7 @@ export const RichTextEditor = ({ label, placeholder, name }: any) => {
         </label>
       )}
       
-      <div className="w-full bg-slate-100 rounded-3xl overflow-hidden border border-transparent focus-within:ring-2 focus-within:ring-slate-900 transition-all">
+      <div className="w-full bg-slate-50 rounded-3xl overflow-hidden border border-transparent focus-within:ring-2 focus-within:ring-slate-900 transition-all">
         {/* TOOLBAR RICHE */}
         <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-200/50 border-b border-slate-200">
           {/* Style de base */}
