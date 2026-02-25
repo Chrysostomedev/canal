@@ -51,8 +51,8 @@ export default function LoginPage() {
           <Image
             src="/images/logo_canal.png"
             alt="CANAL+"
-            width={160}
-            height={40}
+            width={250}
+            height={50}
             priority
           />
         </div>
@@ -60,7 +60,7 @@ export default function LoginPage() {
           Bienvenue
         </h1>
         <p className="text-sm text-gray-500 text-center mb-8">
-          saisissez vos infromations de connexion pour vous connecter à votre espace.
+          Saisissez vos informations de connexion pour vous connecter à votre espace.
         </p>
 
         <form

@@ -564,12 +564,12 @@ export default function DevisPage() {
               <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
             </div>
 
-              {/* Importer */}
+              {/* Importer
               <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition">
               <Download size={16} /> Importer
               <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
                 onChange={() => showFlash("error", "Fonctionnalité d'import en cours de développement.")} />
-            </label>
+            </label> */}
             {/* Exporter */}
             <button
               onClick={() => showFlash("error", "Fonctionnalité d'export en cours de développement.")}

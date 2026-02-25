@@ -10,7 +10,7 @@ export interface AuthResponse {
     first_name?: string;
     last_name?: string;
     email: string;
-    role: "super-admin" | "admin" | "user";
+    role: "super-admin" | "admin" | "manager";
   };
   token: string;
 }
