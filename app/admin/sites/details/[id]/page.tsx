@@ -17,10 +17,10 @@ import ReusableForm from "@/components/ReusableForm";
 import DataTable from "@/components/DataTable";
 import { FieldConfig } from "@/components/ReusableForm";
 
-import { useSites } from "../../../../../hooks/useSites";
 import { useTypes } from "../../../../../hooks/useTypes";
 import { useSubTypeAssets } from "../../../../../hooks/useSubTypeAssets";
 import { AssetService, CompanyAsset } from "../../../../../services/asset.service";
+import { getSiteById, getSiteStats } from "../../../../../services/site.service";
 import axiosInstance from "../../../../../core/axios";
 
 // ═══════════════════════════════════════════════
@@ -292,13 +292,14 @@ export default function SiteDetailsPage() {
   const params = useParams();
   const siteId = Number(params?.id);
 
-  const { sites, stats, fetchSites } = useSites();
+  // ── Charge le site DIRECTEMENT par ID — indépendant de la pagination ──
+  // Ne dépend plus de useSites().sites qui ne contient que 9 résultats
   const { types }    = useTypes();
   const { subTypes } = useSubTypeAssets();
 
-  const siteStats = stats?.tickets_par_site?.find((s: any) => s.site_id === siteId);
-
   const [site,               setSite]               = useState<any>(null);
+  const [siteStats,          setSiteStats]          = useState<any>(null);
+  const [loadingSite,        setLoadingSite]        = useState(true);
   const [isModalOpen,        setIsModalOpen]        = useState(false);
   const [editingData,        setEditingData]        = useState<CompanyAsset | null>(null);
   const [selectedPatrimoine, setSelectedPatrimoine] = useState<CompanyAsset | null>(null);
@@ -324,14 +325,30 @@ export default function SiteDetailsPage() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
+  // ── Fetch site par ID direct (robuste, indépendant de la liste paginée) ──
   useEffect(() => {
-    if (sites.length === 0) fetchSites();
-  }, []);
+    if (!siteId) return;
+    setLoadingSite(true);
+    getSiteById(siteId)
+      .then(data => setSite(data))
+      .catch(() => setSite(null))
+      .finally(() => setLoadingSite(false));
+  }, [siteId]);
 
+  // ── Fetch stats pour ce site (tickets en cours / clôturés) ──
   useEffect(() => {
-    const found = sites.find((s: any) => s.id === siteId);
-    setSite(found || null);
-  }, [sites, siteId]);
+    if (!siteId) return;
+    getSiteStats()
+      .then(data => {
+        const perSite = data?.tickets_par_site?.find((s: any) => s.site_id === siteId);
+        setSiteStats({
+          tickets_en_cours:       perSite?.tickets_en_cours ?? 0,
+          tickets_clos:           perSite?.tickets_clos     ?? 0,
+          cout_loyer_moyen:       data?.cout_loyer_moyen_par_site ?? null,
+        });
+      })
+      .catch(() => setSiteStats(null));
+  }, [siteId]);
 
   const fetchPatrimoines = async () => {
     if (!siteId) return;
@@ -448,7 +465,15 @@ export default function SiteDetailsPage() {
   // ── Colonnes DataTable
   // Fix : type?.name et subType?.name peuvent avoir différentes clés selon le eager loading
   const columns = [
-   
+    {
+      header: "ID", key: "id",
+      render: (_: any, row: CompanyAsset) => (
+        <div className="flex items-center">
+          <span className="font-black text-slate-900 text-sm">#{row.id}</span>
+          <CopyButton text={String(row.id)} />
+        </div>
+      ),
+    },
     {
       // Fix : teste plusieurs clés pour le type
       header: "Type", key: "type",
@@ -557,12 +582,22 @@ export default function SiteDetailsPage() {
     { name: "description",   label: "Description",      type: "rich-text", gridSpan: 2, placeholder: "Décrivez plus en détail le patrimoine" },
   ];
 
-  // ── Infos du site
-  const siteName   = site?.nom            || "—";
-  const location   = site?.localisation   || "—";
-  const responsible= site?.responsable_name ?? site?.manager?.name ?? "—";
-  const phone      = site?.phone_responsable ?? site?.manager?.phone ?? "—";
-  const email      = site?.email          ?? site?.manager?.email ?? "—";
+  // ── Infos du site — résolution robuste de toutes les clés possibles du backend
+  const siteName    = site?.nom            ?? "—";
+  const location    = site?.localisation   ?? "—";
+  // responsable : champ direct > manager.name > manager.email
+  const responsible = site?.responsable_name
+    ?? site?.manager?.name
+    ?? site?.manager?.email
+    ?? "—";
+  // phone : champ direct > manager.phone
+  const phone       = site?.phone_responsable
+    ?? site?.manager?.phone
+    ?? "—";
+  // email : champ direct > manager.email
+  const email       = site?.email
+    ?? site?.manager?.email
+    ?? "—";
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
@@ -589,41 +624,60 @@ export default function SiteDetailsPage() {
               <Link href="/admin/sites" className="flex items-center gap-2 text-slate-500 hover:text-black transition bg-white px-4 py-2 rounded-xl border border-slate-100 w-fit text-sm font-medium">
                 <ChevronLeft size={18} /> Retour
               </Link>
-              <div>
-                <h1 className="text-5xl font-black text-slate-900 tracking-tighter uppercase">{siteName}</h1>
-                <div className="flex items-center gap-2 text-slate-400 mt-1">
-                  <MapPin size={18} />
-                  <span className="font-medium text-lg">{location}</span>
+              {loadingSite ? (
+                <div className="space-y-2 animate-pulse">
+                  <div className="w-72 h-12 bg-slate-100 rounded-xl" />
+                  <div className="w-44 h-5 bg-slate-50 rounded-lg" />
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <h1 className="text-5xl font-black text-slate-900 tracking-tighter uppercase">{siteName}</h1>
+                  <div className="flex items-center gap-2 text-slate-400 mt-1">
+                    <MapPin size={18} />
+                    <span className="font-medium text-lg">{location}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Contact */}
             <div className="flex flex-col gap-4">
               <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 flex flex-col gap-4 min-w-[320px]">
-                <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>
-                <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
-                  <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
-                    <Phone size={16} className="text-slate-900" />
+                {loadingSite ? (
+                  <div className="space-y-3 animate-pulse">
+                    <div className="w-40 h-5 bg-slate-100 rounded-lg" />
+                    <div className="w-32 h-4 bg-slate-50 rounded-lg" />
+                    <div className="w-48 h-4 bg-slate-50 rounded-lg" />
                   </div>
-                  {phone}
-                </div>
-                <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
-                  <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
-                    <Mail size={16} className="text-slate-900" />
-                  </div>
-                  {email}
-                </div>
+                ) : (
+                  <>
+                    {responsible !== "—" && (
+                      <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>
+                    )}
+                    <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
+                      <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+                        <Phone size={16} className="text-slate-900" />
+                      </div>
+                      {phone}
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
+                      <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+                        <Mail size={16} className="text-slate-900" />
+                      </div>
+                      {email}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
 
           {/* ── KPIs ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard label="Coût moyen / site"   value={formatMontant(stats?.cout_loyer_moyen_par_site)} delta="+0%" trend="up" />
-            <StatsCard label="Tickets en cours"    value={siteStats?.tickets_en_cours ?? 0}               delta="+0%" trend="up" />
-            <StatsCard label="Tickets clôturés"    value={siteStats?.tickets_clos ?? 0}                   delta="+0%" trend="up" />
-            <StatsCard label="Total patrimoines"   value={patrimoines.length}                             delta="+0%" trend="up" />
+            <StatsCard label="Coût moyen / site"   value={formatMontant(siteStats?.cout_loyer_moyen)} delta="+0%" trend="up" />
+            <StatsCard label="Tickets en cours"    value={siteStats?.tickets_en_cours ?? 0}           delta="+0%" trend="up" />
+            <StatsCard label="Tickets clôturés"    value={siteStats?.tickets_clos     ?? 0}           delta="+0%" trend="up" />
+            <StatsCard label="Total patrimoines"   value={patrimoines.length}                         delta="+0%" trend="up" />
           </div>
 
           {/* ── Barre d'actions ── */}

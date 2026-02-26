@@ -102,8 +102,6 @@ function SiteFilterDropdown({
 // PAGE
 // ═══════════════════════════════════════════════
 
-const PER_PAGE = 9;
-
 export default function SitesPage() {
   const [isModalOpen,  setIsModalOpen]  = useState(false);
   const [search,       setSearch]       = useState("");
@@ -117,7 +115,7 @@ export default function SitesPage() {
 
   const {
     sites, stats, managers, loading,
-    page, totalPages, setPage,
+    page, totalPages, totalItems, setPage,
     fetchSites, fetchStats, fetchManagers, addSite,
   } = useSites();
 
@@ -131,9 +129,12 @@ export default function SitesPage() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
+  // Le hook useSites réagit lui-même au changement de `page`.
+  // On n'appelle fetchSites ici que pour search (et il mémorise le search en interne).
   useEffect(() => {
-    fetchSites(search);
-  }, [search, page]);
+    setPage(1);
+    fetchSites(search, filters.status);
+  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchStats();
@@ -148,11 +149,11 @@ export default function SitesPage() {
 
   const showFlash = (type: "success"|"error", msg: string) => setFlash({ type, msg });
 
-  // ── Apply filters → refetch avec status
+  // ── Apply filters → refetch avec status passé à l'API
   const handleApplyFilters = (f: SiteFiltersState) => {
     setFilters(f);
     setPage(1);
-    fetchSites(search);
+    fetchSites(search, f.status, 1); // override page=1 immédiatement
   };
 
   const activeCount = [filters.status].filter(Boolean).length;
@@ -165,7 +166,7 @@ export default function SitesPage() {
         manager_id: formData.manager_id ? Number(formData.manager_id) : undefined,
       });
       setIsModalOpen(false);
-      fetchSites(search);
+      fetchSites(search, filters.status);
       showFlash("success", "Site créé avec succès.");
     } catch (err: any) {
       showFlash("error", err?.response?.data?.message ?? "Erreur lors de la création.");
@@ -270,7 +271,7 @@ export default function SitesPage() {
     },
     { label: "Tickets en cours",   value: ticketsEnCours, delta: "+0%", trend: "up"   as const },
     { label: "Tickets clôturés",   value: ticketsClos,    delta: "+0%", trend: "up"   as const },
-    { label: "Site le plus actif", value: stats?.site_le_plus_visite?.nom ?? "—", delta: "", trend: "up" as const },
+    { label: "Site le plus visité", value: stats?.site_le_plus_visite?.nom ?? "—", delta: "", trend: "up" as const },
   ];
 
   return (
@@ -391,7 +392,7 @@ export default function SitesPage() {
             {/* Search */}
             <div className="w-80">
               <SearchInput
-                onSearch={(v) => { setPage(1); setSearch(v); }}
+                onSearch={(v) => { setSearch(v); fetchSites(v, filters.status, 1); setPage(1); }}
                 placeholder="Rechercher par nom, responsable..."
               />
             </div>
@@ -415,7 +416,7 @@ export default function SitesPage() {
             {/* Pagination */}
             <div className="pt-4 flex items-center justify-between border-t border-slate-50">
               <p className="text-xs text-slate-400">
-                Page {page} sur {totalPages} · {sites.length} site{sites.length > 1 ? "s" : ""}
+                Page {page} sur {totalPages} · {totalItems} site{totalItems > 1 ? "s" : ""}
               </p>
               <Paginate
                 currentPage={page}

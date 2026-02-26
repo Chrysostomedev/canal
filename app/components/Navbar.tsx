@@ -4,32 +4,38 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Bell, LogOut, AlertTriangle } from "lucide-react";
 import { authService } from "../../services/AuthService";
+import NotificationPanel from "./NotificationPanel";
+import { useNotifications } from "../../hooks/useNotifications";
 
-// // Badge visuel selon le rôle
-// function RoleBadge({ role }: { role: string }) {
-//   if (role === "super-admin") {
-//     return (
-//       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-black text-white">
-//         Super Admin
-//       </span>
-//     );
-//   }
-//   if (role === "admin") {
-//     return (
-//       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-700 border border-slate-200">
-//         Admin
-//       </span>
-//     );
-//   }
-//   return null;
-// }
+// Badge visuel selon le rôle
+function RoleBadge({ role }: { role: string }) {
+  if (role === "super-admin") {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-black text-white">
+        Super Admin
+      </span>
+    );
+  }
+  if (role === "admin") {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-700 border border-slate-200">
+        Admin
+      </span>
+    );
+  }
+  return null;
+}
 
 export default function Navbar() {
   const router = useRouter();
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [role, setRole] = useState("");
+  const [notifPanelOpen,  setNotifPanelOpen]  = useState(false);
+  const [firstName,       setFirstName]       = useState("");
+  const [lastName,        setLastName]        = useState("");
+  const [role,            setRole]            = useState("");
+
+  const { unreadCount, initialized } = useNotifications();
 
   useEffect(() => {
     setFirstName(authService.getFirstName());
@@ -63,7 +69,6 @@ export default function Navbar() {
 
         {/* Infos utilisateur connecté */}
         <div className="flex items-center gap-4">
-          {/* Avatar initiales */}
           <div className="w-10 h-10 rounded-full bg-slate-900 text-white font-black flex items-center justify-center text-sm tracking-wide shrink-0">
             {getInitials()}
           </div>
@@ -73,8 +78,7 @@ export default function Navbar() {
               <p className="text-gray-900 font-bold text-sm leading-tight">
                 Bonjour, {fullName}
               </p>
-              {/* Badge rôle — super-admin noir, admin gris */}
-              {/* <RoleBadge role={role} /> */}
+              <RoleBadge role={role} />
             </div>
             <p className="text-gray-500 text-xs font-medium">
               Bienvenue sur votre espace d'administration de Facility Management
@@ -84,15 +88,40 @@ export default function Navbar() {
 
         {/* Actions droite */}
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all group">
+
+          {/* ── Bouton notifications ── */}
+          <button
+            onClick={() => setNotifPanelOpen(true)}
+            className="relative flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all"
+          >
+            {/* Icône cloche + dot pulsant */}
             <div className="relative">
-              <Bell size={24} className="text-black" strokeWidth={2.5} />
-              <span className="absolute top-0 right-0.5 w-2 h-2 bg-black border-2 border-white rounded-full"></span>
+              <Bell size={22} className="text-black" strokeWidth={2.5} />
+              {initialized && unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center">
+                  <span className="absolute w-3 h-3 bg-black rounded-full animate-ping opacity-40" />
+                  <span className="relative w-2 h-2 bg-black border-2 border-white rounded-full" />
+                </span>
+              )}
             </div>
-            <span className="text-black text-lg tracking-tight">Notification</span>
-            <span className="bg-black text-white text-base font-bold w-10 h-7 flex items-center justify-center rounded-full ml-1">0</span>
+
+            <span className="text-black text-sm font-semibold tracking-tight">
+              Notifications
+            </span>
+
+            {/* Badge compteur */}
+            <span
+              className={`text-xs font-black min-w-[28px] h-7 px-2 flex items-center justify-center rounded-full ml-1 transition-all ${
+                initialized && unreadCount > 0
+                  ? "bg-black text-white"
+                  : "bg-black text-white"
+              }`}
+            >
+              {initialized ? (unreadCount > 99 ? "99+" : unreadCount) : "·"}
+            </span>
           </button>
 
+          {/* Déconnexion */}
           <button
             onClick={() => setShowLogoutModal(true)}
             className="p-2 rounded-full hover:bg-gray-100 transition"
@@ -102,7 +131,13 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Modal déconnexion — inchangée */}
+      {/* ── Panneau notifications ── */}
+      <NotificationPanel
+        isOpen={notifPanelOpen}
+        onClose={() => setNotifPanelOpen(false)}
+      />
+
+      {/* ── Modal déconnexion — inchangée ── */}
       {showLogoutModal && (
         <div className="fixed inset-0 w-screen h-screen z-[9999] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLogoutModal(false)} />

@@ -1,86 +1,113 @@
 // hooks/useProviders.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ProviderService, Provider, ProviderStats } from "../services/provider.service";
 
 export const useProviders = () => {
-  // ── Usage original conservé — tableau simple pour les selects ──
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [providers,  setProviders]  = useState<Provider[]>([]);
+  const [stats,      setStats]      = useState<ProviderStats | null>(null);
+  const [meta,       setMeta]       = useState({ current_page: 1, last_page: 1, per_page: 9, total: 0 });
+  const [page,       setPage]       = useState(1);
+  const [search,     setSearch]     = useState("");
+  const [filters,    setFilters]    = useState<{ is_active?: boolean; service_id?: number }>({});
+  const [isLoading,  setIsLoading]  = useState(false);
+  const [loading,    setLoading]    = useState(false); // rétrocompat selects
 
-  // ── Nouveaux états pour la page liste paginée ──
-  const [stats, setStats] = useState<ProviderStats | null>(null);
-  const [meta, setMeta] = useState({ current_page: 1, last_page: 1, per_page: 12, total: 0 });
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState<{ is_active?: boolean; service_id?: number }>({});
-  const [isLoading, setIsLoading] = useState(false);
-
-  // ── Chargement initial simple (rétrocompatible) ──
-  // Utilisé par les selects dans les formulaires (tickets, etc.)
-  useEffect(() => {
-    setLoading(true);
-    ProviderService.getProviders()
-      .then(data => setProviders(data as Provider[]))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  // ── Chargement paginé pour la page liste ──
-  const fetchProviders = async () => {
+  // ── Fetch liste paginée (page liste prestataires) ──
+  const fetchProviders = useCallback(async (
+    overridePage?:    number,
+    overrideSearch?:  string,
+    overrideFilters?: { is_active?: boolean; service_id?: number },
+  ) => {
     setIsLoading(true);
     try {
+      const p = overridePage    ?? page;
+      const s = overrideSearch  ?? search;
+      const f = overrideFilters ?? filters;
+
       const result = await ProviderService.getProviders({
-        page,
-        per_page: 12,
-        search: search || undefined,
-        ...filters,
+        page:       p,
+        per_page:   9,
+        search:     s || undefined,
+        is_active:  f.is_active,
+        service_id: f.service_id,
       }) as { items: Provider[]; meta: any };
-      setProviders(result.items);
-      setMeta(result.meta);
-    } catch (err: any) {
+
+      // Protège contre une réponse inattendue (tableau simple)
+      if (Array.isArray(result)) {
+        setProviders(result as Provider[]);
+      } else {
+        setProviders(result.items ?? []);
+        setMeta(result.meta ?? { current_page: 1, last_page: 1, per_page: 9, total: 0 });
+      }
+    } catch (err) {
       console.error("Erreur chargement prestataires", err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, search, filters]);
 
-  // ── Stats globales ──
-  const fetchStats = async () => {
+  // ── Fetch stats globales ──
+  const fetchStats = useCallback(async () => {
     try {
       const data = await ProviderService.getStats();
       setStats(data);
-    } catch {}
-  };
-
-  // Refetch quand page/search/filters changent — seulement si utilisé en mode liste
-  useEffect(() => {
-    if (page > 1 || search || Object.keys(filters).length > 0) {
-      fetchProviders();
+    } catch (err) {
+      console.error("Erreur stats prestataires", err);
     }
-  }, [page, search, filters]);
+  }, []);
 
+  // ── Fetch simplifié pour les selects (rétrocompat) ──
+  const fetchSimple = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await ProviderService.getProviders();
+      if (Array.isArray(data)) setProviders(data as Provider[]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ── Fetch automatique au montage + quand page/search/filters changent ──
+  useEffect(() => {
+    fetchProviders();
+  }, [page, search, filters]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Stats au montage ──
+  useEffect(() => {
+    fetchStats();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Helpers ──
   const applySearch = (value: string) => {
     setSearch(value);
     setPage(1);
   };
 
-  const applyFilters = (newFilters: typeof filters) => {
-    setFilters(newFilters);
+  const applyFilters = (newFilters: { is_active?: boolean; service_id?: number }) => {
+    setFilters(newFilters); // remplace complètement (le dropdown envoie l'objet complet)
     setPage(1);
   };
 
+  const handleSetPage = (p: number) => {
+    setPage(p);
+  };
+
   return {
-    // Rétrocompatible avec l'usage select/formulaire
     providers,
-    loading,
-    // Nouveaux pour la page liste
+    loading,   // rétrocompat selects
+    isLoading, // état de chargement liste
     stats,
     meta,
-    page, setPage,
-    search, applySearch,
-    filters, applyFilters,
-    isLoading,
-    fetchProviders,
+    page,
+    setPage: handleSetPage,
+    search,
+    applySearch,
+    filters,
+    applyFilters,
+    fetchProviders: () => fetchProviders(),
     fetchStats,
+    fetchSimple,
   };
 };

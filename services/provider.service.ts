@@ -33,7 +33,6 @@ export interface ProviderStats {
 
 export interface ProviderDetail {
   provider: Provider;
-  // Retourné par ProvidersServices.getProvider()
   stats: {
     total_tickets: number;
     in_progress_tickets: number;
@@ -51,6 +50,16 @@ export interface ServiceItem {
 // ── ProviderService ──────────────────────────────────────────────────────────
 
 export const ProviderService = {
+
+  /**
+   * GET /admin/providers
+   *
+   * Le controller retourne TOUJOURS :
+   *   { success, message, data: { items: [...], meta: {...} } }
+   *
+   * Sans params → retourne Provider[] (rétrocompat selects)
+   * Avec params → retourne { items: Provider[], meta }
+   */
   async getProviders(params?: {
     page?: number;
     per_page?: number;
@@ -60,15 +69,31 @@ export const ProviderService = {
   }): Promise<any> {
     const response = await axios.get("/admin/providers", { params });
 
-    // Si appelé sans params (usage select) → retourne tableau simple comme avant
+    // Normalisation — le back enveloppe toujours dans data.data
+    const payload = response.data?.data;
+
+    // Si appelé sans params (selects dans formulaires) → retourne tableau simple
     if (!params || Object.keys(params).length === 0) {
-      return response.data.data?.items ?? response.data.data ?? [];
+      // payload peut être { items, meta } ou un tableau direct selon l'ancienne version du back
+      if (Array.isArray(payload)) return payload as Provider[];
+      return (payload?.items ?? []) as Provider[];
     }
 
-    // Si appelé avec params (usage liste paginée) → retourne { items, meta }
+    // Mode liste paginée → retourne { items, meta }
+    // Deux structures possibles selon version du back :
+    //   A) data.data = { items: [...], meta: {...} }   ← standard (BaseController::Response)
+    //   B) data.data = [...]  +  data.meta = {...}     ← ancienne version
+    if (payload && !Array.isArray(payload) && payload.items) {
+      return {
+        items: payload.items as Provider[],
+        meta:  payload.meta  ?? { current_page: 1, last_page: 1, per_page: 9, total: 0 },
+      };
+    }
+
+    // Fallback structure B
     return {
-      items: (response.data.data ?? []) as Provider[],
-      meta: response.data.meta ?? { current_page: 1, last_page: 1, per_page: 12, total: 0 },
+      items: (Array.isArray(payload) ? payload : []) as Provider[],
+      meta:  response.data?.meta ?? { current_page: 1, last_page: 1, per_page: 9, total: 0 },
     };
   },
 
@@ -78,22 +103,26 @@ export const ProviderService = {
     return response.data.data;
   },
 
-  // GET /admin/providers/{id} — retourne { data: provider, stats: {...} }
+  // GET /admin/providers/{id} — retourne { data: { provider, stats } } ou { data: provider, stats: {...} }
   async getProvider(id: number): Promise<ProviderDetail> {
     const response = await axios.get(`/admin/providers/${id}`);
+    // Le controller show() retourne Response([provider, stats]) → data.data = { provider, stats }
+    const d = response.data?.data;
     return {
-      provider: response.data.data,
-      stats: response.data.stats,
+      provider: d?.provider ?? d,
+      stats:    d?.stats    ?? response.data?.stats ?? {
+        total_tickets: 0, in_progress_tickets: 0, closed_tickets: 0, rating: null,
+      },
     };
   },
 
   // GET /admin/providers/{id}/tickets
-  async getProviderTickets(id: number, params?: { page?: number; status?: string }) {
+  async getProviderTickets(id: number, params?: { page?: number; status?: string; type?: string }) {
     const response = await axios.get(`/admin/providers/${id}/tickets`, { params });
     return {
       items: response.data.data ?? [],
       stats: response.data.stats ?? {},
-      meta: response.data.meta ?? { current_page: 1, last_page: 1, total: 0 },
+      meta:  response.data.meta  ?? { current_page: 1, last_page: 1, total: 0 },
     };
   },
 
@@ -128,7 +157,7 @@ export const ProviderService = {
   },
 };
 
-// ── ServiceService — inchangé ────────────────────────────────────────────────
+// ── ServiceService ───────────────────────────────────────────────────────────
 
 export const ServiceService = {
   async getServices(): Promise<ServiceItem[]> {

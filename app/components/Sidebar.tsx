@@ -54,7 +54,7 @@ const menuItems: MenuItem[] = [
   {
     label: "Gestionnaires",
     icon: <Grid size={20} />,
-    href: "#",
+    href: "/admin/gestionnaires",
     subItems: [{ label: "Vue globale", icon: <PieChart size={20} />, href: "#" }],
   },
   {

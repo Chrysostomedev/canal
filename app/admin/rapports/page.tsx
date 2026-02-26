@@ -589,7 +589,7 @@ export default function RapportsPage() {
           {/* Redirection vers page détails */}
           <Link
             href={`/admin/rapports/details/${row.id}`}
-            className="group p-2 rounded-xl bg-black hover:bg-white transition flex items-center justify-center"
+            className="group p-2 rounded-xl bg-white hover:bg-black transition flex items-center justify-center"
           >
            <ArrowUpRight
   size={16}

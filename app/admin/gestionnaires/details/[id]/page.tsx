@@ -54,12 +54,12 @@ import {
 
 // ── Palette couleur avatar (identique à GestCard) ─────────────────────────────
 const AVATAR_PALETTES = [
-  { bg: "#ede9fe", text: "#7c3aed", ring: "#ddd6fe" }, // violet
-  { bg: "#e0f2fe", text: "#0284c7", ring: "#bae6fd" }, // sky
-  { bg: "#d1fae5", text: "#059669", ring: "#a7f3d0" }, // emerald
-  { bg: "#ffe4e6", text: "#e11d48", ring: "#fecdd3" }, // rose
-  { bg: "#fef3c7", text: "#d97706", ring: "#fde68a" }, // amber
-  { bg: "#ccfbf1", text: "#0d9488", ring: "#99f6e4" }, // teal
+  { bg: "#f9fafb", text: "#111827", ring: "#e5e7eb" }, // ultra light
+  { bg: "#f3f4f6", text: "#1f2937", ring: "#d1d5db" }, // light
+  { bg: "#e5e7eb", text: "#111827", ring: "#9ca3af" }, // soft gray
+  { bg: "#d1d5db", text: "#0f172a", ring: "#6b7280" }, // medium
+  { bg: "#9ca3af", text: "#ffffff", ring: "#4b5563" }, // dark gray
+  { bg: "#4b5563", text: "#ffffff", ring: "#1f2937" }, // deep gray
 ];
 
 export default function GestionnaireDetailsPage() {
