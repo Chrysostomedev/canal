@@ -345,7 +345,37 @@ export default function PatrimoinesPage() {
 
   // ── Colonnes DataTable ──
   const columns = [
-    { header: "ID", key: "id" },
+  //  implementation de l'image du patrimoine
+    {
+      header: "Photos",
+      key: "images",
+      render: (_: any, row: CompanyAsset) => {
+        const imgs: string[] = row.images ?? []; // adapte selon ton modèle
+        if (!imgs.length) return <span className="text-slate-300 text-xs">—</span>;
+    
+        return (
+          <div className="flex items-center gap-1">
+            {imgs.slice(0, 3).map((src, i) => (
+              <div
+                key={i}
+                className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white shrink-0"
+                style={{ zIndex: 3 - i, marginLeft: i > 0 ? "-10px" : "0" }}
+              >
+                <img src={src} alt="" className="w-full h-full object-cover" />
+              </div>
+            ))}
+            {imgs.length > 3 && (
+              <div
+                className="w-9 h-9 rounded-xl bg-slate-100 ring-2 ring-white flex items-center justify-center shrink-0"
+                style={{ zIndex: 0, marginLeft: "-10px" }}
+              >
+                <span className="text-[10px] font-bold text-slate-500">+{imgs.length - 3}</span>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
     { header: "Type", key: "type", render: (_: any, row: CompanyAsset) => row.type?.name ?? "-" },
     {
       header: "Sous-type", key: "sub_type",
@@ -383,39 +413,49 @@ export default function PatrimoinesPage() {
   ];
 
   // ── Champs formulaire ──
-  // La codification se remplit automatiquement (read-only preview) — le vrai code est généré par le backend
   const assetFields: FieldConfig[] = [
     {
-      name: "type_company_asset_id", label: "Famille / Type", type: "select", required: true,
+      name: "type_company_asset_id",
+      label: "Famille / Type",
+      type: "select",
+      required: true,
       options: types.map(t => ({ label: t.name, value: t.id })),
-      // onChange intercepté dans le form pour mettre à jour le preview
     },
     {
-      name: "sub_type_company_asset_id", label: "Sous-type", type: "select", required: true,
+      name: "sub_type_company_asset_id",
+      label: "Sous-type",
+      type: "select",
+      required: true,
       options: subTypes.map(st => ({ label: st.name, value: st.id })),
     },
-    { name: "designation", label: "Désignation", type: "text", required: true },
     {
-      name: "product_type_code",
-      label: "Code produit (2 car.)",
+      name: "designation",
+      label: "Désignation",
       type: "text",
-      required: !editingData, // requis uniquement à la création
-      placeholder: "ex: 01",
+      required: true,
     },
-    // Codification : read-only, valeur = preview
     {
       name: "codification_preview",
       label: "Codification (générée automatiquement)",
       type: "text",
-      placeholder: codificationPreview || "Sélectionnez type, sous-type et code produit",
-      disabled: true, // read-only
+      placeholder: codificationPreview || "ne peut etre modifié",
+      disabled: true,
     },
     {
-      name: "site_id", label: "Site", type: "select", required: true,
-      options: sites.map((s: any) => ({ label: s.nom ?? s.name ?? `Site ${s.id}`, value: s.id })),
+      name: "site_id",
+      label: "Site",
+      type: "select",
+      required: true,
+      options: sites.map((s: any) => ({
+        label: s.nom ?? s.name ?? `Site ${s.id}`,
+        value: s.id,
+      })),
     },
     {
-      name: "status", label: "Statut", type: "select", required: true,
+      name: "status",
+      label: "Statut",
+      type: "select",
+      required: true,
       options: [
         { label: "Actif", value: "actif" },
         { label: "Inactif", value: "inactif" },
@@ -423,15 +463,46 @@ export default function PatrimoinesPage() {
       ],
     },
     {
-      name: "criticite", label: "Criticité", type: "select",
+      name: "criticite",
+      label: "Criticité",
+      type: "select",
       options: [
         { label: "Critique", value: "critique" },
         { label: "Non critique", value: "non_critique" },
       ],
     },
-    { name: "date_entree", label: "Date d'entrée", type: "date", required: true, icon: CalendarClock },
-    { name: "valeur_entree", label: "Valeur entrée (FCFA)", type: "number", required: true },
-    { name: "description", label: "Description", type: "rich-text", gridSpan: 2 },
+    {
+      name: "date_amortissement",
+      label: "Date d'amortissement",
+      type: "date",
+      required: true,
+      icon: CalendarClock,
+    },
+    {
+      name: "date_entree",
+      label: "Date d'entrée",
+      type: "date",
+      required: true,
+      icon: CalendarClock,
+    },
+    {
+      name: "valeur_entree",
+      label: "Valeur entrée (FCFA)",
+      type: "number",
+      required: true,
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "rich-text",
+      gridSpan: 2,
+    },
+    {
+      name: "images",
+      label: "Photos",
+      type: "image-upload",
+      gridSpan: 2,
+    },
   ];
 
   return (
@@ -565,6 +636,7 @@ export default function PatrimoinesPage() {
               { label: "Statut", value: selectedPatrimoine.status ?? "-" },
               { label: "Criticité", value: selectedPatrimoine.criticite ?? "-" },
               { label: "Date d'entrée", value: selectedPatrimoine.date_entree ?? "-" },
+               { label: "Date d'amortissement", value: selectedPatrimoine.date_amortissement ?? "-" },
               { label: "Valeur d'entrée", value: selectedPatrimoine.valeur_entree ? formatMontant(selectedPatrimoine.valeur_entree) : "-" },
             ] : []}
             onEdit={handleEdit}

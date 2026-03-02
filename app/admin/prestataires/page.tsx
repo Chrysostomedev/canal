@@ -21,7 +21,7 @@ import { ProviderService, Provider } from "../../../services/provider.service";
 import { useServices } from "../../../hooks/useServices";
 
 // ═══════════════════════════════════════════════
-// FILTER DROPDOWN — pattern CANAL+
+// FILTER DROPDOWN
 // ═══════════════════════════════════════════════
 
 interface ProviderFilters { is_active?: boolean; service_id?: number; }
@@ -38,7 +38,6 @@ function ProviderFilterDropdown({
   useEffect(() => { setLocal(filters); }, [filters]);
   if (!isOpen) return null;
 
-  // Valeur string courante du statut pour comparer avec les pills
   const currentStatus =
     local.is_active === undefined ? "" :
     local.is_active ? "true" : "false";
@@ -60,7 +59,6 @@ function ProviderFilterDropdown({
 
   return (
     <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Filtres</span>
         <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition">
@@ -69,7 +67,6 @@ function ProviderFilterDropdown({
       </div>
 
       <div className="p-5 space-y-5 max-h-[65vh] overflow-y-auto">
-
         {/* Statut */}
         <div className="space-y-1.5">
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
@@ -113,7 +110,6 @@ function ProviderFilterDropdown({
         )}
       </div>
 
-      {/* Footer */}
       <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
         <button
           onClick={() => { setLocal({}); onApply({}); onClose(); }}
@@ -155,7 +151,6 @@ export default function PrestatairesPage() {
 
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // Ferme le dropdown au clic extérieur
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(e.target as Node))
@@ -165,7 +160,6 @@ export default function PrestatairesPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Auto-dismiss flash
   useEffect(() => {
     if (!flash) return;
     const t = setTimeout(() => setFlash(null), 5000);
@@ -175,13 +169,11 @@ export default function PrestatairesPage() {
   const showFlash = (type: "success"|"error", message: string) =>
     setFlash({ type, message });
 
-  // ── Nombre de filtres actifs ──
   const activeCount = [
     filters.is_active !== undefined ? "1" : "",
     filters.service_id              ? "1" : "",
   ].filter(Boolean).length;
 
-  // ── ProfileModal : charge les stats réelles ──
   const handleOpenProfil = async (p: Provider) => {
     try {
       const detail = await ProviderService.getProvider(p.id);
@@ -191,13 +183,11 @@ export default function PrestatairesPage() {
     }
   };
 
-  // ── Import / Export — endpoints pas encore en ligne ──
   const handleExport = () =>
     showFlash("error", "Fonctionnalité d'export en cours de développement.");
   const handleImport = () =>
     showFlash("error", "Fonctionnalité d'import en cours de développement.");
 
-  // ── Toggle statut ──
   const handleToggleStatus = async (p: Provider) => {
     try {
       if (p.is_active) {
@@ -213,23 +203,43 @@ export default function PrestatairesPage() {
     }
   };
 
-  // ── Création prestataire ──
+  // ── Champs formulaire création prestataire ──
+  // Structure : Infos société → Responsable → Médias (logo + photos)
   const prestFields = [
-    { name: "company_name",    label: "Nom du prestataire",   type: "text",      required: true },
-    { name: "city",            label: "Ville",                type: "text",      required: true },
-    { name: "neighborhood",    label: "Quartier",             type: "text"                      },
-    { name: "street",          label: "Rue / Adresse",        type: "text"                      },
+
+    // ── BLOC 1 : Informations société ──
+    { name: "company_name", label: "Nom du prestataire", type: "text",   required: true },
     {
-      name: "service_id", label: "Service", type: "select", required: true,
+      name: "service_id",   label: "Service",             type: "select", required: true,
       options: services.map(s => ({ label: s.name, value: String(s.id) })),
     },
-    { name: "date_entree",     label: "Date d'entrée",        type: "date",      required: true },
-    { name: "description",     label: "Description",          type: "rich-text", gridSpan: 2   },
-    { name: "users.last_name", label: "Nom du responsable",   type: "text",      required: true },
-    { name: "users.first_name", label: "Prénom",   type: "text",      required: true },
-    { name: "users.email",     label: "Email du responsable", type: "email",     required: true },
-    { name: "users.phone",     label: "Téléphone",            type: "text",      required: true },
-    { name: "users.password",  label: "Mot de passe",         type: "password",  required: true },
+    { name: "city",         label: "Ville",               type: "text",   required: true },
+    { name: "street",       label: "Rue / Adresse",       type: "text"                   },
+    { name: "date_entree",  label: "Date d'entrée",       type: "date",   required: true },
+    { name: "users.password",   label: "Mot de passe",        type: "password", required: true },
+
+    // ── BLOC 2 : Responsable compte ──
+    { name: "users.last_name",  label: "Nom du responsable", type: "text",     required: true },
+    { name: "users.first_name", label: "Prénom",              type: "text",     required: true },
+    { name: "users.email",      label: "Email du responsable",type: "email",    required: true },
+    { name: "users.phone",      label: "Téléphone",           type: "text",     required: true },
+    
+    // Description pleine largeur
+    { name: "description",  label: "Description",         type: "rich-text", gridSpan: 2 },
+
+    
+
+    // ── BLOC 3 : Médias ──
+    // Logo : 1 seule image carrée (identité visuelle du prestataire)
+    {
+      name: "logo",   label: "Logo du prestataire",
+      type: "image-upload", gridSpan: 1, maxImages: 1,
+    },
+    // Photos : jusqu'à 3 images supplémentaires (locaux, équipe, etc.)
+    {
+      name: "images", label: "Photos supplémentaires",
+      type: "image-upload", gridSpan: 1, maxImages: 3,
+    },
   ];
 
   const handleCreate = async (formData: any) => {
@@ -244,11 +254,14 @@ export default function PrestatairesPage() {
         description:  formData.description   || undefined,
         users: {
           first_name: formData["users.first_name"],
-          last_name: formData["users.last_name"],
-          email:     formData["users.email"],
-          phone:     formData["users.phone"],
-          password:  formData["users.password"],
+          last_name:  formData["users.last_name"],
+          email:      formData["users.email"],
+          phone:      formData["users.phone"],
+          password:   formData["users.password"],
         },
+        // logo & images transmis séparément si ton backend supporte multipart
+        // logo:   formData.logo,
+        // images: formData.images,
       });
       showFlash("success", "Prestataire créé avec succès.");
       setIsModalOpen(false);
@@ -260,10 +273,10 @@ export default function PrestatairesPage() {
 
   // ── KPIs ──
   const kpis = [
-    { label: "Total prestataires",      value: stats?.total_providers        ?? 0, delta: "+0%", trend: "up"   as const },
-    { label: "Prestataires actifs",     value: stats?.active_providers       ?? 0, delta: "+0%", trend: "up"   as const },
-    { label: "Prestataires inactifs",   value: stats?.inactive_providers     ?? 0, delta: "+0%", trend: "down" as const },
-    { label: "Délai moyen intervention",value: stats?.average_intervention_time ?? "—",           delta: "+0%", trend: "up"   as const },
+    { label: "Total prestataires",       value: stats?.total_providers           ?? 0,  delta: "+0%", trend: "up"   as const },
+    { label: "Prestataires actifs",      value: stats?.active_providers          ?? 0,  delta: "+0%", trend: "up"   as const },
+    { label: "Prestataires inactifs",    value: stats?.inactive_providers        ?? 0,  delta: "+0%", trend: "down" as const },
+    { label: "Délai moyen intervention", value: stats?.average_intervention_time ?? "—",              delta: "+0%", trend: "up"   as const },
   ];
 
   return (
@@ -305,10 +318,7 @@ export default function PrestatairesPage() {
               {filters.is_active !== undefined && (
                 <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
                   {filters.is_active ? "Actifs" : "Inactifs"}
-                  <button
-                    onClick={() => applyFilters({ ...filters, is_active: undefined })}
-                    className="hover:opacity-70 transition"
-                  >
+                  <button onClick={() => applyFilters({ ...filters, is_active: undefined })} className="hover:opacity-70 transition">
                     <X size={11} />
                   </button>
                 </span>
@@ -316,10 +326,7 @@ export default function PrestatairesPage() {
               {filters.service_id && (
                 <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
                   {services.find(s => s.id === filters.service_id)?.name ?? `Service #${filters.service_id}`}
-                  <button
-                    onClick={() => applyFilters({ ...filters, service_id: undefined })}
-                    className="hover:opacity-70 transition"
-                  >
+                  <button onClick={() => applyFilters({ ...filters, service_id: undefined })} className="hover:opacity-70 transition">
                     <X size={11} />
                   </button>
                 </span>
@@ -328,8 +335,6 @@ export default function PrestatairesPage() {
 
             {/* Droite : boutons d'action */}
             <div className="flex items-center gap-3 shrink-0">
-
-              {/* Importer */}
               <button
                 onClick={handleImport}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
@@ -337,7 +342,6 @@ export default function PrestatairesPage() {
                 <Download size={16} /> Importer
               </button>
 
-              {/* Exporter */}
               <button
                 onClick={handleExport}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
@@ -345,7 +349,6 @@ export default function PrestatairesPage() {
                 <Upload size={16} /> Exporter
               </button>
 
-              {/* Filtrer */}
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(o => !o)}
@@ -371,7 +374,6 @@ export default function PrestatairesPage() {
                 />
               </div>
 
-              {/* Ajouter */}
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
@@ -421,19 +423,13 @@ export default function PrestatairesPage() {
               </div>
             )}
 
-            {/* Pagination */}
             <div className="flex items-center justify-between pt-4 border-t border-slate-50">
               <p className="text-xs text-slate-400">
                 Page {page} sur {meta.last_page} · {meta.total} prestataire{meta.total > 1 ? "s" : ""}
               </p>
-              <Paginate
-                currentPage={page}
-                totalPages={meta.last_page}
-                onPageChange={setPage}
-              />
+              <Paginate currentPage={page} totalPages={meta.last_page} onPageChange={setPage} />
             </div>
           </div>
-
         </main>
       </div>
 
@@ -443,7 +439,7 @@ export default function PrestatairesPage() {
         onClose={() => setIsModalOpen(false)}
         title="Ajouter un nouveau prestataire"
         subtitle="Remplissez les informations pour enregistrer un prestataire."
-        fields={prestFields}
+        fields={prestFields as any}
         onSubmit={handleCreate}
         submitLabel="Créer le prestataire"
       />
@@ -462,9 +458,9 @@ export default function PrestatairesPage() {
           status:     selectedProvider.is_active ? "Actif" : "Inactif",
           logo:       selectedProvider.logoUrl,
           stats: {
-            totalBillets:   { value: selectedProvider.loadedStats?.total_tickets       ?? 0,    delta: "+0%" },
-            ticketsEnCours: { value: selectedProvider.loadedStats?.in_progress_tickets ?? 0,    delta: "+0%" },
-            ticketsTraites: { value: selectedProvider.loadedStats?.closed_tickets      ?? 0,    delta: "+0%" },
+            totalBillets:   { value: selectedProvider.loadedStats?.total_tickets       ?? 0, delta: "+0%" },
+            ticketsEnCours: { value: selectedProvider.loadedStats?.in_progress_tickets ?? 0, delta: "+0%" },
+            ticketsTraites: { value: selectedProvider.loadedStats?.closed_tickets      ?? 0, delta: "+0%" },
             noteObtenue:    selectedProvider.loadedStats?.rating
               ? `${selectedProvider.loadedStats.rating}/5`
               : (selectedProvider.rating ? `${selectedProvider.rating}/5` : "N/A"),

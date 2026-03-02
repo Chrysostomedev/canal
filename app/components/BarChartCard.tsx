@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Ban } from "lucide-react";
 
 type BarChartData = {
   label: string;
@@ -28,7 +28,10 @@ export default function BarChartCard({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(DEFAULT_YEAR);
 
+  const isFutureYear = (year: string) => parseInt(year) > parseInt(CURRENT_YEAR);
+
   const handleYearSelect = (year: string) => {
+    if (isFutureYear(year)) return;
     setSelectedYear(year);
     setIsOpen(false);
     if (onYearChange) onYearChange(year);
@@ -73,19 +76,28 @@ export default function BarChartCard({
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 5, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full w-28 bg-white border border-slate-100 shadow-2xl rounded-2xl p-2 overflow-hidden z-40"
+                  className="absolute right-0 top-full w-32 bg-white border border-slate-100 shadow-2xl rounded-2xl p-2 overflow-hidden z-40"
                 >
-                  {YEARS.map((year) => (
-                    <button
-                      key={year}
-                      onClick={() => handleYearSelect(year)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-sm font-bold transition-colors ${
-                        selectedYear === year ? "bg-black text-white" : "text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {year}{year === CURRENT_YEAR ? " ●" : ""}
-                    </button>
-                  ))}
+                  {YEARS.map((year) => {
+                    const future = isFutureYear(year);
+                    return (
+                      <button
+                        key={year}
+                        onClick={() => handleYearSelect(year)}
+                        disabled={future}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-sm font-bold transition-colors flex items-center justify-between gap-2 ${
+                          future
+                            ? "text-slate-300 cursor-not-allowed"
+                            : selectedYear === year
+                            ? "bg-black text-white"
+                            : "text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span>{year}{year === CURRENT_YEAR ? " ●" : ""}</span>
+                        {future && <Ban size={12} className="text-red-400 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
                 </motion.div>
               </>
             )}
@@ -93,11 +105,11 @@ export default function BarChartCard({
         </div>
       </div>
 
-      {/* Zone graphique — padding bottom pour les labels des mois */}
+      {/* Zone graphique */}
       <div className="w-full flex-1 pt-2 pb-8">
-      <div className="relative flex h-full">
-        
-          {/* Axe Y — largeur fixe pour ne pas écraser les barres */}
+        <div className="relative flex h-full">
+
+          {/* Axe Y */}
           <div className="flex flex-col justify-between flex-shrink-0 w-8 text-slate-300 text-[9px] font-black text-right pr-1">
             {yAxisMarkers.map((marker) => (
               <span key={marker}>
@@ -108,18 +120,15 @@ export default function BarChartCard({
 
           {/* Lignes horizontales + barres */}
           <div className="relative flex-1 min-w-0">
-            {/* Lignes de grille */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
               {yAxisMarkers.map((marker) => (
                 <div key={marker} className="w-full h-[1px] bg-slate-50" />
               ))}
             </div>
 
-            {/* Barres + labels mois en dessous */}
             <div className="absolute inset-0 flex items-end gap-[2px] px-1">
               {data.map((item) => (
                 <div key={item.label} className="relative flex flex-col items-center flex-1 h-full group">
-                  {/* Barre */}
                   <div className="flex-1 w-full flex items-end">
                     <motion.div
                       layout
@@ -129,14 +138,11 @@ export default function BarChartCard({
                       style={{ backgroundColor: item.color || "#0F172A" }}
                       className="w-full rounded-t-md hover:brightness-125 transition-all cursor-pointer relative"
                     >
-                      {/* Tooltip */}
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-bold whitespace-nowrap z-10">
-                        {item.value}
+                        {item.value} tickets
                       </div>
                     </motion.div>
                   </div>
-
-                  {/* Label mois — positionné en absolute sous la zone graphique */}
                   <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-slate-400 text-[8px] font-black tracking-tighter whitespace-nowrap">
                     {item.label}
                   </span>

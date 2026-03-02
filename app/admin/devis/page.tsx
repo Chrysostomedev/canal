@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import {
   Eye, Filter, Download, Upload, X, CheckCircle2,
   XCircle, Clock, Copy, FileText, ExternalLink,
+  PlusCircle,
+  CalendarDays,
 } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
@@ -12,6 +14,7 @@ import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
+import ReusableForm from "@/components/ReusableForm";
 
 import { useQuotes } from "../../../hooks/useQuotes";
 import { Quote } from "../../../services/quote.service";
@@ -441,12 +444,14 @@ function QuoteSidePanel({
   );
 }
 
+
 // ═══════════════════════════════════════════════
 // PAGE PRINCIPALE
 // ═══════════════════════════════════════════════
 
 export default function DevisPage() {
   const filterRef = useRef<HTMLDivElement>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const {
     quotes, stats, isLoading, statsLoading,
@@ -517,6 +522,44 @@ export default function DevisPage() {
     { label: "Montant approuvé",  value: statsLoading ? 0 : (stats?.total_approved_amount ?? 0), delta: "+20%", trend: "up" as const, isCurrency: true },
   ];
 
+    // ── Champs formulaire création ─────────────────────────────────────────────
+  const quoteFields = [
+    { name: "ticket_id", label: "Ticket",        type: "text",  required: true },
+    { name: "provider_id",  label: "Prestataire",            type: "text",  required: true },
+    { name: "site_id",      label: "Site",          type: "text", required: true },
+    { name: "amount_ttc",      label: "Téléphone",      type: "number"                  },
+    { name: "created_at", label: "Date ", type: "date", required: true, icon: CalendarDays },
+    { name: "status",   label: "Statut",   type: "select", required: true,
+      options: [
+       
+        { label: "en attente", value: "pending" },   
+        { label: "Revisé", value: "revision" },  
+      ],
+    },
+  ];
+
+  // ── Création ───────────────────────────────────────────────────────────────
+  const handleCreate = async (formData: any) => {
+    try {
+      await QuoteService.createQuote({
+        reference: formData.first_name,
+        ticket_id:  formData.ticket_id,
+        provider:      formData.provider_id,
+        montant: formData.amount_ttc,
+        status: formData.status,
+        site:      formData.site_id,
+
+        date:   formData.created_at || undefined,
+      });
+      showFlash("success", "Gestionnaire créé avec succès");
+      setIsCreateModalOpen(false);
+      fetchQuotes();
+    } catch (err: any) {
+      showFlash("error", err?.response?.data?.message || "Erreur lors de la création");
+    }
+  };
+
+  
   const columns = [
     { header: "Référence",   key: "reference",  render: (_: any, row: Quote) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
     { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `#${row.ticket_id}` },
@@ -577,6 +620,15 @@ export default function DevisPage() {
             >
               <Upload size={16} /> Exporter
             </button>
+            
+  {/* ── Ajouter ──────────────────────────────────────────── */}
+  <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition-all"
+              >
+                <PlusCircle size={14} />
+                Ajouter
+              </button>
           </div>
 
           {filters.status && (
@@ -595,6 +647,16 @@ export default function DevisPage() {
               <Paginate currentPage={currentPage} totalPages={totalPages || 1} onPageChange={setCurrentPage} />
             </div>
           </div>
+  {/* ── Modal création ─────────────────────────────────────────── */}
+  <ReusableForm
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            title="Ajouter un devis"
+            subtitle="Les informations ci-dessous permettront de faire un nouveau devis."
+            fields={quoteFields}
+            onSubmit={handleCreate}
+            submitLabel="Créer le gestionnaire"
+          />
 
           <QuoteSidePanel
             quote={isDetailsOpen ? selectedQuote : null}
@@ -603,13 +665,7 @@ export default function DevisPage() {
             onReject={handleReject}
           />
 
-          {flashMessage && (
-            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
-              flashMessage.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"
-            }`}>
-              {flashMessage.message}
-            </div>
-          )}
+        
         </main>
       </div>
     </div>

@@ -30,10 +30,6 @@ import axiosInstance from "../../../core/axios";
 const formatHeures = (h: number | null | undefined) =>
   h !== null && h !== undefined ? `${h}h` : "—";
 
-/**
- * Formate une date ISO en "DD/MM/YYYY à HH:MM"
- * Affiche l'heure seulement si elle est non nulle
- */
 const formatDate = (iso?: string | null): string => {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -109,8 +105,7 @@ function PriorityBadge({ priority }: { priority: string }) {
 }
 
 // ═══════════════════════════════════════════════
-// FILTER DROPDOWN — pattern CANAL+
-// 3 sections : Statut / Type / Priorité
+// FILTER DROPDOWN
 // ═══════════════════════════════════════════════
 
 interface TicketFilters { status?: string; type?: string; priority?: string; }
@@ -138,7 +133,6 @@ function FilterDropdown({
 
   return (
     <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Filtres</span>
         <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition">
@@ -147,7 +141,6 @@ function FilterDropdown({
       </div>
 
       <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-
         {/* Statut */}
         <div className="space-y-1.5">
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
@@ -201,7 +194,6 @@ function FilterDropdown({
         </div>
       </div>
 
-      {/* Footer */}
       <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
         <button
           onClick={() => { setLocal({}); onApply({}); onClose(); }}
@@ -222,7 +214,6 @@ function FilterDropdown({
 
 // ═══════════════════════════════════════════════
 // TICKET SIDE PANEL
-// Dates formatées, couleurs statuts, provider multi-structure
 // ═══════════════════════════════════════════════
 
 function TicketSidePanel({
@@ -235,14 +226,14 @@ function TicketSidePanel({
   const statusColor = STATUS_DOT_COLORS[ticket.status] ?? "#94a3b8";
   const statusLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
   
-  const [copied, setCopied] = useState(false); // <--- Ajoute cet état ici
-// logique pour copier l'id
+  const [copied, setCopied] = useState(false);
+
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  // Résolution prestataire — supporte company_name, user.name, name, ou fallback id
+
   const providerName =
     (ticket as any).provider?.company_name ??
     (ticket as any).provider?.user?.name   ??
@@ -293,20 +284,17 @@ function TicketSidePanel({
       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed right-0 top-0 h-full w-[460px] bg-white z-50 shadow-2xl flex flex-col rounded-l-3xl overflow-hidden">
 
-        {/* ── Croix haut gauche ── */}
         <div className="flex items-start px-6 pt-6 pb-0 shrink-0">
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition -ml-1">
             <X size={18} className="text-slate-500" />
           </button>
         </div>
 
-        {/* ── Titre + badges ── */}
         <div className="px-7 pt-4 pb-5 shrink-0">
           <h2 className="text-2xl font-black text-slate-900 leading-tight">
             {ticket.subject ?? `Ticket #${ticket.id}`}
           </h2>
           <div className="flex flex-wrap items-center gap-2 mt-2.5">
-            {/* Type */}
             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
               ticket.type === "curatif"
                 ? "bg-orange-50 text-orange-700 border-orange-200"
@@ -314,7 +302,6 @@ function TicketSidePanel({
             }`}>
               {ticket.type === "curatif" ? "Curatif" : "Préventif"}
             </span>
-            {/* Statut avec couleur dot dynamique */}
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border ${STATUS_STYLES[ticket.status] ?? ""}`}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusColor }} />
               {statusLabel}
@@ -322,10 +309,7 @@ function TicketSidePanel({
           </div>
         </div>
 
-        {/* ── Contenu scrollable ── */}
         <div className="flex-1 overflow-y-auto px-7 pb-7 space-y-6">
-
-          {/* Tableau infos */}
           <div className="space-y-0">
             {infoRows.map((row, i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0 gap-4">
@@ -339,8 +323,6 @@ function TicketSidePanel({
                 }
               </div>
             ))}
-
-            {/* Coût */}
             {ticket.cout !== undefined && ticket.cout !== null && (
               <div className="flex items-center justify-between py-3">
                 <p className="text-xs text-slate-400 font-medium">Coût</p>
@@ -351,7 +333,6 @@ function TicketSidePanel({
             )}
           </div>
 
-          {/* Description */}
           {ticket.description && (
             <div>
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Description</p>
@@ -363,7 +344,6 @@ function TicketSidePanel({
           )}
         </div>
 
-        {/* ── Footer ── */}
         <div className="px-7 py-5 border-t border-slate-100 shrink-0">
           <button
             onClick={onEdit}
@@ -405,7 +385,6 @@ export default function TicketsPage() {
   const [importLoading,  setImportLoading]  = useState(false);
   const [exportLoading,  setExportLoading]  = useState(false);
 
-  // Ferme dropdown filtre au clic extérieur
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(e.target as Node))
@@ -426,13 +405,11 @@ export default function TicketsPage() {
 
   const activeCount = [filters.status, filters.type, filters.priority].filter(Boolean).length;
 
-  // ── Open détails ──
   const handleOpenDetails = (ticket: Ticket) => {
     setSelectedTicket(ticket);
     setIsDetailsOpen(true);
   };
 
-  // ── Édition depuis le panel ──
   const handleEdit = () => {
     if (!selectedTicket) return;
     setEditingTicket(selectedTicket);
@@ -440,7 +417,6 @@ export default function TicketsPage() {
     setIsModalOpen(true);
   };
 
-  // ── Créer / Mettre à jour ──
   const handleSubmit = async (formData: any) => {
     try {
       if (editingTicket) {
@@ -458,10 +434,6 @@ export default function TicketsPage() {
     }
   };
 
-  // ══════════════════════════════════════
-  // EXPORT — GET /admin/ticket/export
-  // Passe les filtres actifs, reçoit un blob xlsx
-  // ══════════════════════════════════════
   const handleExport = async () => {
     if (exportLoading) return;
     setExportLoading(true);
@@ -498,14 +470,10 @@ export default function TicketsPage() {
     }
   };
 
-  // ══════════════════════════════════════
-  // IMPORT — POST /admin/ticket/import
-  // multipart/form-data { file }
-  // ══════════════════════════════════════
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    e.target.value = ""; // reset pour ré-import possible
+    e.target.value = "";
     setImportLoading(true);
     try {
       const fd = new FormData();
@@ -523,9 +491,39 @@ export default function TicketsPage() {
   };
 
   // ── Colonnes DataTable ──
+  // Note : "Photos" affiche les images du ticket en vignettes empilées (max 3 + compteur)
   const columns = [
     {
-      header: "ID", key: "id",
+      header: "Photos",
+      key: "images",
+      render: (_: any, row: Ticket) => {
+        const imgs: string[] = (row as any).images ?? [];
+        if (!imgs.length) return <span className="text-slate-300 text-xs">—</span>;
+        return (
+          <div className="flex items-center">
+            {imgs.slice(0, 3).map((src, i) => (
+              <div
+                key={i}
+                className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white shrink-0"
+                style={{ zIndex: 3 - i, marginLeft: i > 0 ? "-10px" : "0" }}
+              >
+                <img src={src} alt="" className="w-full h-full object-cover" />
+              </div>
+            ))}
+            {imgs.length > 3 && (
+              <div
+                className="w-9 h-9 rounded-xl bg-slate-100 ring-2 ring-white flex items-center justify-center shrink-0"
+                style={{ zIndex: 0, marginLeft: "-10px" }}
+              >
+                <span className="text-[10px] font-bold text-slate-500">+{imgs.length - 3}</span>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Codification", key: "id",
       render: (_: any, row: Ticket) =>
         <span className="font-black text-slate-900 text-sm">#{row.id}</span>,
     },
@@ -539,7 +537,6 @@ export default function TicketsPage() {
       render: (_: any, row: Ticket) => row.site?.nom ?? "—",
     },
     {
-      // Fix provider vide : essaie company_name → user.name → name → fallback id
       header: "Prestataire", key: "provider",
       render: (_: any, row: Ticket) => {
         const name =
@@ -581,7 +578,7 @@ export default function TicketsPage() {
     },
   ];
 
-  // ── Formulaire création ──
+  // ── Formulaire création d'un ticket (tous les champs métier) ──
   const ticketFields: FieldConfig[] = [
     {
       name: "site_id", label: "Site", type: "select", required: true,
@@ -602,32 +599,60 @@ export default function TicketsPage() {
         value: String(p.id),
       })),
     },
-    { name: "type",     label: "Type de maintenance", type: "select", required: true, options: [{ label: "Curatif", value: "curatif" }, { label: "Préventif", value: "preventif" }] },
-    { name: "priority", label: "Priorité",            type: "select", required: true, options: [{ label: "Faible", value: "faible" }, { label: "Moyenne", value: "moyenne" }, { label: "Haute", value: "haute" }, { label: "Critique", value: "critique" }] },
-    { name: "subject",     label: "Sujet",         type: "text" },
-    { name: "planned_at",  label: "Date planifiée",type: "date", required: true, icon: CalendarDays },
-    { name: "due_at",      label: "Date limite",   type: "date", required: true, icon: CalendarCheck },
-    { name: "description", label: "Description",   type: "rich-text", gridSpan: 2, placeholder: "Décrivez le problème ou l'intervention" },
+    {
+      name: "type", label: "Type de maintenance", type: "select", required: true,
+      options: [{ label: "Curatif", value: "curatif" }, { label: "Préventif", value: "preventif" }],
+    },
+    {
+      name: "priority", label: "Priorité", type: "select", required: true,
+      options: [
+        { label: "Faible", value: "faible" }, { label: "Moyenne", value: "moyenne" },
+        { label: "Haute", value: "haute" },   { label: "Critique", value: "critique" },
+      ],
+    },
+    { name: "subject",    label: "Sujet",          type: "text" },
+    { name: "planned_at", label: "Date planifiée", type: "date", required: true, icon: CalendarDays },
+    { name: "due_at",     label: "Date limite",    type: "date", required: true, icon: CalendarCheck },
+    // Description + Photos occupent toute la largeur (gridSpan: 2)
+    {
+      name: "description", label: "Description", type: "rich-text", gridSpan: 2,
+      placeholder: "Décrivez le problème ou l'intervention",
+    },
+    {
+      name: "images", label: "Photos", type: "image-upload", gridSpan: 2, maxImages: 3,
+    },
   ];
 
+  // ── Formulaire édition d'un ticket (statut + commentaire + photos) ──
   const editFields: FieldConfig[] = [
-    { name: "status",   label: "Statut",    type: "select", required: true, options: Object.entries(STATUS_LABELS).map(([v, l]) => ({ label: l, value: v })) },
-    { name: "priority", label: "Priorité",  type: "select",                 options: [{ label: "Faible", value: "faible" }, { label: "Moyenne", value: "moyenne" }, { label: "Haute", value: "haute" }, { label: "Critique", value: "critique" }] },
+    {
+      name: "status", label: "Statut", type: "select", required: true,
+      options: Object.entries(STATUS_LABELS).map(([v, l]) => ({ label: l, value: v })),
+    },
+    {
+      name: "priority", label: "Priorité", type: "select",
+      options: [
+        { label: "Faible", value: "faible" }, { label: "Moyenne", value: "moyenne" },
+        { label: "Haute",  value: "haute"  }, { label: "Critique", value: "critique" },
+      ],
+    },
+    // Commentaire + Photos pleine largeur
     { name: "description", label: "Commentaire", type: "rich-text", gridSpan: 2 },
+    { name: "images",      label: "Photos",      type: "image-upload", gridSpan: 2, maxImages: 3 },
   ];
 
   // ── KPIs ──
   const kpis1 = [
-    { label: "Coût moyen / ticket", value: stats?.cout_moyen_par_ticket ?? 0,          isCurrency: true, delta: "+0%", trend: "up" as const },
-    { label: "Total tickets",        value: stats?.nombre_total_tickets ?? 0,            delta: "+0%",     trend: "up" as const },
-    { label: "Tickets en cours",     value: stats?.nombre_total_tickets_en_cours ?? 0,  delta: "+0%",     trend: "up" as const },
-    { label: "Tickets clôturés",     value: stats?.nombre_total_tickets_clotures ?? 0,  delta: "+0%",     trend: "up" as const },
+    { label: "Coût moyen / ticket", value: stats?.cout_moyen_par_ticket ?? 0,         isCurrency: true, delta: "+0%", trend: "up" as const },
+    { label: "Total tickets",       value: stats?.nombre_total_tickets ?? 0,           delta: "+0%",     trend: "up" as const },
+    { label: "Tickets en cours",    value: stats?.nombre_total_tickets_en_cours ?? 0,  delta: "+0%",     trend: "up" as const },
+    { label: "Tickets clôturés",    value: stats?.nombre_total_tickets_clotures ?? 0,  delta: "+0%",     trend: "up" as const },
   ];
   const kpis2 = [
-    { label: "Tickets ce mois",  value: stats?.nombre_tickets_par_mois ?? 0,                           delta: "+0%", trend: "up" as const },
-    { label: "Délai moyen",      value: formatHeures(stats?.delais_moyen_traitement_heures) ?? "0h",            delta: "+0%", trend: "up" as const },
-    { label: "Délai minimal",    value: formatHeures(stats?.delais_minimal_traitement_heures)?? "0h",          delta: "+0%", trend: "up" as const },
-    { label: "Délai maximal",    value: formatHeures(stats?.delais_maximal_traitement_heures) ?? "0h",          delta: "+0%", trend: "up" as const },
+    { label: "Tickets ce mois", value: stats?.nombre_tickets_par_mois ?? 0,                  delta: "+0%", trend: "up" as const },
+    { label: "Délai moyen",     value: formatHeures(stats?.delais_moyen_traitement_heures),   delta: "+0%", trend: "up" as const },
+    { label: "Délai minimal",   value: formatHeures(stats?.delais_minimal_traitement_heures), delta: "+0%", trend: "up" as const },
+    { label: "Délai maximal",   value: formatHeures(stats?.delais_maximal_traitement_heures), delta: "+0%", trend: "up" as const },
   ];
 
   return (
@@ -662,7 +687,6 @@ export default function TicketsPage() {
 
           {/* ── Barre d'actions ── */}
           <div className="flex items-center justify-between gap-3">
-
             {/* Gauche : badges filtres actifs */}
             <div className="flex items-center gap-2 flex-wrap min-h-[36px]">
               {activeCount === 0 && (
@@ -690,7 +714,6 @@ export default function TicketsPage() {
 
             {/* Droite : boutons d'action */}
             <div className="flex items-center gap-3 shrink-0">
-
               {/* Importer */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
                 {importLoading
@@ -698,13 +721,7 @@ export default function TicketsPage() {
                   : <Download size={16} />
                 }
                 Importer
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  className="hidden"
-                  disabled={importLoading}
-                  onChange={handleImport}
-                />
+                <input type="file" accept=".xlsx,.xls,.csv" className="hidden" disabled={importLoading} onChange={handleImport} />
               </label>
 
               {/* Exporter */}
@@ -720,7 +737,7 @@ export default function TicketsPage() {
                 Exporter
               </button>
 
-              {/* Filtrer — dropdown CANAL+ */}
+              {/* Filtrer */}
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
@@ -774,11 +791,7 @@ export default function TicketsPage() {
               <p className="text-xs text-slate-400">
                 Page {page} sur {meta?.last_page ?? 1} · {meta?.total ?? 0} tickets
               </p>
-              <Paginate
-                currentPage={page}
-                totalPages={meta?.last_page ?? 1}
-                onPageChange={setPage}
-              />
+              <Paginate currentPage={page} totalPages={meta?.last_page ?? 1} onPageChange={setPage} />
             </div>
           </div>
         </main>
@@ -801,6 +814,8 @@ export default function TicketsPage() {
             ? "Modifiez le statut ou les informations du ticket"
             : "Remplissez les informations pour créer un ticket"
         }
+        // En édition → editFields (statut + commentaire + photos)
+        // En création → ticketFields (tous les champs métier + photos)
         fields={editingTicket ? editFields : ticketFields}
         initialValues={editingTicket ? {
           status:      editingTicket.status,

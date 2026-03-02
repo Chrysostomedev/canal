@@ -87,7 +87,7 @@ export const InvoiceService = {
    * Liste toutes les factures avec relations (provider, site, report, quote)
    */
   async getInvoices(): Promise<Invoice[]> {
-    const res = await axiosInstance.get("/admin/invoice");
+    const res = await axiosInstance.get("/super-admin/invoice");
     return res.data.data;
   },
 

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import {
   Eye, Filter, Download, Upload, X,
   CheckCircle2, FileText, Copy,
+  CalendarDays,
+  PlusCircle,
 } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
@@ -12,6 +14,7 @@ import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
+import ReusableForm from "@/components/ReusableForm";
 
 import { useInvoices } from "../../../hooks/useInvoices";
 import { Invoice, InvoiceService } from "../../../services/invoice.service";
@@ -170,6 +173,8 @@ function InvoiceSidePanel({
   const siteName     = invoice.site?.nom ?? invoice.site?.name ?? "—";
 
   const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
+
+ 
 
   return (
     <>
@@ -330,6 +335,27 @@ function InvoiceSidePanel({
 
 export default function FacturesPage() {
   const filterRef = useRef<HTMLDivElement>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+// ── Création ───────────────────────────────────────────────────────────────
+const handleCreate = async (formData: any) => {
+  try {
+    await InvoiceService.createInvoice({
+      reference: formData.invoice_id,
+      ticket_id:  formData.ticket_id,
+      provider:      formData.provider_id,
+      montant: formData.amount_ttc,
+      status: formData.payment_status,
+      site:      formData.site_id,
+
+      date:   formData.created_at || undefined,
+    });
+    showFlash("success", "facture créé avec succès");
+    setIsCreateModalOpen(false);
+    fetchInvoices();
+  } catch (err: any) {
+    showFlash("error", err?.response?.data?.message || "Erreur lors de la création");
+  }
+};
 
   const { invoices, stats, isLoading, statsLoading, fetchInvoices, fetchStats, markAsPaid } = useInvoices();
 
@@ -388,6 +414,22 @@ export default function FacturesPage() {
     { label: "Factures payées",          value: statsLoading ? 0 : (stats?.total_paid ?? 0),     delta: "+15,03%", trend: "up" as const },
   ];
 
+    // ── Champs formulaire création ─────────────────────────────────────────────
+    const invoiceFields = [
+      { name: "invoice_id", label: "Ticket",        type: "text",  required: true },
+      { name: "provider_id",  label: "Prestataire",            type: "text",  required: true },
+      { name: "site_id",      label: "Site",          type: "text", required: true },
+      { name: "amount_ttc",      label: "Montant TTC",      type: "number"                  },
+      { name: "created_at", label: "Date ", type: "date", required: true, icon: CalendarDays },
+      { name: "payment_status",   label: "Statut",   type: "select", required: true,
+        options: [
+          { label: "en attente", value: "pending" },   
+          { label: "payé", value: "paid" },   
+          { label: "rejeté", value: "overdue" },  
+        ],
+      },
+    ];
+  
   const columns = [
     { header: "ID Facture",   key: "reference",       render: (_: any, row: Invoice) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
     { header: "Prestataire",  key: "provider",        render: (_: any, row: Invoice) => row.provider?.name ?? "—" },
@@ -413,6 +455,14 @@ export default function FacturesPage() {
         <Navbar />
         <main className="ml-64 mt-20 p-6 space-y-8">
           <PageHeader title="Factures" subtitle="Ce menu vous permet de voir les différentes factures disponibles" />
+
+          {flashMessage && (
+            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
+              flashMessage.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"
+            }`}>
+              {flashMessage.message}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
@@ -446,6 +496,13 @@ export default function FacturesPage() {
             >
               <Upload size={16} /> Exporter
             </button>
+            <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition-all"
+              >
+                <PlusCircle size={14} />
+                Ajouter
+              </button>
           </div>
 
           {filters.status && (
@@ -465,19 +522,24 @@ export default function FacturesPage() {
             </div>
           </div>
 
+{/* ── Modal création ─────────────────────────────────────────── */}
+<ReusableForm
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            title="Ajouter un devis"
+            subtitle="Les informations ci-dessous permettront de faire un nouveau devis."
+            fields={invoiceFields}
+            onSubmit={handleCreate}
+            submitLabel="Créer une facture"
+          />
+
           <InvoiceSidePanel
             invoice={isDetailsOpen ? selectedInvoice : null}
             onClose={() => { setIsDetailsOpen(false); setSelectedInvoice(null); }}
             onMarkPaid={handleMarkPaid}
           />
 
-          {flashMessage && (
-            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
-              flashMessage.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"
-            }`}>
-              {flashMessage.message}
-            </div>
-          )}
+         
         </main>
       </div>
     </div>

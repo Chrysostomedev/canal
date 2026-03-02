@@ -2,17 +2,19 @@
 
 import SideModal from "@/components/form/SideModal";
 import FormButton from "@/components/form/FormButton";
-import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor } from "@/components/form/FormInput";
+import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor, ImageUpload } from "@/components/form/FormInput";
 
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "password" | "date" | "select" | "email" | "number" | "rich-text"; 
+  type: "text" | "password" | "date" | "select" | "email" | "number" | "rich-text" | "image-upload";
   placeholder?: string;
   required?: boolean;
   gridSpan?: 1 | 2;
   options?: { label: string; value: string | number }[];
   icon?: any;
+  maxImages?: number;
+  disabled?: boolean;
 }
 
 interface ReusableFormProps {
@@ -21,10 +23,11 @@ interface ReusableFormProps {
   title: string;
   subtitle: string;
   fields: FieldConfig[];
-  onSubmit: (formData: Record<string, any>) => void; // objet JS
+  onSubmit: (formData: Record<string, any>) => void;
   submitLabel?: string;
   cancelLabel?: string;
-  initialValues?: Record<string, any>; // pour modification / préremplissage
+  initialValues?: Record<string, any>;
+  onFieldChange?: (name: string, value: any) => void;
 }
 
 export default function ReusableForm({
@@ -36,36 +39,46 @@ export default function ReusableForm({
   onSubmit,
   submitLabel = "Enregistrer",
   cancelLabel = "Annuler",
-  initialValues = {}
+  initialValues = {},
+  onFieldChange,
 }: ReusableFormProps) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    const formDataObj = Object.fromEntries(data.entries()); // transformation en objet JS
+    const formDataObj = Object.fromEntries(data.entries());
     onSubmit(formDataObj);
   };
 
   return (
     <SideModal isOpen={isOpen} onClose={onClose} title={title} subtitle={subtitle}>
       <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100vh-180px)]">
-        
-        <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar"> 
+
+        <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 pb-8">
             {fields.map((field) => (
-              <div 
-                key={field.name} 
+              <div
+                key={field.name}
                 className={field.gridSpan === 2 ? "col-span-2" : "col-span-2 md:col-span-1"}
               >
                 <FormField label={field.label} required={field.required}>
-                  {field.type === "select" ? (
+
+                  {field.type === "image-upload" ? (
+                    <ImageUpload
+                      name={field.name}
+                      maxImages={field.maxImages ?? 3}
+                    />
+
+                  ) : field.type === "select" ? (
                     <Select
-                    name={field.name}
-                    required={field.required}
-                    icon={field.icon}
-                    defaultValue={String(initialValues[field.name] ?? "")}
-                  >
-                      
+                      name={field.name}
+                      required={field.required}
+                      icon={field.icon}
+                      defaultValue={String(initialValues[field.name] ?? "")}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                        onFieldChange?.(field.name, e.target.value)
+                      }
+                    >
                       <option value="">Cliquez pour sélectionner</option>
                       {field.options?.map((opt, index) => (
                         <option key={`${opt.value}-${index}`} value={opt.value}>
@@ -73,6 +86,7 @@ export default function ReusableForm({
                         </option>
                       ))}
                     </Select>
+
                   ) : field.type === "rich-text" ? (
                     <RichTextEditor
                       label={field.label}
@@ -80,6 +94,7 @@ export default function ReusableForm({
                       placeholder={field.placeholder}
                       defaultValue={initialValues[field.name] ?? ""}
                     />
+
                   ) : field.type === "password" ? (
                     <PasswordInput
                       name={field.name}
@@ -87,6 +102,7 @@ export default function ReusableForm({
                       required={field.required}
                       defaultValue={initialValues[field.name] ?? ""}
                     />
+
                   ) : field.type === "date" ? (
                     <DateInput
                       name={field.name}
@@ -94,15 +110,21 @@ export default function ReusableForm({
                       icon={field.icon}
                       defaultValue={initialValues[field.name] ?? ""}
                     />
+
                   ) : (
                     <Input
                       name={field.name}
                       type={field.type}
                       placeholder={field.placeholder}
                       required={field.required}
+                      disabled={field.disabled}
                       defaultValue={initialValues[field.name] ?? ""}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        onFieldChange?.(field.name, e.target.value)
+                      }
                     />
                   )}
+
                 </FormField>
               </div>
             ))}

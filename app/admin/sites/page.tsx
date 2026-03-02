@@ -227,20 +227,21 @@ export default function SitesPage() {
   const siteFields: FieldConfig[] = [
     { name: "nom",               label: "Nom du site",            type: "text",   required: true },
     { name: "ref_contrat",       label: "Référence contrat",      type: "text",   required: true },
-    { name: "responsable_name",  label: "Nom du responsable",     type: "text"                   },
-    { name: "email",             label: "Email du site",          type: "email"                  },
-    { name: "phone_responsable", label: "Téléphone responsable",  type: "text"                   },
     {
-      name: "status", label: "Statut", type: "select", required: true,
-      options: [{ label: "Actif", value: "active" }, { label: "Inactif", value: "inactive" }],
-    },
-    {
-      name: "manager_id", label: "Gestionnaire", type: "select",
+      name: "manager_id", label: "Nom Gestionnaire", type: "select",
       options: managers.map((m: any) => ({
         label: m.name ?? m.email ?? `Manager #${m.id}`,
         value: String(m.id),
       })),
     },
+    
+    { name: "manager_phone", label: "Téléphone responsable",  type: "text"                   },
+    { name: "email",             label: "Email du site",          type: "email"                  },
+    {
+      name: "status", label: "Statut", type: "select", required: true,
+      options: [{ label: "Actif", value: "active" }, { label: "Inactif", value: "inactive" }],
+    },
+    
     { name: "effectifs",        label: "Effectifs",                type: "number" },
     { name: "loyer",            label: "Loyer mensuel (FCFA)",     type: "number" },
     { name: "localisation",     label: "Localisation",             type: "text",  gridSpan: 2 },

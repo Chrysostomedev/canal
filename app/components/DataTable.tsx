@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import ActionHeader from "@/components/ActionHeader";
 import SearchInput from "./SearchInput";
 
 export type ColumnConfig<T> = {
@@ -59,7 +58,7 @@ export default function DataTable<T extends { id: string | number }>({
         <div className="flex-1">
           <SearchInput onSearch={setSearch} />
         </div>
-        <ActionHeader />
+        
       </div>
 
       {/* Table */}

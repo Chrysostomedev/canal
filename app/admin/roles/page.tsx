@@ -558,31 +558,7 @@ export default function RolesPage() {
             {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
           </div>
 
-          {/* ── Cartes rôles (résumé visuel) ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(ROLES_CONFIG).map(([key, cfg]) => {
-             const Icon = cfg.icon;
-              const isActive = roleFilter === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleRoleFilter(isActive ? "all" : key)}
-                  className={`group flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
-                    isActive ? "border-slate-900 bg-slate-900 shadow-lg" : "border-slate-100 bg-white hover:border-slate-300 hover:shadow-sm"
-                  }`}
-                >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${isActive ? "bg-white/10" : "bg-slate-50 border border-slate-100"}`}>
-                    <Icon size={20} className={isActive ? "text-white" : "text-slate-600"} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-black text-sm ${isActive ? "text-white" : "text-slate-900"}`}>{cfg.label}</p>
-                    <p className={`text-xs font-bold ${isActive ? "text-white/60" : "text-slate-400"}`}>{cfg.count} utilisateur{cfg.count > 1 ? "s" : ""}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
+      
           {/* ── Filter pills + bouton Ajouter ── */}
           <div className="flex items-center justify-between gap-3">
             {/* Pills rôles à gauche */}
