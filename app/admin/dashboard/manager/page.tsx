@@ -12,7 +12,7 @@ import DataTable from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye } from "lucide-react";
 
-import { useDashboard } from "../../../hooks/useDashboard";
+import { useDashboard } from "../../../../hooks/useDashboard";
 
 const MOIS_LABELS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
 const DONUT_COLORS = ["#df1414", "#07ad07", "#606eee", "#050f6b", "#f97316"];
@@ -139,19 +139,13 @@ export default function Dashboard() {
           </div>
 
           {/* KPIs Sites — 4 cartes, coûts avec isCurrency=true */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard label="Sites actifs" value={dashboard?.nombre_sites_actifs ?? 0} delta="+3%" trend="up" />
-            <StatsCard label="Sites inactifs" value={dashboard?.nombre_sites_inactifs ?? 0} delta="+3%" trend="up" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <StatsCard label="Mes prestataires" value={dashboard?.nombre_sites_actifs ?? 0} delta="+3%" trend="up" />
+            <StatsCard label=" " value={dashboard?.nombre_sites_inactifs ?? 0} delta="+3%" trend="up" />
             {/* isCurrency=true → formate en K/M FCFA sans virgule */}
+            
             <StatsCard
-              label="Coût moyen par site"
-              value={dashboard?.cout_moyen_par_site ?? 0}
-              isCurrency
-              delta="+20,10%"
-              trend="up"
-            />
-            <StatsCard
-              label="Coût total de maintenance"
+              label="Coût de maintenance de mon siste"
               value={dashboard?.cout_total_maintenance ?? 0}
               isCurrency
               delta="+1%"
@@ -160,9 +154,9 @@ export default function Dashboard() {
           </div>
 
           {/* Graphiques */}
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch pb-4">
+          <section className="grid grid-cols-1 lg:grid-cols-8 gap-12 items-stretch pb-4">
             {/* tendance de l'année en fonction des tickets */}
-  <div className="lg:col-span-5 flex">
+  <div className="lg:col-span-4 flex">
     <div className="w-full h-full">
       <BarChartCard
         title="Tendance de l'année "
@@ -175,22 +169,13 @@ export default function Dashboard() {
   <div className="lg:col-span-4 flex">
     <div className="w-full h-full">
       <DonutChartCard
-        title="Sites les plus fréquentés(interventions)"
+        title="Mes prestataires favoris"
         data={buildDonutData()}
       />
     </div>
   </div>
 
-  <div className="lg:col-span-3 flex">
-    <div className="w-full h-full">
-      <ListCard
-        title="Listes des sites"
-        items={buildListItems()}
-        viewAllHref="/admin/sites"
-        viewAllText="Voir tous"
-      />
-    </div>
-  </div>
+ 
 </section>
           {/* Tickets récents avec lien voir tous */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">

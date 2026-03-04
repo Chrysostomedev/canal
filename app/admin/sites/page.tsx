@@ -3,28 +3,25 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Filter, Download, Upload, Globe, X,
-  Building2, MapPin, Phone, Mail, Users,
-  TrendingUp, Activity,
 } from "lucide-react";
 
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import SiteCard from "@/components/SiteCard";
-import StatsCard from "@/components/StatsCard";
-import Paginate from "@/components/Paginate";
+import Navbar      from "@/components/Navbar";
+import Sidebar     from "@/components/Sidebar";
+import SiteCard    from "@/components/SiteCard";
+import StatsCard   from "@/components/StatsCard";
+import Paginate    from "@/components/Paginate";
 import ReusableForm from "@/components/ReusableForm";
-import PageHeader from "@/components/PageHeader";
+import PageHeader  from "@/components/PageHeader";
 import SearchInput from "@/components/SearchInput";
 import { FieldConfig } from "@/components/ReusableForm";
 
 import { useSites } from "../../../hooks/useSites";
-import { exportSites, importSites } from "../../../services/site.service";
+import { exportSites, importSites, downloadSiteImportTemplate } from "../../../services/site.service";
 
 // ═══════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════
 
-/** 100000 → "100K" · 1500000 → "1,5M" · 0 → "0" */
 const formatMontant = (v: number | null | undefined): string => {
   if (!v) return "0";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 !== 0 ? 1 : 0)}M`;
@@ -33,7 +30,7 @@ const formatMontant = (v: number | null | undefined): string => {
 };
 
 // ═══════════════════════════════════════════════
-// FILTER DROPDOWN — pattern CANAL+
+// FILTER DROPDOWN
 // ═══════════════════════════════════════════════
 
 interface SiteFiltersState { status?: string; }
@@ -103,13 +100,13 @@ function SiteFilterDropdown({
 // ═══════════════════════════════════════════════
 
 export default function SitesPage() {
-  const [isModalOpen,  setIsModalOpen]  = useState(false);
-  const [search,       setSearch]       = useState("");
-  const [filters,      setFilters]      = useState<SiteFiltersState>({});
-  const [filtersOpen,  setFiltersOpen]  = useState(false);
-  const [importLoading,setImportLoading]= useState(false);
-  const [exportLoading,setExportLoading]= useState(false);
-  const [flash,        setFlash]        = useState<{ type: "success"|"error"; msg: string } | null>(null);
+  const [isModalOpen,   setIsModalOpen]   = useState(false);
+  const [search,        setSearch]        = useState("");
+  const [filters,       setFilters]       = useState<SiteFiltersState>({});
+  const [filtersOpen,   setFiltersOpen]   = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [flash, setFlash] = useState<{ type: "success"|"error"; msg: string } | null>(null);
 
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -129,17 +126,15 @@ export default function SitesPage() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  // Le hook useSites réagit lui-même au changement de `page`.
-  // On n'appelle fetchSites ici que pour search (et il mémorise le search en interne).
   useEffect(() => {
     setPage(1);
-    fetchSites(search, filters.status);
+    fetchSites(search, filters.status, 1);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchStats();
     fetchManagers();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!flash) return;
@@ -149,11 +144,10 @@ export default function SitesPage() {
 
   const showFlash = (type: "success"|"error", msg: string) => setFlash({ type, msg });
 
-  // ── Apply filters → refetch avec status passé à l'API
   const handleApplyFilters = (f: SiteFiltersState) => {
     setFilters(f);
     setPage(1);
-    fetchSites(search, f.status, 1); // override page=1 immédiatement
+    fetchSites(search, f.status, 1);
   };
 
   const activeCount = [filters.status].filter(Boolean).length;
@@ -173,9 +167,7 @@ export default function SitesPage() {
     }
   };
 
-  // ══════════════════════
-  // EXPORT
-  // ══════════════════════
+  // ── Export
   const handleExport = async () => {
     if (exportLoading) return;
     setExportLoading(true);
@@ -204,9 +196,7 @@ export default function SitesPage() {
     }
   };
 
-  // ══════════════════════
-  // IMPORT
-  // ══════════════════════
+  // ── Import
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -228,26 +218,24 @@ export default function SitesPage() {
     { name: "nom",               label: "Nom du site",            type: "text",   required: true },
     { name: "ref_contrat",       label: "Référence contrat",      type: "text",   required: true },
     {
-      name: "manager_id", label: "Nom Gestionnaire", type: "select",
+      name: "manager_id", label: "Gestionnaire", type: "select",
       options: managers.map((m: any) => ({
-        label: m.name ?? m.email ?? `Manager #${m.id}`,
+        label: m.first_name ?? m.name ?? m.email ?? `Manager #${m.id}`,
         value: String(m.id),
       })),
     },
-    
-    { name: "manager_phone", label: "Téléphone responsable",  type: "text"                   },
-    { name: "email",             label: "Email du site",          type: "email"                  },
+    { name: "phone_responsable", label: "Téléphone responsable", type: "text" },
+    { name: "email",             label: "Email du site",          type: "email" },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: [{ label: "Actif", value: "active" }, { label: "Inactif", value: "inactive" }],
     },
-    
     { name: "effectifs",        label: "Effectifs",                type: "number" },
     { name: "loyer",            label: "Loyer mensuel (FCFA)",     type: "number" },
-    { name: "localisation",     label: "Localisation",             type: "text",  gridSpan: 2 },
+    { name: "localisation",     label: "Localisation",             type: "text", gridSpan: 2 },
     { name: "superficie",       label: "Superficie (m²)",          type: "number" },
-    { name: "date_deb_contrat", label: "Date de début de contrat", type: "date"   },
-    { name: "date_fin_contrat", label: "Date de fin de contrat",   type: "date"   },
+    { name: "date_deb_contrat", label: "Date de début de contrat", type: "date" },
+    { name: "date_fin_contrat", label: "Date de fin de contrat",   type: "date" },
   ];
 
   // ── KPIs
@@ -259,10 +247,10 @@ export default function SitesPage() {
   ) ?? 0;
 
   const kpis1 = [
-    { label: "Sites actifs",          value: stats?.nombre_sites_actifs   ?? 0, delta: "+0%", trend: "up"   as const },
-    { label: "Sites inactifs",        value: stats?.nombre_sites_inactifs ?? 0, delta: "+0%", trend: "down" as const },
-    { label: "Délai moyen / site",    value: "1 semaine",                        delta: "+0%", trend: "up"   as const },
-    { label: "Total sites",           value: stats?.nombre_total_sites    ?? 0, delta: "+0%", trend: "up"   as const },
+    { label: "Sites actifs",       value: stats?.nombre_sites_actifs   ?? 0, delta: "+0%", trend: "up"   as const },
+    { label: "Sites inactifs",     value: stats?.nombre_sites_inactifs ?? 0, delta: "+0%", trend: "down" as const },
+    { label: "Délai moyen / site", value: "1 semaine",                        delta: "+0%", trend: "up"   as const },
+    { label: "Total sites",        value: stats?.nombre_total_sites    ?? 0, delta: "+0%", trend: "up"   as const },
   ];
   const kpis2 = [
     {
@@ -270,8 +258,8 @@ export default function SitesPage() {
       value: formatMontant(stats?.cout_loyer_moyen_par_site) + " FCFA",
       delta: "+0%", trend: "up" as const,
     },
-    { label: "Tickets en cours",   value: ticketsEnCours, delta: "+0%", trend: "up"   as const },
-    { label: "Tickets clôturés",   value: ticketsClos,    delta: "+0%", trend: "up"   as const },
+    { label: "Tickets en cours",    value: ticketsEnCours, delta: "+0%", trend: "up" as const },
+    { label: "Tickets clôturés",    value: ticketsClos,    delta: "+0%", trend: "up" as const },
     { label: "Site le plus visité", value: stats?.site_le_plus_visite?.nom ?? "—", delta: "", trend: "up" as const },
   ];
 
@@ -326,6 +314,16 @@ export default function SitesPage() {
 
             {/* Droite : boutons */}
             <div className="flex items-center gap-3 shrink-0">
+
+              {/* Template import */}
+              <button
+                onClick={downloadSiteImportTemplate}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 transition"
+                title="Télécharger le modèle d'import"
+              >
+                <Download size={14} />
+                Modèle
+              </button>
 
               {/* Importer */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
@@ -390,7 +388,6 @@ export default function SitesPage() {
 
           {/* ── Grille sites ── */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-6">
-            {/* Search */}
             <div className="w-80">
               <SearchInput
                 onSearch={(v) => { setSearch(v); fetchSites(v, filters.status, 1); setPage(1); }}
@@ -398,7 +395,6 @@ export default function SitesPage() {
               />
             </div>
 
-            {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {loading ? (
                 <div className="col-span-full py-16 text-center">
@@ -414,7 +410,6 @@ export default function SitesPage() {
               )}
             </div>
 
-            {/* Pagination */}
             <div className="pt-4 flex items-center justify-between border-t border-slate-50">
               <p className="text-xs text-slate-400">
                 Page {page} sur {totalPages} · {totalItems} site{totalItems > 1 ? "s" : ""}
@@ -430,7 +425,6 @@ export default function SitesPage() {
         </main>
       </div>
 
-      {/* Formulaire création site */}
       <ReusableForm
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

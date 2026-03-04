@@ -5,29 +5,33 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Filter, Download, Upload, Building2,
-  Eye, ChevronLeft, MapPin,
-  Phone, Mail, CalendarClock, X, Copy, CheckCheck,
+  Eye, ChevronLeft, MapPin, Phone, Mail, CalendarClock, X, Copy, CheckCheck,
 } from "lucide-react";
 
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import Paginate from "@/components/Paginate";
-import StatsCard from "@/components/StatsCard";
+import Navbar      from "@/components/Navbar";
+import Sidebar     from "@/components/Sidebar";
+import Paginate    from "@/components/Paginate";
+import StatsCard   from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
-import DataTable from "@/components/DataTable";
+import DataTable   from "@/components/DataTable";
 import { FieldConfig } from "@/components/ReusableForm";
 
-import { useTypes } from "../../../../../hooks/useTypes";
+import { useTypes }         from "../../../../../hooks/useTypes";
 import { useSubTypeAssets } from "../../../../../hooks/useSubTypeAssets";
 import { AssetService, CompanyAsset } from "../../../../../services/asset.service";
-import { getSiteById, getSiteStats } from "../../../../../services/site.service";
+import {
+  getSiteById,
+  getSiteStats,
+  resolveManagerName,
+  resolveManagerPhone,
+  resolveManagerEmail,
+} from "../../../../../services/site.service";
 import axiosInstance from "../../../../../core/axios";
 
 // ═══════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════
 
-/** 100000 → "100K" · 1500000 → "1,5M" */
 const formatMontant = (v: number | null | undefined): string => {
   if (!v && v !== 0) return "—";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 !== 0 ? 1 : 0)}M FCFA`;
@@ -50,18 +54,12 @@ const formatDate = (iso?: string | null): string => {
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* fallback silencieux */
-    }
-  };
   return (
     <button
-      onClick={handleCopy}
+      onClick={async () => {
+        try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+        catch { /* fallback silencieux */ }
+      }}
       title="Copier l'ID"
       className="ml-2 p-1 rounded-lg hover:bg-slate-200 transition text-slate-400 hover:text-slate-700"
     >
@@ -71,20 +69,20 @@ function CopyButton({ text }: { text: string }) {
 }
 
 // ═══════════════════════════════════════════════
-// STATUT PATRIMOINE
+// STATUTS
 // ═══════════════════════════════════════════════
 
 const ASSET_STATUS_STYLES: Record<string, string> = {
-  actif:     "border-green-500  bg-green-50  text-green-700",
-  inactif:   "border-red-400    bg-red-50    text-red-600",
-  hors_usage:"border-slate-400  bg-slate-100 text-slate-700",
+  actif:      "border-green-500 bg-green-50  text-green-700",
+  inactif:    "border-red-400   bg-red-50    text-red-600",
+  hors_usage: "border-slate-400 bg-slate-100 text-slate-700",
 };
 const ASSET_STATUS_LABELS: Record<string, string> = {
   actif: "Actif", inactif: "Inactif", hors_usage: "Hors usage",
 };
 
 // ═══════════════════════════════════════════════
-// FILTER DROPDOWN CANAL+
+// FILTER DROPDOWN
 // ═══════════════════════════════════════════════
 
 interface AssetFilters { type_id?: number; sub_type_id?: number; status?: string; }
@@ -100,9 +98,13 @@ function AssetFilterDropdown({
   useEffect(() => { setLocal(filters); }, [filters]);
   if (!isOpen) return null;
 
+  // Sous-types filtrés selon le type sélectionné
+  const filteredSubTypes = local.type_id
+    ? subTypes.filter((st: any) => st.type_company_asset_id === local.type_id)
+    : subTypes;
+
   const Pill = ({ val, current, onClick, label }: { val: string; current?: string; onClick: () => void; label: string }) => (
-    <button
-      onClick={onClick}
+    <button onClick={onClick}
       className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
         (current ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
       }`}
@@ -115,9 +117,7 @@ function AssetFilterDropdown({
     <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Filtres</span>
-        <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition">
-          <X size={16} className="text-slate-500" />
-        </button>
+        <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition"><X size={16} className="text-slate-500" /></button>
       </div>
 
       <div className="p-5 space-y-5 max-h-[60vh] overflow-y-auto">
@@ -127,10 +127,10 @@ function AssetFilterDropdown({
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
           <div className="flex flex-col gap-1.5">
             {[
-              { val: "",          label: "Tous" },
-              { val: "actif",     label: "Actif" },
-              { val: "inactif",   label: "Inactif" },
-              { val: "hors_usage",label: "Hors usage" },
+              { val: "",           label: "Tous" },
+              { val: "actif",      label: "Actif" },
+              { val: "inactif",    label: "Inactif" },
+              { val: "hors_usage", label: "Hors usage" },
             ].map(o => (
               <Pill key={o.val} val={o.val} current={local.status ?? ""} label={o.label}
                 onClick={() => setLocal({ ...local, status: o.val || undefined })} />
@@ -138,29 +138,31 @@ function AssetFilterDropdown({
           </div>
         </div>
 
-        {/* Type */}
+        {/* Type — sélection efface le sous-type si incompatible */}
         {types.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Type / Famille</p>
             <div className="flex flex-col gap-1.5">
               <Pill val="" current={String(local.type_id ?? "")} label="Tous les types"
-                onClick={() => setLocal({ ...local, type_id: undefined })} />
+                onClick={() => setLocal({ ...local, type_id: undefined, sub_type_id: undefined })} />
               {types.map((t: any) => (
                 <Pill key={t.id} val={String(t.id)} current={String(local.type_id ?? "")} label={t.name}
-                  onClick={() => setLocal({ ...local, type_id: t.id })} />
+                  onClick={() => setLocal({ ...local, type_id: t.id, sub_type_id: undefined })} />
               ))}
             </div>
           </div>
         )}
 
-        {/* Sous-type */}
-        {subTypes.length > 0 && (
+        {/* Sous-type — filtré selon le type sélectionné */}
+        {filteredSubTypes.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Sous-type</p>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+              Sous-type {local.type_id ? <span className="text-slate-300 normal-case font-medium">(filtrés)</span> : ""}
+            </p>
             <div className="flex flex-col gap-1.5">
               <Pill val="" current={String(local.sub_type_id ?? "")} label="Tous les sous-types"
                 onClick={() => setLocal({ ...local, sub_type_id: undefined })} />
-              {subTypes.map((st: any) => (
+              {filteredSubTypes.map((st: any) => (
                 <Pill key={st.id} val={String(st.id)} current={String(local.sub_type_id ?? "")} label={st.name}
                   onClick={() => setLocal({ ...local, sub_type_id: st.id })} />
               ))}
@@ -170,16 +172,12 @@ function AssetFilterDropdown({
       </div>
 
       <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
-        <button
-          onClick={() => { setLocal({}); onApply({}); onClose(); }}
-          className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition"
-        >
+        <button onClick={() => { setLocal({}); onApply({}); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition">
           Réinitialiser
         </button>
-        <button
-          onClick={() => { onApply(local); onClose(); }}
-          className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
-        >
+        <button onClick={() => { onApply(local); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition">
           Appliquer
         </button>
       </div>
@@ -188,7 +186,7 @@ function AssetFilterDropdown({
 }
 
 // ═══════════════════════════════════════════════
-// ASSET SIDE PANEL CUSTOM
+// ASSET SIDE PANEL
 // ═══════════════════════════════════════════════
 
 function AssetSidePanel({
@@ -198,12 +196,16 @@ function AssetSidePanel({
 }) {
   if (!patrimoine) return null;
 
+  const typeName    = patrimoine.type?.name    ?? "—";
+  const subTypeName = patrimoine.subType?.name ?? "—";
+  const siteName    = patrimoine.site?.nom     ?? "—";
+
   const infoRows = [
-    { label: "Famille / Type",  value: (patrimoine as any).type?.name     ?? (patrimoine as any).typeCompanyAsset?.name ?? "—" },
-    { label: "Sous-type",       value: (patrimoine as any).subType?.name  ?? (patrimoine as any).subTypeCompanyAsset?.name ?? "—" },
+    { label: "Famille / Type",  value: typeName    },
+    { label: "Sous-type",       value: subTypeName },
     { label: "Codification",    value: patrimoine.codification },
-    { label: "Désignation",     value: patrimoine.designation },
-    { label: "Site",            value: (patrimoine as any).site?.nom ?? (patrimoine as any).site?.name ?? "—" },
+    { label: "Désignation",     value: patrimoine.designation  },
+    { label: "Site",            value: siteName    },
     { label: "Date d'entrée",   value: formatDate(patrimoine.date_entree) },
     { label: "Valeur d'entrée", value: formatMontant(patrimoine.valeur_entree) },
   ];
@@ -212,40 +214,27 @@ function AssetSidePanel({
     <>
       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed right-0 top-0 h-full w-[440px] bg-white z-50 shadow-2xl flex flex-col rounded-l-3xl overflow-hidden">
-
-        {/* Croix haut gauche */}
         <div className="flex items-start px-6 pt-6 pb-0 shrink-0">
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition -ml-1">
             <X size={18} className="text-slate-500" />
           </button>
         </div>
-
-        {/* Header */}
         <div className="px-7 pt-4 pb-5 shrink-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
-              #{patrimoine.id}
-            </span>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">#{patrimoine.id}</span>
             <CopyButton text={String(patrimoine.id)} />
           </div>
-          <h2 className="text-xl font-black text-slate-900 leading-tight">
-            {patrimoine.designation}
-          </h2>
+          <h2 className="text-xl font-black text-slate-900 leading-tight">{patrimoine.designation}</h2>
           <p className="text-sm text-slate-500 mt-0.5 font-medium">{patrimoine.codification}</p>
-          {/* Badge statut */}
           <div className="mt-2.5">
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border ${ASSET_STATUS_STYLES[patrimoine.status] ?? ""}`}>
               <span className="w-1.5 h-1.5 rounded-full" style={{
-                backgroundColor:
-                  patrimoine.status === "actif"     ? "#22c55e" :
-                  patrimoine.status === "inactif"   ? "#ef4444" : "#94a3b8"
+                backgroundColor: patrimoine.status === "actif" ? "#22c55e" : patrimoine.status === "inactif" ? "#ef4444" : "#94a3b8"
               }} />
               {ASSET_STATUS_LABELS[patrimoine.status] ?? patrimoine.status}
             </span>
           </div>
         </div>
-
-        {/* Infos */}
         <div className="flex-1 overflow-y-auto px-7 pb-7">
           <div className="space-y-0">
             {infoRows.map((row, i) => (
@@ -255,8 +244,6 @@ function AssetSidePanel({
               </div>
             ))}
           </div>
-
-          {/* Description */}
           {patrimoine.description && (
             <div className="mt-5">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Description</p>
@@ -267,13 +254,9 @@ function AssetSidePanel({
             </div>
           )}
         </div>
-
-        {/* Footer */}
         <div className="px-7 py-5 border-t border-slate-100 shrink-0">
-          <button
-            onClick={onEdit}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
-          >
+          <button onClick={onEdit}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition">
             Modifier le patrimoine
           </button>
         </div>
@@ -289,11 +272,9 @@ function AssetSidePanel({
 const PER_PAGE = 10;
 
 export default function SiteDetailsPage() {
-  const params = useParams();
-  const siteId = Number(params?.id);
+  const params  = useParams();
+  const siteId  = Number(params?.id);
 
-  // ── Charge le site DIRECTEMENT par ID — indépendant de la pagination ──
-  // Ne dépend plus de useSites().sites qui ne contient que 9 résultats
   const { types }    = useTypes();
   const { subTypes } = useSubTypeAssets();
 
@@ -315,17 +296,15 @@ export default function SiteDetailsPage() {
 
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // Ferme dropdown au clic extérieur
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node))
-        setFiltersOpen(false);
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setFiltersOpen(false);
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  // ── Fetch site par ID direct (robuste, indépendant de la liste paginée) ──
+  // ── Fetch site
   useEffect(() => {
     if (!siteId) return;
     setLoadingSite(true);
@@ -335,16 +314,18 @@ export default function SiteDetailsPage() {
       .finally(() => setLoadingSite(false));
   }, [siteId]);
 
-  // ── Fetch stats pour ce site (tickets en cours / clôturés) ──
+  // ── Fetch stats — comparaison en Number pour éviter string vs number
   useEffect(() => {
     if (!siteId) return;
     getSiteStats()
       .then(data => {
-        const perSite = data?.tickets_par_site?.find((s: any) => s.site_id === siteId);
+        const perSite = data?.tickets_par_site?.find(
+          (s: any) => Number(s.site_id) === Number(siteId)
+        );
         setSiteStats({
-          tickets_en_cours:       perSite?.tickets_en_cours ?? 0,
-          tickets_clos:           perSite?.tickets_clos     ?? 0,
-          cout_loyer_moyen:       data?.cout_loyer_moyen_par_site ?? null,
+          tickets_en_cours: perSite?.tickets_en_cours ?? 0,
+          tickets_clos:     perSite?.tickets_clos     ?? 0,
+          cout_loyer_moyen: data?.cout_loyer_moyen_par_site ?? null,
         });
       })
       .catch(() => setSiteStats(null));
@@ -363,7 +344,7 @@ export default function SiteDetailsPage() {
     }
   };
 
-  useEffect(() => { fetchPatrimoines(); }, [siteId, filters]);
+  useEffect(() => { fetchPatrimoines(); }, [siteId, filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!flashMessage) return;
@@ -372,7 +353,7 @@ export default function SiteDetailsPage() {
   }, [flashMessage]);
 
   // ── Pagination côté client
-  const totalPages   = Math.ceil(patrimoines.length / PER_PAGE) || 1;
+  const totalPages = Math.ceil(patrimoines.length / PER_PAGE) || 1;
   const paginatedPatrimoines = patrimoines.slice(
     (currentPage - 1) * PER_PAGE,
     currentPage * PER_PAGE
@@ -380,13 +361,7 @@ export default function SiteDetailsPage() {
 
   const activeFiltersCount = [filters.status, filters.type_id, filters.sub_type_id].filter(Boolean).length;
 
-  // ── Open details
-  const handleOpenDetails = (p: CompanyAsset) => {
-    setSelectedPatrimoine(p);
-    setIsDetailsOpen(true);
-  };
-
-  // ── Edit
+  const handleOpenDetails = (p: CompanyAsset) => { setSelectedPatrimoine(p); setIsDetailsOpen(true); };
   const handleEdit = () => {
     if (!selectedPatrimoine) return;
     setEditingData(selectedPatrimoine);
@@ -412,7 +387,7 @@ export default function SiteDetailsPage() {
     }
   };
 
-  // ── Export patrimoines du site
+  // ── Export
   const handleExport = async () => {
     if (exportLoading) return;
     setExportLoading(true);
@@ -440,7 +415,7 @@ export default function SiteDetailsPage() {
     }
   };
 
-  // ── Import patrimoines
+  // ── Import
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -462,8 +437,7 @@ export default function SiteDetailsPage() {
     }
   };
 
-  // ── Colonnes DataTable
-  // Fix : type?.name et subType?.name peuvent avoir différentes clés selon le eager loading
+  // ── Colonnes DataTable — clés exactes du back (type, subType, site.nom)
   const columns = [
     {
       header: "ID", key: "id",
@@ -475,28 +449,16 @@ export default function SiteDetailsPage() {
       ),
     },
     {
-      // Fix : teste plusieurs clés pour le type
       header: "Type", key: "type",
-      render: (_: any, row: CompanyAsset) => {
-        const name =
-          (row as any).type?.name             ??
-          (row as any).typeCompanyAsset?.name  ??
-          (row as any).asset_type?.name        ??
-          "—";
-        return <span className="text-sm text-slate-700">{name}</span>;
-      },
+      render: (_: any, row: CompanyAsset) => (
+        <span className="text-sm text-slate-700">{row.type?.name ?? "—"}</span>
+      ),
     },
     {
-      // Fix : teste plusieurs clés pour le sous-type
       header: "Sous-type", key: "subType",
-      render: (_: any, row: CompanyAsset) => {
-        const name =
-          (row as any).subType?.name              ??
-          (row as any).subTypeCompanyAsset?.name   ??
-          (row as any).sub_type?.name              ??
-          "—";
-        return <span className="text-sm text-slate-700">{name}</span>;
-      },
+      render: (_: any, row: CompanyAsset) => (
+        <span className="text-sm text-slate-700">{row.subType?.name ?? "—"}</span>
+      ),
     },
     {
       header: "Codification", key: "codification",
@@ -513,18 +475,6 @@ export default function SiteDetailsPage() {
       ),
     },
     {
-      // Fix : site?.nom vs site?.name
-      header: "Site", key: "site",
-      render: (_: any, row: CompanyAsset) => {
-        const name =
-          (row as any).site?.nom  ??
-          (row as any).site?.name ??
-          site?.nom               ??
-          "—";
-        return <span className="text-sm text-slate-600">{name}</span>;
-      },
-    },
-    {
       header: "Statut", key: "status",
       render: (_: any, row: CompanyAsset) => (
         <span className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${ASSET_STATUS_STYLES[row.status] ?? ""}`}>
@@ -534,9 +484,7 @@ export default function SiteDetailsPage() {
     },
     {
       header: "Date entrée", key: "date_entree",
-      render: (_: any, row: CompanyAsset) => (
-        <span className="text-xs text-slate-500">{formatDate(row.date_entree)}</span>
-      ),
+      render: (_: any, row: CompanyAsset) => <span className="text-xs text-slate-500">{formatDate(row.date_entree)}</span>,
     },
     {
       header: "Valeur", key: "valeur_entree",
@@ -547,17 +495,15 @@ export default function SiteDetailsPage() {
     {
       header: "Actions", key: "actions",
       render: (_: any, row: CompanyAsset) => (
-        <button
-          onClick={() => handleOpenDetails(row)}
-          className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition"
-        >
+        <button onClick={() => handleOpenDetails(row)}
+          className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition">
           <Eye size={18} /> Aperçu
         </button>
       ),
     },
   ];
 
-  // ── Champs formulaire patrimoine
+  // ── Champs formulaire — codification retirée (générée auto par le back)
   const assetFields: FieldConfig[] = [
     {
       name: "type_company_asset_id", label: "Famille / Type", type: "select", required: true,
@@ -567,37 +513,34 @@ export default function SiteDetailsPage() {
       name: "sub_type_company_asset_id", label: "Sous-type", type: "select", required: true,
       options: subTypes.map((st: any) => ({ label: st.name, value: String(st.id) })),
     },
-    { name: "designation",  label: "Désignation",      type: "text",   required: true },
-    { name: "codification", label: "Codification",     type: "text",   required: true, placeholder: "ex: SD1245" },
+    { name: "designation",  label: "Désignation",  type: "text",   required: true },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: [
-        { label: "Actif",     value: "actif"     },
-        { label: "Inactif",   value: "inactif"   },
-        { label: "Hors usage",value: "hors_usage"},
+        { label: "Actif",      value: "actif"      },
+        { label: "Inactif",    value: "inactif"    },
+        { label: "Hors usage", value: "hors_usage" },
       ],
     },
-    { name: "date_entree",   label: "Date d'entrée",    type: "date",   required: true, icon: CalendarClock },
-    { name: "valeur_entree", label: "Valeur d'entrée",  type: "number", required: true },
-    { name: "description",   label: "Description",      type: "rich-text", gridSpan: 2, placeholder: "Décrivez plus en détail le patrimoine" },
+    {
+      name: "criticite", label: "Criticité", type: "select",
+      options: [
+        { label: "Non critique", value: "non_critique" },
+        { label: "Critique",     value: "critique"     },
+      ],
+    },
+    { name: "date_entree",   label: "Date d'entrée",   type: "date",   required: true, icon: CalendarClock },
+    { name: "valeur_entree", label: "Valeur d'entrée", type: "number", required: true },
+    { name: "description",   label: "Description",     type: "rich-text", gridSpan: 2,
+      placeholder: "Décrivez plus en détail le patrimoine" },
   ];
 
-  // ── Infos du site — résolution robuste de toutes les clés possibles du backend
-  const siteName    = site?.nom            ?? "—";
-  const location    = site?.localisation   ?? "—";
-  // responsable : champ direct > manager.name > manager.email
-  const responsible = site?.responsable_name
-    ?? site?.manager?.name
-    ?? site?.manager?.email
-    ?? "—";
-  // phone : champ direct > manager.phone
-  const phone       = site?.phone_responsable
-    ?? site?.manager?.phone
-    ?? "—";
-  // email : champ direct > manager.email
-  const email       = site?.email
-    ?? site?.manager?.email
-    ?? "—";
+  // ── Infos du site via helpers robustes
+  const siteName    = site?.nom        ?? "—";
+  const location    = site?.localisation ?? "—";
+  const responsible = resolveManagerName(site);
+  const phone       = resolveManagerPhone(site);
+  const email       = resolveManagerEmail(site);
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
@@ -607,7 +550,6 @@ export default function SiteDetailsPage() {
 
         <main className="mt-20 p-8 space-y-8">
 
-          {/* Flash */}
           {flashMessage && (
             <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
               flashMessage.type === "success"
@@ -640,7 +582,6 @@ export default function SiteDetailsPage() {
               )}
             </div>
 
-            {/* Contact */}
             <div className="flex flex-col gap-4">
               <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 flex flex-col gap-4 min-w-[320px]">
                 {loadingSite ? (
@@ -651,19 +592,13 @@ export default function SiteDetailsPage() {
                   </div>
                 ) : (
                   <>
-                    {responsible !== "—" && (
-                      <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>
-                    )}
+                    {responsible !== "—" && <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>}
                     <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
-                      <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
-                        <Phone size={16} className="text-slate-900" />
-                      </div>
+                      <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Phone size={16} className="text-slate-900" /></div>
                       {phone}
                     </div>
                     <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
-                      <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
-                        <Mail size={16} className="text-slate-900" />
-                      </div>
+                      <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Mail size={16} className="text-slate-900" /></div>
                       {email}
                     </div>
                   </>
@@ -674,20 +609,17 @@ export default function SiteDetailsPage() {
 
           {/* ── KPIs ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard label="Coût moyen / site"   value={formatMontant(siteStats?.cout_loyer_moyen)} delta="+0%" trend="up" />
-            <StatsCard label="Tickets en cours"    value={siteStats?.tickets_en_cours ?? 0}           delta="+0%" trend="up" />
-            <StatsCard label="Tickets clôturés"    value={siteStats?.tickets_clos     ?? 0}           delta="+0%" trend="up" />
-            <StatsCard label="Total patrimoines"   value={patrimoines.length}                         delta="+0%" trend="up" />
+            <StatsCard label="Coût moyen / site"  value={formatMontant(siteStats?.cout_loyer_moyen)} delta="+0%" trend="up" />
+            <StatsCard label="Tickets en cours"   value={siteStats?.tickets_en_cours ?? 0}           delta="+0%" trend="up" />
+            <StatsCard label="Tickets clôturés"   value={siteStats?.tickets_clos     ?? 0}           delta="+0%" trend="up" />
+            <StatsCard label="Total patrimoines"  value={patrimoines.length}                         delta="+0%" trend="up" />
           </div>
 
           {/* ── Barre d'actions ── */}
           <div className="flex items-center justify-between gap-3">
 
-            {/* Badges filtres actifs */}
             <div className="flex items-center gap-2 flex-wrap min-h-[36px]">
-              {activeFiltersCount === 0 && (
-                <p className="text-xs text-slate-400 font-medium">Aucun filtre actif</p>
-              )}
+              {activeFiltersCount === 0 && <p className="text-xs text-slate-400 font-medium">Aucun filtre actif</p>}
               {filters.status && (
                 <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
                   {ASSET_STATUS_LABELS[filters.status] ?? filters.status}
@@ -697,7 +629,7 @@ export default function SiteDetailsPage() {
               {filters.type_id && (
                 <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
                   {types.find((t: any) => t.id === filters.type_id)?.name ?? `Type #${filters.type_id}`}
-                  <button onClick={() => { setFilters(f => ({ ...f, type_id: undefined })); setCurrentPage(1); }} className="hover:opacity-70"><X size={11} /></button>
+                  <button onClick={() => { setFilters(f => ({ ...f, type_id: undefined, sub_type_id: undefined })); setCurrentPage(1); }} className="hover:opacity-70"><X size={11} /></button>
                 </span>
               )}
               {filters.sub_type_id && (
@@ -708,41 +640,43 @@ export default function SiteDetailsPage() {
               )}
             </div>
 
-            {/* Boutons */}
             <div className="flex items-center gap-3 shrink-0">
+
+              {/* Template import */}
+              <button
+                onClick={() => AssetService.downloadImportTemplate()}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 transition"
+                title="Télécharger le modèle d'import"
+              >
+                <Download size={14} /> Modèle
+              </button>
 
               {/* Importer */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
                 {importLoading
                   ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
-                  : <Download size={16} />
-                }
+                  : <Download size={16} />}
                 Importer
                 <input type="file" accept=".xlsx,.xls,.csv" className="hidden" disabled={importLoading} onChange={handleImport} />
               </label>
 
               {/* Exporter */}
-              <button
-                onClick={handleExport} disabled={exportLoading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
-              >
+              <button onClick={handleExport} disabled={exportLoading}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait">
                 {exportLoading
                   ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
-                  : <Upload size={16} />
-                }
+                  : <Upload size={16} />}
                 Exporter
               </button>
 
               {/* Filtrer */}
               <div className="relative" ref={filterRef}>
-                <button
-                  onClick={() => setFiltersOpen(!filtersOpen)}
+                <button onClick={() => setFiltersOpen(!filtersOpen)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
                     filtersOpen || activeFiltersCount > 0
                       ? "bg-slate-900 text-white border-slate-900"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
+                  }`}>
                   <Filter size={16} /> Filtrer
                   {activeFiltersCount > 0 && (
                     <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
@@ -760,11 +694,8 @@ export default function SiteDetailsPage() {
                 />
               </div>
 
-              {/* Ajouter patrimoine */}
-              <button
-                onClick={() => { setEditingData(null); setIsModalOpen(true); }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
-              >
+              <button onClick={() => { setEditingData(null); setIsModalOpen(true); }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm">
                 <Building2 size={16} /> Ajouter un patrimoine
               </button>
             </div>
@@ -782,37 +713,24 @@ export default function SiteDetailsPage() {
                 Aucun patrimoine{activeFiltersCount > 0 ? " pour ces filtres" : ""}.
               </div>
             ) : (
-              <DataTable
-                columns={columns}
-                data={paginatedPatrimoines}
-                title="Patrimoines du site"
-                onViewAll={() => {}}
-              />
+              <DataTable columns={columns} data={paginatedPatrimoines} title="Patrimoines du site" onViewAll={() => {}} />
             )}
-
-            {/* Pagination côté client */}
             <div className="p-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
               <p className="text-xs text-slate-400">
                 Page {currentPage} sur {totalPages} · {patrimoines.length} patrimoine{patrimoines.length > 1 ? "s" : ""}
               </p>
-              <Paginate
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+              <Paginate currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </div>
           </div>
         </main>
       </div>
 
-      {/* ── Asset Side Panel ── */}
       <AssetSidePanel
         patrimoine={isDetailsOpen ? selectedPatrimoine : null}
         onClose={() => { setIsDetailsOpen(false); setSelectedPatrimoine(null); }}
         onEdit={handleEdit}
       />
 
-      {/* ── Formulaire créer/modifier patrimoine ── */}
       <ReusableForm
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingData(null); }}
@@ -823,8 +741,8 @@ export default function SiteDetailsPage() {
           type_company_asset_id:     String((editingData as any).type_company_asset_id     ?? ""),
           sub_type_company_asset_id: String((editingData as any).sub_type_company_asset_id ?? ""),
           designation:   editingData.designation,
-          codification:  editingData.codification,
           status:        editingData.status,
+          criticite:     editingData.criticite ?? "non_critique",
           date_entree:   editingData.date_entree ?? "",
           valeur_entree: editingData.valeur_entree ?? "",
           description:   editingData.description ?? "",

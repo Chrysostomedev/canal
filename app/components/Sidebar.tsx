@@ -14,6 +14,7 @@ import {
   Users2,
   Building2Icon,
   Layers,
+  FolderSync,
 } from "lucide-react";
 
 // Définition de la structure d'un menu
@@ -26,7 +27,7 @@ interface MenuItem {
 
 // Menu principal
 const menuItems: MenuItem[] = [
-  { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, href: "/admin/dashboard" },
+  { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, href: "/admin/dashboard/admin" },
   {
     label: "Administration",
     icon: <MapPinHouse size={20} />,
@@ -49,6 +50,7 @@ const menuItems: MenuItem[] = [
       { label: "Factures", icon: <FileText size={20} />, href: "/admin/factures" },
       { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/admin/rapports" },
       { label: "Services", icon: <Layers size={20} />, href: "/admin/services" },
+       { label: "Transfert inter-sites", icon: <FolderSync size={20} />, href: "/admin/transfert" },
     ],
   },
   {

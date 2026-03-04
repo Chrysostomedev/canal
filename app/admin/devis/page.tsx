@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import {
   Eye, Filter, Download, Upload, X, CheckCircle2,
   XCircle, Clock, Copy, FileText, ExternalLink,
   PlusCircle,
   CalendarDays,
+  ArrowUpRight,
 } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
@@ -568,13 +570,25 @@ export default function DevisPage() {
     { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
     { header: "Date",        key: "created_at", render: (_: any, row: Quote) => formatDate(row.created_at) },
     { header: "Statut",      key: "status",     render: (_: any, row: Quote) => <StatusBadge status={row.status} /> },
+   
+    
+    // Colonne Actions APRÈS :
     {
       header: "Actions", key: "actions",
       render: (_: any, row: Quote) => (
-        <button onClick={() => { setSelectedQuote(row); setIsDetailsOpen(true); }}
-          className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition">
-          <Eye size={18} /> Aperçu
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Aperçu side panel */}
+          <button onClick={() => { setSelectedQuote(row); setIsDetailsOpen(true); }}
+            className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition">
+            <Eye size={18} />
+          </button>
+          
+          {/* Redirection vers page détails */}
+          <Link href={`/admin/devis/details/${row.id}`}
+            className="group p-2 rounded-xl bg-white hover:bg-black transition flex items-center justify-center">
+            <ArrowUpRight size={16} className="group-hover:rotate-45 transition-transform" />
+          </Link>
+        </div>
       ),
     },
   ];

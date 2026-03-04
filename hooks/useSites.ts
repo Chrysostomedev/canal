@@ -16,37 +16,33 @@ export const useSites = () => {
   const [stats,      setStats]      = useState<any>(null);
   const [managers,   setManagers]   = useState<any[]>([]);
   const [loading,    setLoading]    = useState(false);
-  const [page,       setPage]       = useState(1);
+  const [page,       setPageState]  = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Références internes pour éviter les closures périmées dans useEffect
-  const pageRef    = useRef(page);
-  const searchRef  = useRef<string>("");
-  const statusRef  = useRef<string | undefined>(undefined);
-
-  useEffect(() => { pageRef.current = page; }, [page]);
+  // Références internes pour éviter les closures périmées
+  const pageRef   = useRef(1);
+  const searchRef = useRef<string>("");
+  const statusRef = useRef<string | undefined>(undefined);
 
   // ─────────────────────────────────────────────
   // FETCH PRINCIPAL — respecte page, search, status
-  // Appelé depuis la page avec les params courants
   // ─────────────────────────────────────────────
   const fetchSites = async (
-    search?: string,
-    status?: string,
+    search?:      string,
+    status?:      string,
     overridePage?: number,
   ) => {
-    // Mémorise les derniers params pour que useEffect(page) puisse relancer
-    searchRef.current = search ?? "";
-    statusRef.current = status;
+    searchRef.current = search ?? searchRef.current;
+    statusRef.current = status !== undefined ? status : statusRef.current;
 
     const currentPage = overridePage ?? pageRef.current;
 
     setLoading(true);
     try {
       const { items, meta } = await getSitesFiltered({
-        search:   search   || undefined,
-        status:   status   || undefined,
+        search:   searchRef.current || undefined,
+        status:   statusRef.current || undefined,
         page:     currentPage,
         per_page: PER_PAGE,
       });
@@ -64,8 +60,6 @@ export const useSites = () => {
 
   // ─────────────────────────────────────────────
   // FETCH SIMPLE — pour les selects (per_page élevé)
-  // Utilisé par la page détails site pour alimenter
-  // les listes déroulantes
   // ─────────────────────────────────────────────
   const fetchSitesAll = async () => {
     try {
@@ -77,7 +71,7 @@ export const useSites = () => {
   };
 
   // ─────────────────────────────────────────────
-  // Auto-fetch au montage (page liste)
+  // Auto-fetch au montage UNIQUEMENT (pas de double)
   // ─────────────────────────────────────────────
   useEffect(() => {
     fetchSites();
@@ -85,10 +79,15 @@ export const useSites = () => {
 
   // ─────────────────────────────────────────────
   // Réaction au changement de page
-  // Relance avec les derniers search/status mémorisés
+  // skipFirst évite le double-fetch au montage
   // ─────────────────────────────────────────────
+  const isFirstMount = useRef(true);
   useEffect(() => {
-    // Évite le double-fetch au montage (page vaut déjà 1)
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    pageRef.current = page;
     fetchSites(searchRef.current, statusRef.current, page);
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -123,6 +122,10 @@ export const useSites = () => {
     await createSite(data);
   };
 
+  const setPage = (p: number) => {
+    setPageState(p);
+  };
+
   return {
     sites,
     stats,
@@ -132,8 +135,8 @@ export const useSites = () => {
     totalPages,
     totalItems,
     setPage,
-    fetchSites,       // fetch paginé + filtré (page liste)
-    fetchSitesAll,    // fetch tous pour selects (page détails)
+    fetchSites,
+    fetchSitesAll,
     fetchStats,
     fetchManagers,
     addSite,

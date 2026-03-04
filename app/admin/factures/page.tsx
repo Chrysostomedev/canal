@@ -1,11 +1,14 @@
+// app/admin/factures/page.tsx
+// ✅ CORRIGÉ - Gère intervention_report au lieu de interventionReport
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   Eye, Filter, Download, Upload, X,
   CheckCircle2, FileText, Copy,
-  CalendarDays,
-  PlusCircle,
+  CalendarDays, PlusCircle, ArrowUpRight,
 } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
@@ -23,11 +26,12 @@ import { Invoice, InvoiceService } from "../../../services/invoice.service";
 // HELPERS
 // ═══════════════════════════════════════════════
 
-const formatMontant = (v: number): string => {
-  if (!v && v !== 0) return "0 FCFA";
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
-  return `${v.toLocaleString("fr-FR")} FCFA`;
+const formatMontant = (v: number | string): string => {
+  const num = typeof v === "string" ? parseFloat(v) : v;
+  if (!num && num !== 0) return "0 FCFA";
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M FCFA`;
+  if (num >= 1_000) return `${Math.round(num / 1_000)}K FCFA`;
+  return `${num.toLocaleString("fr-FR")} FCFA`;
 };
 
 const formatDate = (iso: string): string => {
@@ -36,7 +40,7 @@ const formatDate = (iso: string): string => {
 };
 
 // ═══════════════════════════════════════════════
-// STATUTS FACTURE — noir/blanc CANAL+
+// STATUTS
 // ═══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
@@ -62,7 +66,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 // ═══════════════════════════════════════════════
-// PDF PREVIEW MODAL — plein écran
+// PDF PREVIEW MODAL
 // ═══════════════════════════════════════════════
 
 function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
@@ -151,8 +155,7 @@ function FilterDropdown({
 }
 
 // ═══════════════════════════════════════════════
-// SIDE PANEL FACTURE — style exact comme la capture
-// Croix haut gauche, champs label/valeur, PDF preview
+// SIDE PANEL FACTURE
 // ═══════════════════════════════════════════════
 
 function InvoiceSidePanel({
@@ -169,36 +172,35 @@ function InvoiceSidePanel({
   const isPaid       = invoice.payment_status === "paid";
   const pdfUrl       = invoice.pdf_path ? InvoiceService.getPdfUrl(invoice.pdf_path) : null;
   const pdfName      = invoice.pdf_path?.split("/").pop() ?? "facture.pdf";
-  const providerName = invoice.provider?.name ?? "—";
-  const siteName     = invoice.site?.nom ?? invoice.site?.name ?? "—";
+  
+  // ✅ CORRECTION : Accès à provider via company_name
+  const providerName = invoice.provider?.company_name ?? "—";
+  const siteName     = invoice.site?.nom ?? "—";
 
   const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
-
- 
+  
+  // ✅ CORRECTION : Normalisation montants
+  const amountHT  = typeof invoice.amount_ht === "string" ? parseFloat(invoice.amount_ht) : invoice.amount_ht;
+  const taxAmount = typeof invoice.tax_amount === "string" ? parseFloat(invoice.tax_amount) : invoice.tax_amount;
+  const amountTTC = typeof invoice.amount_ttc === "string" ? parseFloat(invoice.amount_ttc) : invoice.amount_ttc;
 
   return (
     <>
       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
 
       <div className="fixed right-0 top-0 h-full w-[420px] bg-white z-50 shadow-2xl flex flex-col rounded-l-3xl overflow-hidden">
-
-        {/* ── Croix en haut à gauche ── */}
         <div className="flex items-start px-6 pt-6 pb-0 shrink-0">
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition -ml-1">
             <X size={18} className="text-slate-500" />
           </button>
         </div>
 
-        {/* ── Titre ── */}
         <div className="px-6 pt-4 pb-5 shrink-0">
           <h2 className="text-2xl font-black text-slate-900">Facture {invoice.reference}</h2>
           <p className="text-slate-400 text-xs mt-0.5">Retrouvez les détails de la facture en dessous</p>
         </div>
 
-        {/* ── Contenu ── */}
         <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
-
-          {/* Champs */}
           <div className="space-y-0">
             {[
               {
@@ -216,7 +218,7 @@ function InvoiceSidePanel({
               { label: "Prestataire", value: providerName },
               { label: "Date",        value: formatDate(invoice.invoice_date) },
               { label: "Site",        value: siteName },
-              { label: "Montant HT",  value: formatMontant(invoice.amount_ht) },
+              { label: "Montant HT",  value: formatMontant(amountHT) },
             ].map((f, i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                 <p className="text-xs text-slate-400 font-medium">{f.label}</p>
@@ -224,7 +226,6 @@ function InvoiceSidePanel({
               </div>
             ))}
 
-            {/* Statut — avec bouton "Marquer payée" inline si pending */}
             <div className="flex items-center justify-between py-3">
               <p className="text-xs text-slate-400 font-medium">Statut</p>
               <div className="flex items-center gap-2">
@@ -242,23 +243,21 @@ function InvoiceSidePanel({
             </div>
           </div>
 
-          {/* Montants */}
           <div className="bg-slate-50 rounded-2xl border border-slate-100 px-4 py-3 space-y-1.5">
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">Montant HT</span>
-              <span className="font-bold text-slate-900">{formatMontant(invoice.amount_ht)}</span>
+              <span className="font-bold text-slate-900">{formatMontant(amountHT)}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">TVA</span>
-              <span className="font-bold text-slate-900">{formatMontant(invoice.tax_amount)}</span>
+              <span className="font-bold text-slate-900">{formatMontant(taxAmount)}</span>
             </div>
             <div className="flex justify-between text-sm border-t border-slate-200 pt-1.5">
               <span className="font-black text-slate-900">Montant TTC</span>
-              <span className="font-black text-slate-900">{formatMontant(invoice.amount_ttc)}</span>
+              <span className="font-black text-slate-900">{formatMontant(amountTTC)}</span>
             </div>
           </div>
 
-          {/* Payée le */}
           {isPaid && invoice.payment_date && (
             <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold">
               <CheckCircle2 size={16} />
@@ -266,17 +265,16 @@ function InvoiceSidePanel({
             </div>
           )}
 
-          {/* Rapport lié */}
-          {invoice.interventionReport?.description && (
+          {/* ✅ CORRECTION : Accès à intervention_report */}
+          {invoice.intervention_report?.findings && (
             <div>
-              <p className="text-xs text-slate-400 font-medium mb-2">Action</p>
+              <p className="text-xs text-slate-400 font-medium mb-2">Constatations</p>
               <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-                {invoice.interventionReport.description}
+                {invoice.intervention_report.findings}
               </p>
             </div>
           )}
 
-          {/* ── Pièce jointe PDF — style exact de la capture ── */}
           {pdfUrl ? (
             <div>
               <p className="text-xs text-slate-400 font-medium mb-3">Pièce jointe</p>
@@ -308,7 +306,6 @@ function InvoiceSidePanel({
           )}
         </div>
 
-        {/* Footer — bouton Marquer payée */}
         {!isPaid && (
           <div className="px-6 py-5 border-t border-slate-100 shrink-0">
             <button
@@ -321,7 +318,6 @@ function InvoiceSidePanel({
         )}
       </div>
 
-      {/* Preview PDF fullscreen */}
       {pdfPreview && (
         <PdfPreviewModal url={pdfPreview.url} name={pdfPreview.name} onClose={() => setPdfPreview(null)} />
       )}
@@ -336,26 +332,6 @@ function InvoiceSidePanel({
 export default function FacturesPage() {
   const filterRef = useRef<HTMLDivElement>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-// ── Création ───────────────────────────────────────────────────────────────
-const handleCreate = async (formData: any) => {
-  try {
-    await InvoiceService.createInvoice({
-      reference: formData.invoice_id,
-      ticket_id:  formData.ticket_id,
-      provider:      formData.provider_id,
-      montant: formData.amount_ttc,
-      status: formData.payment_status,
-      site:      formData.site_id,
-
-      date:   formData.created_at || undefined,
-    });
-    showFlash("success", "facture créé avec succès");
-    setIsCreateModalOpen(false);
-    fetchInvoices();
-  } catch (err: any) {
-    showFlash("error", err?.response?.data?.message || "Erreur lors de la création");
-  }
-};
 
   const { invoices, stats, isLoading, statsLoading, fetchInvoices, fetchStats, markAsPaid } = useInvoices();
 
@@ -368,7 +344,7 @@ const handleCreate = async (formData: any) => {
 
   const PER_PAGE = 10;
 
-  useEffect(() => { fetchInvoices(); fetchStats(); }, []);
+  useEffect(() => { fetchInvoices(); fetchStats(); }, [fetchInvoices, fetchStats]);
 
   useEffect(() => {
     if (!flashMessage) return;
@@ -403,47 +379,38 @@ const handleCreate = async (formData: any) => {
     }
   };
 
+  // ✅ CORRECTION : Normaliser les montants pour les KPIs
+  const totalAmount = stats?.total_amount ?? 0;
+  const totalInvoices = stats?.total_invoices ?? 0;
+  const avgCost = totalInvoices > 0 ? Math.round(totalAmount / totalInvoices) : 0;
+
   const kpis = [
-    {
-      label: "Coût moyen par facture",
-      value: statsLoading ? 0 : (stats?.total_amount && stats?.total_invoices ? Math.round(stats.total_amount / stats.total_invoices) : 0),
-      delta: "+3%", trend: "up" as const, isCurrency: true,
-    },
-    { label: "Nombre total de factures", value: statsLoading ? 0 : (stats?.total_invoices ?? 0), delta: "+3%",     trend: "up" as const },
-    { label: "Factures en attente",      value: statsLoading ? 0 : (stats?.total_unpaid ?? 0),   delta: "+0%",     trend: "up" as const },
-    { label: "Factures payées",          value: statsLoading ? 0 : (stats?.total_paid ?? 0),     delta: "+15,03%", trend: "up" as const },
+    { label: "Coût moyen par facture", value: avgCost, delta: "+3%", trend: "up" as const, isCurrency: true },
+    { label: "Nombre total de factures", value: totalInvoices, delta: "+3%", trend: "up" as const },
+    { label: "Factures en attente", value: stats?.total_unpaid ?? 0, delta: "+0%", trend: "up" as const },
+    { label: "Factures payées", value: stats?.total_paid ?? 0, delta: "+15,03%", trend: "up" as const },
   ];
 
-    // ── Champs formulaire création ─────────────────────────────────────────────
-    const invoiceFields = [
-      { name: "invoice_id", label: "Ticket",        type: "text",  required: true },
-      { name: "provider_id",  label: "Prestataire",            type: "text",  required: true },
-      { name: "site_id",      label: "Site",          type: "text", required: true },
-      { name: "amount_ttc",      label: "Montant TTC",      type: "number"                  },
-      { name: "created_at", label: "Date ", type: "date", required: true, icon: CalendarDays },
-      { name: "payment_status",   label: "Statut",   type: "select", required: true,
-        options: [
-          { label: "en attente", value: "pending" },   
-          { label: "payé", value: "paid" },   
-          { label: "rejeté", value: "overdue" },  
-        ],
-      },
-    ];
-  
   const columns = [
-    { header: "ID Facture",   key: "reference",       render: (_: any, row: Invoice) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
-    { header: "Prestataire",  key: "provider",        render: (_: any, row: Invoice) => row.provider?.name ?? "—" },
-    { header: "Date",         key: "invoice_date",    render: (_: any, row: Invoice) => formatDate(row.invoice_date) },
-    { header: "Site",         key: "site",            render: (_: any, row: Invoice) => row.site?.nom ?? row.site?.name ?? "—" },
-    { header: "Montant TTC",  key: "amount_ttc",      render: (_: any, row: Invoice) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
-    { header: "Statut",       key: "payment_status",  render: (_: any, row: Invoice) => <StatusBadge status={row.payment_status} /> },
+    { header: "ID Facture", key: "reference", render: (_: any, row: Invoice) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
+    { header: "Prestataire", key: "provider", render: (_: any, row: Invoice) => row.provider?.company_name ?? "—" },
+    { header: "Date", key: "invoice_date", render: (_: any, row: Invoice) => formatDate(row.invoice_date) },
+    { header: "Site", key: "site", render: (_: any, row: Invoice) => row.site?.nom ?? "—" },
+    { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Invoice) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
+    { header: "Statut", key: "payment_status", render: (_: any, row: Invoice) => <StatusBadge status={row.payment_status} /> },
     {
       header: "Actions", key: "actions",
       render: (_: any, row: Invoice) => (
-        <button onClick={() => { setSelectedInvoice(row); setIsDetailsOpen(true); }}
-          className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition">
-          <Eye size={18} /> Aperçu
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => { setSelectedInvoice(row); setIsDetailsOpen(true); }}
+            className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition">
+            <Eye size={18} />
+          </button>
+          <Link href={`/admin/factures/details/${row.id}`}
+            className="group p-2 rounded-xl bg-white hover:bg-black transition flex items-center justify-center">
+            <ArrowUpRight size={16} className="group-hover:rotate-45 transition-transform" />
+          </Link>
+        </div>
       ),
     },
   ];
@@ -469,8 +436,6 @@ const handleCreate = async (formData: any) => {
           </div>
 
           <div className="shrink-0 flex justify-end items-center gap-3">
-       
-            {/* Filtrer */}
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setFiltersOpen(!filtersOpen)}
@@ -483,26 +448,12 @@ const handleCreate = async (formData: any) => {
               </button>
               <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
             </div>
-                 {/* Importer */}
-                 <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition">
-              <Download size={16} /> Importer
-              <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
-                onChange={() => showFlash("error", "Fonctionnalité d'import en cours de développement.")} />
-            </label>
-            {/* Exporter */}
             <button
               onClick={() => showFlash("error", "Fonctionnalité d'export en cours de développement.")}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
             >
               <Upload size={16} /> Exporter
             </button>
-            <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition-all"
-              >
-                <PlusCircle size={14} />
-                Ajouter
-              </button>
           </div>
 
           {filters.status && (
@@ -522,24 +473,11 @@ const handleCreate = async (formData: any) => {
             </div>
           </div>
 
-{/* ── Modal création ─────────────────────────────────────────── */}
-<ReusableForm
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            title="Ajouter un devis"
-            subtitle="Les informations ci-dessous permettront de faire un nouveau devis."
-            fields={invoiceFields}
-            onSubmit={handleCreate}
-            submitLabel="Créer une facture"
-          />
-
           <InvoiceSidePanel
             invoice={isDetailsOpen ? selectedInvoice : null}
             onClose={() => { setIsDetailsOpen(false); setSelectedInvoice(null); }}
             onMarkPaid={handleMarkPaid}
           />
-
-         
         </main>
       </div>
     </div>

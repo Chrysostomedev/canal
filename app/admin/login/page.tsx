@@ -28,8 +28,12 @@ export default function LoginPage() {
 
       // CORRECTION 3 : Le token est déjà stocké dans localStorage par le service
       // Mais on redirige vers le dashboard
-      router.push("/admin/dashboard"); 
-      
+      router.push("/admin/dashboard/admin"); 
+      // cette route /admin/dashboard/admin   est destiné au super-admins et admins
+// 
+// NB: Auth
+// si c'est un manager il doit etre diriger vers la route Next /admin/dashboard/manager
+
     } catch (err: any) {
       console.error("Erreur détaillée:", err);
       // CORRECTION 4 : Gestion propre du message d'erreur Laravel
