@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Bell, LogOut, AlertTriangle } from "lucide-react";
+import { Bell, LogOut, AlertTriangle, BellDot } from "lucide-react";
 import { authService } from "../../services/AuthService";
 import NotificationPanel from "./NotificationPanel";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -96,7 +96,7 @@ export default function Navbar() {
           >
             {/* Icône cloche + dot pulsant */}
             <div className="relative">
-              <Bell size={22} className="text-black" strokeWidth={2.5} />
+              <BellDot size={22} className="text-black" strokeWidth={2.5} />
               {initialized && unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center">
                   <span className="absolute w-3 h-3 bg-black rounded-full animate-ping opacity-40" />

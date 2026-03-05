@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User, Settings2, ShieldCheck, ChevronRight, X,
-  Sun, Moon, Monitor, Bell, Activity, Globe,
-  Clock, Check, Pencil, Mail, Phone, Camera,
-  Lock, Shield, Languages, Palette,
+  Bell, Activity, Globe, Clock, Check, Pencil, 
+  Mail, Phone, Camera, Lock, Languages, Palette,
   Zap, Radio, Users, Key,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
+import ThemePicker from "@/components/ThemePicker";
 import { authService } from "../../../services/AuthService";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 // ═══════════════════════════════════════
 // DONNÉES STATIQUES
@@ -42,18 +43,18 @@ const NOTIFS = [
 ];
 
 const ROLE_MAP: Record<string, { label: string; style: string; dot: string }> = {
-  "super-admin": { label: "Super Administrateur", style: "bg-slate-900 text-white",                                   dot: "bg-white"       },
-  "admin":       { label: "Administrateur",        style: "bg-slate-100 text-slate-800 border border-slate-200",      dot: "bg-slate-700"   },
-  "manager":     { label: "Manager",               style: "bg-blue-50 text-blue-800 border border-blue-200",          dot: "bg-blue-600"    },
-  "provider":    { label: "Prestataire",           style: "bg-emerald-50 text-emerald-800 border border-emerald-200", dot: "bg-emerald-600" },
+  "super-admin": { label: "Super Administrateur", style: "bg-slate-900 text-white", dot: "bg-white" },
+  "admin":       { label: "Administrateur", style: "bg-slate-100 text-slate-800 border border-slate-200", dot: "bg-slate-700" },
+  "manager":     { label: "Manager", style: "bg-blue-50 text-blue-800 border border-blue-200", dot: "bg-blue-600" },
+  "provider":    { label: "Prestataire", style: "bg-emerald-50 text-emerald-800 border border-emerald-200", dot: "bg-emerald-600" },
 };
 
 const TRACK_LOGS = [
-  { user: "super-admin@canal.com", action: "Connexion admin",         page: "Dashboard",   time: "17:12", today: true  },
-  { user: "admin@canal.com",       action: "Modification ticket #42", page: "Tickets",     time: "15:48", today: true  },
-  { user: "jean.dupont@canal.com", action: "Consultation planning",   page: "Planning",    time: "14:30", today: true  },
-  { user: "marie.curie@canal.com", action: "Ajout patrimoine",        page: "Patrimoines", time: "09:15", today: false },
-  { user: "paul.l@canal.com",      action: "Création devis #18",      page: "Devis",       time: "08:50", today: false },
+  { user: "super-admin@canal.com", action: "Connexion admin", page: "Dashboard", time: "17:12", today: true },
+  { user: "admin@canal.com", action: "Modification ticket #42", page: "Tickets", time: "15:48", today: true },
+  { user: "jean.dupont@canal.com", action: "Consultation planning", page: "Planning", time: "14:30", today: true },
+  { user: "marie.curie@canal.com", action: "Ajout patrimoine", page: "Patrimoines", time: "09:15", today: false },
+  { user: "paul.l@canal.com", action: "Création devis #18", page: "Devis", time: "08:50", today: false },
 ];
 
 // ═══════════════════════════════════════
@@ -72,20 +73,16 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
 }
 
 // ═══════════════════════════════════════
-// SIDE PANEL — glisse de droite à gauche
-// Remplace toutes les modales centrées
+// SIDE PANEL
 // ═══════════════════════════════════════
 
 type PanelType = "profile" | "advanced" | null;
 
 function SettingsSidePanel({
   open, type, advTab, setAdvTab, onClose,
-  // profil
   firstName, lastName, email, phone,
   avatarId, setAvatarId,
   form, setForm, onSaveProfile,
-  // avancé
-  theme, setTheme, applyTheme,
   lang, setLang, applyLang,
   trackOn, setTrackOn,
   notifs, setNotifs,
@@ -97,7 +94,6 @@ function SettingsSidePanel({
   firstName: string; lastName: string; email: string; phone: string;
   avatarId: string; setAvatarId: (id: string) => void;
   form: any; setForm: (f: any) => void; onSaveProfile: () => void;
-  theme: string; setTheme: (t: any) => void; applyTheme: (t: string) => void;
   lang: string; setLang: (l: any) => void; applyLang: (l: string) => void;
   trackOn: boolean; setTrackOn: (v: boolean) => void;
   notifs: Record<string, boolean>; setNotifs: (n: any) => void;
@@ -127,19 +123,17 @@ function SettingsSidePanel({
       {/* Overlay */}
       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
 
-      {/* Panel — glisse depuis la droite */}
+      {/* Panel */}
       <div className="fixed right-0 top-0 h-full w-[480px] bg-white z-50 shadow-2xl flex flex-col rounded-l-3xl overflow-hidden">
 
-        {/* ── Croix haut gauche ── */}
+        {/* Header */}
         <div className="flex items-start px-6 pt-6 pb-0 shrink-0">
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition -ml-1">
             <X size={18} className="text-slate-500" />
           </button>
         </div>
 
-        {/* ══════════════════════════════════
-            PROFIL
-        ══════════════════════════════════ */}
+        {/* PROFIL */}
         {type === "profile" && (
           <>
             <div className="px-7 pt-4 pb-5 shrink-0">
@@ -148,8 +142,7 @@ function SettingsSidePanel({
             </div>
 
             <div className="flex-1 overflow-y-auto px-7 pb-7 space-y-6">
-
-              {/* Avatar + color picker */}
+              {/* Avatar */}
               <div>
                 <div className="flex items-center gap-4 mb-3">
                   <div className={`w-16 h-16 rounded-2xl ${av.bg} flex items-center justify-center shadow-lg shrink-0`}>
@@ -218,9 +211,7 @@ function SettingsSidePanel({
           </>
         )}
 
-        {/* ══════════════════════════════════
-            PARAMÈTRES AVANCÉS
-        ══════════════════════════════════ */}
+        {/* PARAMÈTRES AVANCÉS */}
         {type === "advanced" && (
           <>
             <div className="px-7 pt-4 pb-5 shrink-0">
@@ -228,7 +219,7 @@ function SettingsSidePanel({
               <p className="text-slate-400 text-xs mt-0.5">Personnalisez votre expérience</p>
             </div>
 
-            {/* Tabs horizontaux */}
+            {/* Tabs */}
             <div className="px-7 shrink-0">
               <div className="flex gap-1 p-1 bg-slate-100 rounded-2xl">
                 {advTabs.map(tb => {
@@ -250,35 +241,10 @@ function SettingsSidePanel({
             {/* Contenu tabs */}
             <div className="flex-1 overflow-y-auto px-7 py-5">
 
-              {/* ─── Apparence ─── */}
+              {/* ─── Apparence (NOUVEAU avec ThemePicker) ─── */}
               {advTab === "appearance" && (
                 <div className="space-y-4">
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Thème d'affichage</p>
-                  <div className="grid grid-cols-3 gap-3">
-                    {([
-                      { val: "light",  Icon: Sun,     label: "Mode clair",  cls: "bg-white border-slate-200" },
-                      { val: "dark",   Icon: Moon,    label: "Sombre",      cls: "bg-slate-900 border-slate-700" },
-                      { val: "system", Icon: Monitor, label: "Système",     cls: "bg-gradient-to-br from-white to-slate-800 border-slate-300" },
-                    ] as const).map(opt => {
-                      const { Icon } = opt;
-                      const active = theme === opt.val;
-                      return (
-                        <button
-                          key={opt.val}
-                          onClick={() => { setTheme(opt.val); applyTheme(opt.val); }}
-                          className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition ${active ? "border-slate-900 bg-slate-50 shadow-md" : "border-slate-100 hover:border-slate-300"}`}
-                        >
-                          <div className={`w-full h-12 rounded-xl border ${opt.cls}`} />
-                          <div className="flex items-center gap-1">
-                            <Icon size={12} className={active ? "text-slate-900" : "text-slate-400"} />
-                            <span className={`text-[11px] font-black ${active ? "text-slate-900" : "text-slate-500"}`}>{opt.label}</span>
-                            {active && <Check size={11} className="text-slate-900" />}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs text-slate-400">Le thème s'applique instantanément.</p>
+                  <ThemePicker />
                 </div>
               )}
 
@@ -412,11 +378,12 @@ function SettingsSidePanel({
 }
 
 // ═══════════════════════════════════════
-// PAGE
+// PAGE PRINCIPALE
 // ═══════════════════════════════════════
 
 export default function ParametresPage() {
   const router = useRouter();
+  const { theme } = useTheme();
 
   const [firstName, setFirstName] = useState("SuperAdmin");
   const [lastName,  setLastName]  = useState("");
@@ -433,7 +400,6 @@ export default function ParametresPage() {
   const [advTab,    setAdvTab]    = useState<"appearance"|"notifications"|"tracking"|"language">("appearance");
 
   const [form,    setForm]    = useState({ first_name: "", last_name: "", email: "", phone: "" });
-  const [theme,   setTheme]   = useState<"light"|"dark"|"system">("light");
   const [lang,    setLang]    = useState<"fr"|"en"|"ar">("fr");
   const [trackOn, setTrackOn] = useState(true);
   const [notifs,  setNotifs]  = useState(Object.fromEntries(NOTIFS.map(n => [n.key, n.defaultOn])));
@@ -463,18 +429,11 @@ export default function ParametresPage() {
     if (rl) setRole(rl);
     setForm({ first_name: fn || "", last_name: ln || "", email: em || "", phone: "" });
 
-    const st = (localStorage.getItem("theme")    ?? "light") as any;
-    const sl = (localStorage.getItem("lang")     ?? "fr")    as any;
-    const sa = localStorage.getItem("avatarId")  ?? "1";
-    setTheme(st); setLang(sl); setAvatarId(sa);
-    applyTheme(st); applyLang(sl);
+    const sl = (localStorage.getItem("lang") ?? "fr") as any;
+    const sa = localStorage.getItem("avatarId") ?? "1";
+    setLang(sl); setAvatarId(sa);
+    applyLang(sl);
   }, []);
-
-  const applyTheme = (v: string) => {
-    const dark = v === "dark" || (v === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("theme", v);
-  };
 
   const applyLang = (v: string) => {
     const l = LANGS.find(x => x.code === v);
@@ -501,10 +460,17 @@ export default function ParametresPage() {
   const activeNotifCount = Object.values(notifs).filter(Boolean).length;
 
   const advTiles = [
-    { key: "appearance",    Icon: Palette,  label: "Apparence",     sub: theme === "dark" ? "Mode sombre" : theme === "system" ? "Automatique" : "Mode clair", accent: "text-violet-600", bg: "bg-violet-50" },
-    { key: "notifications", Icon: Bell,     label: "Notifications", sub: `${activeNotifCount}/${NOTIFS.length} activées`,                                        accent: "text-amber-600",  bg: "bg-amber-50"  },
-    { key: "tracking",      Icon: Activity, label: "Traçabilité",   sub: trackOn ? "Active" : "Désactivée",                                                       accent: "text-emerald-600",bg: "bg-emerald-50"},
-    { key: "language",      Icon: Globe,    label: "Langue",        sub: LANGS.find(l => l.code === lang)?.label ?? "Français",                                  accent: "text-sky-600",    bg: "bg-sky-50"    },
+    { 
+      key: "appearance", 
+      Icon: Palette, 
+      label: "Apparence", 
+      sub: `Thème ${theme.color} · ${theme.mode === 'dark' ? 'Sombre' : theme.mode === 'system' ? 'Auto' : 'Clair'}`, 
+      accent: "text-violet-600", 
+      bg: "bg-violet-50" 
+    },
+    { key: "notifications", Icon: Bell, label: "Notifications", sub: `${activeNotifCount}/${NOTIFS.length} activées`, accent: "text-amber-600", bg: "bg-amber-50" },
+    { key: "tracking", Icon: Activity, label: "Traçabilité", sub: trackOn ? "Active" : "Désactivée", accent: "text-emerald-600", bg: "bg-emerald-50" },
+    { key: "language", Icon: Globe, label: "Langue", sub: LANGS.find(l => l.code === lang)?.label ?? "Français", accent: "text-sky-600", bg: "bg-sky-50" },
   ] as const;
 
   return (
@@ -514,15 +480,11 @@ export default function ParametresPage() {
         <Navbar />
 
         <main className="ml-64 mt-20 p-8">
-          {/* ── Titre ── */}
           <PageHeader title="Paramètres" subtitle="Gérez votre profil, vos préférences et les accès administrateurs" />
 
-          {/* ════════════════════════════════════════════════════════
-              GRID 3 COLS — pleine largeur, sans max-w centering
-          ════════════════════════════════════════════════════════ */}
           <div className={`mt-8 grid gap-6 ${role === "super-admin" ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1 lg:grid-cols-2"}`}>
 
-            {/* ══ CARTE 1 — PROFIL ══ */}
+            {/* CARTE 1 — PROFIL */}
             <div className="flex flex-col bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-50">
                 <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
@@ -535,7 +497,6 @@ export default function ParametresPage() {
               </div>
 
               <div className="p-6 flex-1 flex flex-col gap-5">
-                {/* Avatar */}
                 <div className="flex flex-col items-center gap-3">
                   <div className="relative">
                     <div className={`w-20 h-20 rounded-2xl ${av.bg} flex items-center justify-center shadow-lg`}>
@@ -554,7 +515,6 @@ export default function ParametresPage() {
                   </span>
                 </div>
 
-                {/* Infos */}
                 <div className="space-y-2.5">
                   {[
                     { Icon: User,  label: "Prénom",     value: firstName || "—" },
@@ -581,7 +541,7 @@ export default function ParametresPage() {
               </div>
             </div>
 
-            {/* ══ CARTE 2 — PARAMÈTRES AVANCÉS ══ */}
+            {/* CARTE 2 — PARAMÈTRES AVANCÉS */}
             <div className="flex flex-col bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-50">
                 <div className="w-9 h-9 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">
@@ -616,7 +576,7 @@ export default function ParametresPage() {
               </div>
             </div>
 
-            {/* ══ CARTE 3 — SUPER-ADMIN uniquement ══ */}
+            {/* CARTE 3 — SUPER-ADMIN */}
             {role === "super-admin" && (
               <div className="flex flex-col bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-50">
@@ -676,7 +636,6 @@ export default function ParametresPage() {
         </main>
       </div>
 
-      {/* ── Side Panel ── */}
       <SettingsSidePanel
         open={panelOpen}
         type={panelType}
@@ -686,7 +645,6 @@ export default function ParametresPage() {
         firstName={firstName} lastName={lastName} email={email} phone={phone}
         avatarId={avatarId} setAvatarId={setAvatarId}
         form={form} setForm={setForm} onSaveProfile={handleSaveProfile}
-        theme={theme} setTheme={setTheme} applyTheme={applyTheme}
         lang={lang} setLang={setLang} applyLang={applyLang}
         trackOn={trackOn} setTrackOn={setTrackOn}
         notifs={notifs} setNotifs={setNotifs}
