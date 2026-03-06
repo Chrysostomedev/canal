@@ -1,19 +1,19 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User, Settings2, ShieldCheck, ChevronRight, X,
-  Bell, Activity, Globe, Clock, Check, Pencil, 
-  Mail, Phone, Camera, Lock, Languages, Palette,
+  Bell, Activity, Globe, Clock, Check, Pencil,
+  Mail, Phone, Camera, Lock, Languages,
   Zap, Radio, Users, Key,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
-import ThemePicker from "@/components/ThemePicker";
 import { authService } from "../../../services/AuthService";
-import { useTheme } from "../../../contexts/ThemeContext";
 
 // ═══════════════════════════════════════
 // DONNÉES STATIQUES
@@ -112,7 +112,6 @@ function SettingsSidePanel({
   const activeNotifCount = Object.values(notifs).filter(Boolean).length;
 
   const advTabs = [
-    { key: "appearance",    Icon: Palette,   label: "Apparence"    },
     { key: "notifications", Icon: Bell,      label: "Notifs"       },
     { key: "tracking",      Icon: Activity,  label: "Traçabilité"  },
     { key: "language",      Icon: Languages, label: "Langue"       },
@@ -154,7 +153,7 @@ function SettingsSidePanel({
                       onClick={() => setShowPicker(!showPicker)}
                       className="text-xs text-slate-400 hover:text-slate-900 underline underline-offset-2 mt-0.5 font-medium flex items-center gap-1 transition"
                     >
-                      <Palette size={11} />
+                      <Check size={11} />
                       {showPicker ? "Fermer le sélecteur" : "Changer la couleur"}
                     </button>
                   </div>
@@ -240,13 +239,6 @@ function SettingsSidePanel({
 
             {/* Contenu tabs */}
             <div className="flex-1 overflow-y-auto px-7 py-5">
-
-              {/* ─── Apparence (NOUVEAU avec ThemePicker) ─── */}
-              {advTab === "appearance" && (
-                <div className="space-y-4">
-                  <ThemePicker />
-                </div>
-              )}
 
               {/* ─── Notifications ─── */}
               {advTab === "notifications" && (
@@ -383,7 +375,6 @@ function SettingsSidePanel({
 
 export default function ParametresPage() {
   const router = useRouter();
-  const { theme } = useTheme();
 
   const [firstName, setFirstName] = useState("SuperAdmin");
   const [lastName,  setLastName]  = useState("");
@@ -397,7 +388,7 @@ export default function ParametresPage() {
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelType, setPanelType] = useState<"profile"|"advanced"|null>(null);
-  const [advTab,    setAdvTab]    = useState<"appearance"|"notifications"|"tracking"|"language">("appearance");
+  const [advTab,    setAdvTab]    = useState<"notifications"|"tracking"|"language">("notifications");
 
   const [form,    setForm]    = useState({ first_name: "", last_name: "", email: "", phone: "" });
   const [lang,    setLang]    = useState<"fr"|"en"|"ar">("fr");
@@ -460,17 +451,9 @@ export default function ParametresPage() {
   const activeNotifCount = Object.values(notifs).filter(Boolean).length;
 
   const advTiles = [
-    { 
-      key: "appearance", 
-      Icon: Palette, 
-      label: "Apparence", 
-      sub: `Thème ${theme.color} · ${theme.mode === 'dark' ? 'Sombre' : theme.mode === 'system' ? 'Auto' : 'Clair'}`, 
-      accent: "text-violet-600", 
-      bg: "bg-violet-50" 
-    },
-    { key: "notifications", Icon: Bell, label: "Notifications", sub: `${activeNotifCount}/${NOTIFS.length} activées`, accent: "text-amber-600", bg: "bg-amber-50" },
-    { key: "tracking", Icon: Activity, label: "Traçabilité", sub: trackOn ? "Active" : "Désactivée", accent: "text-emerald-600", bg: "bg-emerald-50" },
-    { key: "language", Icon: Globe, label: "Langue", sub: LANGS.find(l => l.code === lang)?.label ?? "Français", accent: "text-sky-600", bg: "bg-sky-50" },
+    { key: "notifications", Icon: Bell,     label: "Notifications", sub: `${activeNotifCount}/${NOTIFS.length} activées`, accent: "text-amber-600",   bg: "bg-amber-50"   },
+    { key: "tracking",      Icon: Activity, label: "Traçabilité",   sub: trackOn ? "Active" : "Désactivée",               accent: "text-emerald-600", bg: "bg-emerald-50" },
+    { key: "language",      Icon: Globe,    label: "Langue",        sub: LANGS.find(l => l.code === lang)?.label ?? "Français", accent: "text-sky-600", bg: "bg-sky-50"  },
   ] as const;
 
   return (
@@ -549,7 +532,7 @@ export default function ParametresPage() {
                 </div>
                 <div>
                   <p className="font-black text-slate-900 text-sm">Paramètres avancés</p>
-                  <p className="text-slate-400 text-xs">Apparence, notifications, traçabilité, langue</p>
+                  <p className="text-slate-400 text-xs">Notifications, traçabilité, langue</p>
                 </div>
               </div>
 
@@ -606,10 +589,10 @@ export default function ParametresPage() {
 
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         {[
-                          { Icon: Key,        val: "5",  lbl: "Rôles" },
-                          { Icon: User,       val: "2",  lbl: "Admins" },
-                          { Icon: Users,      val: "12", lbl: "Utilisateurs" },
-                          { Icon: ShieldCheck,val: "24+",lbl: "Permissions" },
+                          { Icon: Key,         val: "5",   lbl: "Rôles" },
+                          { Icon: User,        val: "2",   lbl: "Admins" },
+                          { Icon: Users,       val: "12",  lbl: "Utilisateurs" },
+                          { Icon: ShieldCheck, val: "24+", lbl: "Permissions" },
                         ].map((s, i) => (
                           <div key={i} className="bg-white/10 rounded-xl p-2.5 flex items-center gap-2">
                             <s.Icon size={14} className="text-white/50 shrink-0" />
