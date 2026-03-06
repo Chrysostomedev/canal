@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
+import PageHeader from "@/components/PageHeader";
 import {
   Bell, CheckCheck, Trash2, ChevronRight, X,
   ArrowLeft, ExternalLink, Ticket, MapPin, Building2,
@@ -274,7 +275,10 @@ export default function NotificationsPage() {
           {/* ── En-tête page ───────────────────────────────────────────── */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Notifications</h1>
+            <PageHeader
+              title="Mes notifications"
+              subtitle="Consultez et mettez à jour le statut de vos interventions"
+            />
               <p className="text-sm text-slate-500 mt-1">
                 {unreadCount > 0
                   ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}`

@@ -163,7 +163,7 @@ export default function OtpPage() {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="h-1 w-full bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 rounded-t-3xl" />
+        <div className="h-1 w-full bg-gradient-to-r rounded-t-3xl" />
 
         <div className="bg-white rounded-b-3xl shadow-2xl px-8 py-10">
 
