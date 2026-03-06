@@ -467,6 +467,7 @@ export default function PatrimoinesPage() {
     },
     { name: "date_entree",   label: "Date d'entrée",   type: "date",   required: true, icon: CalendarClock },
     { name: "valeur_entree", label: "Valeur d'entrée", type: "number", required: true },
+     { name: "dimension", label: "Dimension", type: "number", required: false },
     { name: "description",   label: "Description",     type: "rich-text", gridSpan: 2 },
   ];
 

@@ -148,30 +148,30 @@ export default function PlanningPage() {
 
   // ── Champs formulaire dynamiques ────────────────────────────
   const planningFields: FieldConfig[] = [
-    { name: "codification",      label: "Codification",            type: "text",  required: true },
-    { name: "date_debut",        label: "Date de début",           type: "date",  required: true, icon: CalendarClock },
-    { name: "date_fin",          label: "Date de fin",             type: "date",  required: true, icon: CalendarClock },
-    { name: "responsable_name",  label: "Nom du responsable",      type: "text",  required: true },
-    { name: "responsable_phone", label: "Téléphone du responsable",type: "text" },
-    {
-      name: "status", label: "Statut", type: "select",
-      options: [
-        { label: "Planifié",  value: "planifie"  },
-        { label: "En cours",  value: "en_cours"  },
-        { label: "En retard", value: "en_retard" },
-        { label: "Réalisé",   value: "realise"   },
-      ],
-    },
-    {
-      name: "provider_id", label: "Prestataire assigné",
-      type: "select", required: true,
-      options: providers,  // ← dynamique depuis l'API
-    },
     {
       name: "site_id", label: "Site",
       type: "select", required: true,
       options: sites,      // ← dynamique depuis l'API (site.nom)
     },
+    { name: "date_debut",        label: "Date de début",           type: "date",  required: true, icon: CalendarClock },
+    { name: "date_fin",          label: "Date de fin",             type: "date",  required: true, icon: CalendarClock },
+    { name: "responsable_name",  label: "Nom du responsable",      type: "text",  required: true },
+    { name: "responsable_phone", label: "Téléphone du responsable",type: "text" },
+    // {
+    //   name: "status", label: "Statut", type: "select",
+    //   options: [
+    //     { label: "Planifié",  value: "planifie"  },
+    //     { label: "En cours",  value: "en_cours"  },
+    //     { label: "En retard", value: "en_retard" },
+    //     { label: "Réalisé",   value: "realise"   },
+    //   ],
+    // },
+    {
+      name: "provider_id", label: "Prestataire assigné",
+      type: "select", required: true,
+      options: providers,  // ← dynamique depuis l'API
+    },
+    
     {
       name: "description", label: "Description / Observations",
       type: "rich-text", gridSpan: 2,
@@ -355,11 +355,11 @@ export default function PlanningPage() {
       <ReusableForm
         isOpen={isCreateModalOpen}
         onClose={closeCreateModal}
-        title="Ajouter un nouveau planning"
+        title="Publier un nouveau planning"
         subtitle="Remplissez les informations pour enregistrer un nouveau planning."
         fields={planningFields}
         onSubmit={handleCreateSubmit}
-        submitLabel={isSubmitting ? "Enregistrement..." : "Enregistrer"}
+        submitLabel={isSubmitting ? "Diffusion du planning..." : "Diffuser"}
       />
 
       {/* Modal Édition */}
