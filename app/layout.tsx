@@ -22,8 +22,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Ebène Patrimoine",
-  description: "l'application tout en un faite par CIPLUS !",
+  title: "Facility Management",
+  description: "l'application tout en un faite par Canal+ et ses partenaires !",
 };
 
 export default function RootLayout({
