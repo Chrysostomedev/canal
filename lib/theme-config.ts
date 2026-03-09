@@ -74,7 +74,7 @@ export const THEME_COLORS = [
     icon: '🟠',
     description: 'Orange dynamique',
     preview: {
-      primary: '#c2410c',
+      primary: 'rgba(241, 103, 48, 1)ff',
       light: '#fff7ed',
       bg: '#fffaf5',
     },

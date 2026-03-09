@@ -11,12 +11,10 @@ export type ActionButton = {
 };
 
 interface ActionGroupProps {
-  // On rend la prop optionnelle ou on initialise par défaut pour éviter le undefined.map()
-  actions?: ActionButton[]; 
+  actions?: ActionButton[];
 }
 
 export default function ActionGroup({ actions = [] }: ActionGroupProps) {
-  // Si le tableau est vide, on ne retourne rien (propre)
   if (!actions || actions.length === 0) return null;
 
   return (
@@ -30,9 +28,10 @@ export default function ActionGroup({ actions = [] }: ActionGroupProps) {
             key={`${action.label}-${index}`}
             onClick={action.onClick}
             className={`
-              flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold text-[14px] transition-all duration-200 active:scale-95
-              ${isPrimary 
-                ? "bg-[#111] text-white hover:bg-black shadow-md shadow-slate-200" 
+              flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold text-[14px]
+              transition-all duration-200 active:scale-95
+              ${isPrimary
+                ? "bg-theme-primary text-white hover:opacity-90 shadow-md"
                 : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
               }
             `}

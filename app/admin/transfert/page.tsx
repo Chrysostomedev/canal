@@ -1,23 +1,12 @@
 "use client";
 
-/**
- * Page Transfert Inter-Sites
- * Route : /admin/patrimoines/transfert  (ou /admin/patrimoines/[id]/transfert)
- *
- * Composants utilisés :
- *   Navbar · Sidebar · PageHeader · StatsCard · ReusableForm · Paginate
- *
- * Données de transferts : statiques fictives (brancher sur API quand dispo)
- * Formulaire de transfert : SideModal avec ReusableForm
- */
-
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
-  ArrowRightLeft, MapPin, Building2, Filter,
-  Download, X, Eye, ChevronRight, CheckCircle,
-  Clock, AlertTriangle, Info, Search, RotateCcw,
-  TrendingUp, Calendar, User, Hash,
+  ArrowRightLeft, Building2, Filter,
+  X, Eye, ChevronRight,
+  Info, Search, RotateCcw,
+  Calendar, User, Hash,
 } from "lucide-react";
 
 import Navbar       from "@/components/Navbar";
@@ -31,7 +20,7 @@ import { FieldConfig } from "@/components/ReusableForm";
 import { getSites, Site } from "../../../services/site.service";
 
 // ─────────────────────────────────────────────────────────────
-// DONNÉES STATIQUES FICTIVES
+// TYPES & DONNÉES STATIQUES
 // ─────────────────────────────────────────────────────────────
 
 interface TransferRecord {
@@ -52,157 +41,86 @@ interface TransferRecord {
 
 const FAKE_TRANSFERS: TransferRecord[] = [
   {
-    id: 1,
-    asset_id: 14,
-    asset_designation: "Climatiseur split 24 000 BTU",
-    asset_codification: "CLI-SP-03014",
-    asset_type: "Climatisation",
-    site_from_id: 3,
-    site_from: "Boutique Quartier 1",
-    site_to_id: 1,
-    site_to: "Siège Canal+",
-    date: "2025-11-12T09:30:00Z",
-    motif: "Panne sur le site source, équipement inutilisé",
-    initiateur: "Moussa K.",
-    statut: "effectué",
+    id: 1, asset_id: 14,
+    asset_designation: "Climatiseur split 24 000 BTU", asset_codification: "CLI-SP-03014", asset_type: "Climatisation",
+    site_from_id: 3, site_from: "Boutique Quartier 1", site_to_id: 1, site_to: "Siège Canal+",
+    date: "2025-11-12T09:30:00Z", motif: "Panne sur le site source, équipement inutilisé", initiateur: "Moussa K.", statut: "effectué",
   },
   {
-    id: 2,
-    asset_id: 7,
-    asset_designation: "Serveur Rack Dell PowerEdge R750",
-    asset_codification: "INF-SR-02007",
-    asset_type: "Informatique",
-    site_from_id: 1,
-    site_from: "Siège Canal+",
-    site_to_id: 2,
-    site_to: "Entrepôt Zone 4",
-    date: "2025-12-03T14:15:00Z",
-    motif: "Mise à disposition pour stockage temporaire avant déploiement",
-    initiateur: "Fatou D.",
-    statut: "effectué",
+    id: 2, asset_id: 7,
+    asset_designation: "Serveur Rack Dell PowerEdge R750", asset_codification: "INF-SR-02007", asset_type: "Informatique",
+    site_from_id: 1, site_from: "Siège Canal+", site_to_id: 2, site_to: "Entrepôt Zone 4",
+    date: "2025-12-03T14:15:00Z", motif: "Mise à disposition pour stockage temporaire avant déploiement", initiateur: "Fatou D.", statut: "effectué",
   },
   {
-    id: 3,
-    asset_id: 22,
-    asset_designation: "Groupe électrogène 20 kVA",
-    asset_codification: "ENE-GE-01022",
-    asset_type: "Énergie",
-    site_from_id: 5,
-    site_from: "Boutique Quartier 3",
-    site_to_id: 6,
-    site_to: "Boutique Quartier 4",
-    date: "2026-01-08T11:00:00Z",
-    motif: "Besoin urgent suite à coupure fréquente sur le site de destination",
-    initiateur: "Zénab K.",
-    statut: "effectué",
+    id: 3, asset_id: 22,
+    asset_designation: "Groupe électrogène 20 kVA", asset_codification: "ENE-GE-01022", asset_type: "Énergie",
+    site_from_id: 5, site_from: "Boutique Quartier 3", site_to_id: 6, site_to: "Boutique Quartier 4",
+    date: "2026-01-08T11:00:00Z", motif: "Besoin urgent suite à coupure fréquente sur le site de destination", initiateur: "Zénab K.", statut: "effectué",
   },
   {
-    id: 4,
-    asset_id: 31,
-    asset_designation: "Imprimante multifonction Canon MF",
-    asset_codification: "INF-IM-04031",
-    asset_type: "Informatique",
-    site_from_id: 2,
-    site_from: "Entrepôt Zone 4",
-    site_to_id: 9,
-    site_to: "Boutique Quartier 7",
-    date: "2026-01-20T10:45:00Z",
-    motif: "Redistribution équipements neufs reçus en entrepôt",
-    initiateur: "Awa T.",
-    statut: "en_cours",
+    id: 4, asset_id: 31,
+    asset_designation: "Imprimante multifonction Canon MF", asset_codification: "INF-IM-04031", asset_type: "Informatique",
+    site_from_id: 2, site_from: "Entrepôt Zone 4", site_to_id: 9, site_to: "Boutique Quartier 7",
+    date: "2026-01-20T10:45:00Z", motif: "Redistribution équipements neufs reçus en entrepôt", initiateur: "Awa T.", statut: "en_cours",
   },
   {
-    id: 5,
-    asset_id: 9,
-    asset_designation: "Onduleur APC Smart-UPS 3000VA",
-    asset_codification: "ENE-ON-02009",
-    asset_type: "Énergie",
-    site_from_id: 4,
-    site_from: "Boutique Quartier 2",
-    site_to_id: 1,
-    site_to: "Siège Canal+",
-    date: "2026-02-05T08:00:00Z",
-    motif: "Remplacement onduleur défaillant au siège",
-    initiateur: "Amadou D.",
-    statut: "annulé",
+    id: 5, asset_id: 9,
+    asset_designation: "Onduleur APC Smart-UPS 3000VA", asset_codification: "ENE-ON-02009", asset_type: "Énergie",
+    site_from_id: 4, site_from: "Boutique Quartier 2", site_to_id: 1, site_to: "Siège Canal+",
+    date: "2026-02-05T08:00:00Z", motif: "Remplacement onduleur défaillant au siège", initiateur: "Amadou D.", statut: "annulé",
   },
   {
-    id: 6,
-    asset_id: 45,
-    asset_designation: "Switch réseau Cisco Catalyst 2960",
-    asset_codification: "INF-SW-05045",
-    asset_type: "Réseau",
-    site_from_id: 1,
-    site_from: "Siège Canal+",
-    site_to_id: 11,
-    site_to: "Boutique Quartier 9",
-    date: "2026-02-18T16:00:00Z",
-    motif: "Extension réseau boutique suite rénovation",
-    initiateur: "Cissé I.",
-    statut: "effectué",
+    id: 6, asset_id: 45,
+    asset_designation: "Switch réseau Cisco Catalyst 2960", asset_codification: "INF-SW-05045", asset_type: "Réseau",
+    site_from_id: 1, site_from: "Siège Canal+", site_to_id: 11, site_to: "Boutique Quartier 9",
+    date: "2026-02-18T16:00:00Z", motif: "Extension réseau boutique suite rénovation", initiateur: "Cissé I.", statut: "effectué",
   },
   {
-    id: 7,
-    asset_id: 58,
-    asset_designation: "Caméra de surveillance IP Hikvision",
-    asset_codification: "SEC-CA-06058",
-    asset_type: "Sécurité",
-    site_from_id: 7,
-    site_from: "Boutique Quartier 5",
-    site_to_id: 8,
-    site_to: "Boutique Quartier 8",
-    date: "2026-03-01T09:15:00Z",
-    motif: "Installation système vidéosurveillance complet",
-    initiateur: "Koffi Y.",
-    statut: "en_cours",
+    id: 7, asset_id: 58,
+    asset_designation: "Caméra de surveillance IP Hikvision", asset_codification: "SEC-CA-06058", asset_type: "Sécurité",
+    site_from_id: 7, site_from: "Boutique Quartier 5", site_to_id: 8, site_to: "Boutique Quartier 8",
+    date: "2026-03-01T09:15:00Z", motif: "Installation système vidéosurveillance complet", initiateur: "Koffi Y.", statut: "en_cours",
   },
 ];
 
 // ─────────────────────────────────────────────────────────────
-// HELPERS
+// HELPERS & STYLES STATUTS
+// (statuts gardent leurs couleurs sémantiques : vert/bleu/rouge)
 // ─────────────────────────────────────────────────────────────
 
-const formatDate = (iso: string) => {
-  const d = new Date(iso);
-  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
-};
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 
-const formatDateTime = (iso: string) => {
-  const d = new Date(iso);
-  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })
-    + " à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-};
+const formatDateTime = (iso: string) =>
+  new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })
+  + " à " + new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
+// Statuts : couleurs sémantiques conservées (vert = effectué, bleu = en cours, rouge = annulé)
 const STATUT_STYLES: Record<string, string> = {
-  effectué:  "bg-green-50 text-green-700 border-green-200",
-  en_cours:  "bg-blue-50  text-blue-700  border-blue-200",
-  annulé:    "bg-red-50   text-red-600   border-red-200",
+  effectué: "bg-green-50 text-green-700 border-green-200",
+  en_cours: "bg-blue-50  text-blue-700  border-blue-200",
+  annulé:   "bg-red-50   text-red-600   border-red-200",
 };
-
 const STATUT_LABELS: Record<string, string> = {
   effectué: "Effectué", en_cours: "En cours", annulé: "Annulé",
 };
-
 const STATUT_DOT: Record<string, string> = {
   effectué: "#22c55e", en_cours: "#3b82f6", annulé: "#ef4444",
 };
 
 // ─────────────────────────────────────────────────────────────
-// COMPOSANT : CARTE TRANSFERT
-// Visualisation relation source → destination
+// CARTE TRANSFERT
 // ─────────────────────────────────────────────────────────────
 
-function TransferCard({
-  record,
-  onView,
-}: {
-  record: TransferRecord;
-  onView: (r: TransferRecord) => void;
-}) {
+function TransferCard({ record, onView }: { record: TransferRecord; onView: (r: TransferRecord) => void }) {
+  // La destination active utilise bg-theme-primary au lieu de bg-slate-900
+  const destActive = record.statut !== "annulé";
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition p-5 space-y-4">
 
-      {/* Header ligne */}
+      {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -223,9 +141,9 @@ function TransferCard({
         </button>
       </div>
 
-      {/* Visualisation arc sites */}
+      {/* Sites : origine → destination */}
       <div className="flex items-center gap-3">
-        {/* Site source */}
+        {/* Origine */}
         <div className="flex-1 min-w-0 bg-slate-50 rounded-xl p-3 border border-slate-100">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Origine</p>
           <div className="flex items-center gap-1.5">
@@ -234,7 +152,7 @@ function TransferCard({
           </div>
         </div>
 
-        {/* Flèche animée */}
+        {/* Icône flèche — couleur sémantique du statut */}
         <div className="flex flex-col items-center shrink-0">
           <div className={`p-2 rounded-full border-2 ${
             record.statut === "effectué" ? "border-green-400 bg-green-50" :
@@ -249,50 +167,38 @@ function TransferCard({
           </div>
         </div>
 
-        {/* Site destination */}
+        {/* Destination — bg-theme-primary si actif */}
         <div className={`flex-1 min-w-0 rounded-xl p-3 border ${
-          record.statut === "effectué" ? "bg-slate-900 border-slate-900" :
-          record.statut === "en_cours" ? "bg-gray-600 border-gray-900" :
-          "bg-slate-100 border-slate-200"
+          destActive
+            ? "bg-theme-primary border-theme-primary"
+            : "bg-slate-100 border-slate-200"
         }`}>
-          <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${
-            record.statut === "annulé" ? "text-slate-400" : "text-white/50"
-          }`}>Destination</p>
+          <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${destActive ? "text-white/50" : "text-slate-400"}`}>
+            Destination
+          </p>
           <div className="flex items-center gap-1.5">
-            <Building2 size={12} className={record.statut === "annulé" ? "text-slate-400 shrink-0" : "text-white/70 shrink-0"} />
-            <p className={`text-xs font-black truncate ${record.statut === "annulé" ? "text-slate-500" : "text-white"}`}>
+            <Building2 size={12} className={destActive ? "text-white/70 shrink-0" : "text-slate-400 shrink-0"} />
+            <p className={`text-xs font-black truncate ${destActive ? "text-white" : "text-slate-500"}`}>
               {record.site_to}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Metadata */}
+      {/* Métadonnées */}
       <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium pt-1 border-t border-slate-50">
-        <div className="flex items-center gap-1.5">
-          <Calendar size={11} />
-          {formatDate(record.date)}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <User size={11} />
-          {record.initiateur}
-        </div>
+        <div className="flex items-center gap-1.5"><Calendar size={11} />{formatDate(record.date)}</div>
+        <div className="flex items-center gap-1.5"><User size={11} />{record.initiateur}</div>
       </div>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// COMPOSANT : SIDE PANEL DÉTAILS TRANSFERT
+// SIDE PANEL DÉTAILS
 // ─────────────────────────────────────────────────────────────
 
-function TransferDetailPanel({
-  record,
-  onClose,
-}: {
-  record: TransferRecord | null;
-  onClose: () => void;
-}) {
+function TransferDetailPanel({ record, onClose }: { record: TransferRecord | null; onClose: () => void }) {
   if (!record) return null;
 
   return (
@@ -311,10 +217,9 @@ function TransferDetailPanel({
           </button>
         </div>
 
-        {/* Contenu */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-          {/* Statut */}
+          {/* Statut (sémantique conservée) */}
           <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl border ${STATUT_STYLES[record.statut]}`}>
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: STATUT_DOT[record.statut] }} />
             <span className="text-sm font-black">{STATUT_LABELS[record.statut]}</span>
@@ -332,7 +237,7 @@ function TransferDetailPanel({
             </div>
             <Link
               href={`/admin/patrimoines/${record.asset_id}`}
-              className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition mt-1"
+              className="flex items-center gap-1.5 text-xs font-bold text-theme-primary hover:opacity-70 transition mt-1"
             >
               Voir le patrimoine <ChevronRight size={12} />
             </Link>
@@ -342,7 +247,7 @@ function TransferDetailPanel({
           <div className="space-y-2">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trajet</p>
             <div className="flex items-stretch gap-3">
-              {/* Source */}
+              {/* Origine */}
               <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Origine</p>
                 <div className="flex items-center gap-2 mb-1">
@@ -352,15 +257,15 @@ function TransferDetailPanel({
                 <p className="text-[10px] text-slate-400">Site #{record.site_from_id}</p>
               </div>
 
-              {/* Icône centre */}
+              {/* Icône */}
               <div className="flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-theme-primary flex items-center justify-center shadow-sm">
                   <ArrowRightLeft size={14} className="text-white" />
                 </div>
               </div>
 
               {/* Destination */}
-              <div className="flex-1 bg-slate-900 rounded-2xl p-4 border border-slate-900">
+              <div className="flex-1 bg-theme-primary rounded-2xl p-4">
                 <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-2">Destination</p>
                 <div className="flex items-center gap-2 mb-1">
                   <Building2 size={14} className="text-white/70" />
@@ -371,17 +276,15 @@ function TransferDetailPanel({
             </div>
           </div>
 
-          {/* Détails */}
+          {/* Détails ligne par ligne */}
           <div className="divide-y divide-slate-50">
             {[
-              { label: "Date",       value: formatDateTime(record.date),  icon: <Calendar size={13} /> },
-              { label: "Initié par", value: record.initiateur,            icon: <User size={13} /> },
-              { label: "ID Actif",   value: `#${record.asset_id}`,        icon: <Hash size={13} /> },
+              { label: "Date",       value: formatDateTime(record.date), icon: <Calendar size={13} /> },
+              { label: "Initié par", value: record.initiateur,           icon: <User size={13} />     },
+              { label: "ID Actif",   value: `#${record.asset_id}`,       icon: <Hash size={13} />     },
             ].map((row, i) => (
               <div key={i} className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
-                  {row.icon} {row.label}
-                </div>
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">{row.icon} {row.label}</div>
                 <p className="text-sm font-bold text-slate-900">{row.value}</p>
               </div>
             ))}
@@ -403,18 +306,10 @@ function TransferDetailPanel({
 }
 
 // ─────────────────────────────────────────────────────────────
-// COMPOSANT : SIDE MODAL NOUVEAU TRANSFERT
+// MODAL NOUVEAU TRANSFERT
 // ─────────────────────────────────────────────────────────────
 
-function NewTransferModal({
-  isOpen,
-  onClose,
-  sites,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  sites: Site[];
-}) {
+function NewTransferModal({ isOpen, onClose, sites }: { isOpen: boolean; onClose: () => void; sites: Site[] }) {
   if (!isOpen) return null;
 
   const siteOptions = sites
@@ -423,53 +318,40 @@ function NewTransferModal({
 
   const transferFields: FieldConfig[] = [
     {
-      name: "asset_id",
-      label: "ID ou codification de l'équipement",
-      type: "text",
-      required: true,
-      placeholder: "Ex: 14 ou CLI-SP-03014",
+      name: "asset_id", label: "ID ou codification de l'équipement",
+      type: "text", required: true, placeholder: "Ex: 14 ou CLI-SP-03014",
     },
     {
-      name: "site_destination_id",
-      label: "Site de destination",
-      type: "select",
-      required: true,
+      name: "site_destination_id", label: "Site de destination",
+      type: "select", required: true,
       options: siteOptions.length > 0 ? siteOptions : [{ label: "Chargement...", value: "" }],
     },
     {
-      name: "motif",
-      label: "Motif du transfert",
-      type: "rich-text",
-      gridSpan: 2,
-      placeholder: "Décrivez la raison du transfert (optionnel)",
+      name: "motif", label: "Motif du transfert",
+      type: "rich-text", gridSpan: 2, placeholder: "Décrivez la raison du transfert (optionnel)",
     },
   ];
 
   const handleSubmit = (formData: any) => {
-    // ⚠️  Brancher ici : POST /admin/asset/{id}/transfer
     console.log("Transfert soumis (simulation) :", formData);
     onClose();
   };
 
   return (
     <ReusableForm
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Nouveau transfert"
-      subtitle="Déplacez un équipement vers un autre site"
-      fields={transferFields}
-      initialValues={{}}
-      onSubmit={handleSubmit}
-      submitLabel="Initier le transfert"
+      isOpen={isOpen} onClose={onClose}
+      title="Nouveau transfert" subtitle="Déplacez un équipement vers un autre site"
+      fields={transferFields} initialValues={{}}
+      onSubmit={handleSubmit} submitLabel="Initier le transfert"
     />
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// FILTER DROPDOWN TRANSFERTS
+// FILTRE DROPDOWN
 // ─────────────────────────────────────────────────────────────
 
-interface TransferFilters { statut?: string; site_from?: number; site_to?: number; }
+interface TransferFilters { statut?: string; }
 
 function TransferFilterDropdown({
   isOpen, onClose, filters, onApply, sites,
@@ -483,10 +365,12 @@ function TransferFilterDropdown({
   if (!isOpen) return null;
 
   const Pill = ({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) => (
-    <button onClick={onClick}
+    <button
+      onClick={onClick}
       className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
-        active ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-      }`}>
+        active ? "bg-theme-primary text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+      }`}
+    >
       {label}
     </button>
   );
@@ -502,10 +386,10 @@ function TransferFilterDropdown({
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
           <div className="flex flex-col gap-1">
             {[
-              { val: "",          label: "Tous" },
-              { val: "effectué",  label: "Effectué" },
-              { val: "en_cours",  label: "En cours" },
-              { val: "annulé",    label: "Annulé" },
+              { val: "",         label: "Tous"     },
+              { val: "effectué", label: "Effectué" },
+              { val: "en_cours", label: "En cours" },
+              { val: "annulé",   label: "Annulé"   },
             ].map(o => (
               <Pill key={o.val} active={(local.statut ?? "") === o.val} label={o.label}
                 onClick={() => setLocal({ ...local, statut: o.val || undefined })} />
@@ -514,12 +398,16 @@ function TransferFilterDropdown({
         </div>
       </div>
       <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
-        <button onClick={() => { setLocal({}); onApply({}); onClose(); }}
-          className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition">
+        <button
+          onClick={() => { setLocal({}); onApply({}); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition"
+        >
           Réinitialiser
         </button>
-        <button onClick={() => { onApply(local); onClose(); }}
-          className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition">
+        <button
+          onClick={() => { onApply(local); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold hover:opacity-90 transition"
+        >
           Appliquer
         </button>
       </div>
@@ -534,15 +422,15 @@ function TransferFilterDropdown({
 const PER_PAGE = 6;
 
 export default function TransfertPage() {
-  const [sites,          setSites]          = useState<Site[]>([]);
-  const [search,         setSearch]         = useState("");
-  const [filters,        setFilters]        = useState<TransferFilters>({});
-  const [filtersOpen,    setFiltersOpen]    = useState(false);
-  const [modalOpen,      setModalOpen]      = useState(false);
-  const [detailRecord,   setDetailRecord]   = useState<TransferRecord | null>(null);
-  const [isPanelOpen,    setIsPanelOpen]    = useState(false);
-  const [currentPage,    setCurrentPage]    = useState(1);
-  const [transfers,      setTransfers]      = useState<TransferRecord[]>(FAKE_TRANSFERS);
+  const [sites,        setSites]        = useState<Site[]>([]);
+  const [search,       setSearch]       = useState("");
+  const [filters,      setFilters]      = useState<TransferFilters>({});
+  const [filtersOpen,  setFiltersOpen]  = useState(false);
+  const [modalOpen,    setModalOpen]    = useState(false);
+  const [detailRecord, setDetailRecord] = useState<TransferRecord | null>(null);
+  const [isPanelOpen,  setIsPanelOpen]  = useState(false);
+  const [currentPage,  setCurrentPage]  = useState(1);
+  const [transfers]                     = useState<TransferRecord[]>(FAKE_TRANSFERS);
 
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -559,33 +447,23 @@ export default function TransfertPage() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  // Filtrage + recherche
   const filtered = transfers.filter(t => {
     const matchSearch = !search || [
       t.asset_designation, t.asset_codification, t.site_from, t.site_to, t.initiateur,
     ].some(v => v.toLowerCase().includes(search.toLowerCase()));
-
     const matchStatut = !filters.statut || t.statut === filters.statut;
-
     return matchSearch && matchStatut;
   });
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE) || 1;
   const paginated  = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
-
   const activeFilters = [filters.statut].filter(Boolean).length;
 
-  // KPIs
-  const totalEffectues = transfers.filter(t => t.statut === "effectué").length;
-  const totalEnCours   = transfers.filter(t => t.statut === "en_cours").length;
-  const totalAnnules   = transfers.filter(t => t.statut === "annulé").length;
-  const sitesUniques   = new Set([...transfers.map(t => t.site_from), ...transfers.map(t => t.site_to)]).size;
-
   const kpis = [
-    { label: "Total transferts",   value: transfers.length, delta: "+0%", trend: "up"   as const },
-    { label: "Effectués",          value: totalEffectues,   delta: "+0%", trend: "up"   as const },
-    { label: "En cours",           value: totalEnCours,     delta: "+0%", trend: "up"   as const },
-    { label: "Sites impliqués",    value: sitesUniques,     delta: "+0%", trend: "up"   as const },
+    { label: "Total transferts", value: transfers.length,                                            delta: "+0%", trend: "up" as const },
+    { label: "Effectués",        value: transfers.filter(t => t.statut === "effectué").length,       delta: "+0%", trend: "up" as const },
+    { label: "En cours",         value: transfers.filter(t => t.statut === "en_cours").length,       delta: "+0%", trend: "up" as const },
+    { label: "Sites impliqués",  value: new Set([...transfers.map(t => t.site_from), ...transfers.map(t => t.site_to)]).size, delta: "+0%", trend: "up" as const },
   ];
 
   return (
@@ -596,18 +474,21 @@ export default function TransfertPage() {
 
         <main className="mt-20 p-8 space-y-8">
 
-          {/* PageHeader */}
           <PageHeader
             title="Transferts inter-sites"
             subtitle="Historique et gestion des relocalisations d'équipements entre sites"
           />
 
-          {/* Bandeau info backend en attente */}
-          <div className="flex items-start gap-3 px-5 py-4 rounded-2xl bg-gray-200 border border-gray-400">
-            <Info size={16} className="text-black shrink-0 mt-0.5" />
-            <p className="text-sm text-black 700 font-medium">
-              Les données affichées ne sont pas encore dynamique.
-              L'endpoint <code className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">POST /admin/asset/{"{id}"}/transfer</code> sera branché dès disponibilité côté serveur.
+          {/* Bandeau info */}
+          <div className="flex items-start gap-3 px-5 py-4 rounded-2xl bg-theme-light border border-theme-primary/20">
+            <Info size={16} className="text-theme-primary shrink-0 mt-0.5" />
+            <p className="text-sm font-medium" style={{ color: "rgb(var(--color-text-primary))" }}>
+              Les données affichées ne sont pas encore dynamiques.
+              L'endpoint{" "}
+              <code className="font-mono text-xs bg-white/60 px-1.5 py-0.5 rounded">
+                POST /admin/asset/{"{id}"}/transfer
+              </code>{" "}
+              sera branché dès disponibilité côté serveur.
             </p>
           </div>
 
@@ -616,56 +497,51 @@ export default function TransfertPage() {
             {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
           </div>
 
-          {/* ── Barre d'actions ── */}
+          {/* Barre d'actions */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
-
-            {/* Gauche : search + badges filtres */}
             <div className="flex items-center gap-3 flex-wrap">
+              {/* Recherche */}
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="text"
-                  value={search}
+                  type="text" value={search}
                   onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
                   placeholder="Rechercher un transfert..."
-                  className="pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-slate-400 w-64 transition"
+                  className="pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-theme-primary focus:ring-1 focus:ring-theme-primary w-64 transition"
                 />
               </div>
 
-              {/* Badges filtres actifs */}
+              {/* Badge filtre actif */}
               {filters.statut && (
-                <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                <span className="flex items-center gap-1.5 bg-theme-primary text-white text-xs font-bold px-3 py-1.5 rounded-full">
                   {STATUT_LABELS[filters.statut]}
                   <button onClick={() => { setFilters({}); setCurrentPage(1); }}><X size={10} /></button>
                 </span>
               )}
             </div>
 
-            {/* Droite : boutons actions */}
             <div className="flex items-center gap-2 shrink-0">
-
-              {/* Filtrer */}
+              {/* Filtre dropdown */}
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
                     filtersOpen || activeFilters > 0
-                      ? "bg-slate-900 text-white border-slate-900"
+                      ? "bg-theme-primary text-white border-theme-primary"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <Filter size={14} /> Filtrer
                   {activeFilters > 0 && (
-                    <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                    <span className="ml-1 bg-white text-theme-primary text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
                       {activeFilters}
                     </span>
                   )}
                 </button>
                 <TransferFilterDropdown
-                  isOpen={filtersOpen}
-                  onClose={() => setFiltersOpen(false)}
+                  isOpen={filtersOpen} onClose={() => setFiltersOpen(false)}
                   filters={filters}
-                  onApply={(f) => { setFilters(f); setCurrentPage(1); setFiltersOpen(false); }}
+                  onApply={f => { setFilters(f); setCurrentPage(1); setFiltersOpen(false); }}
                   sites={sites}
                 />
               </div>
@@ -673,14 +549,14 @@ export default function TransfertPage() {
               {/* Nouveau transfert */}
               <button
                 onClick={() => setModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold hover:opacity-90 transition shadow-sm"
               >
                 <ArrowRightLeft size={15} /> Nouveau transfert
               </button>
             </div>
           </div>
 
-          {/* ── Grille des transferts ── */}
+          {/* Grille */}
           <div className="space-y-4">
             {paginated.length === 0 ? (
               <div className="bg-white rounded-3xl border border-slate-100 py-16 text-center space-y-3">
@@ -691,7 +567,7 @@ export default function TransfertPage() {
                 {(search || activeFilters > 0) && (
                   <button
                     onClick={() => { setSearch(""); setFilters({}); setCurrentPage(1); }}
-                    className="text-xs text-slate-500 hover:text-slate-900 font-bold underline"
+                    className="text-xs text-theme-primary font-bold underline hover:opacity-70"
                   >
                     Réinitialiser les filtres
                   </button>
@@ -701,9 +577,8 @@ export default function TransfertPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {paginated.map(record => (
                   <TransferCard
-                    key={record.id}
-                    record={record}
-                    onView={(r) => { setDetailRecord(r); setIsPanelOpen(true); }}
+                    key={record.id} record={record}
+                    onView={r => { setDetailRecord(r); setIsPanelOpen(true); }}
                   />
                 ))}
               </div>
@@ -723,18 +598,14 @@ export default function TransfertPage() {
         </main>
       </div>
 
-      {/* Side Panel Détails d'un transfert */}
+      {/* Side panel détails */}
       <TransferDetailPanel
         record={isPanelOpen ? detailRecord : null}
         onClose={() => { setIsPanelOpen(false); setDetailRecord(null); }}
       />
 
-      {/* Modal Nouveau Transfert (ReusableForm) */}
-      <NewTransferModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        sites={sites}
-      />
+      {/* Modal nouveau transfert */}
+      <NewTransferModal isOpen={modalOpen} onClose={() => setModalOpen(false)} sites={sites} />
     </div>
   );
 }

@@ -1,70 +1,87 @@
-'use client';
+"use client";
 
-import { Check } from 'lucide-react';
-import { useTheme } from '../../contexts/ThemeContext';
-import { THEME_COLORS, type ThemeColor } from '../../lib/theme-config';
+import { Check, Zap } from "lucide-react";
+import { useTheme } from "../../contexts/ThemeContext";
+import { THEME_COLORS } from "../../lib/theme-config";
 
 export default function ThemePicker() {
   const { theme, setThemeColor } = useTheme();
 
   return (
     <div className="space-y-4">
-      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-        Couleur du thème
-      </p>
-      <div className="grid grid-cols-2 gap-3">
-        {THEME_COLORS.map((color) => {
-          const isActive = theme.color === color.id;
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+          Thème de couleur
+        </p>
+        <span className="text-xs text-slate-500 font-medium">
+          {THEME_COLORS.find(t => t.id === theme.color)?.label}
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {THEME_COLORS.map(themeConfig => {
+          const active = theme.color === themeConfig.id;
           return (
             <button
-              key={color.id}
-              onClick={() => setThemeColor(color.id)}
-              className={`
-                flex flex-col items-start gap-3 p-4 rounded-2xl border-2 transition-all
-                ${isActive 
-                  ? 'border-slate-900 bg-slate-50 shadow-md' 
-                  : 'border-slate-100 hover:border-slate-300'
-                }
-              `}
+              key={themeConfig.id}
+              onClick={() => setThemeColor(themeConfig.id)}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                active 
+                  ? "border-slate-900 bg-slate-50 shadow-sm" 
+                  : "border-slate-100 hover:border-slate-300 hover:shadow-sm"
+              }`}
             >
-              {/* Preview couleur */}
-              <div 
-                className="w-full h-12 rounded-xl border-2 flex items-center justify-center"
-                style={{
-                  backgroundColor: color.preview.bg,
-                  borderColor: color.preview.primary,
-                }}
-              >
-                <div
-                  className="w-8 h-8 rounded-lg"
-                  style={{ backgroundColor: color.preview.primary }}
+              {/* Preview couleurs */}
+              <div className="flex gap-1.5 shrink-0">
+                <div 
+                  className="w-10 h-10 rounded-xl shadow-sm" 
+                  style={{ backgroundColor: themeConfig.preview.primary }}
                 />
+                <div className="flex flex-col gap-1">
+                  <div 
+                    className="w-6 h-[18px] rounded-md" 
+                    style={{ backgroundColor: themeConfig.preview.light }}
+                  />
+                  <div 
+                    className="w-6 h-[18px] rounded-md" 
+                    style={{ backgroundColor: themeConfig.preview.bg }}
+                  />
+                </div>
               </div>
 
-              {/* Label */}
-              <div className="flex items-center gap-2 w-full">
-                <span className="text-lg">{color.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-black truncate ${
-                    isActive ? 'text-slate-900' : 'text-slate-500'
-                  }`}>
-                    {color.label}
-                  </p>
-                  <p className="text-[10px] text-slate-400 truncate">
-                    {color.description}
-                  </p>
-                </div>
-                {isActive && (
-                  <Check size={14} className="text-slate-900 shrink-0" />
-                )}
+              {/* Info */}
+              <div className="flex-1 text-left">
+                <p className={`font-black text-sm flex items-center gap-2 ${active ? "text-slate-900" : "text-slate-700"}`}>
+                  <span className="text-base">{themeConfig.icon}</span>
+                  {themeConfig.label}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">{themeConfig.description}</p>
               </div>
+
+              {/* Badge actif */}
+              {active && (
+                <span className="flex items-center gap-1 bg-slate-900 text-white px-3 py-1.5 rounded-full text-[10px] font-black shrink-0">
+                  <Check size={10} /> Actif
+                </span>
+              )}
             </button>
           );
         })}
       </div>
-      <p className="text-xs text-slate-400 mt-4">
-        Les changements s'appliquent instantanément à toute l'application.
-      </p>
+
+      <div className="mt-6 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
+            <Zap size={14} className="text-slate-600" />
+          </div>
+          <div>
+            <p className="text-xs font-black text-slate-900 mb-1">Application instantanée</p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Le thème s'applique immédiatement à toute l'interface et est sauvegardé automatiquement.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
