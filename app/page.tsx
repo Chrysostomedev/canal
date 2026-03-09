@@ -8,7 +8,7 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white text-orane-600">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-black text-white">
       {/* Logo avec légère animation */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -17,7 +17,7 @@ export default function Home() {
         className="mb-12"
       >
         <Image
-          src="/images/logoci.png" 
+          src="/images/logo_canal.png" 
           alt="CANAL+"
           width={240}
           height={80}
@@ -33,9 +33,9 @@ export default function Home() {
         className="text-center px-6 sm:px-0 max-w-xl"
       >
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
-          Bienvenue sur Ebène Patrimoine
+          Bienvenue sur Facility Management
         </h1>
-        <p className="text-lg sm:text-xl text-gray-500">
+        <p className="text-lg sm:text-xl text-gray-300">
           Gérez facilement vos parcs et suivez vos performances en temps réel.
         </p>
       </motion.div>
@@ -49,7 +49,7 @@ export default function Home() {
       >
         <button
           onClick={() => router.push("/admin/login")}
-          className="relative flex items-center gap-3 bg-orange-500 text-white font-semibold rounded-full px-8 py-4 shadow-lg hover:bg-orange-600 transition-all duration-300"
+          className="relative flex items-center gap-3 bg-white text-black font-semibold rounded-full px-8 py-4 shadow-lg hover:bg-gray-200 transition-all duration-300"
         >
           Continuer
           {/* Petite icône animée à droite */}

@@ -145,10 +145,11 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="fixed top-0 left-0 w-64 h-screen bg-white shadow-lg border-r border-gray-200 flex flex-col z-40">
+      <aside className="fixed top-0 left-0 
+      w-64 h-screen bg-white shadow-lg border-r border-gray-200 flex flex-col z-40">
         {/* Logo */}
         <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-center">
-          <Image src="/images/logoci.png" alt="CANAL+" width={180} height={50} priority />
+          <Image src="/images/logo_canal.png" alt="CANAL+" width={180} height={50} priority />
         </div>
 
         {/* Menu principal */}

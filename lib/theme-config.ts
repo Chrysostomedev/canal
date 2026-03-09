@@ -33,10 +33,10 @@ export const THEME_COLORS = [
   },
   {
     id: 'red' as ThemeColor,
-    label: 'Rouge CANAL+',
-    labelEn: 'CANAL+ Red',
+    label: 'Rouge ',
+    labelEn: 'red',
     icon: '🔴',
-    description: 'Rouge signature CANAL+',
+    description: 'Rouge signature ',
     preview: {
       primary: '#E40613',
       light: '#fef2f2',
