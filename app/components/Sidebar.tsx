@@ -146,7 +146,7 @@ const BOTTOM_ADMIN: BottomItem[] = [
 
 /** PROVIDER */
 const BOTTOM_PROVIDER: BottomItem[] = [
-  { label: "Paramètres", href: "/provider/parametres", icon: <Settings size={20} /> },
+  { label: "Paramètres", href: "/provider/parametre", icon: <Settings size={20} /> },
 ];
 
 /** MANAGER */

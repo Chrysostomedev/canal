@@ -16,12 +16,12 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import { useProviderQuotes } from "@hooks/useProviderQuotes";
+import { useProviderQuotes } from "../../../hooks/provider/useProviderQuotes";
 import {
   Quote, ALL_STATUSES,
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
   formatCurrency, formatDate, getPdfUrl,
-} from "@services/providerQuoteService";
+} from "../../../services/provider/providerQuoteService";
 import type { FieldConfig } from "@/components/ReusableForm";
 import { useState } from "react";
 

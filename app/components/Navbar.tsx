@@ -6,6 +6,34 @@ import { LogOut, AlertTriangle, BellDot } from "lucide-react";
 import { authService } from "../../services/AuthService";
 import Link from "next/link";
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Mapping rôle → route notifications
+ *
+ * SUPER-ADMIN → /admin/notifications
+ * ADMIN       → /admin/notifications
+ * PROVIDER    → /provider/notifications
+ * MANAGER     → /manager/notifications
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+const getNotificationsRoute = (role: string): string => {
+  switch (role) {
+    case "SUPER-ADMIN":
+      return "/admin/notifications";
+    case "ADMIN":
+      return "/admin/notifications";
+
+    case "PROVIDER":
+      return "/provider/notifications";
+
+    case "MANAGER":
+      return "/manager/notifications";
+
+    default:
+      return "#";
+  }
+};
+
 function RoleBadge({ role }: { role: string }) {
   if (role === "super-admin")
     return (
@@ -28,11 +56,17 @@ export default function Navbar() {
   const [firstName, setFirstName] = useState("");
   const [lastName,  setLastName]  = useState("");
   const [role,      setRole]      = useState("");
+  const [notificationRoute, setNotificationRoute] = useState("#");
 
   useEffect(() => {
+    const currentRole = authService.getRole();
+
     setFirstName(authService.getFirstName());
     setLastName(authService.getLastName());
-    setRole(authService.getRole());
+    setRole(currentRole);
+
+    // Route notifications dynamique selon le rôle
+    setNotificationRoute(getNotificationsRoute(currentRole));
   }, []);
 
   const handleLogout = async () => {
@@ -75,11 +109,14 @@ export default function Navbar() {
         {/* Actions droite */}
         <div className="flex items-center gap-4">
           <Link
-            href="/admin/notifications"
+            href={notificationRoute}
             className="relative flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all"
           >
             <BellDot size={22} className="text-theme-primary" strokeWidth={2.5} />
-            <span className="text-sm font-semibold tracking-tight" style={{ color: "rgb(var(--color-text-primary))" }}>
+            <span
+              className="text-sm font-semibold tracking-tight"
+              style={{ color: "rgb(var(--color-text-primary))" }}
+            >
               Notifications
             </span>
           </Link>
@@ -104,7 +141,7 @@ export default function Navbar() {
             <div className="space-y-3">
               <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Déconnexion de votre compte</h2>
               <p className="text-gray-500 text-lg leading-relaxed font-medium px-4">
-                Souhaitez-vous vous déconnecter ? Vous pourrez vous reconnecter facilement à tout moment.
+                Souhaitez-vous vous déconnecter ? Vous pourrez vous reconnecter facilement à tout moment avec vos identifiants.
               </p>
             </div>
             <div className="flex gap-4 w-full pt-4">

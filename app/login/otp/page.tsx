@@ -184,7 +184,7 @@ export default function OtpPage() {
       className="min-h-screen flex items-center justify-center relative bg-cover bg-center"
       style={{ backgroundImage: "url('/assets/bg_login.png')" }}
     >
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute " />
 
       <div className="relative z-10 w-full max-w-md">
         <div className="h-1 w-full bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl" />
@@ -263,7 +263,7 @@ export default function OtpPage() {
           <button
             onClick={handleSubmit}
             disabled={loading || !isComplete || !!success}
-            className="w-full py-3.5 rounded-xl bg-gray-900 text-white font-semibold text-sm
+            className="w-full py-3.5 rounded-xl bg-theme-primary text-white font-semibold text-sm
                        hover:bg-black disabled:bg-gray-300 disabled:cursor-not-allowed
                        transition-all duration-200 shadow-lg shadow-gray-900/20
                        flex items-center justify-center gap-2"
