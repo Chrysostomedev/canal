@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import ActionGroup from "@/components/ActionGroup";
@@ -8,7 +8,7 @@ import StatsCard from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
 import PageHeader from "@/components/PageHeader";
 import MainCard from "@/components/MainCard";
-import { Filter, CalendarClock, Plus, CheckCircle2, XCircle } from "lucide-react";
+import { Filter, CalendarClock, Plus, CheckCircle2, XCircle, X } from "lucide-react";
 
 import { usePlanning } from "../../../hooks/admin/usePlanning";
 import {
@@ -43,6 +43,91 @@ function Toast({ toast }: { toast: ToastType }) {
         : <XCircle      size={20} className="text-red-500 shrink-0" />
       }
       {toast.message}
+    </div>
+  );
+}
+
+// ─── Filter Dropdown (pattern identique à SitesPage) ─────────────────────────
+
+interface PlanningFiltersState {
+  status?: string;
+}
+
+function PlanningFilterDropdown({
+  isOpen, onClose, filters, onApply,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  filters: PlanningFiltersState;
+  onApply: (f: PlanningFiltersState) => void;
+}) {
+  const [local, setLocal] = useState<PlanningFiltersState>(filters);
+  useEffect(() => { setLocal(filters); }, [filters]);
+  if (!isOpen) return null;
+
+  const Pill = ({
+    val, current, onClick, label,
+  }: { val: string; current?: string; onClick: () => void; label: string }) => (
+    <button
+      onClick={onClick}
+      className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
+        (current ?? "") === val
+          ? "bg-slate-900 text-white"
+          : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Filtres</span>
+        <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition">
+          <X size={16} className="text-slate-500" />
+        </button>
+      </div>
+
+      {/* Options statut */}
+      <div className="p-5 space-y-3">
+        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
+        <div className="flex flex-col gap-1.5">
+          {[
+            { val: "",            label: "Tous les plannings" },
+            { val: "planifie",    label: "Planifié"           },
+            { val: "en_cours",    label: "En cours"           },
+            { val: "en_retard",   label: "En retard"          },
+            { val: "realise",     label: "Réalisé"            },
+            { val: "non_realise", label: "Non réalisé"        },
+          ].map(o => (
+            <Pill
+              key={o.val}
+              val={o.val}
+              current={local.status ?? ""}
+              label={o.label}
+              onClick={() => setLocal({ ...local, status: o.val || undefined })}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
+        <button
+          onClick={() => { setLocal({}); onApply({}); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition"
+        >
+          Réinitialiser
+        </button>
+        <button
+          onClick={() => { onApply(local); onClose(); }}
+          className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
+        >
+          Appliquer
+        </button>
+      </div>
     </div>
   );
 }
@@ -93,85 +178,91 @@ export default function PlanningPage() {
     setFilters,
   } = usePlanning();
 
-  // ── Toast ────────────────────────────────────────────────────
+  // ── Toast ──────────────────────────────────────────────────────────────────
   const [toast, setToast] = useState<ToastType>(null);
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   };
 
-  // ── Providers et Sites dynamiques ────────────────────────────
-  // FIX : on fetch les vraies listes pour les selects du formulaire
+  // ── Filter dropdown state (pattern SitesPage) ──────────────────────────────
+  const [planningFilters, setPlanningFilters] = useState<PlanningFiltersState>({});
+  const [filtersOpen,     setFiltersOpen]     = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Ferme dropdown au clic extérieur
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node))
+        setFiltersOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const activeCount = [planningFilters.status].filter(Boolean).length;
+
+  const handleApplyFilters = (f: PlanningFiltersState) => {
+    setPlanningFilters(f);
+    setFilters({ status: f.status as any ?? undefined });
+  };
+
+  // ── Providers et Sites dynamiques ─────────────────────────────────────────
   const [providers, setProviders] = useState<{ label: string; value: number }[]>([]);
   const [sites, setSites]         = useState<{ label: string; value: number }[]>([]);
 
   useEffect(() => {
-    // Fetch providers
     import("../../../core/axios").then(({ default: api }) => {
-      api.get("/provider").then(({ data }) => {
-        const list = data?.data ?? data ?? [];
-        // La réponse peut être paginée ou directe
-        const items = Array.isArray(list) ? list : (list.data ?? list.items ?? []);
+
+      // FIX 1 — per_page=1000 pour récupérer TOUS les prestataires sans pagination
+      api.get("/admin/providers", { params: { per_page: 1000 } }).then(({ data }) => {
+        // FIX 3 — Laravel renvoie data.data.items (paginé) ou data.data (tableau)
+        const raw   = data?.data ?? data ?? {};
+        const items: any[] = Array.isArray(raw)
+          ? raw
+          : (raw.items ?? raw.data ?? []);
         setProviders(
           items.map((p: any) => ({
-            label: p.company_name ?? `${p.user?.first_name ?? ""} ${p.user?.last_name ?? ""}`.trim(),
+            label: (p.company_name ?? `${p.user?.first_name ?? ""} ${p.user?.last_name ?? ""}`.trim()) || `Prestataire #${p.id}`,
             value: p.id,
           }))
         );
-      }).catch(() => {
-        // Fallback si endpoint indisponible
-        setProviders([{ label: "SOUDOTEC", value: 1 }]);
-      });
-    });
+      }).catch(() => setProviders([]));
 
-    // Fetch sites
-    import("../../../core/axios").then(({ default: api }) => {
-      api.get("/admin/sites").then(({ data }) => {
-        const list = data?.data ?? data ?? [];
-        const items = Array.isArray(list) ? list : (list.data ?? list.items ?? []);
+      // FIX 2 — /admin/site (sans "s") + per_page=1000 pour tous les sites
+      api.get("/admin/site", { params: { per_page: 1000 } }).then(({ data }) => {
+        // FIX 3 — même logique de parsing robuste
+        const raw   = data?.data ?? data ?? {};
+        const items: any[] = Array.isArray(raw)
+          ? raw
+          : (raw.items ?? raw.data ?? []);
         setSites(
           items.map((s: any) => ({
             label: s.nom ?? s.name ?? `Site #${s.id}`,
             value: s.id,
           }))
         );
-      }).catch(() => {
-        // Fallback si endpoint indisponible
-        setSites([
-          { label: "Siège Canal+",     value: 1 },
-          { label: "Entrepôt Central", value: 2 },
-          { label: "Boutique Canal+",  value: 3 },
-        ]);
-      });
+      }).catch(() => setSites([]));
+
     });
   }, []);
 
-  // ── Champs formulaire dynamiques ────────────────────────────
+  // ── Champs formulaire ─────────────────────────────────────────────────────
   const planningFields: FieldConfig[] = [
     {
       name: "site_id", label: "Site",
       type: "select", required: true,
-      options: sites,      // ← dynamique depuis l'API (site.nom)
+      options: sites,
     },
-    { name: "date_debut",        label: "Date de début",           type: "date",  required: true, icon: CalendarClock },
-    { name: "date_fin",          label: "Date de fin",             type: "date",  required: true, icon: CalendarClock },
-    { name: "responsable_name",  label: "Nom du responsable",      type: "text",  required: true },
-    { name: "responsable_phone", label: "Téléphone du responsable",type: "text" },
-    // {
-    //   name: "status", label: "Statut", type: "select",
-    //   options: [
-    //     { label: "Planifié",  value: "planifie"  },
-    //     { label: "En cours",  value: "en_cours"  },
-    //     { label: "En retard", value: "en_retard" },
-    //     { label: "Réalisé",   value: "realise"   },
-    //   ],
-    // },
+    { name: "date_debut",        label: "Date de début",            type: "date", required: true, icon: CalendarClock },
+    { name: "date_fin",          label: "Date de fin",              type: "date", required: true, icon: CalendarClock },
+    { name: "responsable_name",  label: "Nom du responsable",       type: "text", required: true },
+    { name: "responsable_phone", label: "Téléphone du responsable", type: "text", required: true},
     {
       name: "provider_id", label: "Prestataire assigné",
       type: "select", required: true,
-      options: providers,  // ← dynamique depuis l'API
+      options: providers,
     },
-    
     {
       name: "description", label: "Description / Observations",
       type: "rich-text", gridSpan: 2,
@@ -179,66 +270,45 @@ export default function PlanningPage() {
     },
   ];
 
-  // ── Filtre statut ────────────────────────────────────────────
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const cpis = buildStatsCards(stats, isLoadingStats);
 
-  const siteActions = [
-    {
-      label: statusFilter === "all"
-        ? "Filtrer par statut"
-        : `Statut : ${STATUS_LABELS[statusFilter as keyof typeof STATUS_LABELS] ?? statusFilter}`,
-      icon: Filter,
-      onClick: () => {
-        const order = ["all", "planifie", "en_cours", "en_retard", "realise"];
-        const next  = order[(order.indexOf(statusFilter) + 1) % order.length];
-        setStatusFilter(next);
-        setFilters({ status: next === "all" ? undefined : (next as any) });
-      },
-      variant: "secondary" as const,
-    },
-    {
-      label: "Nouveau planning",
-      icon: Plus,
-      onClick: openCreateModal,
-      variant: "primary" as const,
-    },
-  ];
-
-  // ── Submit création ──────────────────────────────────────────
+  // ── Submit création ────────────────────────────────────────────────────────
   const handleCreateSubmit = async (formData: Record<string, any>) => {
+    // Génération d'un codification unique : PLN-YYYYMMDD-XXXXXXXX (timestamp hex)
+    // Garanti unique car basé sur Date.now() en base 36 + aléatoire
+    const unique = Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const codification = `PLN-${dateStr}-${unique}`;
+
     const payload: CreatePlanningPayload = {
-      codification:      formData.codification,
-      date_debut:        formData.date_debut,
-      date_fin:          formData.date_fin,
-      responsable_name:  formData.responsable_name,
-      responsable_phone: formData.responsable_phone || undefined,
-      provider_id:       Number(formData.provider_id),
-      site_id:           Number(formData.site_id),
-      status:            (formData.status as any) || "planifie",
-      description:       formData.description || undefined,
+      codification,
+      date_debut:  formData.date_debut,
+      date_fin:    formData.date_fin,
+      provider_id: Number(formData.provider_id),
+      site_id:     Number(formData.site_id),
+      status:      (formData.status as any) || "planifie",
+      ...(formData.responsable_name  ? { responsable_name:  formData.responsable_name  } : {}),
+      ...(formData.responsable_phone ? { responsable_phone: formData.responsable_phone } : {}),
+      ...(formData.description       ? { description:       formData.description       } : {}),
     };
     const ok = await handleCreate(payload);
-    // FIX : toast feedback après création
     showToast(
       ok ? "Planning créé avec succès ✓" : (error || "Erreur lors de la création"),
       ok ? "success" : "error"
     );
   };
 
-  // ── Submit édition ───────────────────────────────────────────
+  // ── Submit édition ─────────────────────────────────────────────────────────
   const handleEditSubmit = async (formData: Record<string, any>) => {
     if (!selectedPlanning) return;
     const payload: UpdatePlanningPayload = {
-      codification:      formData.codification,
-      date_debut:        formData.date_debut,
-      date_fin:          formData.date_fin,
-      responsable_name:  formData.responsable_name,
-      responsable_phone: formData.responsable_phone || undefined,
-      provider_id:       formData.provider_id ? Number(formData.provider_id) : undefined,
-      site_id:           formData.site_id ? Number(formData.site_id) : undefined,
-      status:            (formData.status as any) || undefined,
-      description:       formData.description || undefined,
+      date_debut:  formData.date_debut,
+      date_fin:    formData.date_fin,
+      provider_id: formData.provider_id ? Number(formData.provider_id) : undefined,
+      site_id:     formData.site_id     ? Number(formData.site_id)     : undefined,
+      status:      (formData.status as any) || undefined,
+      ...(formData.responsable_name  ? { responsable_name:  formData.responsable_name  } : {}),
+      ...(formData.responsable_phone ? { responsable_phone: formData.responsable_phone } : {}),
+      ...(formData.description       ? { description:       formData.description       } : {}),
     };
     const ok = await handleUpdate(selectedPlanning.id, payload);
     showToast(
@@ -247,7 +317,8 @@ export default function PlanningPage() {
     );
   };
 
-  // ── initialValues édition ────────────────────────────────────
+
+  // ── initialValues édition ──────────────────────────────────────────────────
   const editInitialValues = selectedPlanning
     ? {
         codification:      selectedPlanning.codification,
@@ -262,27 +333,19 @@ export default function PlanningPage() {
       }
     : {};
 
-  // ── Format SideDetailsPanel ──────────────────────────────────
-  // FIX : getSiteName → site.nom | getProviderName → company_name
+  // ── Format SideDetailsPanel ────────────────────────────────────────────────
   const formattedSelectedEvent = selectedPlanning
     ? {
         title:       selectedPlanning.codification,
         reference:   `#${String(selectedPlanning.id).padStart(7, "0")}`,
         description: selectedPlanning.description ?? "Aucune description disponible.",
         fields: [
-          {
-            label: "Site",
-            value: getSiteName(selectedPlanning.site),           // ← site.nom ✓
-          },
-          {
-            label: "Prestataire",
-            value: getProviderName(selectedPlanning.provider),   // ← company_name ✓
-          },
-          { label: "Responsable", value: selectedPlanning.responsable_name },
-          { label: "Téléphone",   value: selectedPlanning.responsable_phone ?? "—" },
+          { label: "Site",        value: getSiteName(selectedPlanning.site)         },
+          { label: "Prestataire", value: getProviderName(selectedPlanning.provider) },
+          { label: "Responsable", value: selectedPlanning.responsable_name          },
+          { label: "Téléphone",   value: selectedPlanning.responsable_phone ?? "—"  },
           {
             label: "Date de début",
-            // FIX : affiche date ET heure
             value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
           },
           {
@@ -299,7 +362,9 @@ export default function PlanningPage() {
       }
     : null;
 
-  // ─── Render ───────────────────────────────────────────────────
+  const cpis = buildStatsCards(stats, isLoadingStats);
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
       <Sidebar />
@@ -322,15 +387,74 @@ export default function PlanningPage() {
             />
           </div>
 
+          {/* KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {cpis.map((cpi, i) => <StatsCard key={i} {...cpi} />)}
           </div>
 
-          <div className="shrink-0 flex justify-end">
-            <ActionGroup actions={siteActions} />
+          {/* ── Barre d'actions ── */}
+          <div className="flex items-center justify-between gap-3">
+
+            {/* Gauche : badges filtres actifs */}
+            <div className="flex items-center gap-2 flex-wrap min-h-[36px]">
+              {activeCount === 0 && (
+                <p className="text-xs text-slate-400 font-medium">Aucun filtre actif</p>
+              )}
+              {planningFilters.status && (
+                <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {STATUS_LABELS[planningFilters.status as keyof typeof STATUS_LABELS] ?? planningFilters.status}
+                  <button
+                    onClick={() => handleApplyFilters({ ...planningFilters, status: undefined })}
+                    className="hover:opacity-70"
+                  >
+                    <X size={11} />
+                  </button>
+                </span>
+              )}
+            </div>
+
+            {/* Droite : boutons */}
+            <div className="flex items-center gap-3 shrink-0">
+
+              {/* Filtrer — dropdown identique à SitesPage */}
+              <div className="relative" ref={filterRef}>
+                <button
+                  onClick={() => setFiltersOpen(!filtersOpen)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
+                    filtersOpen || activeCount > 0
+                      ? "bg-slate-900 text-white border-slate-900"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <Filter size={16} />
+                  Filtrer
+                  {activeCount > 0 && (
+                    <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                      {activeCount}
+                    </span>
+                  )}
+                </button>
+
+                <PlanningFilterDropdown
+                  isOpen={filtersOpen}
+                  onClose={() => setFiltersOpen(false)}
+                  filters={planningFilters}
+                  onApply={handleApplyFilters}
+                />
+              </div>
+
+              {/* Nouveau planning */}
+              <button
+                onClick={openCreateModal}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
+              >
+                <Plus size={16} />
+                Nouveau planning
+              </button>
+            </div>
           </div>
 
-          {/* FIX : MainCard reçoit les plannings réels + handlers corrects */}
+          {/* Tableau / Calendrier */}
           <MainCard
             plannings={plannings}
             isLoading={isLoading}

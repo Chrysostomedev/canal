@@ -108,7 +108,7 @@ const MENU_MANAGER: MenuItem[] = [
   {
     label: "Sites",
     icon: <MapPinHouse size={20} />,
-    href: "/manager/sites",
+    href: "/manager/site",
     // Le manager voit ses propres sites — la page /manager/sites filtre côté back
   },
   {

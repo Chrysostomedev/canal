@@ -1,6 +1,5 @@
 // ============================================================
 // services/planningService.ts
-// Calqué sur la vraie réponse API (Postman)
 // ============================================================
 
 import api from "../../core/axios";
@@ -19,7 +18,7 @@ export interface PlanningUser {
 
 export interface PlanningProvider {
   id: number;
-  company_name: string;       // ← "SOUDOTEC" (pas user.name)
+  company_name: string;
   city: string;
   is_active: boolean;
   user_id: number;
@@ -28,7 +27,7 @@ export interface PlanningProvider {
 
 export interface PlanningSite {
   id: number;
-  nom: string;                // ← "nom" et non "name" !
+  nom: string;
   responsable_name: string;
   email: string;
   localisation: string;
@@ -38,7 +37,7 @@ export interface PlanningSite {
 export interface Planning {
   id: number;
   codification: string;
-  date_debut: string;         // "2024-03-18T10:00:00.000000Z"
+  date_debut: string;
   date_fin: string;
   description: string | null;
   responsable_name: string;
@@ -83,22 +82,24 @@ export interface PlanningFilters {
   page?: number;
 }
 
+// FIX — codification et responsable_name passent en optionnels
+// Le back (PlanningServices.php) auto-remplit responsable_name depuis le site
+// et codification doit être nullable en base (ou généré via un observer)
 export interface CreatePlanningPayload {
-  codification: string;
-  date_debut: string;
-  date_fin: string;
-  description?: string;
-  responsable_name: string;
+  codification:       string;        // requis — généré côté front (PLN-YYYYMMDD-UNIQUE)
+  date_debut:         string;
+  date_fin:           string;
+  description?:       string;
+  responsable_name?:  string;        // optionnel — auto-rempli depuis site.responsable_name
   responsable_phone?: string;
-  provider_id: number;
-  site_id: number;
-  status?: PlanningStatus;
+  provider_id:        number;
+  site_id:            number;
+  status?:            PlanningStatus;
 }
 
 export type UpdatePlanningPayload = Partial<CreatePlanningPayload>;
 
 // ─── Unwrap Laravel response ──────────────────────────────────────────────────
-// Laravel répond : { success, message, data: { items, meta } | Planning | Stats }
 function unwrap<T>(response: any): T {
   return response?.data?.data ?? response?.data ?? response;
 }
@@ -129,12 +130,15 @@ export async function fetchPlanningById(id: number): Promise<Planning> {
 }
 
 export async function createPlanning(payload: CreatePlanningPayload): Promise<Planning> {
-  const response = await api.post("/admin/planning", payload);
+  // FIX — on retire les clés undefined avant d'envoyer
+  const clean = cleanParams(payload as Record<string, any>);
+  const response = await api.post("/admin/planning", clean);
   return unwrap<Planning>(response);
 }
 
 export async function updatePlanning(id: number, payload: UpdatePlanningPayload): Promise<Planning> {
-  const response = await api.put(`/admin/planning/${id}`, payload);
+  const clean = cleanParams(payload as Record<string, any>);
+  const response = await api.put(`/admin/planning/${id}`, clean);
   return unwrap<Planning>(response);
 }
 
@@ -165,21 +169,18 @@ export const STATUS_LABELS: Record<PlanningStatus, string> = {
   realise:   "Réalisé",
 };
 
-/** "2024-03-18T10:00:00.000000Z" → "18/03/2024" */
 export function formatDate(iso: string): string {
   if (!iso) return "—";
   const [y, m, d] = iso.split("T")[0].split("-");
   return `${d}/${m}/${y}`;
 }
 
-/** "2024-03-18T10:00:00.000000Z" → "10:00" */
 export function formatTime(iso: string): string {
   if (!iso) return "—";
   const timePart = iso.split("T")[1];
   return timePart ? timePart.slice(0, 5) : "—";
 }
 
-/** Nom complet du prestataire depuis l'objet provider */
 export function getProviderName(provider?: PlanningProvider): string {
   if (!provider) return "—";
   if (provider.company_name) return provider.company_name;
@@ -187,13 +188,11 @@ export function getProviderName(provider?: PlanningProvider): string {
   return `Prestataire #${provider.id}`;
 }
 
-/** Nom du site — champ "nom" dans l'API */
 export function getSiteName(site?: PlanningSite): string {
   if (!site) return "—";
   return site.nom ?? `Site #${site.id}`;
 }
 
-/** true si le planning couvre la date donnée (date_debut ≤ date ≤ date_fin) */
 export function isPlanningOnDate(planning: Planning, date: Date): boolean {
   const start = new Date(planning.date_debut);
   const end   = new Date(planning.date_fin);
@@ -203,7 +202,6 @@ export function isPlanningOnDate(planning: Planning, date: Date): boolean {
   return d >= start && d <= end;
 }
 
-/** Groupe les plannings par "YYYY-MM-DD" de leur date_debut */
 export function groupPlanningsByDate(plannings: Planning[]): Record<string, Planning[]> {
   return plannings.reduce<Record<string, Planning[]>>((acc, p) => {
     const key = p.date_debut.split("T")[0];

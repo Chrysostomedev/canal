@@ -464,16 +464,42 @@ export default function PatrimoinesPage() {
     { name: "valeur_entree", label: "Valeur d'entrée", type: "number", required: true },
      { name: "dimension", label: "Dimension", type: "number", required: false },
     { name: "description",   label: "Description",     type: "rich-text", gridSpan: 2 },
+    {
+      name: "images", label: "Photos", type: "image-upload", gridSpan: 2, maxImages: 3,
+    },
   ];
 
   // ── COLONNES — Eye aperçu + ChevronRight vers détails ──────
   const columns = [
     {
-      header: "ID", key: "id",
-      render: (_: any, row: CompanyAsset) => (
-        <span className="font-black text-slate-900 text-sm">#{row.id}</span>
-      ),
-    },
+          header: "Photos",
+          key: "images",
+          render: (_: any, row: CompanyAsset) => {
+            const imgs: string[] = (row as any).images ?? [];
+            if (!imgs.length) return <span className="text-slate-300 text-xs">—</span>;
+            return (
+              <div className="flex items-center">
+                {imgs.slice(0, 3).map((src, i) => (
+                  <div
+                    key={i}
+                    className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white shrink-0"
+                    style={{ zIndex: 3 - i, marginLeft: i > 0 ? "-10px" : "0" }}
+                  >
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+                {imgs.length > 3 && (
+                  <div
+                    className="w-9 h-9 rounded-xl bg-slate-100 ring-2 ring-white flex items-center justify-center shrink-0"
+                    style={{ zIndex: 0, marginLeft: "-10px" }}
+                  >
+                    <span className="text-[10px] font-bold text-slate-500">+{imgs.length - 3}</span>
+                  </div>
+                )}
+              </div>
+            );
+          },
+        },
     {
       header: "Codification", key: "codification",
       render: (_: any, row: CompanyAsset) => (

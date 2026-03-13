@@ -50,7 +50,7 @@ const mockReports: InterventionReport[] = [
     ticket: { subject: "Panne générale" },
     attachments: [
       { id: 1, file_type: "document", file_path: "/docs/rapport1.pdf" },
-      { id: 2, file_type: "photo", file_path: "/images/photo1.jpg" },
+      { id: 2, file_type: "photo", file_path: "/images/logo_canal.png" },
     ],
   },
   {

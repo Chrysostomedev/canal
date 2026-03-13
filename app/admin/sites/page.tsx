@@ -5,18 +5,18 @@ import {
   Filter, Download, Upload, Globe, X,
 } from "lucide-react";
 
-import Navbar      from "@/components/Navbar";
-import Sidebar     from "@/components/Sidebar";
-import SiteCard    from "@/components/SiteCard";
-import StatsCard   from "@/components/StatsCard";
-import Paginate    from "@/components/Paginate";
+import Navbar       from "@/components/Navbar";
+import Sidebar      from "@/components/Sidebar";
+import SiteCard     from "@/components/SiteCard";
+import StatsCard    from "@/components/StatsCard";
+import Paginate     from "@/components/Paginate";
 import ReusableForm from "@/components/ReusableForm";
-import PageHeader  from "@/components/PageHeader";
-import SearchInput from "@/components/SearchInput";
+import PageHeader   from "@/components/PageHeader";
+import SearchInput  from "@/components/SearchInput";
 import { FieldConfig } from "@/components/ReusableForm";
 
 import { useSites } from "../../../hooks/admin/useSites";
-import { exportSites, importSites, downloadSiteImportTemplate } from "../../../services/admin/site.service";
+import { exportSites, importSites, downloadSiteImportTemplate, resolveManagerName } from "../../../services/admin/site.service";
 
 // ═══════════════════════════════════════════════
 // HELPERS
@@ -111,7 +111,7 @@ export default function SitesPage() {
   const filterRef = useRef<HTMLDivElement>(null);
 
   const {
-    sites, stats, managers, loading,
+    sites, stats, managers, managersLoading, loading,
     page, totalPages, totalItems, setPage,
     fetchSites, fetchStats, fetchManagers, addSite,
   } = useSites();
@@ -214,17 +214,22 @@ export default function SitesPage() {
   };
 
   // ── Champs formulaire
+  // FIX (Bug 2) : utilise resolveManagerName pour garantir un label non vide
+  // FIX (Bug 3) : champ désactivé et placeholder pendant le chargement des managers
   const siteFields: FieldConfig[] = [
     { name: "nom",               label: "Nom du site",            type: "text",   required: true },
     { name: "ref_contrat",       label: "Référence contrat",      type: "text",   required: true },
     {
-      name: "manager_id", label: "Gestionnaire", type: "select",
-      options: managers.map((m: any) => ({
-        label: m.first_name ?? m.name ?? m.email ?? `Manager #${m.id}`,
+      name: "manager_id",
+      label: managersLoading ? "Gestionnaire (chargement...)" : "Gestionnaire",
+      type: "select",
+      disabled: managersLoading, // FIX (Bug 3): bloqué pendant le fetch
+      options: managers.map((m) => ({
+        // FIX (Bug 2): resolveManagerName gère first_name / name / email en cascade
+        label: resolveManagerName(m) || `Manager #${m.id}`,
         value: String(m.id),
       })),
     },
-    { name: "phone_responsable", label: "Téléphone responsable", type: "text" },
     { name: "email",             label: "Email du site",          type: "email" },
     {
       name: "status", label: "Statut", type: "select", required: true,
@@ -232,8 +237,8 @@ export default function SitesPage() {
     },
     { name: "effectifs",        label: "Effectifs",                type: "number" },
     { name: "loyer",            label: "Loyer mensuel (FCFA)",     type: "number" },
-    { name: "localisation",     label: "Localisation",             type: "text", gridSpan: 2 },
     { name: "superficie",       label: "Superficie (m²)",          type: "number" },
+    { name: "localisation",     label: "Localisation",             type: "text", gridSpan: 2 },
     { name: "date_deb_contrat", label: "Date de début de contrat", type: "date" },
     { name: "date_fin_contrat", label: "Date de fin de contrat",   type: "date" },
   ];
@@ -376,12 +381,18 @@ export default function SitesPage() {
                 />
               </div>
 
-              {/* Ajouter */}
+              {/* Ajouter — FIX (Bug 3): désactivé pendant le chargement des managers */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
+                disabled={managersLoading}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm disabled:opacity-60 disabled:cursor-wait"
+                title={managersLoading ? "Chargement des gestionnaires..." : undefined}
               >
-                <Globe size={16} /> Ajouter un site
+                {managersLoading
+                  ? <span className="w-4 h-4 border-2 border-slate-600 border-t-white rounded-full animate-spin" />
+                  : <Globe size={16} />
+                }
+                Ajouter un site
               </button>
             </div>
           </div>

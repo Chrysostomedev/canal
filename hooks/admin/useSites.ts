@@ -7,18 +7,20 @@ import {
   getSiteStats,
   getManagers,
   Site,
+  Manager, // FIX: import du type Manager
 } from "../../services/admin/site.service";
 
 const PER_PAGE = 9;
 
 export const useSites = () => {
-  const [sites,      setSites]      = useState<Site[]>([]);
-  const [stats,      setStats]      = useState<any>(null);
-  const [managers,   setManagers]   = useState<any[]>([]);
-  const [loading,    setLoading]    = useState(false);
-  const [page,       setPageState]  = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  const [sites,          setSites]          = useState<Site[]>([]);
+  const [stats,          setStats]          = useState<any>(null);
+  const [managers,       setManagers]       = useState<Manager[]>([]); // FIX: typé Manager[]
+  const [loading,        setLoading]        = useState(false);
+  const [managersLoading, setManagersLoading] = useState(false); // FIX (Bug 3): état de chargement dédié
+  const [page,           setPageState]      = useState(1);
+  const [totalPages,     setTotalPages]     = useState(1);
+  const [totalItems,     setTotalItems]     = useState(0);
 
   // Références internes pour éviter les closures périmées
   const pageRef   = useRef(1);
@@ -29,8 +31,8 @@ export const useSites = () => {
   // FETCH PRINCIPAL — respecte page, search, status
   // ─────────────────────────────────────────────
   const fetchSites = async (
-    search?:      string,
-    status?:      string,
+    search?:       string,
+    status?:       string,
     overridePage?: number,
   ) => {
     searchRef.current = search ?? searchRef.current;
@@ -71,7 +73,7 @@ export const useSites = () => {
   };
 
   // ─────────────────────────────────────────────
-  // Auto-fetch au montage UNIQUEMENT (pas de double)
+  // Auto-fetch au montage UNIQUEMENT
   // ─────────────────────────────────────────────
   useEffect(() => {
     fetchSites();
@@ -79,7 +81,6 @@ export const useSites = () => {
 
   // ─────────────────────────────────────────────
   // Réaction au changement de page
-  // skipFirst évite le double-fetch au montage
   // ─────────────────────────────────────────────
   const isFirstMount = useRef(true);
   useEffect(() => {
@@ -104,14 +105,19 @@ export const useSites = () => {
   };
 
   // ─────────────────────────────────────────────
-  // Managers
+  // Managers — FIX (Bug 1 + Bug 3)
+  // getManagers() retourne maintenant toujours un Manager[]
+  // managersLoading exposé pour bloquer le modal tant que pas prêt
   // ─────────────────────────────────────────────
   const fetchManagers = async () => {
+    setManagersLoading(true);
     try {
-      const data = await getManagers();
-      setManagers(Array.isArray(data) ? data : data?.items ?? []);
+      const data = await getManagers(); // FIX: retourne Manager[] directement
+      setManagers(data);
     } catch {
       setManagers([]);
+    } finally {
+      setManagersLoading(false);
     }
   };
 
@@ -130,6 +136,7 @@ export const useSites = () => {
     sites,
     stats,
     managers,
+    managersLoading, // FIX (Bug 3): exposé
     loading,
     page,
     totalPages,
