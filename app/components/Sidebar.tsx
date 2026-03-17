@@ -92,9 +92,10 @@ const MENU_PROVIDER: MenuItem[] = [
   { label: "Tableau de bord",  icon: <LayoutDashboard size={20} />,                href: "/provider/dashboard"      },
   { label: "Tickets",          icon: <Ticket size={20} />,                         href: "/provider/tickets"        },
   { label: "Planning",         icon: <Calendar size={20} />,                       href: "/provider/planning"       },
+    { label: "Rapports ",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/provider/entretien"        },
   { label: "Devis",            icon: <FileSignature size={20} />,                  href: "/provider/devis"          },
   { label: "Factures",         icon: <FileText size={20} />,                       href: "/provider/factures"       },
-  { label: "Rapports",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/provider/rapports"       },
+  { label: "Interventions",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/provider/rapports"       },
   { label: "Notifications",    icon: <Bell size={20} />,                           href: "/provider/notifications"  },
 ];
 
@@ -117,11 +118,12 @@ const MENU_MANAGER: MenuItem[] = [
     href: "/manager/patrimoines",
     // Pas de sous-menus Type / Sous-type — réservés aux admins
   },
+   { label: "Rapports ",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/manager/entretien"        },
   { label: "Planning",         icon: <Calendar size={20} />,                       href: "/manager/planning"        },
   { label: "Prestataires",     icon: <Users size={20} />,                          href: "/manager/prestataires"    },
   { label: "Devis",            icon: <FileSignature size={20} />,                  href: "/manager/devis"           },
   { label: "Factures",         icon: <FileText size={20} />,                       href: "/manager/factures"        },
-  { label: "Rapports",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/manager/rapports"        },
+  { label: "Interventions",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/manager/rapports"        },
   { label: "Notifications",    icon: <Bell size={20} />,                           href: "/manager/notifications"   },
 ];
 
