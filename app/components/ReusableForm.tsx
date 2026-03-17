@@ -73,6 +73,7 @@ export default function ReusableForm({
                     <Select
                       name={field.name}
                       required={field.required}
+                      disabled={field.disabled}
                       icon={field.icon}
                       defaultValue={String(initialValues[field.name] ?? "")}
                       onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -107,6 +108,7 @@ export default function ReusableForm({
                     <DateInput
                       name={field.name}
                       required={field.required}
+                      disabled={field.disabled}
                       icon={field.icon}
                       defaultValue={initialValues[field.name] ?? ""}
                     />

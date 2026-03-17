@@ -25,10 +25,10 @@
 import axiosInstance from "../core/axios";
 
 // ─── Clés localStorage ────────────────────────────────────────────────────────
-const AUTH_TOKEN_KEY    = "auth_token";
-const USER_ROLE_KEY     = "user_role";
+const AUTH_TOKEN_KEY = "auth_token";
+const USER_ROLE_KEY = "user_role";
 const PENDING_EMAIL_KEY = "pending_otp_email"; // Email en attente de vérification OTP
-const PENDING_FLOW_KEY  = "pending_otp_flow";  // "login" | "reset" — distingue les deux flux OTP
+const PENDING_FLOW_KEY = "pending_otp_flow";  // "login" | "reset" — distingue les deux flux OTP
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type UserRole = "SUPER-ADMIN" | "ADMIN" | "MANAGER" | "PROVIDER";
@@ -81,11 +81,11 @@ export const getDashboardRoute = (role: UserRole): string => {
 // Le backend Laravel expose plusieurs préfixes (super-admin, admin, manager, provider)
 // mais le AuthService Laravel gère tous les rôles depuis le même controller.
 // On utilise /admin comme point d'entrée unifié — le back détecte le rôle tout seul.
-const LOGIN_ENDPOINT            = "/admin/login";
-const VERIFY_OTP_ENDPOINT       = "/admin/verify-otp";
-const LOGOUT_ENDPOINT           = "/admin/logout";
-const FORGOT_PASSWORD_ENDPOINT  = "/admin/forgot-password";
-const RESET_PASSWORD_ENDPOINT   = "/admin/reset-password";
+const LOGIN_ENDPOINT = "/admin/login";
+const VERIFY_OTP_ENDPOINT = "/admin/verify-otp";
+const LOGOUT_ENDPOINT = "/admin/logout";
+const FORGOT_PASSWORD_ENDPOINT = "/admin/forgot-password";
+const RESET_PASSWORD_ENDPOINT = "/admin/reset-password";
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 export const authService = {
@@ -244,7 +244,7 @@ export const authService = {
 
     // Le backend peut retourner first_name/last_name OU un champ name unique
     const firstName = user.first_name ?? "";
-    const lastName  = user.last_name  ?? "";
+    const lastName = user.last_name ?? "";
 
     if (firstName || lastName) {
       localStorage.setItem("first_name", firstName);
@@ -275,14 +275,14 @@ export const authService = {
   // ┌─────────────────────────────────────────────────────────────────────────┐
   // │  Getters                                                                 │
   // └─────────────────────────────────────────────────────────────────────────┘
-  getFirstName    : (): string => typeof window !== "undefined" ? localStorage.getItem("first_name")      ?? "" : "",
-  getLastName     : (): string => typeof window !== "undefined" ? localStorage.getItem("last_name")       ?? "" : "",
-  getRole         : (): string => typeof window !== "undefined" ? localStorage.getItem(USER_ROLE_KEY)     ?? "" : "",
-  getEmail        : (): string => typeof window !== "undefined" ? localStorage.getItem("user_email")      ?? "" : "",
-  getUserId       : (): string => typeof window !== "undefined" ? localStorage.getItem("user_id")         ?? "" : "",
-  getPendingEmail : (): string => typeof window !== "undefined" ? localStorage.getItem(PENDING_EMAIL_KEY) ?? "" : "",
+  getFirstName: (): string => typeof window !== "undefined" ? localStorage.getItem("first_name") ?? "" : "",
+  getLastName: (): string => typeof window !== "undefined" ? localStorage.getItem("last_name") ?? "" : "",
+  getRole: (): string => typeof window !== "undefined" ? localStorage.getItem(USER_ROLE_KEY) ?? "" : "",
+  getEmail: (): string => typeof window !== "undefined" ? localStorage.getItem("user_email") ?? "" : "",
+  getUserId: (): string => typeof window !== "undefined" ? localStorage.getItem("user_id") ?? "" : "",
+  getPendingEmail: (): string => typeof window !== "undefined" ? localStorage.getItem(PENDING_EMAIL_KEY) ?? "" : "",
   /** Retourne le flux OTP en cours : "login" | "reset" | "" */
-  getPendingFlow  : (): OtpFlow | "" => typeof window !== "undefined" ? (localStorage.getItem(PENDING_FLOW_KEY) as OtpFlow) ?? "" : "",
+  getPendingFlow: (): OtpFlow | "" => typeof window !== "undefined" ? (localStorage.getItem(PENDING_FLOW_KEY) as OtpFlow) ?? "" : "",
 
   getToken: (): string | null => {
     if (typeof window === "undefined") return null;
@@ -296,7 +296,7 @@ export const authService = {
   isAuthenticated: (): boolean => {
     if (typeof window === "undefined") return false;
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    const role  = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
+    const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
     const validRoles: UserRole[] = ["SUPER-ADMIN", "ADMIN", "MANAGER", "PROVIDER"];
     return !!token && !!role && validRoles.includes(role);
   },

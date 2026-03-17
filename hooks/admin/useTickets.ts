@@ -55,6 +55,48 @@ export const useTickets = () => {
     setPage(1);
   };
 
+  const assignTicket = async (id: number, providerId: number) => {
+    setIsLoading(true);
+    try {
+      await TicketService.assignTicket(id, providerId);
+      await Promise.all([fetchTickets(), fetchStats()]);
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de l'assignation");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeTicket = async (id: number) => {
+    setIsLoading(true);
+    try {
+      await TicketService.closeTicket(id);
+      await Promise.all([fetchTickets(), fetchStats()]);
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la clôture");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const validateReport = async (id: number, payload: { result: string; rating?: number; comment?: string }) => {
+    setIsLoading(true);
+    try {
+      await TicketService.validateReport(id, payload);
+      await Promise.all([fetchTickets(), fetchStats()]);
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la validation");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     tickets,
     stats,
@@ -67,5 +109,8 @@ export const useTickets = () => {
     fetchStats,
     setPage: changePage,
     applyFilters,
+    assignTicket,
+    closeTicket,
+    validateReport,
   };
 };

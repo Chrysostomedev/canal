@@ -20,7 +20,9 @@ import {
   formatTime,
   getSiteName,
   getProviderName,
+  PlanningStatus, // Ajouté
 } from "../../../services/admin/planningService";
+import { Site, resolveManagerName, resolveManagerPhone } from "../../../services/admin/site.service"; // Ajouté
 import type { FieldConfig } from "@/components/ReusableForm";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -96,11 +98,10 @@ function PlanningFilterDropdown({
         <div className="flex flex-col gap-1.5">
           {[
             { val: "",            label: "Tous les plannings" },
-            { val: "planifie",    label: "Planifié"           },
-            { val: "en_cours",    label: "En cours"           },
-            { val: "en_retard",   label: "En retard"          },
-            { val: "realise",     label: "Réalisé"            },
-            { val: "non_realise", label: "Non réalisé"        },
+            { val: "PLANIFIÉ",    label: "Planifié"           },
+            { val: "EN_COURS",    label: "En cours"           },
+            { val: "EN_RETARD",   label: "En retard"          },
+            { val: "RÉALISÉ",     label: "Réalisé"            },
           ].map(o => (
             <Pill
               key={o.val}
@@ -209,7 +210,8 @@ export default function PlanningPage() {
 
   // ── Providers et Sites dynamiques ─────────────────────────────────────────
   const [providers, setProviders] = useState<{ label: string; value: number }[]>([]);
-  const [sites, setSites]         = useState<{ label: string; value: number }[]>([]);
+  const [sites, setSites]         = useState<Site[]>([]); // Maintenant des objets Site complets
+  const [formInitialValues, setFormInitialValues] = useState<Record<string, any>>({});
 
   useEffect(() => {
     import("../../../core/axios").then(({ default: api }) => {
@@ -231,33 +233,26 @@ export default function PlanningPage() {
 
       // FIX 2 — /admin/site (sans "s") + per_page=1000 pour tous les sites
       api.get("/admin/site", { params: { per_page: 1000 } }).then(({ data }) => {
-        // FIX 3 — même logique de parsing robuste
         const raw   = data?.data ?? data ?? {};
         const items: any[] = Array.isArray(raw)
           ? raw
           : (raw.items ?? raw.data ?? []);
-        setSites(
-          items.map((s: any) => ({
-            label: s.nom ?? s.name ?? `Site #${s.id}`,
-            value: s.id,
-          }))
-        );
+        setSites(items);
       }).catch(() => setSites([]));
 
     });
   }, []);
 
-  // ── Champs formulaire ─────────────────────────────────────────────────────
   const planningFields: FieldConfig[] = [
     {
       name: "site_id", label: "Site",
       type: "select", required: true,
-      options: sites,
+      options: sites.map(s => ({ label: s.nom, value: s.id })),
     },
     { name: "date_debut",        label: "Date de début",            type: "date", required: true, icon: CalendarClock },
     { name: "date_fin",          label: "Date de fin",              type: "date", required: true, icon: CalendarClock },
-    { name: "responsable_name",  label: "Nom du responsable",       type: "text", required: true },
-    { name: "responsable_phone", label: "Téléphone du responsable", type: "text", required: true},
+    { name: "responsable_name",  label: "Nom du responsable",       type: "text", required: false, disabled: true },
+    { name: "responsable_phone", label: "Téléphone du responsable", type: "text", required: false, disabled: true },
     {
       name: "provider_id", label: "Prestataire assigné",
       type: "select", required: true,
@@ -269,6 +264,44 @@ export default function PlanningPage() {
       placeholder: "Décrivez les différentes observations sur le planning...",
     },
   ];
+
+  const handleFieldChange = (name: string, value: any) => {
+    if (name === "site_id") {
+      const site = sites.find(s => String(s.id) === String(value));
+      if (site) {
+        setFormInitialValues(prev => ({
+          ...prev,
+          site_id: value,
+          responsable_name: resolveManagerName(site),
+          responsable_phone: resolveManagerPhone(site),
+        }));
+      }
+    }
+  };
+
+  const handleEventDrop = async (planningId: number, newDate: Date) => {
+    // On garde l'heure d'origine mais change le jour
+    const p = plannings.find(pl => pl.id === planningId);
+    if (!p) return;
+
+    const start = new Date(p.date_debut);
+    const end   = new Date(p.date_fin);
+    const diff  = end.getTime() - start.getTime();
+
+    const nextStart = new Date(newDate);
+    nextStart.setHours(start.getHours(), start.getMinutes());
+    const nextEnd   = new Date(nextStart.getTime() + diff);
+
+    const ok = await handleUpdate(planningId, {
+      date_debut: nextStart.toISOString(),
+      date_fin:   nextEnd.toISOString(),
+    });
+
+    showToast(
+      ok ? "Planning déplacé avec succès ✓" : "Erreur lors du déplacement",
+      ok ? "success" : "error"
+    );
+  };
 
 
   // ── Submit création ────────────────────────────────────────────────────────
@@ -285,7 +318,7 @@ export default function PlanningPage() {
       date_fin:    formData.date_fin,
       provider_id: Number(formData.provider_id),
       site_id:     Number(formData.site_id),
-      status:      (formData.status as any) || "planifie",
+      status:      (formData.status as any) || "PLANIFIÉ",
       ...(formData.responsable_name  ? { responsable_name:  formData.responsable_name  } : {}),
       ...(formData.responsable_phone ? { responsable_phone: formData.responsable_phone } : {}),
       ...(formData.description       ? { description:       formData.description       } : {}),
@@ -462,6 +495,7 @@ export default function PlanningPage() {
             isPanelOpen={isPanelOpen}
             onEventClick={openPanel}
             onPanelClose={closePanel}
+            onEventDrop={handleEventDrop} // Ajouté
             onEditClick={() => selectedPlanning && openEditModal(selectedPlanning)}
             onDeleteClick={async () => {
               if (!selectedPlanning) return;
@@ -483,6 +517,8 @@ export default function PlanningPage() {
         subtitle="Remplissez les informations pour enregistrer un nouveau planning."
         fields={planningFields}
         onSubmit={handleCreateSubmit}
+        onFieldChange={handleFieldChange} // Ajouté
+        initialValues={formInitialValues} // Ajouté
         submitLabel={isSubmitting ? "Diffusion du planning..." : "Diffuser"}
       />
 

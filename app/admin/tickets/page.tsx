@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Check, Copy, Eye, Filter, Download, Upload, TicketPlus, X,
   CalendarCheck, CalendarDays, Clock, MapPin,
-  Wrench, User, Tag, AlertTriangle, CheckCircle2,
+  Wrench, User, Tag, AlertTriangle, CheckCircle2, Plus,
 } from "lucide-react";
 
 import ReusableForm from "@/components/ReusableForm";
@@ -21,6 +21,8 @@ import { useServices } from "../../../hooks/admin/useServices";
 import { useSites } from "../../../hooks/admin/useSites";
 import { useAssets } from "../../../hooks/admin/useAssets";
 import { TicketService, Ticket } from "../../../services/admin/ticket.service";
+import { resolveManagerName, resolveManagerPhone } from "../../../services/admin/site.service";
+import * as PlanningService from "../../../services/admin/planningService";
 import axiosInstance from "../../../core/axios";
 
 // ═══════════════════════════════════════════════
@@ -44,33 +46,33 @@ const formatDate = (iso?: string | null): string => {
 // ═══════════════════════════════════════════════
 
 const STATUS_LABELS: Record<string, string> = {
-  signalez: "Signalé",
-  validé:   "Validé",
-  assigné:  "Assigné",
-  en_cours: "En cours",
-  rapporté: "Rapporté",
-  évalué:   "Évalué",
-  clos:     "Clôturé",
+  SIGNALÉ:  "Signalé",
+  VALIDÉ:   "Validé",
+  ASSIGNÉ:  "Assigné",
+  EN_COURS: "En cours",
+  RAPPORTÉ: "Rapporté",
+  ÉVALUÉ:   "Évalué",
+  CLOS:     "Clôturé",
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  signalez: "border-slate-300  bg-slate-100   text-slate-700",
-  validé:   "border-blue-400   bg-blue-50     text-blue-700",
-  assigné:  "border-violet-400 bg-violet-50   text-violet-700",
-  en_cours: "border-orange-400 bg-orange-50   text-orange-600",
-  rapporté: "border-amber-400  bg-amber-50    text-amber-700",
-  évalué:   "border-green-500  bg-green-50    text-green-700",
-  clos:     "border-black      bg-black       text-white",
+  SIGNALÉ:  "border-slate-300  bg-slate-100   text-slate-700",
+  VALIDÉ:   "border-blue-400   bg-blue-50     text-blue-700",
+  ASSIGNÉ:  "border-violet-400 bg-violet-50   text-violet-700",
+  EN_COURS: "border-orange-400 bg-orange-50   text-orange-600",
+  RAPPORTÉ: "border-amber-400  bg-amber-50    text-amber-700",
+  ÉVALUÉ:   "border-green-500  bg-green-50    text-green-700",
+  CLOS:     "border-black      bg-black       text-white",
 };
 
 const STATUS_DOT_COLORS: Record<string, string> = {
-  signalez: "#94a3b8",
-  validé:   "#3b82f6",
-  assigné:  "#8b5cf6",
-  en_cours: "#f97316",
-  rapporté: "#f59e0b",
-  évalué:   "#22c55e",
-  clos:     "#000000",
+  SIGNALÉ:  "#94a3b8",
+  VALIDÉ:   "#3b82f6",
+  ASSIGNÉ:  "#8b5cf6",
+  EN_COURS: "#f97316",
+  RAPPORTÉ: "#f59e0b",
+  ÉVALUÉ:   "#22c55e",
+  CLOS:     "#000000",
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -147,13 +149,13 @@ function FilterDropdown({
           <div className="flex flex-col gap-1.5">
             {[
               { val: "",         label: "Tous les statuts" },
-              { val: "signalez", label: "Signalé"  },
-              { val: "validé",   label: "Validé"   },
-              { val: "assigné",  label: "Assigné"  },
-              { val: "en_cours", label: "En cours" },
-              { val: "rapporté", label: "Rapporté" },
-              { val: "évalué",   label: "Évalué"   },
-              { val: "clos",     label: "Clôturé"  },
+               { val: "SIGNALÉ",  label: "Signalé"  },
+               { val: "VALIDÉ",   label: "Validé"   },
+               { val: "ASSIGNÉ",  label: "Assigné"  },
+               { val: "EN_COURS", label: "En cours" },
+               { val: "RAPPORTÉ", label: "Rapporté" },
+               { val: "ÉVALUÉ",   label: "Évalué"   },
+               { val: "CLOS",     label: "Clôturé"  },
             ].map(o => (
               <Pill key={o.val} val={o.val} current={local.status ?? ""} label={o.label}
                 onClick={() => setLocal({ ...local, status: o.val || undefined })} />
@@ -217,9 +219,10 @@ function FilterDropdown({
 // ═══════════════════════════════════════════════
 
 function TicketSidePanel({
-  ticket, onClose, onEdit,
+  ticket, onClose, onEdit, onWorkflowAction,
 }: {
   ticket: Ticket | null; onClose: () => void; onEdit: () => void;
+  onWorkflowAction?: (action: string, ticket: Ticket) => void;
 }) {
   if (!ticket) return null;
 
@@ -344,12 +347,48 @@ function TicketSidePanel({
           )}
         </div>
 
-        <div className="px-7 py-5 border-t border-slate-100 shrink-0">
+        <div className="px-7 py-5 border-t border-slate-100 shrink-0 space-y-3">
+          {ticket.status === "SIGNALÉ" && (
+            <button
+              onClick={() => onWorkflowAction?.("assign", ticket)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-700 transition"
+            >
+              Assigner un prestataire
+            </button>
+          )}
+
+          {ticket.status === "RAPPORTÉ" && (
+            <button
+              onClick={() => onWorkflowAction?.("validate", ticket)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition"
+            >
+              Valider le rapport
+            </button>
+          )}
+
+          {ticket.status === "ÉVALUÉ" && (
+            <button
+              onClick={() => onWorkflowAction?.("close", ticket)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-black text-white text-sm font-bold hover:bg-gray-900 transition"
+            >
+              Clôturer le ticket
+            </button>
+          )}
+
+          {ticket.type === "curatif" && (
+            <button
+              onClick={() => onWorkflowAction?.("create_planning", ticket)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+            >
+              <CalendarCheck size={16} /> Créer un planning
+            </button>
+          )}
+
           <button
             onClick={onEdit}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition"
           >
-            Modifier le ticket
+            Modifier les infos
           </button>
         </div>
       </div>
@@ -365,6 +404,7 @@ export default function TicketsPage() {
   const {
     tickets, stats, isLoading, meta, page,
     filters, fetchTickets, setPage, applyFilters,
+    assignTicket, closeTicket, validateReport,
   } = useTickets();
 
   const { providers } = useProviders();
@@ -384,6 +424,10 @@ export default function TicketsPage() {
   const [flashMessage,   setFlashMessage]   = useState<{ type: "success"|"error"; message: string } | null>(null);
   const [importLoading,  setImportLoading]  = useState(false);
   const [exportLoading,  setExportLoading]  = useState(false);
+  const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
+  const [isAssignModalOpen,   setIsAssignModalOpen]   = useState(false);
+  const [isValidModalOpen,    setIsValidModalOpen]    = useState(false);
+  const [workflowActionLoading, setWorkflowActionLoading] = useState(false);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -431,6 +475,79 @@ export default function TicketsPage() {
       setEditingTicket(null);
     } catch (err: any) {
       showFlash("error", err?.response?.data?.message ?? err?.message ?? "Erreur serveur.");
+    }
+  };
+
+  const handleWorkflowAction = async (action: string, ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    if (action === "assign") {
+      setIsAssignModalOpen(true);
+    } else if (action === "close") {
+      if (confirm("Êtes-vous sûr de vouloir clôturer ce ticket ?")) {
+        setWorkflowActionLoading(true);
+        const ok = await closeTicket(ticket.id);
+        if (ok) {
+          showFlash("success", "Ticket clôturé avec succès.");
+          setIsDetailsOpen(false);
+        }
+        setWorkflowActionLoading(false);
+      }
+    } else if (action === "validate") {
+      setIsValidModalOpen(true);
+    } else if (action === "create_planning") {
+      setIsPlanningModalOpen(true);
+    }
+  };
+
+  const handleAssignSubmit = async (formData: any) => {
+    if (!selectedTicket) return;
+    setWorkflowActionLoading(true);
+    const ok = await assignTicket(selectedTicket.id, Number(formData.provider_id));
+    if (ok) {
+      showFlash("success", "Prestataire assigné avec succès.");
+      setIsAssignModalOpen(false);
+      setIsDetailsOpen(false);
+    }
+    setWorkflowActionLoading(false);
+  };
+
+  const handleValidateSubmit = async (formData: any) => {
+    if (!selectedTicket) return;
+    setWorkflowActionLoading(true);
+    const ok = await validateReport(selectedTicket.id, {
+      result: formData.result,
+      rating: Number(formData.rating),
+      comment: formData.comment,
+    });
+    if (ok) {
+      showFlash("success", "Rapport validé avec succès.");
+      setIsValidModalOpen(false);
+      setIsDetailsOpen(false);
+    }
+    setWorkflowActionLoading(false);
+  };
+
+  const handlePlanningSubmit = async (formData: any) => {
+    if (!selectedTicket) return;
+    setWorkflowActionLoading(true);
+    try {
+      const payload: PlanningService.CreatePlanningPayload = {
+        date_debut: formData.date_debut,
+        date_fin: formData.date_fin,
+        description: formData.description,
+        site_id: Number(formData.site_id),
+        provider_id: Number(formData.provider_id),
+        company_asset_id: selectedTicket.company_asset_id,
+      };
+      await PlanningService.createPlanning(payload);
+      showFlash("success", "Planning créé avec succès.");
+      setIsPlanningModalOpen(false);
+      setIsDetailsOpen(false);
+      await fetchTickets();
+    } catch (err: any) {
+      showFlash("error", err?.response?.data?.message ?? "Erreur lors de la création du planning.");
+    } finally {
+      setWorkflowActionLoading(false);
     }
   };
 
@@ -492,7 +609,7 @@ export default function TicketsPage() {
 
   // ── Colonnes DataTable ──
   // Note : "Photos" affiche les images du ticket en vignettes empilées (max 3 + compteur)
-  const columns = [
+  const columns: any[] = [
     {
       header: "Photos",
       key: "images",
@@ -636,9 +753,52 @@ export default function TicketsPage() {
         { label: "Haute",  value: "haute"  }, { label: "Critique", value: "critique" },
       ],
     },
-    // Commentaire + Photos pleine largeur
     { name: "description", label: "Commentaire", type: "rich-text", gridSpan: 2 },
     { name: "images",      label: "Photos",      type: "image-upload", gridSpan: 2, maxImages: 3 },
+  ];
+
+  // ── Formulaire Planning ──
+  const planningFields: FieldConfig[] = [
+    {
+      name: "site_id", label: "Site", type: "select", required: true,
+      disabled: !!selectedTicket, // Désactivé si on vient d'un ticket
+      options: sites.map((s: any) => ({ label: s.nom, value: String(s.id) })),
+    },
+    {
+      name: "provider_id", label: "Prestataire", type: "select", required: true,
+      options: providers.map((p: any) => ({
+        label: p.company_name ?? p.user?.name ?? p.name ?? `Prestataire #${p.id}`,
+        value: String(p.id),
+      })),
+    },
+    { name: "date_debut", label: "Date de début", type: "date", required: true },
+    { name: "date_fin",   label: "Date de fin",   type: "date", required: true },
+    { name: "responsable_name",  label: "Nom du responsable",       type: "text", required: false, disabled: true },
+    { name: "responsable_phone", label: "Téléphone du responsable", type: "text", required: false, disabled: true },
+    { name: "description", label: "Description", type: "rich-text", gridSpan: 2 },
+  ];
+
+  const assignFields: FieldConfig[] = [
+    {
+      name: "provider_id", label: "Sélectionner un prestataire", type: "select", required: true,
+      options: providers.map((p: any) => ({
+        label: p.company_name ?? p.user?.name ?? p.name ?? `Prestataire #${p.id}`,
+        value: String(p.id),
+      })),
+    },
+  ];
+
+  const validateFields: FieldConfig[] = [
+    {
+      name: "result", label: "Résultat", type: "select", required: true,
+      options: [
+        { label: "Réalisé avec succès", value: "SUCCESS" },
+        { label: "Partiellement réalisé", value: "PARTIAL" },
+        { label: "Échec", value: "FAILURE" },
+      ],
+    },
+    { name: "rating", label: "Note (1-5)", type: "number", required: true },
+    { name: "comment", label: "Commentaire", type: "rich-text", gridSpan: 2 },
   ];
 
   // ── KPIs ──
@@ -785,7 +945,7 @@ export default function TicketsPage() {
                 Aucun ticket{activeCount > 0 ? " correspondant aux filtres" : ""}.
               </div>
             ) : (
-              <DataTable columns={columns} data={tickets} onViewAll={() => {}} />
+              <DataTable title="Liste des tickets" columns={columns} data={tickets} onViewAll={() => {}} />
             )}
             <div className="p-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
               <p className="text-xs text-slate-400">
@@ -802,6 +962,7 @@ export default function TicketsPage() {
         ticket={isDetailsOpen ? selectedTicket : null}
         onClose={() => { setIsDetailsOpen(false); setSelectedTicket(null); }}
         onEdit={handleEdit}
+        onWorkflowAction={handleWorkflowAction}
       />
 
       {/* ── Formulaire création / édition ── */}
@@ -814,8 +975,6 @@ export default function TicketsPage() {
             ? "Modifiez le statut ou les informations du ticket"
             : "Remplissez les informations pour créer un ticket"
         }
-        // En édition → editFields (statut + commentaire + photos)
-        // En création → ticketFields (tous les champs métier + photos)
         fields={editingTicket ? editFields : ticketFields}
         initialValues={editingTicket ? {
           status:      editingTicket.status,
@@ -824,6 +983,49 @@ export default function TicketsPage() {
         } : {}}
         onSubmit={handleSubmit}
         submitLabel={editingTicket ? "Mettre à jour" : "Créer le ticket"}
+      />
+
+      {/* Modale Assigner */}
+      <ReusableForm
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        title="Assigner un prestataire"
+        subtitle="Sélectionnez un prestataire pour ce ticket"
+        fields={assignFields}
+        onSubmit={handleAssignSubmit}
+        submitLabel="Assigner"
+      />
+
+      {/* Modale Valider */}
+      <ReusableForm
+        isOpen={isValidModalOpen}
+        onClose={() => setIsValidModalOpen(false)}
+        title="Valider l'intervention"
+        subtitle="Vérifiez le travail effectué et évaluez la prestation"
+        fields={validateFields}
+        onSubmit={handleValidateSubmit}
+        submitLabel="Valider"
+      />
+
+      {/* Modale Planning */}
+      <ReusableForm
+        isOpen={isPlanningModalOpen}
+        onClose={() => setIsPlanningModalOpen(false)}
+        title="Créer un Planning (Maintenance Préventive)"
+        subtitle="Un planning créera automatiquement un ticket préventif récurent"
+        fields={planningFields}
+        initialValues={selectedTicket ? (() => {
+          const site = sites.find(s => s.id === selectedTicket.site_id);
+          return {
+            site_id: String(selectedTicket.site_id),
+            provider_id: String(selectedTicket.provider_id),
+            responsable_name: site ? resolveManagerName(site) : "",
+            responsable_phone: site ? resolveManagerPhone(site) : "",
+            description: `Maintenance préventive issue du ticket #${selectedTicket.id}`,
+          };
+        })() : {}}
+        onSubmit={handlePlanningSubmit}
+        submitLabel="Créer le planning"
       />
     </div>
   );

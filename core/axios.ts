@@ -39,4 +39,7 @@ api.interceptors.response.use(
   }
 );
 
+// Remplace "export default api;" par ces 3 lignes
 export default api;
+export { api as axiosInstance };
+export { api as axios };

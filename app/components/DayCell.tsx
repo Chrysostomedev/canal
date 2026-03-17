@@ -19,10 +19,12 @@ interface DayCellProps {
   day: number;
   currentMonth?: boolean;
   events: CalendarEvent[];
+  date?: Date;
   onClick: (event: CalendarEvent) => void;
+  onDrop?: (planningId: number) => void;
 }
 
-export function DayCell({ day, currentMonth = true, events, onClick }: DayCellProps) {
+export function DayCell({ day, currentMonth = true, events, onClick, onDrop, date }: DayCellProps) {
   const isToday = (() => {
     const d = new Date();
     // On ne peut pas vérifier l'année/mois ici sans les props, 
@@ -32,9 +34,23 @@ export function DayCell({ day, currentMonth = true, events, onClick }: DayCellPr
 
   return (
     <div
+      onDragOver={(e) => {
+        if (currentMonth) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        }
+      }}
+      onDrop={(e) => {
+        if (currentMonth) {
+          e.preventDefault();
+          const planningId = e.dataTransfer.getData("planningId");
+          if (planningId && onDrop) onDrop(Number(planningId));
+        }
+      }}
       className={`
         min-h-[110px] border-b border-r border-slate-100 p-2 flex flex-col gap-1
         ${!currentMonth ? "bg-slate-50/50" : "bg-white"}
+        ${currentMonth ? "hover:bg-slate-50/30 transition-colors" : ""}
       `}
     >
       {/* Numéro du jour */}
@@ -54,11 +70,16 @@ export function DayCell({ day, currentMonth = true, events, onClick }: DayCellPr
         {events.slice(0, 2).map((event, i) => (
           <button
             key={i}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData("planningId", String(event.id));
+              e.dataTransfer.effectAllowed = "move";
+            }}
             onClick={() => onClick(event)}
-            className="w-full text-left group"
+            className="w-full text-left group cursor-grab active:cursor-grabbing"
           >
             <div
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all hover:opacity-80 active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all hover:bg-white/50 ring-1 ring-transparent hover:ring-slate-200"
               style={{ backgroundColor: `${event.color}15`, borderLeft: `3px solid ${event.color}` }}
             >
               <div className="flex-1 min-w-0">

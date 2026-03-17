@@ -23,6 +23,7 @@ interface CalendarGridProps {
   plannings: Planning[];
   activeMonth: Date;
   onEventClick: (planning: Planning) => void;
+  onEventDrop?: (planningId: number, newDate: Date) => void;
 }
 
 export default function CalendarGrid({
@@ -30,6 +31,7 @@ export default function CalendarGrid({
   plannings,
   activeMonth,
   onEventClick,
+  onEventDrop,
 }: CalendarGridProps) {
   const year  = activeMonth.getFullYear();
   const month = activeMonth.getMonth();
@@ -64,8 +66,8 @@ export default function CalendarGrid({
         !q ||
         p.codification.toLowerCase().includes(q) ||
         p.responsable_name.toLowerCase().includes(q) ||
-        (p.site?.name ?? "").toLowerCase().includes(q) ||
-        (p.provider?.user?.name ?? "").toLowerCase().includes(q)
+        (p.site?.nom ?? "").toLowerCase().includes(q) ||
+        (p.provider?.company_name ?? p.provider?.user?.first_name ?? "").toLowerCase().includes(q)
       );
     });
 
@@ -112,10 +114,15 @@ export default function CalendarGrid({
             key={i}
             day={cell.day}
             currentMonth={cell.currentMonth}
+            date={new Date(year, month, cell.day)}
             events={cell.events}
             onClick={(event) => {
-              // On remonte le planning complet, pas juste l'event formaté
               if (event?.planning) onEventClick(event.planning);
+            }}
+            onDrop={(planningId) => {
+              if (cell.currentMonth && onEventDrop) {
+                onEventDrop(planningId, new Date(year, month, cell.day));
+              }
             }}
           />
         ))}

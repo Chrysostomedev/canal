@@ -3,6 +3,7 @@ import axios from "../../core/axios";
 
 export interface Ticket {
   id: number;
+  code_ticket: string; // Ajouté pour correspondre au backend
   site_id: number;
   company_asset_id: number;
   service_id: number;
@@ -10,7 +11,7 @@ export interface Ticket {
   user_id: number;
   type: "curatif" | "preventif";
   priority: "faible" | "moyenne" | "haute" | "critique";
-  status: "signalez" | "validé" | "assigné" | "en_cours" | "rapporté" | "évalué" | "clos";
+  status: "SIGNALÉ" | "PLANIFIÉ" | "EN_COURS" | "RAPPORTÉ" | "ÉVALUÉ" | "CLOS" | string;
   subject?: string;
   description?: string;
   planned_at: string;
@@ -18,11 +19,15 @@ export interface Ticket {
   resolved_at?: string;
   closed_at?: string;
   cout?: number;
+  rating?: number;
+  images?: string[];
   site?: { id: number; nom: string };
   asset?: { id: number; designation: string; codification: string };
   service?: { id: number; name: string };
-  provider?: { id: number; name: string };
+  provider?: { id: number; name: string; user?: { first_name: string; last_name: string } };
   user?: { id: number; name: string };
+  reports?: any[];
+  attachments?: any[];
   created_at?: string;
   updated_at?: string;
 }
@@ -99,6 +104,58 @@ export const TicketService = {
 
   async getStats(): Promise<TicketStats> {
     const response = await axios.get("/admin/ticket/stats");
+    return response.data.data;
+  },
+
+  // Workflow Actions
+  async assignTicket(id: number, provider_id: number): Promise<Ticket> {
+    const response = await axios.post(`/admin/ticket/${id}/assign`, { provider_id });
+    return response.data.data;
+  },
+
+  async startIntervention(id: number): Promise<Ticket> {
+    const response = await axios.post(`/admin/ticket/${id}/start`);
+    return response.data.data;
+  },
+
+  async submitReport(id: number, payload: {
+    findings: string;
+    action_taken: string;
+    anomaly_detected: boolean;
+    anomaly_description?: string;
+    attachments?: File[];
+  }): Promise<Ticket> {
+    const formData = new FormData();
+    formData.append("findings", payload.findings);
+    formData.append("action_taken", payload.action_taken);
+    formData.append("anomaly_detected", payload.anomaly_detected ? "1" : "0");
+    if (payload.anomaly_description) formData.append("anomaly_description", payload.anomaly_description);
+    if (payload.attachments) {
+      payload.attachments.forEach((file) => formData.append("attachments[]", file));
+    }
+    const response = await axios.post(`/admin/ticket/${id}/submit-report`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data.data;
+  },
+
+  async validateReport(id: number, payload: { result: string; rating?: number; comment?: string }): Promise<Ticket> {
+    const response = await axios.post(`/admin/ticket/${id}/validate-report`, payload);
+    return response.data.data;
+  },
+
+  async rejectReport(id: number, reason: string): Promise<Ticket> {
+    const response = await axios.post(`/admin/ticket/${id}/reject-report`, { reason });
+    return response.data.data;
+  },
+
+  async closeTicket(id: number): Promise<Ticket> {
+    const response = await axios.post(`/admin/ticket/${id}/close`);
+    return response.data.data;
+  },
+
+  async rateTicket(id: number, payload: { rating: number; comment?: string }): Promise<Ticket> {
+    const response = await axios.post(`/admin/ticket/${id}/rate`, payload);
     return response.data.data;
   },
 };

@@ -6,7 +6,7 @@ import api from "../../core/axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type PlanningStatus = "planifie" | "en_cours" | "en_retard" | "realise";
+export type PlanningStatus = "PLANIFIÉ" | "EN_COURS" | "EN_RETARD" | "RÉALISÉ";
 
 export interface PlanningUser {
   id: number;
@@ -86,7 +86,7 @@ export interface PlanningFilters {
 // Le back (PlanningServices.php) auto-remplit responsable_name depuis le site
 // et codification doit être nullable en base (ou généré via un observer)
 export interface CreatePlanningPayload {
-  codification:       string;        // requis — généré côté front (PLN-YYYYMMDD-UNIQUE)
+  codification?:      string;        // optionnel — généré côté back
   date_debut:         string;
   date_fin:           string;
   description?:       string;
@@ -94,6 +94,7 @@ export interface CreatePlanningPayload {
   responsable_phone?: string;
   provider_id:        number;
   site_id:            number;
+  company_asset_id?:  number;
   status?:            PlanningStatus;
 }
 
@@ -149,24 +150,24 @@ export async function deletePlanning(id: number): Promise<void> {
 // ─── Helpers métier ───────────────────────────────────────────────────────────
 
 export const STATUS_COLORS: Record<PlanningStatus, string> = {
-  planifie:  "#000000",
-  en_cours:  "#0ea5e9",
-  en_retard: "#ef4444",
-  realise:   "#22c55e",
+  PLANIFIÉ:  "#3b82f6", // Bleu
+  EN_COURS:  "#0ea5e9", // Sky
+  EN_RETARD: "#ef4444", // Rouge
+  RÉALISÉ:   "#22c55e", // Vert
 };
 
 export const STATUS_BG: Record<PlanningStatus, string> = {
-  planifie:  "#f1f5f9",
-  en_cours:  "#e0f2fe",
-  en_retard: "#fef2f2",
-  realise:   "#f0fdf4",
+  PLANIFIÉ:  "#eff6ff",
+  EN_COURS:  "#e0f2fe",
+  EN_RETARD: "#fef2f2",
+  RÉALISÉ:   "#f0fdf4",
 };
 
 export const STATUS_LABELS: Record<PlanningStatus, string> = {
-  planifie:  "Planifié",
-  en_cours:  "En cours",
-  en_retard: "En retard",
-  realise:   "Réalisé",
+  PLANIFIÉ:  "Planifié",
+  EN_COURS:  "En cours",
+  EN_RETARD: "En retard",
+  RÉALISÉ:   "Réalisé",
 };
 
 export function formatDate(iso: string): string {

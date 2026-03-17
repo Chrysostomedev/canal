@@ -25,11 +25,12 @@ export const Input = (props: any) => (
 );
 
 // Select (Style "Dropdown")
-export const Select = ({ children, ...props }: any) => (
+export const Select = ({ children, disabled, ...props }: any) => (
   <div className="relative">
     <select 
       {...props} 
-      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-slate-900"
+      disabled={disabled}
+      className={`w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-slate-900 transition-all ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-100' : ''}`}
     >
       {children}
     </select>
@@ -40,33 +41,37 @@ export const Select = ({ children, ...props }: any) => (
 );
 
 // Champ Password
-export const PasswordInput = (props: any) => {
+export const PasswordInput = ({ disabled, ...props }: any) => {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
       <input 
         {...props} 
+        disabled={disabled}
         type={show ? "text" : "password"}
-        className="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all"
+        className={`w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-100' : ''}`}
       />
-      <button 
-        type="button"
-        onClick={() => setShow(!show)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-      >
-        {show ? <EyeOff size={20} /> : <Eye size={20} />}
-      </button>
+      {!disabled && (
+        <button 
+          type="button"
+          onClick={() => setShow(!show)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+        >
+          {show ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      )}
     </div>
   );
 };
 
 // Champ Date
-export const DateInput = (props: any) => (
+export const DateInput = ({ disabled, ...props }: any) => (
   <div className="relative">
     <input 
       {...props} 
+      disabled={disabled}
       type="date"
-      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all appearance-none"
+      className={`w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all appearance-none ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-100' : ''}`}
     />
     <Calendar size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
   </div>

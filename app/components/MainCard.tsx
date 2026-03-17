@@ -11,7 +11,7 @@ import EventLegend from "./EventLegend";
 import CalendarGrid from "./CalendarGrid";
 import MiniCalendar from "./MiniCalendar";
 import SideDetailsPanel from "./SideDetailsPanel";
-import { Planning } from "../../../services/planningService";
+import { Planning } from "../../services/admin/planningService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +37,7 @@ interface MainCardProps {
   onEventClick: (planning: Planning) => void;
   onPanelClose: () => void;
   onEditClick: () => void;
+  onEventDrop?: (planningId: number, newDate: Date) => void;
   onDeleteClick?: () => void;
 }
 
@@ -50,6 +51,7 @@ export default function MainCard({
   onEventClick,
   onPanelClose,
   onEditClick,
+  onEventDrop,
   onDeleteClick,
 }: MainCardProps) {
   const [searchQuery, setSearchQuery]     = useState("");
@@ -61,8 +63,8 @@ export default function MainCard({
     return (
       p.codification.toLowerCase().includes(q) ||
       p.responsable_name.toLowerCase().includes(q) ||
-      (p.site?.name ?? "").toLowerCase().includes(q) ||
-      (p.provider?.user?.name ?? "").toLowerCase().includes(q)
+      (p.site?.nom ?? "").toLowerCase().includes(q) ||
+      (p.provider?.company_name ?? p.provider?.user?.first_name ?? "").toLowerCase().includes(q)
     );
   });
 
@@ -116,6 +118,7 @@ export default function MainCard({
               plannings={filteredPlannings}
               activeMonth={activeMonth}
               onEventClick={onEventClick}
+              onEventDrop={onEventDrop}
             />
           )}
         </div>
