@@ -37,7 +37,7 @@ function Toast({ msg, type }: { msg: string; type: "success" | "error" }) {
         : "bg-white border-red-100 text-red-700"}`}>
       {type === "success"
         ? <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-        : <XCircle      size={18} className="text-red-500 shrink-0" />}
+        : <XCircle size={18} className="text-red-500 shrink-0" />}
       {msg}
     </div>
   );
@@ -88,12 +88,12 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
 // ─── Side Panel aperçu (droite) ───────────────────────────────────────────────
 
 function QuotePreviewPanel({ quote, onClose }: { quote: Quote; onClose: () => void }) {
-  const [copied,     setCopied]     = useState(false);
+  const [copied, setCopied] = useState(false);
   const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
 
   const pdfFiles = (quote.pdf_paths ?? []).map(p => ({
     name: p.split("/").pop() ?? "devis.pdf",
-    url:  getPdfUrl(p),
+    url: getPdfUrl(p),
   }));
 
   const copyRef = () => {
@@ -134,11 +134,11 @@ function QuotePreviewPanel({ quote, onClose }: { quote: Quote; onClose: () => vo
                   </div>
                 ),
               },
-              { label: "Ticket",    value: quote.ticket?.subject ?? quote.ticket?.title ?? `#${quote.ticket_id}` },
-              { label: "Site",      value: quote.site?.nom ?? quote.site?.name ?? "—" },
-              { label: "Montant HT",  value: formatCurrency(quote.amount_ht) },
+              { label: "Ticket", value: quote.ticket?.subject ?? quote.ticket?.title ?? `#${quote.ticket_id}` },
+              { label: "Site", value: quote.site?.nom ?? quote.site?.name ?? "—" },
+              { label: "Montant HT", value: formatCurrency(quote.amount_ht) },
               { label: `TVA (${quote.tax_rate ?? 18}%)`, value: formatCurrency(quote.tax_amount) },
-              { label: "Date",      value: formatDate(quote.created_at) },
+              { label: "Date", value: formatDate(quote.created_at) },
             ].map((f, i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                 <p className="text-xs text-slate-400 font-medium">{f.label}</p>
@@ -282,41 +282,41 @@ export default function ProviderDevisPage() {
   // ── Champs formulaire — même pattern que DevisPage admin ─────────────────
   const quoteFields: FieldConfig[] = [
     {
-      name:     "ticket_id",
-      label:    "ID du Ticket *",
-      type:     "text",
+      name: "ticket_id",
+      label: "ID du Ticket *",
+      type: "text",
       required: true,
     },
     {
-      name:  "description",
+      name: "description",
       label: "Description",
-      type:  "textarea",
+      type: "textarea",
     },
     {
-      name:  "unit_price",
+      name: "unit_price",
       label: "Prix unitaire",
-      type:  "number",
+      type: "number",
     },
     {
-      name:  "quantity",
+      name: "quantity",
       label: "Quantité",
-      type:  "number",
+      type: "number",
     },
-  
+
     {
-      name:     "quote_pdf",
-      label:    "Devis PDF",
-      type:     "pdf-upload",
-      maxPDFs:  1,
+      name: "quote_pdf",
+      label: "Devis PDF",
+      type: "pdf-upload",
+      maxPDFs: 1,
       gridSpan: 2,
     } as any,
   ];
 
   const handleCreate = async (formData: any) => {
     const ok = await createQuote({
-      ticket_id:   parseInt(formData.ticket_id),
+      ticket_id: parseInt(formData.ticket_id),
       description: formData.description || undefined,
-      tax_rate:    parseFloat(formData.tax_rate) || 18,
+      tax_rate: parseFloat(formData.tax_rate) || 18,
       // Items par défaut — le prestataire les saisit dans le formulaire
       items: formData.items ?? [
         { designation: "Prestation", quantity: 1, unit_price: 0 },
@@ -353,14 +353,14 @@ export default function ProviderDevisPage() {
   // ── ActionGroup ───────────────────────────────────────────────────────────
   const actions = [
     {
-      label:   "Exporter",
-      icon:    Download,
+      label: "Exporter",
+      icon: Download,
       onClick: exportXlsx,
       variant: "secondary" as const,
     },
     {
-      label:   "Nouveau devis",
-      icon:    PlusCircle,
+      label: "Nouveau devis",
+      icon: PlusCircle,
       onClick: openCreate,
       variant: "primary" as const,
     },
@@ -378,7 +378,7 @@ export default function ProviderDevisPage() {
       header: "Ticket", key: "ticket",
       render: (_: any, row: Quote) => (
         <span className="text-xs text-slate-600 font-medium">
-         {row.ticket?.subject ?? row.ticket?.title ?? `#${row.ticket_id}`}
+          {row.ticket?.subject ?? row.ticket?.title ?? `#${row.ticket_id}`}
         </span>
       ),
     },
@@ -417,7 +417,7 @@ export default function ProviderDevisPage() {
           </button>
           {/* Détails — page [id] */}
           <button
-            onClick={() => router.push(`/provider/quotes/${row.id}`)}
+            onClick={() => router.push(`/provider/devis/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center"
           >
             <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
@@ -450,8 +450,8 @@ export default function ProviderDevisPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {statsLoading
               ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
-                ))
+                <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
+              ))
               : kpis.map((k, i) => <StatsCard key={i} {...k} />)
             }
           </div>
@@ -495,11 +495,11 @@ export default function ProviderDevisPage() {
             <div className="px-6 py-4">
               {loading
                 ? <div className="space-y-3 animate-pulse">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-gray-100 rounded-xl" />
-                    ))}
-                  </div>
-                : <DataTable columns={columns} data={quotes} onViewAll={() => {}} />
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+                  ))}
+                </div>
+                : <DataTable columns={columns} data={quotes} onViewAll={() => { }} />
               }
             </div>
           </div>
@@ -509,7 +509,7 @@ export default function ProviderDevisPage() {
 
       {/* Toasts */}
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
-      {submitError   && <Toast msg={submitError}   type="error"   />}
+      {submitError && <Toast msg={submitError} type="error" />}
 
       {/* Panel aperçu — slide droite */}
       {isPanelOpen && selectedQuote && (

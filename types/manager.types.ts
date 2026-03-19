@@ -325,12 +325,16 @@ export interface PlanningFilters extends BaseFilters {
 export interface InterventionReport {
   id: number;
   reference?: string;
-  status: "draft" | "submitted" | "validated" | "rejected";
+  status: "draft" | "submitted" | "validated" | "rejected" | "pending";
+  intervention_type?: "curatif" | "preventif";
+  result?: "ras" | "anomalie" | "resolu";
   description?: string;
+  findings?: string;
   start_date?: string;
   end_date?: string;
   rating?: number;
-  validator_comment?: string;
+  manager_comment?: string;
+  validator_comment?: string; // Doublon possible avec manager_comment, gardé pour compatibilité
   ticket_id?: number;
   provider_id: number;
   site_id: number;
@@ -350,6 +354,7 @@ export interface InterventionReport {
   site: {
     id: number;
     nom: string;
+    name?: string;
   };
   attachments?: ReportAttachment[];
   validator?: {
@@ -380,6 +385,7 @@ export interface ReportFilters extends BaseFilters {
 }
 
 export interface ValidateReportPayload {
+  result: "ras" | "anomalie" | "resolu"; // Obligatoire pour le backend V3
   rating?: number;
   comment?: string;
 }

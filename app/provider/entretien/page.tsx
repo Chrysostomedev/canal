@@ -14,9 +14,11 @@ import {
   PlusCircle, Copy, Check, CalendarDays,
   ClipboardList, Wrench, ShieldCheck,
   PlayCircle, CheckSquare, AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 import { useState } from "react";
 import type { FieldConfig } from "@/components/ReusableForm";
+import { useProviderReports } from "../../../hooks/provider/useProviderReports";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -703,100 +705,99 @@ function MaintenancePreviewPanel({
 export default function ProviderEntretienPage() {
   const router = useRouter();
 
-  const [tickets] = useState<MaintenanceTicket[]>(MOCK_TICKETS);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState<MaintenanceTicket | null>(null);
+  const {
+    reports, filteredReports, stats,
+    loading, submitting,
+    error, submitSuccess, submitError,
+    filters, setFilters,
+    createReport, exportXlsx, refresh
+  } = useProviderReports();
+
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
   const [isPanelOpen, setIsPanelOpen]   = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [reportTargetTicket, setReportTargetTicket] = useState<MaintenanceTicket | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const [submitError, setSubmitError]     = useState<string | null>(null);
-  const [submitting, setSubmitting]       = useState(false);
+  const [reportTargetTicket, setReportTargetTicket] = useState<any | null>(null);
 
-  const openPanel = (t: MaintenanceTicket) => { setSelectedTicket(t); setIsPanelOpen(true); };
+  const openPanel = (t: any) => { setSelectedTicket(t); setIsPanelOpen(true); };
   const closePanel = () => setIsPanelOpen(false);
 
-  // Ouvre le form rapport — peut venir du panel ou d'un nouveau rapport
-  const openReport = (t: MaintenanceTicket) => {
+  const openReport = (t: any) => {
     setReportTargetTicket(t);
     setIsPanelOpen(false);
     setIsReportOpen(true);
   };
   const closeReport = () => { setIsReportOpen(false); setReportTargetTicket(null); };
 
-  // Ouvre rapport pour "Nouveau rapport" — utilise le premier ticket en_cours ou planifié
-  // En production, un select de ticket serait intégré dans le form
   const openNewReport = () => {
-    const target = tickets.find(t => t.status === "en_cours" || t.status === "planifié" || t.status === "rejeté")
-      ?? tickets[0];
-    openReport(target);
+    // Dans cette version, on laisse le formulaire gérer le choix du ticket ou on prend le premier disponible
+    const target = reports.find(r => r.status === "en_cours" || r.status === "planifié") ?? reports[0];
+    if (target) openReport(target);
   };
 
-  const filtered = statusFilter ? tickets.filter(t => t.status === statusFilter) : tickets;
-
   const kpis = [
-    { label: "Total entretiens", value: tickets.length, delta: "", trend: "up" as const },
-    { label: "Planifiés", value: tickets.filter(t => t.status === "planifié").length, delta: "", trend: "up" as const },
-    { label: "En cours", value: tickets.filter(t => t.status === "en_cours").length, delta: "", trend: "up" as const },
-    { label: "Clôturés", value: tickets.filter(t => t.status === "clos").length, delta: "", trend: "up" as const },
+    { label: "Total rapports", value: stats?.total_reports ?? 0, delta: "", trend: "up" as const },
+    { label: "En attente", value: stats?.pending_reports ?? 0, delta: "", trend: "up" as const },
+    { label: "Validés", value: stats?.validated_reports ?? 0, delta: "", trend: "up" as const },
+    { label: "Note moyenne", value: stats?.average_rating ?? "—", delta: "", trend: "up" as const },
   ];
 
   const actions = [
-    { label: "Exporter", icon: Download, onClick: () => alert("Export XLSX"), variant: "secondary" as const },
+    { label: "Exporter", icon: Download, onClick: exportXlsx, variant: "secondary" as const },
     { label: "Nouveau rapport", icon: PlusCircle, onClick: openNewReport, variant: "primary" as const },
   ];
 
   const handleSubmitReport = async (formData: any) => {
-    setSubmitting(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setSubmitting(false);
-    closeReport();
-    setSubmitSuccess("Rapport soumis avec succès !");
-    setTimeout(() => setSubmitSuccess(null), 4000);
+    const success = await createReport({
+      ticket_id: reportTargetTicket?.id,
+      ...formData
+    });
+    if (success) {
+      closeReport();
+    }
   };
 
-  const columns = [
+  const columns: any[] = [
     {
-      header: "Référence", key: "reference",
-      render: (_: any, row: MaintenanceTicket) => (
-        <span className="font-black text-slate-900 text-sm">{row.reference}</span>
+      header: "Référence", key: "id",
+      render: (_: any, row: any) => (
+        <span className="font-black text-slate-900 text-sm">{row.ticket?.code_ticket || row.reference || `ENT-${row.id}`}</span>
       ),
     },
     {
-      header: "Site", key: "site",
-      render: (_: any, row: MaintenanceTicket) => (
-        <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? row.site?.name ?? "—"}</span>
+      header: "Site", key: "site_id",
+      render: (_: any, row: any) => (
+        <span className="text-xs text-slate-600 font-medium">{row.ticket?.site?.nom ?? row.site?.nom ?? "—"}</span>
       ),
     },
     {
-      header: "Date planifiée", key: "scheduled_date",
-      render: (_: any, row: MaintenanceTicket) => (
+      header: "Date planifiée", key: "created_at",
+      render: (_: any, row: any) => (
         <span className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
           <CalendarDays size={12} className="text-slate-400" />
-          {formatDate(row.scheduled_date)}
+          {formatDate(row.ticket?.planned_at || row.created_at)}
         </span>
       ),
     },
     {
       header: "Statut", key: "status",
-      render: (_: any, row: MaintenanceTicket) => <StatusBadge status={row.status} />,
+      render: (_: any, row: any) => <StatusBadge status={row.status.toLowerCase()} />,
     },
     {
-      header: "Progression", key: "workflow",
-      render: (_: any, row: MaintenanceTicket) => (
-        <div className="w-36"><WorkflowProgress status={row.status} /></div>
+      header: "Progression", key: "id",
+      render: (_: any, row: any) => (
+        <div className="w-36"><WorkflowProgress status={row.status.toLowerCase()} /></div>
       ),
     },
     {
       header: "Actions", key: "actions",
-      render: (_: any, row: MaintenanceTicket) => (
+      render: (_: any, row: any) => (
         <div className="flex items-center gap-2">
           <button onClick={() => openPanel(row)}
             className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600 hover:text-slate-900">
             <Eye size={16} />
           </button>
           <button
-            onClick={() => router.push(`/provider/entretiens/${row.id}`)}
+            onClick={() => router.push(`/provider/entretien/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition">
             <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
           </button>
@@ -817,9 +818,9 @@ export default function ProviderEntretienPage() {
             subtitle="Consultez vos visites d'entretien préventif et soumettez vos rapports d'intervention"
           />
 
-          {submitError && (
+          {(error || submitError) && (
             <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
-              <AlertCircle size={15} className="shrink-0" /> {submitError}
+              <AlertCircle size={15} className="shrink-0" /> {error || submitError}
             </div>
           )}
 
@@ -830,14 +831,17 @@ export default function ProviderEntretienPage() {
           <div className="shrink-0 flex justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <Filter size={15} className="text-slate-400 shrink-0" />
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+              <select 
+                value={filters.status || ""} 
+                onChange={e => setFilters({ ...filters, status: e.target.value })}
                 className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold
-                  rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900 transition cursor-pointer">
+                  rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900 transition cursor-pointer"
+              >
                 <option value="">Tous les statuts</option>
                 {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
               </select>
-              {statusFilter && (
-                <button onClick={() => setStatusFilter("")}
+              {filters.status && (
+                <button onClick={() => setFilters({ ...filters, status: undefined })}
                   className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400">
                   <X size={14} />
                 </button>
@@ -849,10 +853,21 @@ export default function ProviderEntretienPage() {
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-800">Liste des entretiens préventifs</h3>
-              <span className="text-xs text-slate-400">{filtered.length} entretien{filtered.length > 1 ? "s" : ""}</span>
+              <span className="text-xs text-slate-400">{filteredReports.length} entretien{filteredReports.length > 1 ? "s" : ""}</span>
             </div>
             <div className="px-6 py-4">
-              <DataTable columns={columns} data={filtered} onViewAll={() => {}} />
+              {loading ? (
+                <div className="flex justify-center py-10">
+                  <RefreshCw className="animate-spin text-slate-400" size={30} />
+                </div>
+              ) : (
+                <DataTable 
+                  title="Liste des entretiens"
+                  columns={columns} 
+                  data={filteredReports} 
+                  onViewAll={() => {}} 
+                />
+              )}
             </div>
           </div>
 
@@ -860,8 +875,7 @@ export default function ProviderEntretienPage() {
       </div>
 
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
-      {submitError   && <Toast msg={submitError}   type="error" />}
-
+      
       {isPanelOpen && selectedTicket && (
         <MaintenancePreviewPanel
           ticket={selectedTicket}

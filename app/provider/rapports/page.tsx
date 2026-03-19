@@ -366,8 +366,8 @@ const baseFields: FieldConfig[] = [
   },
   {name:"start_date",   label:"Date de début *", type:"date",     required:true},
   {name:"end_date",     label:"Date de fin",     type:"date"},
-  {name:"description",  label:"Description de l'intervention",   type:"textarea"},
-  {name:"findings",     label:"Observations / Constatations",     type:"textarea"},
+  {name:"description",  label:"Travaux effectués / Actions menées *",   type:"textarea", required:true},
+  {name:"findings",     label:"Observations / Constatations / Anomalies",     type:"textarea"},
   {name:"attachments",  label:"Photos & Documents justificatifs (PDF, images)",
    type:"pdf-upload", maxPDFs:10, gridSpan:2} as any,
 ];
@@ -449,7 +449,7 @@ export default function ProviderRapportsPage() {
     {label:"Nouveau rapport", icon:PlusCircle, onClick:openCreate, variant:"primary"   as const},
   ];
 
-  const columns = [
+  const columns: any[] = [
     {header:"ID",       key:"id",         render:(_:any,row:InterventionReport)=><span className="font-black text-slate-900 text-sm">#{row.id}</span>},
     {header:"Ticket",   key:"ticket",     render:(_:any,row:InterventionReport)=><span className="text-xs text-slate-600 font-medium">{row.ticket?.subject??`#${row.ticket_id}`}</span>},
     {header:"Site",     key:"site",       render:(_:any,row:InterventionReport)=><span className="text-xs text-slate-600">{getSiteName(row.site)}</span>},
@@ -557,7 +557,12 @@ export default function ProviderRapportsPage() {
                       <div key={i} className="h-12 bg-gray-100 rounded-xl"/>
                     ))}
                   </div>
-                : <DataTable columns={columns} data={paginated} onViewAll={()=>{}}/>
+                : <DataTable
+                    title="Liste des rapports soumis"
+                    columns={columns}
+                    data={paginated}
+                    onViewAll={()=>{}}
+                  />
               }
             </div>
             {totalPages>1 && (

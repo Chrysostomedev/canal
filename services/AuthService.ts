@@ -31,7 +31,7 @@ const PENDING_EMAIL_KEY = "pending_otp_email"; // Email en attente de vérificat
 const PENDING_FLOW_KEY = "pending_otp_flow";  // "login" | "reset" — distingue les deux flux OTP
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-export type UserRole = "SUPER-ADMIN" | "ADMIN" | "MANAGER" | "PROVIDER";
+export type UserRole = "SUPER-ADMIN" | "ADMIN" | "MANAGER" | "PROVIDER" | "USER";
 
 /** Flux OTP en cours — permet à la page OTP de savoir quoi faire après validation */
 export type OtpFlow = "login" | "reset";
@@ -62,8 +62,9 @@ export interface LoginStepResponse {
  * Retourne la route dashboard selon le rôle de l'utilisateur.
  * SUPER-ADMIN et ADMIN partagent /admin/dashboard.
  */
-export const getDashboardRoute = (role: UserRole): string => {
-  switch (role) {
+export const getDashboardRoute = (role: string): string => {
+  const normalizedRole = role.toUpperCase();
+  switch (normalizedRole) {
     case "SUPER-ADMIN":
       return "/admin/dashboard";
     case "ADMIN":
@@ -71,6 +72,7 @@ export const getDashboardRoute = (role: UserRole): string => {
     case "MANAGER":
       return "/manager/dashboard";
     case "PROVIDER":
+    case "USER": // Sécurité : Mapper USER vers PROVIDER
       return "/provider/dashboard";
     default:
       return "/login";
@@ -297,7 +299,7 @@ export const authService = {
     if (typeof window === "undefined") return false;
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
-    const validRoles: UserRole[] = ["SUPER-ADMIN", "ADMIN", "MANAGER", "PROVIDER"];
+    const validRoles: UserRole[] = ["SUPER-ADMIN", "ADMIN", "MANAGER", "PROVIDER", "USER"];
     return !!token && !!role && validRoles.includes(role);
   },
 
@@ -306,6 +308,8 @@ export const authService = {
    */
   hasRole: (allowedRoles: UserRole[]): boolean => {
     const role = authService.getRole() as UserRole;
+    // Mapping sécurité : USER est traité comme PROVIDER pour les accès
+    if (role === "USER" && allowedRoles.includes("PROVIDER")) return true;
     return allowedRoles.includes(role);
   },
 };

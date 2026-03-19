@@ -68,11 +68,15 @@ export const providerTicketService = {
    * Supporte : page, per_page, status, type, priority, site_id
    */
   getTickets: async (params?: Record<string, any>): Promise<TicketListResponse> => {
-    const response = await axiosInstance.get(BASE, { params });
-    const data = response.data?.data ?? response.data;
+    const res = await axiosInstance.get(BASE, { params });
     return {
-      items: data?.items ?? [],
-      meta:  data?.meta  ?? { current_page: 1, last_page: 1, per_page: 15, total: 0 },
+      items: res.data?.data ?? [],
+      meta: {
+        current_page: res.data?.current_page ?? 1,
+        last_page:    res.data?.last_page    ?? 1,
+        per_page:     res.data?.per_page     ?? 15,
+        total:        res.data?.total        ?? 0,
+      },
     };
   },
 
@@ -91,7 +95,19 @@ export const providerTicketService = {
    */
   getStats: async (): Promise<TicketStats> => {
     const response = await axiosInstance.get(`${BASE}/stats`);
-    return response.data?.data ?? response.data;
+    const data = response.data?.data ?? response.data;
+    
+    // Mapping des clés backend → frontend
+    return {
+      total: data.nombre_total_tickets ?? 0,
+      en_cours: data.nombre_total_tickets_en_cours ?? 0,
+      clotures: data.nombre_total_tickets_clotures ?? 0,
+      cout_moyen_par_ticket: data.cout_moyen_par_ticket ?? 0,
+      nombre_tickets_par_mois: data.nombre_tickets_par_mois ?? 0,
+      delais_moyen_traitement_heures: data.delais_moyen_traitement_heures ?? null,
+      delais_minimal_traitement_heures: data.delais_minimal_traitement_heures ?? null,
+      delais_maximal_traitement_heures: data.delais_maximal_traitement_heures ?? null,
+    };
   },
 
   /**

@@ -16,7 +16,7 @@ interface UseReportReturn {
   error: string | null;
   flash: { type: "success" | "error"; message: string } | null;
   refresh: () => void;
-  validateReport: (payload?: ValidateReportPayload) => Promise<void>;
+  validateReport: (payload: ValidateReportPayload) => Promise<void>;
   getAttachmentUrl: (filePath: string) => string;
 }
 
@@ -61,7 +61,7 @@ export function useReport(id: number): UseReportReturn {
    * Interdit si le rapport est déjà validé (status === 'validated').
    */
   const validateReport = async (
-    payload: ValidateReportPayload = {}
+    payload: ValidateReportPayload
   ): Promise<void> => {
     if (report?.status === "validated") {
       showFlash("error", "Ce rapport est déjà validé.");

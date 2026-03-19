@@ -22,7 +22,7 @@ Le backend Laravel tourne en local dans le dossier app.canal.back . Tu dois conn
 ## Ce que tu peux faire
 
 - Créer ou compléter des fichiers de service / appels API s'ils n'existent pas encore.
-- Brancher les données réelles du backend là où le front affiche des données statiques ou fictives.
+- Brancher les données réelles du backend (le dossier app-canal-back) là où le front affiche des données statiques ou pas bien implémentés et non fonctionnel.
 - Gérer les erreurs retournées par l'API.
 
 ## Ce que tu ne dois jamais faire

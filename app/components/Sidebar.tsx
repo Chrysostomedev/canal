@@ -53,24 +53,25 @@ const MENU_ADMIN: MenuItem[] = [
     icon: <MapPinHouse size={20} />,
     href: "/admin/administration",
     subItems: [
-      { label: "Tickets",   icon: <Ticket size={20} />,   href: "/admin/tickets"   },
+      { label: "Tickets", icon: <Ticket size={20} />, href: "/admin/tickets" },
       {
         label: "Patrimoines",
         icon: <Building2 size={20} />,
         href: "/admin/patrimoines",
         subItems: [
-          { label: "Types",      icon: <Building2Icon size={18} />, href: "/admin/patrimoines/type"      },
-          { label: "Sous-types", icon: <Building2 size={18} />,     href: "/admin/patrimoines/sous_type" },
+          { label: "Types", icon: <Building2Icon size={18} />, href: "/admin/patrimoines/type" },
+          { label: "Sous-types", icon: <Building2 size={18} />, href: "/admin/patrimoines/sous_type" },
         ],
       },
-      { label: "Sites",               icon: <MapPinHouse size={20} />,                 href: "/admin/sites"        },
-      { label: "Planning",            icon: <Calendar size={20} />,                    href: "/admin/planning"     },
-      { label: "Prestataires",        icon: <Users size={20} />,                       href: "/admin/prestataires" },
-      { label: "Devis",               icon: <FileSignature size={20} />,               href: "/admin/devis"        },
-      { label: "Factures",            icon: <FileText size={20} />,                    href: "/admin/factures"     },
-      { label: "Rapports",            icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/admin/rapports"     },
-      { label: "Services",            icon: <Layers size={20} />,                      href: "/admin/services"     },
-      { label: "Transfert inter-sites", icon: <FolderSync size={20} />,                href: "/admin/transfert"    },
+      { label: "Sites", icon: <MapPinHouse size={20} />, href: "/admin/sites" },
+      { label: "Planning", icon: <Calendar size={20} />, href: "/admin/planning" },
+      { label: "Entretien", icon: <Calendar size={20} />, href: "/admin/entretien" },
+      { label: "Prestataires", icon: <Users size={20} />, href: "/admin/prestataires" },
+      { label: "Devis", icon: <FileSignature size={20} />, href: "/admin/devis" },
+      { label: "Factures", icon: <FileText size={20} />, href: "/admin/factures" },
+      { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/admin/rapports" },
+      { label: "Services", icon: <Layers size={20} />, href: "/admin/services" },
+      { label: "Transfert inter-sites", icon: <FolderSync size={20} />, href: "/admin/transfert" },
     ],
   },
   {
@@ -89,14 +90,14 @@ const MENU_ADMIN: MenuItem[] = [
 
 /** PROVIDER — ses propres pages uniquement */
 const MENU_PROVIDER: MenuItem[] = [
-  { label: "Tableau de bord",  icon: <LayoutDashboard size={20} />,                href: "/provider/dashboard"      },
-  { label: "Tickets",          icon: <Ticket size={20} />,                         href: "/provider/tickets"        },
-  { label: "Planning",         icon: <Calendar size={20} />,                       href: "/provider/planning"       },
-    { label: "Rapports ",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/provider/entretien"        },
-  { label: "Devis",            icon: <FileSignature size={20} />,                  href: "/provider/devis"          },
-  { label: "Factures",         icon: <FileText size={20} />,                       href: "/provider/factures"       },
-  { label: "Interventions",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/provider/rapports"       },
-  { label: "Notifications",    icon: <Bell size={20} />,                           href: "/provider/notifications"  },
+  { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, href: "/provider/dashboard" },
+  { label: "Tickets", icon: <Ticket size={20} />, href: "/provider/tickets" },
+  { label: "Planning", icon: <Calendar size={20} />, href: "/provider/planning" },
+  { label: "Rapports ", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/provider/entretien" },
+  { label: "Devis", icon: <FileSignature size={20} />, href: "/provider/devis" },
+  { label: "Factures", icon: <FileText size={20} />, href: "/provider/factures" },
+  { label: "Interventions", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/provider/rapports" },
+  { label: "Notifications", icon: <Bell size={20} />, href: "/provider/notifications" },
 ];
 
 /**
@@ -105,7 +106,7 @@ const MENU_PROVIDER: MenuItem[] = [
  * Patrimoines → sans les sous-menus Type / Sous-type (gestion globale)
  */
 const MENU_MANAGER: MenuItem[] = [
-  { label: "Tableau de bord",  icon: <LayoutDashboard size={20} />,                href: "/manager/dashboard"       },
+  { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, href: "/manager/dashboard" },
   {
     label: "Sites",
     icon: <MapPinHouse size={20} />,
@@ -118,13 +119,14 @@ const MENU_MANAGER: MenuItem[] = [
     href: "/manager/patrimoines",
     // Pas de sous-menus Type / Sous-type — réservés aux admins
   },
-   { label: "Rapports ",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/manager/entretien"        },
-  { label: "Planning",         icon: <Calendar size={20} />,                       href: "/manager/planning"        },
-  { label: "Prestataires",     icon: <Users size={20} />,                          href: "/manager/prestataires"    },
-  { label: "Devis",            icon: <FileSignature size={20} />,                  href: "/manager/devis"           },
-  { label: "Factures",         icon: <FileText size={20} />,                       href: "/manager/factures"        },
-  { label: "Interventions",         icon: <ChartNoAxesColumnIncreasing size={20} />,    href: "/manager/rapports"        },
-  { label: "Notifications",    icon: <Bell size={20} />,                           href: "/manager/notifications"   },
+  { label: "Rapports ", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/manager/entretien" },
+  { label: "Planning", icon: <Calendar size={20} />, href: "/manager/planning" },
+  { label: "Rapports", icon: <Calendar size={20} />, href: "/manager/entretien" },
+  { label: "Prestataires", icon: <Users size={20} />, href: "/manager/prestataires" },
+  { label: "Devis", icon: <FileSignature size={20} />, href: "/manager/devis" },
+  { label: "Factures", icon: <FileText size={20} />, href: "/manager/factures" },
+  { label: "Interventions", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/manager/rapports" },
+  { label: "Notifications", icon: <Bell size={20} />, href: "/manager/notifications" },
 ];
 
 // ─── Items bas de sidebar par rôle ────────────────────────────────────────────
@@ -137,8 +139,8 @@ interface BottomItem {
 
 /** SUPER-ADMIN : paramètres + gestion des rôles */
 const BOTTOM_SUPER_ADMIN: BottomItem[] = [
-  { label: "Gestion des rôles", href: "/admin/roles",      icon: <Shield size={20} />   },
-  { label: "Paramètres",        href: "/admin/parametres", icon: <Settings size={20} /> },
+  { label: "Gestion des rôles", href: "/admin/roles", icon: <Shield size={20} /> },
+  { label: "Paramètres", href: "/admin/parametres", icon: <Settings size={20} /> },
 ];
 
 /** ADMIN : paramètres uniquement (pas de gestion des rôles) */
@@ -160,33 +162,33 @@ const BOTTOM_MANAGER: BottomItem[] = [
 const getMenuByRole = (role: string): MenuItem[] => {
   switch (role) {
     case "SUPER-ADMIN": return MENU_ADMIN;
-    case "ADMIN":       return MENU_ADMIN;
-    case "PROVIDER":    return MENU_PROVIDER;
-    case "MANAGER":     return MENU_MANAGER;
-    default:            return [];
+    case "ADMIN": return MENU_ADMIN;
+    case "PROVIDER": return MENU_PROVIDER;
+    case "MANAGER": return MENU_MANAGER;
+    default: return [];
   }
 };
 
 const getBottomByRole = (role: string): BottomItem[] => {
   switch (role) {
     case "SUPER-ADMIN": return BOTTOM_SUPER_ADMIN;
-    case "ADMIN":       return BOTTOM_ADMIN;
-    case "PROVIDER":    return BOTTOM_PROVIDER;
-    case "MANAGER":     return BOTTOM_MANAGER;
-    default:            return [];
+    case "ADMIN": return BOTTOM_ADMIN;
+    case "PROVIDER": return BOTTOM_PROVIDER;
+    case "MANAGER": return BOTTOM_MANAGER;
+    default: return [];
   }
 };
 
 // ─── Composant ────────────────────────────────────────────────────────────────
 export default function Sidebar() {
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
 
   // Rôle lu depuis le localStorage — stable après hydratation
-  const [role,           setRole]           = useState<string>("");
-  const [menuItems,      setMenuItems]      = useState<MenuItem[]>([]);
-  const [bottomItems,    setBottomItems]    = useState<BottomItem[]>([]);
-  const [expandedMenus,  setExpandedMenus]  = useState<string[]>([]);
+  const [role, setRole] = useState<string>("");
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [bottomItems, setBottomItems] = useState<BottomItem[]>([]);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // ── Initialisation : lecture du rôle et construction des menus ──────────────
@@ -239,19 +241,18 @@ export default function Sidebar() {
     const checkActive = (it: MenuItem): boolean =>
       (!!it.href && isActive(it.href)) || (it.subItems?.some(checkActive) ?? false);
 
-    const active     = checkActive(item);
+    const active = checkActive(item);
     const isExpanded = expandedMenus.includes(item.label);
 
     return (
       <div className="w-full">
         <div
-          className={`flex items-center w-full rounded-xl transition-all duration-200 ${
-            active && !hasSubItems
-              ? "bg-theme-primary text-white shadow-md"
-              : active && hasSubItems
+          className={`flex items-center w-full rounded-xl transition-all duration-200 ${active && !hasSubItems
+            ? "bg-theme-primary text-white shadow-md"
+            : active && hasSubItems
               ? "text-theme-primary bg-theme-light"
               : "text-gray-600 hover:bg-gray-50"
-          }`}
+            }`}
         >
           <Link
             href={item.href || "#"}
@@ -307,11 +308,10 @@ export default function Sidebar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all font-medium text-[15px] ${
-                  active
-                    ? "bg-theme-primary text-white shadow-md"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all font-medium text-[15px] ${active
+                  ? "bg-theme-primary text-white shadow-md"
+                  : "text-gray-600 hover:bg-gray-50"
+                  }`}
               >
                 {item.icon}
                 <span>{item.label}</span>

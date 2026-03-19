@@ -154,8 +154,6 @@ export function toNum(v?: number | string | null): number {
 
 export function formatMontant(v?: number | string | null): string {
   const n = toNum(v);
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M FCFA`;
-  if (n >= 1_000)     return `${Math.round(n / 1_000)}K FCFA`;
   return `${n.toLocaleString("fr-FR")} FCFA`;
 }
 
@@ -210,13 +208,13 @@ export const providerInvoiceService = {
     const res = await axiosInstance.get(BASE, { params: filters });
     const d   = res.data?.data ?? res.data;
 
-    // Deux formats possibles : paginé { items, meta } ou tableau direct
-    const items: Invoice[] = d?.items ?? d?.data ?? (Array.isArray(d) ? d : []);
-    const meta: InvoiceMeta = d?.meta ?? {
-      current_page: 1,
-      last_page:    1,
-      per_page:     items.length || 15,
-      total:        items.length,
+    // Mapping Laravel pagination
+    const items: Invoice[] = d?.data ?? (Array.isArray(d) ? d : []);
+    const meta: InvoiceMeta = {
+      current_page: d?.current_page ?? 1,
+      last_page:    d?.last_page    ?? 1,
+      per_page:     d?.per_page     ?? 15,
+      total:        d?.total        ?? 0,
     };
     return { items, meta };
   },
