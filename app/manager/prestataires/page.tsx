@@ -1,59 +1,24 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Filter, Download, Upload, PlusCircle } from "lucide-react";
+import { Filter, Download } from "lucide-react";
 
 import Navbar       from "@/components/Navbar";
 import Sidebar      from "@/components/Sidebar";
 import SearchInput  from "@/components/SearchInput";
-import ReusableForm from "@/components/ReusableForm";
 import StatsCard    from "@/components/StatsCard";
 import ProfileModal from "@/components/ProfileModal";
-import Paginate     from "@/components/Paginate";
 import PrestCard    from "@/components/PrestCard";
 import PageHeader   from "@/components/PageHeader";
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+import { useProviders } from "../../../hooks/manager/useProviders";
+import type { Provider } from "../../../services/manager/provider.service";
 
-const services = [
-  { id: 1, name: "Maintenance Réseau" },
-  { id: 2, name: "Sécurité" },
-  { id: 3, name: "Infrastructure IT" },
-];
+/* ─────────────────────────── */
+/* HELPERS AVATAR */
+/* ─────────────────────────── */
 
-const mockProviders = [
-  {
-    id: 1,
-    company_name: "SOUDOTEC",
-    city: "Abidjan",
-    is_active: true,
-    rating: 4.5,
-    date_entree: "2024-03-10",
-    service: { id: 1, name: "Maintenance Réseau" },
-    user: { phone: "0700000000", email: "contact@soudotec.ci" },
-  },
-  {
-    id: 2,
-    company_name: "Tech Services CI",
-    city: "Abidjan",
-    is_active: false,
-    rating: 3.8,
-    date_entree: "2023-09-02",
-    service: { id: 2, name: "Sécurité" },
-    user: { phone: "0500000000", email: "contact@techservices.ci" },
-  },
-];
-
-const stats = {
-  total_providers: 2,
-  active_providers: 1,
-  inactive_providers: 1,
-  average_intervention_time: "2h 10m",
-};
-
-// ─── Initiales avatar ─────────────────────────────────────────────────────────
-// Palette de couleurs déterministe selon le nom
 const AVATAR_COLORS = [
   "bg-violet-100 text-violet-700",
   "bg-blue-100 text-blue-700",
@@ -66,12 +31,7 @@ const AVATAR_COLORS = [
 ];
 
 function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map(w => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
 function getAvatarColor(name: string): string {
@@ -91,77 +51,43 @@ function ProviderAvatar({ name, size = "lg" }: { name: string; size?: "sm" | "lg
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+/* ─────────────────────────── */
+/* PAGE */
+/* ─────────────────────────── */
+
 export default function PrestatairesPage() {
   const router = useRouter();
 
-  const [providers]          = useState(mockProviders);
-  const [filteredProviders,  setFilteredProviders]  = useState(mockProviders);
-  const [selectedProvider,   setSelectedProvider]   = useState<any | null>(null);
-  const [filters,            setFilters]            = useState<any>({});
-  const [filtersOpen,        setFiltersOpen]        = useState(false);
-  const [isModalOpen,        setIsModalOpen]        = useState(false);
-  const [flash,              setFlash]              = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const {
+    filteredProviders,
+    stats: apiStats,
+    isLoading,
+    error: apiError,
+    search,
+    exportProviders
+  } = useProviders();
 
-  const showFlash = (type: "success" | "error", message: string) => {
-    setFlash({ type, message });
-    setTimeout(() => setFlash(null), 4000);
-  };
-
-  const applySearch = (value: string) => {
-    const v = value.toLowerCase();
-    setFilteredProviders(providers.filter(p => p.company_name.toLowerCase().includes(v)));
-  };
-
-  const applyFilters = (f: any) => {
-    let result = [...providers];
-    if (f.is_active !== undefined) result = result.filter(p => p.is_active === f.is_active);
-    if (f.service_id)              result = result.filter(p => p.service?.id === f.service_id);
-    setFilters(f);
-    setFilteredProviders(result);
-  };
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 
   const kpis = [
-    { label: "Total prestataires",       value: stats.total_providers,           delta: "+0%", trend: "up"   as const },
-    { label: "Prestataires actifs",      value: stats.active_providers,          delta: "+0%", trend: "up"   as const },
-    { label: "Prestataires inactifs",    value: stats.inactive_providers,        delta: "+0%", trend: "down" as const },
-    { label: "Délai moyen intervention", value: stats.average_intervention_time, delta: "+0%", trend: "up"   as const },
-  ];
-
-  const prestFields = [
-    { name: "company_name",    label: "Nom du prestataire",  type: "text",         required: true },
-    { name: "service_id",      label: "Service",             type: "select",       required: true,
-      options: services.map(s => ({ label: s.name, value: String(s.id) })) },
-    { name: "city",            label: "Ville",               type: "text",         required: true },
-    { name: "street",          label: "Rue / Adresse",       type: "text" },
-    { name: "date_entree",     label: "Date d'entrée",       type: "date",         required: true },
-    { name: "users.password",  label: "Mot de passe",        type: "password",     required: true },
-    { name: "users.last_name", label: "Nom du responsable",  type: "text",         required: true },
-    { name: "users.first_name",label: "Prénom",              type: "text",         required: true },
-    { name: "users.email",     label: "Email du responsable",type: "email",        required: true },
-    { name: "users.phone",     label: "Téléphone",           type: "text",         required: true },
-    { name: "description",     label: "Description",         type: "rich-text",    gridSpan: 2 },
+    { label: "Total prestataires",       value: apiStats?.total_providers ?? 0, trend: "up" as const },
+    { label: "Prestataires actifs",      value: apiStats?.active_providers ?? 0, trend: "up" as const },
+    { label: "Prestataires inactifs",    value: apiStats?.inactive_providers ?? 0, trend: "down" as const },
+    { label: "Délai moyen intervention", value: apiStats?.average_intervention_time || "—", trend: "up" as const },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
       <Sidebar />
-
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col pl-64">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-8 space-y-8 max-w-7xl mx-auto w-full">
+          <PageHeader title="Prestataires" subtitle="Consultez et gérez vos prestataires de services." />
 
-          <PageHeader title="Prestataires" subtitle="Gérez tous vos prestataires de services" />
-
-          {/* Flash */}
-          {flash && (
-            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
-              flash.type === "success"
-                ? "text-green-700 bg-green-50 border-green-200"
-                : "text-red-600 bg-red-100 border-red-300"
-            }`}>
-              {flash.message}
+          {apiError && (
+            <div className="bg-red-50 border border-red-100 text-red-700 px-6 py-4 rounded-2xl text-sm font-semibold mb-4">
+              {apiError}
             </div>
           )}
 
@@ -172,41 +98,25 @@ export default function PrestatairesPage() {
 
           {/* Barre actions */}
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => showFlash("error", "Import désactivé (mode statique)")}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+             <div className="w-full max-w-md">
+                <SearchInput onSearch={search} placeholder="Rechercher par nom, ville ou service..." />
+             </div>
+             <button
+                onClick={exportProviders}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-black hover:border-slate-900 transition shadow-sm"
               >
-                <Download size={16} /> Importer
+                <Download size={16} /> Exporter (.xlsx)
               </button>
-              <button
-                onClick={() => showFlash("error", "Export désactivé (mode statique)")}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
-              >
-                <Upload size={16} /> Exporter
-              </button>
-              <button
-                onClick={() => setFiltersOpen(!filtersOpen)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
-              >
-                <Filter size={16} /> Filtrer
-              </button>
-            </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
-            >
-              <PlusCircle size={16} /> Ajouter un prestataire
-            </button>
           </div>
 
           {/* Liste */}
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-6">
-            <div className="w-80">
-              <SearchInput onSearch={applySearch} placeholder="Rechercher un prestataire..." />
-            </div>
-
-            {filteredProviders.length > 0 ? (
+          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 space-y-8">
+            {isLoading ? (
+               <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <div className="w-8 h-8 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin" />
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Récupération des données</p>
+               </div>
+            ) : filteredProviders.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProviders.map(p => (
                   <PrestCard
@@ -219,39 +129,24 @@ export default function PrestatairesPage() {
                     email={p.user?.email}
                     rating={p.rating}
                     status={p.is_active ? "Actif" : "Inactif"}
-                    // ← logo retiré → PrestCard affichera ses propres initiales
-                    // Si PrestCard accepte un renderAvatar ou avatarFallback :
                     avatarFallback={<ProviderAvatar name={p.company_name} />}
                     onProfilClick={() => setSelectedProvider(p)}
-                    onTicketsClick={() => router.push(`/admin/prestataires/details/${p.id}`)}
-                    detailUrl={`/admin/prestataires/details/${p.id}`}
+                    onTicketsClick={() => router.push(`/manager/prestataires/details/${p.id}`)}
+                    detailUrl={`/manager/prestataires/details/${p.id}`}
                   />
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center text-slate-400 italic">
-                Aucun prestataire trouvé.
+              <div className="py-20 text-center">
+                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Filter size={24} className="text-slate-300" />
+                 </div>
+                 <p className="text-slate-400 italic text-sm">Aucun prestataire ne correspond à votre recherche.</p>
               </div>
             )}
-
-            <div className="flex justify-end pt-4 border-t border-slate-50">
-              <Paginate currentPage={1} totalPages={1} onPageChange={() => {}} />
-            </div>
           </div>
-
         </main>
       </div>
-
-      {/* Formulaire création */}
-      <ReusableForm
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Ajouter un nouveau prestataire"
-        subtitle="Mode statique — aucune sauvegarde backend"
-        fields={prestFields as any}
-        onSubmit={() => { showFlash("success", "Création simulée (mode statique)"); setIsModalOpen(false); }}
-        submitLabel="Créer le prestataire"
-      />
 
       {/* Profile modal */}
       <ProfileModal
@@ -264,15 +159,14 @@ export default function PrestatairesPage() {
             phone:      selectedProvider.user?.phone,
             email:      selectedProvider.user?.email,
             category:   selectedProvider.service?.name,
-            dateEntree: selectedProvider.date_entree,
+            dateEntree: selectedProvider.date_entree || "—",
             status:     selectedProvider.is_active ? "Actif" : "Inactif",
-            // ← pas de logo → le ProfileModal devra afficher les initiales
-            avatar: <ProviderAvatar name={selectedProvider.company_name} size="lg" />,
+            avatar:     <ProviderAvatar name={selectedProvider.company_name} size="lg" />,
             stats: {
-              totalBillets:   { value: 12, delta: "+0%" },
-              ticketsEnCours: { value: 3,  delta: "+0%" },
-              ticketsTraites: { value: 9,  delta: "+0%" },
-              noteObtenue:    `${selectedProvider.rating}/5`,
+              totalBillets:   { value: 0, delta: "" },
+              ticketsEnCours: { value: 0,  delta: "" },
+              ticketsTraites: { value: 0,  delta: "" },
+              noteObtenue:    `${selectedProvider.rating || 0}/5`,
             },
           } : null
         }

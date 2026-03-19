@@ -124,12 +124,12 @@ function ValidateModal({
   const [rating, setRating] = useState<number>(0);
   const [hovered, setHovered] = useState<number>(0);
   const [comment, setComment] = useState("");
-  const [result, setResult] = useState<"ras" | "anomalie" | "resolu" | "">("");
+  const [result, setResult] = useState<"RAS" | "ANOMALIE" | "RESOLU">("RAS");
 
   const results = [
-    { id: "ras",      label: "RAS",      desc: "Tout est conforme", icon: CheckCircle,  color: "emerald" },
-    { id: "anomalie", label: "Anomalie", desc: "Besoin de réparation", icon: AlertTriangle, color: "red" },
-    { id: "resolu",   label: "Résolu",   desc: "Problème réglé",    icon: CheckCircle2, color: "blue" },
+    { id: "RAS",      label: "RAS",      desc: "Tout est conforme", icon: CheckCircle,  color: "emerald" },
+    { id: "ANOMALIE", label: "Anomalie", desc: "Besoin de réparation", icon: AlertTriangle, color: "red" },
+    { id: "RESOLU",   label: "Résolu",   desc: "Problème réglé",    icon: CheckCircle2, color: "blue" },
   ];
 
   return (

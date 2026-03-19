@@ -30,39 +30,30 @@ export interface BaseFilters {
 // DASHBOARD
 // ════════════════════════════════════════════════════════════════
 export interface ManagerDashboardStats {
-  tickets: {
-    total: number;
-    open: number;
-    in_progress: number;
-    closed: number;
+  site_info: {
+    id: number;
+    nom: string;
+    responsable?: string;
   };
-  assets: {
-    total: number;
-    active: number;
-    in_maintenance: number;
+  kpis: {
+    nombre_total_tickets: number;
+    nombre_tickets_traités: number;
+    nombre_tickets_non_traités: number;
+    nombre_prestataires: number;
+    cout_global_maintenance: number;
   };
-  quotes: {
+  tickets_stats_par_statut: Record<string, number>;
+  tendance_annuelle_maintenance: Array<{
+    annee: number;
+    mois: number;
     total: number;
-    pending: number;
-    approved: number;
-    rejected: number;
-  };
-  invoices: {
-    total: number;
-    paid: number;
-    pending: number;
-    total_amount: number;
-  };
-  plannings: {
-    total: number;
-    upcoming: number;
-    completed: number;
-  };
-  reports: {
-    total: number;
-    validated: number;
-    pending: number;
-  };
+  }>;
+  sites_les_plus_frequentes: Array<{
+    site_id: number;
+    nom: string;
+    total_tickets: number;
+  }>;
+  prochains_plannings: any[];
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -88,10 +79,6 @@ export interface SiteStats {
 
 // ════════════════════════════════════════════════════════════════
 // PATRIMOINE (ASSETS)
-// Routes : GET /manager/asset       → liste paginée (filtré par site)
-//          GET /manager/asset/{id}  → détail
-//          GET /manager/asset/stats → statistiques
-//          GET /manager/asset/export
 // ════════════════════════════════════════════════════════════════
 export interface Asset {
   id: number;
@@ -151,12 +138,13 @@ export interface QuoteItem {
 export interface Quote {
   id: number;
   reference: string;
-  status: "en attente" | "approved" | "rejected" | "validated" | "invalidated" | "revision";
+  status: "en attente" | "approved" | "rejected" | "validated" | "invalidated" | "revision" | "pending";
   description?: string;
   amount_ht: number;
   tax_rate: number;
   tax_amount: number;
   amount_ttc: number;
+  total_amount_ttc?: number;
   provider_id: number;
   site_id: number;
   ticket_id?: number;
@@ -192,11 +180,16 @@ export interface QuoteHistory {
 }
 
 export interface QuoteStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
   total_quotes: number;
   total_pending: number;
   total_approved: number;
   total_rejected: number;
   total_amount: number;
+  total_approved_amount?: number;
 }
 
 export interface QuoteFilters extends BaseFilters {
@@ -206,23 +199,16 @@ export interface QuoteFilters extends BaseFilters {
   date_fin?: string;
 }
 
-export interface CreateQuotePayload {
-  description?: string;
-  provider_id: number;
-  site_id?: number;
-  ticket_id?: number;
-  items: Omit<QuoteItem, "id" | "total_price">[];
-}
-
-export interface UpdateQuotePayload extends Partial<CreateQuotePayload> {}
-
 // ════════════════════════════════════════════════════════════════
 // FACTURES (INVOICES)
 // ════════════════════════════════════════════════════════════════
+export type InvoiceStatus = "paid" | "pending" | "overdue" | "cancelled" | "unpaid";
+
 export interface Invoice {
   id: number;
   reference: string;
-  payment_status: "paid" | "pending" | "overdue" | "cancelled";
+  status: InvoiceStatus;
+  payment_status: InvoiceStatus;
   invoice_date: string;
   due_date?: string;
   payment_date?: string;
@@ -231,6 +217,7 @@ export interface Invoice {
   amount_ht: number;
   tax_amount: number;
   amount_ttc: number;
+  total_amount_ttc?: number;
   report_id?: number;
   quote_id?: number;
   provider_id: number;
@@ -262,15 +249,21 @@ export interface Invoice {
 }
 
 export interface InvoiceStats {
+  total: number;
+  paid: number;
+  unpaid: number;
   total_invoices: number;
   total_paid: number;
   total_unpaid: number;
   total_amount: number;
+  paid_amount: number;
   total_paid_amount: number;
+  unpaid_amount: number;
   total_unpaid_amount: number;
 }
 
 export interface InvoiceFilters extends BaseFilters {
+  status?: string;
   payment_status?: string;
   provider_id?: number;
   date_debut?: string;
@@ -284,9 +277,12 @@ export interface Planning {
   id: number;
   site_id: number;
   provider_id: number;
-  status: "scheduled" | "in_progress" | "completed" | "cancelled";
+  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "planifie" | "realise" | "en_cours" | "en_retard";
   date_debut: string;
   date_fin: string;
+  codification?: string;
+  responsable_name?: string;
+  responsable_phone?: string;
   description?: string;
   site: {
     id: number;
@@ -310,6 +306,11 @@ export interface PlanningStats {
   in_progress: number;
   completed: number;
   cancelled: number;
+  realise?: number;
+  planifie?: number;
+  en_cours?: number;
+  en_retard?: number;
+  non_realise?: number;
 }
 
 export interface PlanningFilters extends BaseFilters {
@@ -322,10 +323,12 @@ export interface PlanningFilters extends BaseFilters {
 // ════════════════════════════════════════════════════════════════
 // RAPPORTS D'INTERVENTION
 // ════════════════════════════════════════════════════════════════
+export type ProjectStatus = "draft" | "submitted" | "validated" | "rejected" | "pending";
+
 export interface InterventionReport {
   id: number;
   reference?: string;
-  status: "draft" | "submitted" | "validated" | "rejected" | "pending";
+  status: ProjectStatus;
   intervention_type?: "curatif" | "preventif";
   result?: "ras" | "anomalie" | "resolu";
   description?: string;
@@ -333,8 +336,9 @@ export interface InterventionReport {
   start_date?: string;
   end_date?: string;
   rating?: number;
+  comment?: string; // added alias
   manager_comment?: string;
-  validator_comment?: string; // Doublon possible avec manager_comment, gardé pour compatibilité
+  validator_comment?: string;
   ticket_id?: number;
   provider_id: number;
   site_id: number;
@@ -357,10 +361,6 @@ export interface InterventionReport {
     name?: string;
   };
   attachments?: ReportAttachment[];
-  validator?: {
-    id: number;
-    name: string;
-  };
 }
 
 export interface ReportAttachment {
@@ -382,21 +382,11 @@ export interface ReportFilters extends BaseFilters {
   provider_id?: number;
   date_debut?: string;
   date_fin?: string;
-}
-
-export interface ValidateReportPayload {
-  result: "ras" | "anomalie" | "resolu"; // Obligatoire pour le backend V3
-  rating?: number;
-  comment?: string;
+  intervention_type?: string;
 }
 
 // ════════════════════════════════════════════════════════════════
 // TICKETS
-// Routes : GET /manager/ticket              → liste paginée
-//          GET /manager/ticket/{id}         → détail
-//          PUT /manager/ticket/update/{id}  → mise à jour
-//          GET /manager/ticket/stats        → statistiques
-//          GET /manager/ticket/export       → export Excel
 // ════════════════════════════════════════════════════════════════
 export interface Ticket {
   id: number;
@@ -440,13 +430,4 @@ export interface TicketFilters extends BaseFilters {
   provider_id?: number;
   date_debut?: string;
   date_fin?: string;
-}
-
-export interface UpdateTicketPayload {
-  status?: string;
-  priority?: string;
-  provider_id?: number;
-  planned_at?: string;
-  due_at?: string;
-  description?: string;
 }

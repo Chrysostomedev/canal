@@ -1,44 +1,20 @@
-"use client";
-
-// ═══════════════════════════════════════════════════════════════
-// hooks/manager/useQuotes.ts
-// Liste paginée des devis + stats + export
-// ═══════════════════════════════════════════════════════════════
-
 import { useState, useEffect, useCallback } from "react";
-import { QuoteService } from ".../../../services/manager/quote.service";
-import type {
-  Quote,
-  QuoteStats,
-  QuoteFilters,
-  PaginatedResponse,
-} from "../../types/manager.types";
+import { QuoteService } from "../../services/manager/quote.service";
+import type { Quote, QuoteFilters, QuoteStats, PaginatedResponse } from "../../types/manager.types";
 
-interface UseQuotesReturn {
-  quotes: Quote[];
-  stats: QuoteStats | null;
-  meta: PaginatedResponse<Quote>["meta"] | null;
-  filters: QuoteFilters;
-  isLoading: boolean;
-  error: string | null;
-  setFilters: (f: Partial<QuoteFilters>) => void;
-  refresh: () => void;
-  exportQuotes: () => Promise<void>;
-}
-
-export function useQuotes(initialFilters: QuoteFilters = {}): UseQuotesReturn {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
+export function useQuotes(initialFilters: QuoteFilters = {}) {
+  const [data, setData] = useState<Quote[]>([]);
   const [stats, setStats] = useState<QuoteStats | null>(null);
   const [meta, setMeta] = useState<PaginatedResponse<Quote>["meta"] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFiltersState] = useState<QuoteFilters>({
     page: 1,
     per_page: 15,
     ...initialFilters,
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchAll = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -46,21 +22,19 @@ export function useQuotes(initialFilters: QuoteFilters = {}): UseQuotesReturn {
         QuoteService.getQuotes(filters),
         QuoteService.getStats(),
       ]);
-      setQuotes(paginatedData.items);
+      setData(paginatedData.items);
       setMeta(paginatedData.meta);
       setStats(statsData);
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message ?? "Impossible de charger les devis."
-      );
+      setError(err?.response?.data?.message || "Erreur lors du chargement des devis");
     } finally {
       setIsLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchData();
+  }, [fetchData]);
 
   const setFilters = (partial: Partial<QuoteFilters>) => {
     setFiltersState((prev) => ({ ...prev, ...partial, page: 1 }));
@@ -81,14 +55,14 @@ export function useQuotes(initialFilters: QuoteFilters = {}): UseQuotesReturn {
   };
 
   return {
-    quotes,
+    quotes: data,
     stats,
     meta,
     filters,
     isLoading,
     error,
     setFilters,
-    refresh: fetchAll,
+    refresh: fetchData,
     exportQuotes,
   };
 }

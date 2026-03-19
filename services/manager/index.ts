@@ -9,3 +9,7 @@ export { QuoteService } from "./quote.service";
 export { InvoiceService } from "./invoice.service";
 export { PlanningService } from "./planning.service";
 export { ReportService } from "./report.service";
+export { ServiceService } from "./service.service";
+export { ProviderService } from "./provider.service";
+export { AssetService } from "./asset.service";
+export { TicketService } from "./ticket.service";

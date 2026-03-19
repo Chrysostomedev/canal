@@ -1,77 +1,36 @@
-"use client";
-
-// ═══════════════════════════════════════════════════════════════
-// hooks/manager/useSite.ts
-// Charge le(s) site(s) du manager + stats associées
-// ═══════════════════════════════════════════════════════════════
-
 import { useState, useEffect, useCallback } from "react";
-import { SiteService } from ".../../../services/manager/site.service";
-import type { ManagerSite, SiteStats } from "../../types/manager.types";
+import { SiteService } from "../../services/manager/site.service";
+import { AssetService } from "../../services/manager/asset.service";
+import type { ManagerSite, AssetStats } from "../../types/manager.types";
 
-interface UseSiteReturn {
-  sites: ManagerSite[];
-  /** Premier site (le manager n'en a généralement qu'un) */
-  site: ManagerSite | null;
-  stats: SiteStats | null;
-  isLoading: boolean;
-  error: string | null;
-  refresh: () => void;
-  exportSite: () => Promise<void>;
-}
-
-export function useSite(): UseSiteReturn {
-  const [sites, setSites] = useState<ManagerSite[]>([]);
-  const [stats, setStats] = useState<SiteStats | null>(null);
+export function useSite() {
+  const [site, setSite] = useState<ManagerSite | null>(null);
+  const [stats, setStats] = useState<AssetStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAll = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const [sitesData, statsData] = await Promise.all([
         SiteService.getSites(),
-        SiteService.getStats(),
+        AssetService.getStats(),
       ]);
-      setSites(sitesData);
+      
+      // Le manager est généralement assigné à un seul site
+      setSite(sitesData[0] || null);
       setStats(statsData);
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message ??
-          "Impossible de charger les données du site."
-      );
+      setError(err.message || "Erreur lors du chargement des données du site");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchData();
+  }, [fetchData]);
 
-  /** Déclenche le téléchargement du fichier Excel du site */
-  const exportSite = async () => {
-    try {
-      const blob = await SiteService.exportSite();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "site_export.xlsx";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Erreur export site", err);
-    }
-  };
-
-  return {
-    sites,
-    site: sites[0] ?? null,
-    stats,
-    isLoading,
-    error,
-    refresh: fetchAll,
-    exportSite,
-  };
+  return { site, stats, isLoading, error, refresh: fetchData };
 }

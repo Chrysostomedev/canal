@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
 import ActionGroup from "@/components/ActionGroup";
 import ReusableForm from "@/components/ReusableForm";
@@ -348,7 +348,7 @@ export default function ProviderFacturesPage() {
       tax_amount: formData.tax_amount ? parseFloat(formData.tax_amount) : undefined,
       amount_ttc: formData.amount_ttc ? parseFloat(formData.amount_ttc) : undefined,
       comment:    formData.comment    || undefined,
-      pdf_file:   formData.pdf_file?.[0] ?? undefined,
+      pdf_file:   formData.pdf_file || undefined,
     });
   };
 
@@ -371,7 +371,7 @@ export default function ProviderFacturesPage() {
   ];
 
   // ── Colonnes DataTable ────────────────────────────────────────────────────
-  const columns = [
+  const columns: ColumnConfig<Invoice>[] = [
     {
       header: "ID Facture", key: "reference",
       render: (_: any, row: Invoice) => (
@@ -518,7 +518,7 @@ export default function ProviderFacturesPage() {
                       <div key={i} className="h-12 bg-gray-100 rounded-xl" />
                     ))}
                   </div>
-                : <DataTable columns={columns} data={invoices} onViewAll={() => {}} />
+                : <DataTable title="Liste des factures" columns={columns} data={invoices} onViewAll={() => {}} />
               }
             </div>
 

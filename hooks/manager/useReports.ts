@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback } from "react";
-import { ReportService } from ".../../../services/manager/report.service";
+import { ReportService } from "../../services/manager/report.service";
 import type {
   InterventionReport,
   ReportStats,

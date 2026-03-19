@@ -3,7 +3,7 @@ import React, { useRef, useState, useCallback } from "react";
 import { Eye, EyeOff, Calendar,
   Bold, Italic, Underline, List, Strikethrough, 
   Palette, Highlighter, AlignLeft, AlignCenter, AlignRight, 
-  CornerDownLeft, Plus, Minus, ImagePlus, X, Upload
+  CornerDownLeft, Plus, Minus, ImagePlus, X, Upload, FileText
 } from "lucide-react";
 
 // Input Standard
@@ -309,6 +309,132 @@ export const RichTextEditor = ({ label, placeholder, name }: any) => {
         />
         <input type="hidden" name={name} id={`hidden-${name}`} />
       </div>
+    </div>
+  );
+};
+
+
+// ─── PDF UPLOAD ────────────────────────────────────────────────────────────────
+interface PdfFile {
+  id: string;
+  file: File;
+  name: string;
+}
+
+export const PdfUpload = ({
+  name,
+  maxPDFs = 1,
+}: {
+  name?: string;
+  maxPDFs?: number;
+}) => {
+  const [pdfs, setPdfs] = useState<PdfFile[]>([]);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = useCallback(
+    (files: FileList | null) => {
+      if (!files) return;
+      const incoming = Array.from(files)
+        .filter(f => f.type === "application/pdf")
+        .slice(0, maxPDFs - pdfs.length);
+
+      const newPdfs: PdfFile[] = incoming.map((file) => ({
+        id: Math.random().toString(36).slice(2),
+        file,
+        name: file.name
+      }));
+      setPdfs((prev) => [...prev, ...newPdfs].slice(0, maxPDFs));
+    },
+    [pdfs.length, maxPDFs]
+  );
+
+  const remove = (id: string) => {
+    setPdfs((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    addFiles(e.dataTransfer.files);
+  };
+
+  const canAdd = pdfs.length < maxPDFs;
+
+  return (
+    <div className="flex flex-col gap-3 w-full">
+      {canAdd && (
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`
+            relative flex flex-col items-center justify-center gap-3 w-full
+            min-h-[120px] rounded-3xl cursor-pointer select-none
+            transition-all duration-200 border-2 border-dashed
+            ${dragging
+              ? "bg-slate-900 border-slate-900 ring-2 ring-slate-900 ring-offset-2"
+              : "bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+            }
+          `}
+        >
+          <div className={`
+            flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200
+            ${dragging ? "bg-white/20" : "bg-white shadow-sm"}
+          `}>
+            <Upload
+              size={22}
+              className={dragging ? "text-white" : "text-slate-500"}
+              strokeWidth={2}
+            />
+          </div>
+          <div className="text-center">
+            <p className={`text-sm font-semibold transition-colors duration-200 ${dragging ? "text-white" : "text-slate-700"}`}>
+              {dragging ? "Déposez ici" : "Cliquez pour uploader la facture PDF"}
+            </p>
+            <p className={`text-xs mt-0.5 transition-colors duration-200 ${dragging ? "text-white/70" : "text-slate-400"}`}>
+              Format PDF uniquement · Max 10Mo
+            </p>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            multiple={maxPDFs > 1}
+            className="hidden"
+            onChange={(e) => addFiles(e.target.files)}
+            name={name}
+          />
+        </div>
+      )}
+
+      {pdfs.length > 0 && (
+        <div className="space-y-2">
+          {pdfs.map((p) => (
+            <div 
+              key={p.id}
+              className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1"
+            >
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                <FileText size={20} className="text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
+                <p className="text-[10px] text-slate-400 uppercase font-black">Fichier PDF sélectionné</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => remove(p.id)}
+                className="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400 hover:text-red-500"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

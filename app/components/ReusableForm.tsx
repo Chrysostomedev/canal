@@ -2,18 +2,19 @@
 
 import SideModal from "@/components/form/SideModal";
 import FormButton from "@/components/form/FormButton";
-import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor, ImageUpload } from "@/components/form/FormInput";
+import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor, ImageUpload, PdfUpload } from "@/components/form/FormInput";
 
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "password" | "date" | "select" | "email" | "number" | "rich-text" | "image-upload";
+  type: "text" | "password" | "date" | "select" | "email" | "number" | "rich-text" | "image-upload" | "pdf-upload" | "textarea";
   placeholder?: string;
   required?: boolean;
   gridSpan?: 1 | 2;
   options?: { label: string; value: string | number }[];
   icon?: any;
   maxImages?: number;
+  maxPDFs?: number;
   disabled?: boolean;
 }
 
@@ -69,6 +70,12 @@ export default function ReusableForm({
                       maxImages={field.maxImages ?? 3}
                     />
 
+                  ) : field.type === "pdf-upload" ? (
+                    <PdfUpload
+                      name={field.name}
+                      maxPDFs={field.maxPDFs ?? 1}
+                    />
+
                   ) : field.type === "select" ? (
                     <Select
                       name={field.name}
@@ -111,6 +118,17 @@ export default function ReusableForm({
                       disabled={field.disabled}
                       icon={field.icon}
                       defaultValue={initialValues[field.name] ?? ""}
+                    />
+
+                  ) : field.type === "textarea" ? (
+                    <textarea
+                      name={field.name}
+                      placeholder={field.placeholder}
+                      required={field.required}
+                      disabled={field.disabled}
+                      defaultValue={initialValues[field.name] ?? ""}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition-all min-h-[120px] resize-y text-sm font-medium"
+                      onChange={(e) => onFieldChange?.(field.name, e.target.value)}
                     />
 
                   ) : (

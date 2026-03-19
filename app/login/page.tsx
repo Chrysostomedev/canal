@@ -19,8 +19,45 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ChevronDown } from "lucide-react";
 import { authService, getDashboardRoute, UserRole } from "../../services/AuthService";
+
+// ─── Pays CANAL+ Afrique ──────────────────────────────────────────────────────
+// Les drapeaux sont chargés depuis flagcdn.com (CDN fiable, SVG, code ISO 3166-1 alpha-2)
+const CANAL_COUNTRIES = [
+  { code: "ci", name: "Côte d'Ivoire"  },
+  { code: "sn", name: "Sénégal"        },
+  { code: "cm", name: "Cameroun"       },
+  { code: "bf", name: "Burkina Faso"   },
+  { code: "ml", name: "Mali"           },
+  { code: "gn", name: "Guinée"         },
+  { code: "tg", name: "Togo"           },
+  { code: "bj", name: "Bénin"          },
+  { code: "ne", name: "Niger"          },
+  { code: "ga", name: "Gabon"          },
+  { code: "cg", name: "Congo"          },
+  { code: "cd", name: "RD Congo"       },
+  { code: "mg", name: "Madagascar"     },
+  { code: "mu", name: "Maurice"        },
+  { code: "re", name: "La Réunion"     },
+  { code: "gh", name: "Ghana"          },
+  { code: "ng", name: "Nigéria"        },
+  { code: "za", name: "Afrique du Sud" },
+  { code: "ke", name: "Kenya"          },
+  { code: "tz", name: "Tanzanie"       },
+  { code: "ug", name: "Ouganda"        },
+  { code: "rw", name: "Rwanda"         },
+  { code: "et", name: "Éthiopie"       },
+  { code: "mz", name: "Mozambique"     },
+  { code: "zm", name: "Zambie"         },
+  { code: "zw", name: "Zimbabwe"       },
+  { code: "ao", name: "Angola"         },
+] as const;
+
+/** Retourne l'URL du drapeau PNG pour un code pays ISO */
+const flagUrl = (code: string) =>
+  `https://flagcdn.com/w20/${code}.png`;
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,6 +67,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState("");
+
+  // ── Sélecteur de pays — Côte d'Ivoire par défaut ──
+  const [selectedCountry, setSelectedCountry] = useState<(typeof CANAL_COUNTRIES)[number]>(
+    CANAL_COUNTRIES[0]
+  );
+  const [countryOpen, setCountryOpen] = useState(false);
+  // ──────────────────────────────────────────────────
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -112,6 +156,70 @@ export default function LoginPage() {
             className="space-y-4"
             onSubmit={(e) => { e.preventDefault(); handleLogin(); }}
           >
+
+            {/* ── Sélecteur de pays ────────────────────────────────────────── */}
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                Pays
+              </label>
+              <button
+                type="button"
+                onClick={() => setCountryOpen((v) => !v)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl
+                           border border-gray-200 bg-gray-50 text-gray-900 text-sm
+                           hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900
+                           focus:border-transparent focus:bg-white transition-all"
+              >
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <img
+                    src={flagUrl(selectedCountry.code)}
+                    alt={selectedCountry.name}
+                    style={{ width: 24, height: 16, flexShrink: 0, borderRadius: 3, objectFit: "cover", display: "block" }}
+                  />
+                  <span className="font-medium truncate">{selectedCountry.name}</span>
+                </span>
+                <ChevronDown
+                  size={15}
+                  className={`text-gray-400 transition-transform duration-200 ${countryOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {/* Dropdown */}
+              {countryOpen && (
+                <div
+                  className="absolute z-20 mt-1.5 w-full bg-white border border-gray-200 rounded-xl
+                             shadow-xl overflow-y-auto max-h-56 divide-y divide-gray-50"
+                >
+                  {CANAL_COUNTRIES.map((country) => (
+                    <button
+                      key={country.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCountry(country);
+                        setCountryOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left
+                                  transition-colors hover:bg-gray-50
+                                  ${selectedCountry.code === country.code
+                                    ? "bg-gray-100 font-semibold text-gray-900"
+                                    : "text-gray-700"}`}
+                    >
+                      <img
+                        src={flagUrl(country.code)}
+                        alt={country.name}
+                        style={{ width: 22, height: 15, flexShrink: 0, borderRadius: 3, objectFit: "cover", display: "block" }}
+                      />
+                      <span>{country.name}</span>
+                      {selectedCountry.code === country.code && (
+                        <span className="ml-auto text-gray-900 text-xs">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* ────────────────────────────────────────────────────────────── */}
+
             {/* Email */}
             <div className="group relative">
               <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">

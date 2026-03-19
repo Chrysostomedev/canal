@@ -209,12 +209,12 @@ export const providerInvoiceService = {
     const d   = res.data?.data ?? res.data;
 
     // Mapping Laravel pagination
-    const items: Invoice[] = d?.data ?? (Array.isArray(d) ? d : []);
+    const items: Invoice[] = d?.items ?? (Array.isArray(d) ? d : []);
     const meta: InvoiceMeta = {
-      current_page: d?.current_page ?? 1,
-      last_page:    d?.last_page    ?? 1,
-      per_page:     d?.per_page     ?? 15,
-      total:        d?.total        ?? 0,
+      current_page: d?.meta?.current_page ?? 1,
+      last_page:    d?.meta?.last_page    ?? 1,
+      per_page:     d?.meta?.per_page     ?? 15,
+      total:        d?.meta?.total        ?? 0,
     };
     return { items, meta };
   },

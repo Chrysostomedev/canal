@@ -106,6 +106,7 @@ function ValidateModal({
   onClose: () => void;
   onConfirm: (payload: ValidateReportPayload) => Promise<void>;
 }) {
+  const [result,  setResult]  = useState<"RAS" | "ANOMALIE">("RAS");
   const [rating,  setRating]  = useState<number>(0);
   const [hovered, setHovered] = useState<number>(0);
   const [comment, setComment] = useState("");
@@ -114,7 +115,11 @@ function ValidateModal({
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await onConfirm({ rating: rating || null, comment: comment || null });
+      await onConfirm({ 
+        result,
+        rating: rating || null, 
+        comment: comment || null 
+      });
       onClose();
     } finally {
       setLoading(false);
@@ -135,6 +140,26 @@ function ValidateModal({
           </button>
         </div>
         <div className="px-7 py-6 space-y-6">
+          <div>
+            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block mb-3">
+              Résultat de l'intervention
+            </label>
+            <div className="flex gap-3 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+              <button 
+                onClick={() => setResult("RAS")}
+                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${result === "RAS" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              >
+                RAS
+              </button>
+              <button 
+                onClick={() => setResult("ANOMALIE")}
+                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${result === "ANOMALIE" ? "bg-white text-red-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              >
+                ANOMALIE
+              </button>
+            </div>
+          </div>
+
           <div>
             <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block mb-3">
               Note de satisfaction

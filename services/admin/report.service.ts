@@ -154,6 +154,7 @@ export interface UpdateReportPayload {
 }
 
 export interface ValidateReportPayload {
+  result: "RAS" | "ANOMALIE";                  // Obligatoire : Résultat de l'intervention
   rating?: number | null;                         // 1 à 5 étoiles (null = pas de note)
   comment?: string | null;                        // Commentaire du gestionnaire
 }
@@ -312,6 +313,7 @@ export const ReportService = {
    */
   async validateReport(id: number, payload: ValidateReportPayload): Promise<InterventionReport> {
     const res = await axiosInstance.post(`/admin/intervention-report/${id}/validate`, {
+      result: payload.result,
       rating: payload.rating ?? null,
       comment: payload.comment ?? null,
     });

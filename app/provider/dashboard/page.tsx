@@ -15,11 +15,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar         from "@/components/Sidebar";
-import Navbar          from "@/components/Navbar";
-import StatsCard       from "@/components/StatsCard";
-import DataTable       from "@/components/DataTable";
-import EventListCard   from "@/components/EventListCard";
+import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/Navbar";
+import StatsCard from "@/components/StatsCard";
+import DataTable from "@/components/DataTable";
+import EventListCard from "@/components/EventListCard";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye, RefreshCw, AlertCircle } from "lucide-react";
 
@@ -35,46 +35,46 @@ import { authService } from "../../../services/AuthService";
 // ─── Statuts — inchangés ──────────────────────────────────────────────────────
 const STATUS_STYLES: Record<string, string> = {
   signalez: "border-slate-300 text-slate-700 bg-gray-100",
-  validé:   "border-blue-400 text-blue-600 bg-blue-50",
-  assigné:  "border-purple-400 text-purple-600 bg-purple-50",
+  validé: "border-blue-400 text-blue-600 bg-blue-50",
+  assigné: "border-purple-400 text-purple-600 bg-purple-50",
   en_cours: "border-orange-400 text-orange-500 bg-orange-50",
   rapporté: "border-yellow-400 text-yellow-600 bg-yellow-50",
-  évalué:   "border-green-400 text-green-600 bg-green-50",
-  clos:     "bg-black text-white border-black",
+  évalué: "border-green-400 text-green-600 bg-green-50",
+  clos: "bg-black text-white border-black",
 };
 
 const STATUS_LABELS: Record<string, string> = {
   signalez: "Signalé",
-  validé:   "Validé",
-  assigné:  "Assigné",
+  validé: "Validé",
+  assigné: "Assigné",
   en_cours: "En cours",
   rapporté: "Rapporté",
-  évalué:   "Évalué",
-  clos:     "Clos",
+  évalué: "Évalué",
+  clos: "Clos",
 };
 
 // ─── Helper : convertit une Intervention Laravel → format EventListCard ───────
 function toEventItem(i: Intervention) {
   const date = new Date(i.date_debut);
-  const now  = new Date();
+  const now = new Date();
 
   const isToday =
-    date.getDate()     === now.getDate()  &&
-    date.getMonth()    === now.getMonth() &&
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
     date.getFullYear() === now.getFullYear();
 
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
   const isTomorrow =
-    date.getDate()     === tomorrow.getDate()  &&
-    date.getMonth()    === tomorrow.getMonth() &&
+    date.getDate() === tomorrow.getDate() &&
+    date.getMonth() === tomorrow.getMonth() &&
     date.getFullYear() === tomorrow.getFullYear();
 
   const dayLabel = isToday
     ? "Aujourd'hui"
     : isTomorrow
-    ? "Demain"
-    : date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+      ? "Demain"
+      : date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
 
   const timeLabel = date.toLocaleTimeString("fr-FR", {
     hour: "2-digit",
@@ -82,11 +82,11 @@ function toEventItem(i: Intervention) {
   });
 
   return {
-    id:       i.id,
-    title:    i.title ?? i.description ?? `Intervention #${i.id}`,
-    time:     `${dayLabel} à ${timeLabel}`,
+    id: i.id,
+    title: i.title ?? i.description ?? `Intervention #${i.id}`,
+    time: `${dayLabel} à ${timeLabel}`,
     location: i.site ?? i.location ?? "",
-    href:     "#",
+    href: "#",
   };
 }
 
@@ -112,12 +112,12 @@ function StatsSkeleton({ count = 4 }: { count?: number }) {
 export default function ProviderDashboard() {
   const router = useRouter();
 
-  const [data, setData]       = useState<ProviderDashboardData | null>(null);
+  const [data, setData] = useState<ProviderDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
 
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
-  const [isDetailsOpen, setIsDetailsOpen]   = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchDashboard = async () => {
@@ -154,26 +154,26 @@ export default function ProviderDashboard() {
   }, []);
 
   // ── Raccourcis données ─────────────────────────────────────────────────────
-  const stats   = data?.stats;
+  const stats = data?.stats;
   const tickets = data?.tickets_recents ?? [];
 
   // ── Panneau détail ticket ──────────────────────────────────────────────────
   const handleOpenDetails = (ticket: any) => {
     const statusColor =
-      ticket.status === "clos"     ? "#000"    :
-      ticket.status === "en_cours" ? "#f97316" :
-      ticket.status === "évalué"   ? "#22c55e" : "#64748b";
+      ticket.status === "clos" ? "#000" :
+        ticket.status === "en_cours" ? "#f97316" :
+          ticket.status === "évalué" ? "#22c55e" : "#64748b";
 
     setSelectedTicket({
-      title:       ticket.subject ?? `Ticket #${ticket.id}`,
-      reference:   `#${ticket.id}`,
+      title: ticket.subject ?? `Ticket #${ticket.id}`,
+      reference: `#${ticket.id}`,
       description: "Ticket récent visualisé depuis le tableau de bord.",
       fields: [
-        { label: "Type",           value: ticket.type === "curatif" ? "Curatif" : "Préventif" },
-        { label: "Sujet",          value: ticket.subject       ?? "-" },
-        { label: "Site concerné",  value: ticket.site?.nom     ?? "-" },
-        { label: "Service",        value: ticket.service?.name ?? "-" },
-        { label: "Date planifiée", value: ticket.planned_at    ?? "-" },
+        { label: "Type", value: ticket.type === "curatif" ? "Curatif" : "Préventif" },
+        { label: "Sujet", value: ticket.subject ?? "-" },
+        { label: "Site concerné", value: ticket.site?.nom ?? "-" },
+        { label: "Service", value: ticket.service?.name ?? "-" },
+        { label: "Date planifiée", value: ticket.planned_at ?? "-" },
         {
           label: "Statut",
           value: STATUS_LABELS[ticket.status] ?? ticket.status,
@@ -187,11 +187,12 @@ export default function ProviderDashboard() {
 
   // ── Colonnes DataTable — inchangées ───────────────────────────────────────
   const columns = [
-    { header: "ID ticket", key: "id",      render: (_: any, row: any) => `#${row.id}` },
-    { header: "Nom",       key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
-    { header: "Site",      key: "site",    render: (_: any, row: any) => row.site?.nom ?? "-" },
-    { header: "Catégorie", key: "category",render: (_: any, row: any) => row.category?.name ?? "-" },
-    { header: "Type",      key: "type",    render: (_: any, row: any) =>
+    { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
+    { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
+    { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom ?? "-" },
+    { header: "Catégorie", key: "category", render: (_: any, row: any) => row.category?.name ?? "-" },
+    {
+      header: "Type", key: "type", render: (_: any, row: any) =>
         row.type === "curatif" ? "Curatif" : "Préventif"
     },
     {
@@ -248,10 +249,10 @@ export default function ProviderDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {loading ? <StatsSkeleton count={4} /> : (
               <>
-                <StatsCard label="Total tickets"    value={stats?.tickets.total    ?? 0} delta="+0%" trend="up" />
+                <StatsCard label="Total tickets" value={stats?.tickets.total ?? 0} delta="+0%" trend="up" />
                 <StatsCard label="Tickets en cours" value={stats?.tickets.en_cours ?? 0} delta="+0%" trend="up" />
                 <StatsCard label="Tickets clôturés" value={stats?.tickets.clotures ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Total devis"      value={stats?.devis.total      ?? 0} delta="+0%" trend="up" />
+                <StatsCard label="Total devis" value={stats?.devis.total ?? 0} delta="+0%" trend="up" />
               </>
             )}
           </div>
@@ -260,9 +261,9 @@ export default function ProviderDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {loading ? <StatsSkeleton count={4} /> : (
               <>
-                <StatsCard label="Devis en attente"    value={stats?.devis.en_attente   ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Factures totales"    value={stats?.factures.total      ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Factures payées"     value={stats?.factures.payees     ?? 0} delta="+0%" trend="up" isCurrency={false} />
+                <StatsCard label="Devis en attente" value={stats?.devis.en_attente ?? 0} delta="+0%" trend="up" />
+                <StatsCard label="Factures totales" value={stats?.factures.total ?? 0} delta="+0%" trend="up" />
+                <StatsCard label="Factures payées" value={stats?.factures.payees ?? 0} delta="+0%" trend="up" isCurrency={false} />
                 <StatsCard label="Factures en attente" value={stats?.factures.en_attente ?? 0} delta="+0%" trend="up" />
               </>
             )}
@@ -273,7 +274,7 @@ export default function ProviderDashboard() {
             <EventListCard
               interventions={data?.prochaines_interventions ?? []}
               loading={loading}
-              viewAllHref="/provider/interventions"
+              viewAllHref="/provider/planning"
             />
           </div>
 

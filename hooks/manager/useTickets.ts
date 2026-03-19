@@ -1,18 +1,9 @@
-"use client";
-
-// ═══════════════════════════════════════════════════════════════
 // hooks/manager/useTickets.ts
-// Liste paginée des tickets + stats + filtres + export
-// ═══════════════════════════════════════════════════════════════
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { TicketService } from "../../services/manager/ticket.service";
-import type {
-  Ticket,
-  TicketStats,
-  TicketFilters,
-  PaginatedResponse,
-} from "../../types/manager.types";
+import { Ticket, TicketStats, TicketFilters, PaginatedResponse } from "../../types/manager.types";
 
 interface UseTicketsReturn {
   tickets: Ticket[];
@@ -21,33 +12,33 @@ interface UseTicketsReturn {
   filters: TicketFilters;
   isLoading: boolean;
   error: string | null;
-  setFilters: (partial: Partial<TicketFilters>) => void;
+  setFilters: (f: Partial<TicketFilters>) => void;
   refresh: () => void;
   exportTickets: () => Promise<void>;
 }
 
 export function useTickets(initialFilters: TicketFilters = {}): UseTicketsReturn {
-  const [tickets, setTickets]       = useState<Ticket[]>([]);
-  const [stats, setStats]           = useState<TicketStats | null>(null);
-  const [meta, setMeta]             = useState<PaginatedResponse<Ticket>["meta"] | null>(null);
-  const [filters, setFiltersState]  = useState<TicketFilters>({
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [stats, setStats] = useState<TicketStats | null>(null);
+  const [meta, setMeta] = useState<PaginatedResponse<Ticket>["meta"] | null>(null);
+  const [filters, setFiltersState] = useState<TicketFilters>({
     page: 1,
     per_page: 15,
     ...initialFilters,
   });
-  const [isLoading, setIsLoading]   = useState(true);
-  const [error, setError]           = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const [paginated, statsData] = await Promise.all([
+      const [paginatedData, statsData] = await Promise.all([
         TicketService.getTickets(filters),
         TicketService.getStats(),
       ]);
-      setTickets(paginated.items);
-      setMeta(paginated.meta);
+      setTickets(paginatedData.items);
+      setMeta(paginatedData.meta);
       setStats(statsData);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? "Impossible de charger les tickets.");
@@ -67,9 +58,9 @@ export function useTickets(initialFilters: TicketFilters = {}): UseTicketsReturn
   const exportTickets = async () => {
     try {
       const blob = await TicketService.exportTickets(filters);
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href     = url;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
       a.download = `tickets_${Date.now()}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);

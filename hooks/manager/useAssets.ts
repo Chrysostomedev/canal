@@ -1,100 +1,52 @@
-"use client";
-
-// ═══════════════════════════════════════════════════════════════
-// hooks/manager/useAssets.ts
-// Liste paginée du patrimoine + stats + filtres + export
-// ═══════════════════════════════════════════════════════════════
-
 import { useState, useEffect, useCallback } from "react";
 import { AssetService } from "../../services/manager/asset.service";
-import type {
-  Asset,
-  AssetStats,
-  AssetFilters,
-  PaginatedResponse,
-} from "../../types/manager.types";
+import type { Asset, AssetFilters, PaginatedResponse } from "../../types/manager.types";
 
-interface UseAssetsReturn {
-  assets: Asset[];
-  stats: AssetStats | null;
-  meta: PaginatedResponse<Asset>["meta"] | null;
-  filters: AssetFilters;
-  isLoading: boolean;
-  error: string | null;
-  setFilters: (partial: Partial<AssetFilters>) => void;
-  refresh: () => void;
-  exportAssets: () => Promise<void>;
-}
-
-export function useAssets(
-  initialFilters: AssetFilters = {}
-): UseAssetsReturn {
-  const [assets, setAssets]   = useState<Asset[]>([]);
-  const [stats, setStats]     = useState<AssetStats | null>(null);
-  const [meta, setMeta]       = useState<PaginatedResponse<Asset>["meta"] | null>(null);
-  const [filters, setFiltersState] = useState<AssetFilters>({
-    page:     1,
-    per_page: 15,
+export function useAssets(initialFilters: AssetFilters = {}) {
+  const [data, setData] = useState<Asset[]>([]);
+  const [meta, setMeta] = useState<PaginatedResponse<Asset>["meta"] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<AssetFilters>({
+    page: 1,
+    per_page: 10,
     ...initialFilters,
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError]         = useState<string | null>(null);
 
-  const fetchAll = useCallback(async () => {
+  const fetchAssets = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Les deux appels en parallèle
-      const [paginated, statsData] = await Promise.all([
-        AssetService.getAssets(filters),
-        AssetService.getStats(),
-      ]);
-      setAssets(paginated.items);
-      setMeta(paginated.meta);
-      setStats(statsData);
+      const response = await AssetService.getAssets(filters);
+      setData(response.items);
+      setMeta(response.meta);
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message ??
-          "Impossible de charger le patrimoine."
-      );
+      setError(err.message || "Erreur lors du chargement du patrimoine");
     } finally {
       setIsLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchAssets();
+  }, [fetchAssets]);
 
-  // Merge partiel des filtres + reset page à 1
-  const setFilters = (partial: Partial<AssetFilters>) => {
-    setFiltersState((prev) => ({ ...prev, ...partial, page: 1 }));
+  const setPage = (page: number) => {
+    setFilters((prev) => ({ ...prev, page }));
   };
 
-  // Déclenche le téléchargement du fichier Excel
-  const exportAssets = async () => {
-    try {
-      const blob = await AssetService.exportAssets(filters);
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href     = url;
-      a.download = `patrimoine_${Date.now()}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Erreur export patrimoine", err);
-    }
+  const updateFilters = (newFilters: Partial<AssetFilters>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
   };
 
   return {
-    assets,
-    stats,
+    assets: data,
     meta,
-    filters,
     isLoading,
     error,
-    setFilters,
-    refresh: fetchAll,
-    exportAssets,
+    filters,
+    setPage,
+    updateFilters,
+    refresh: fetchAssets,
   };
 }

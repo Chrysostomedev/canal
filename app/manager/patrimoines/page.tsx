@@ -1,228 +1,302 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
-  ChevronLeft, MapPin, Zap,
-  Shield, Calendar, TrendingDown, AlertTriangle,
-  Clock, CheckCircle, ArrowRightLeft, Eye,
+  Building2, Eye, MapPin, Copy, CheckCheck, Filter, Download
 } from "lucide-react";
 
-import Navbar     from "@/components/Navbar";
-import Sidebar    from "@/components/Sidebar";
-import StatsCard  from "@/components/StatsCard";
+import Navbar      from "@/components/Navbar";
+import Sidebar     from "@/components/Sidebar";
+import Paginate    from "@/components/Paginate";
+import StatsCard   from "@/components/StatsCard";
+import DataTable   from "@/components/DataTable";
+import PageHeader  from "@/components/PageHeader";
 
-// ─────────────────────────────────────────
-// DATA STATIQUE (remplace API)
-// ─────────────────────────────────────────
+import { useAssets } from "../../../hooks/manager/useAssets";
 
-const asset = {
-  id: 1024,
-  designation: "Groupe électrogène industriel",
-  codification: "GEN-0024",
-  status: "actif",
-  criticite: "critique",
-  date_entree: "2022-03-10",
-  created_at: "2022-02-25",
-  valeur_entree: 8500000,
-  description: "<p>Groupe électrogène principal utilisé pour alimenter le site en cas de coupure.</p>",
-  type: { name: "Énergie" },
-  subType: { name: "Générateur" },
-  site: { id: 1, nom: "Site Abidjan Nord" },
-};
-
-// ─────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────
-
-const fmtMontant = (v?: number | null) => {
-  if (v == null) return "—";
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const formatMontant = (v?: number | null) => {
+  if (!v && v !== 0) return "—";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K FCFA`;
-  return `${v} FCFA`;
+  if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
+  return `${v.toLocaleString("fr-FR")} FCFA`;
 };
 
-const fmtDate = (iso?: string | null) => {
+const formatDate = (iso?: string | null) => {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleDateString("fr-FR");
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
 };
 
-const fmtDateLong = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return d.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+// ─── Statuts ──────────────────────────────────────────────────────────────────
+const STATUS_STYLE: Record<string, string> = {
+  active:         "border-green-500 bg-green-50 text-green-700",
+  in_maintenance: "border-amber-400 bg-amber-50 text-amber-700",
+  out_of_service: "border-red-400 bg-red-50 text-red-600",
+  disposed:       "border-slate-400 bg-slate-100 text-slate-700",
+  actif:          "border-green-500 bg-green-50 text-green-700",
+  inactif:        "border-red-400 bg-red-50 text-red-600",
+  hors_usage:     "border-slate-400 bg-slate-100 text-slate-700",
 };
 
-// ─────────────────────────────────────────
-// CALCUL AMORTISSEMENT
-// ─────────────────────────────────────────
-
-const computeAmort = (asset: any) => {
-
-  const dureeVieMois = 60;
-
-  const dateEntree = new Date(asset.date_entree);
-
-  const dateFin = new Date(dateEntree);
-
-  dateFin.setMonth(dateFin.getMonth() + dureeVieMois);
-
-  const today = new Date();
-
-  const totalDays = Math.ceil((dateFin.getTime() - dateEntree.getTime()) / 86400000);
-
-  const elapsed = Math.ceil((today.getTime() - dateEntree.getTime()) / 86400000);
-
-  const remaining = Math.ceil((dateFin.getTime() - today.getTime()) / 86400000);
-
-  const pct = Math.min(100, Math.max(0, (elapsed / totalDays) * 100));
-
-  const residual = asset.valeur_entree * (1 - pct / 100);
-
-  const alerte =
-    remaining <= 0
-      ? "expire"
-      : remaining <= 90
-      ? "warning_3m"
-      : remaining <= 180
-      ? "warning_6m"
-      : "ok";
-
-  return { dateEntree, dateFin, elapsed, remaining, pct, residual, alerte };
+const STATUS_LABEL: Record<string, string> = {
+  active:         "Actif",
+  in_maintenance: "En maintenance",
+  out_of_service: "Hors service",
+  disposed:       "Réformé",
+  actif:          "Actif",
+  inactif:        "Inactif",
+  hors_usage:     "Hors usage",
 };
 
-const amort = computeAmort(asset);
+// ─── CopyButton ───────────────────────────────────────────────────────────────
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="ml-2 p-1 rounded-lg hover:bg-slate-200 transition text-slate-400 hover:text-slate-700"
+    >
+      {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
+    </button>
+  );
+}
 
-// ─────────────────────────────────────────
-// PAGE
-// ─────────────────────────────────────────
+export default function PatrimoinesPage() {
+  const { 
+    assets, 
+    meta, 
+    isLoading, 
+    error,
+    setPage,
+    updateFilters,
+    filters 
+  } = useAssets({ per_page: 10 });
 
-export default function PatrimoineDetailsPage() {
+  const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
 
-  const siteId = asset.site?.id;
-
-  const kpis = [
-    { label: "Valeur d'entrée", value: fmtMontant(asset.valeur_entree), trend: "up" as const },
-    { label: "Valeur résiduelle", value: fmtMontant(amort.residual), trend: "down" as const },
-    { label: "Jours restants", value: amort.remaining, trend: "up" as const },
-    { label: "Consommé", value: `${Math.round(amort.pct)}%`, trend: "up" as const },
+  // ── Colonnes table ──
+  const columns: any[] = [
+    {
+      header: "ID", key: "id",
+      render: (_: any, row: any) => (
+        <div className="flex items-center">
+          <span className="font-black text-sm">#{row.id}</span>
+          <CopyButton text={String(row.id)} />
+        </div>
+      ),
+    },
+    {
+      header: "Type", key: "typeAsset",
+      render: (_: any, row: any) => row.typeAsset?.name ?? "—",
+    },
+    {
+      header: "Codification", key: "code",
+      render: (_: any, row: any) => (
+        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+          {row.code ?? row.serial_number ?? "—"}
+        </span>
+      ),
+    },
+    {
+      header: "Désignation", key: "designation",
+      render: (_: any, row: any) => (
+        <div className="max-w-[200px] truncate font-medium text-slate-900" title={row.designation}>
+          {row.designation}
+        </div>
+      ),
+    },
+    {
+      header: "Site", key: "site",
+      render: (_: any, row: any) => (
+        <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? "—"}</span>
+      ),
+    },
+    {
+      header: "Statut", key: "status",
+      render: (_: any, row: any) => (
+        <span className={`px-3 py-1 rounded border text-[10px] font-black uppercase ${STATUS_STYLE[row.status] ?? ""}`}>
+          {STATUS_LABEL[row.status] ?? row.status}
+        </span>
+      ),
+    },
+    {
+      header: "Valeur", key: "valeur",
+      render: (_: any, row: any) => formatMontant(row.acquisition_value),
+    },
+    {
+      header: "Actions", key: "actions",
+      render: (_: any, row: any) => (
+        <button
+          onClick={() => setSelectedAsset(row)}
+          className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600 hover:text-slate-900"
+        >
+          <Eye size={18} />
+        </button>
+      ),
+    },
   ];
 
   return (
-
-    <div className="flex min-h-screen bg-gray-50">
-
+    <div className="flex min-h-screen bg-gray-50 font-sans tracking-tight">
       <Sidebar />
 
       <div className="flex flex-col flex-1 pl-64">
-
         <Navbar />
 
-        <main className="mt-20 p-8 space-y-8">
+        <main className="mt-20 p-8 space-y-8 max-w-7xl mx-auto w-full">
+          
+          <PageHeader 
+            title="Mon Patrimoine" 
+            subtitle="Inventaire complet des équipements et actifs sous votre responsabilité."
+          />
 
-        
-          {/* HEADER */}
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-700 px-6 py-4 rounded-2xl text-sm font-semibold">
+              {error}
+            </div>
+          )}
 
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
-
-              <div className="space-y-3 flex-1">
-
-                <div className="flex items-center gap-3 flex-wrap">
-
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest font-mono">
-                    #{asset.id}
-                  </span>
-
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border border-green-400 bg-green-50 text-green-700">
-                    Actif
-                  </span>
-
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border border-orange-300 bg-orange-50 text-orange-700">
-                    <Shield size={9} /> Critique
-                  </span>
-
-                </div>
-
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-                  {asset.designation}
-                </h1>
-
-                <div className="flex items-center gap-4 flex-wrap text-sm text-slate-500">
-
-                  <span className="font-mono bg-slate-100 px-2 py-1 rounded-lg text-xs font-bold text-slate-700">
-                    {asset.codification}
-                  </span>
-
-                  <Link
-                    href={`/admin/sites/${siteId}`}
-                    className="flex items-center gap-1.5"
-                  >
-                    <MapPin size={13} /> {asset.site.nom}
-                  </Link>
-
-                  <span className="flex items-center gap-1.5">
-                    <Zap size={13} /> {asset.type.name} · {asset.subType.name}
-                  </span>
-
-                </div>
-
+          {/* ── FILTRES ET ACTIONS ── */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
+                <Filter size={16} className="text-slate-400" />
+                <select 
+                  className="bg-transparent border-none outline-none text-sm font-bold text-slate-700 cursor-pointer"
+                  value={filters.status || ""}
+                  onChange={(e) => updateFilters({ status: e.target.value || undefined })}
+                >
+                  <option value="">Tous les statuts</option>
+                  <option value="active">Actif</option>
+                  <option value="in_maintenance">En maintenance</option>
+                  <option value="out_of_service">Hors service</option>
+                </select>
               </div>
-
-             
-
             </div>
 
+            <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-black hover:border-slate-900 transition shadow-sm">
+              <Download size={16} /> Exporter (.xlsx)
+            </button>
           </div>
 
-          {/* KPI */}
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-
-            {kpis.map((k, i) => (
-              <StatsCard key={i} {...k} />
-            ))}
-
+          {/* ── TABLE PRINCIPALE ── */}
+          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
+            {isLoading ? (
+               <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+                  <div className="w-10 h-10 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin" />
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Chargement du patrimoine</p>
+               </div>
+            ) : (
+              <>
+                <DataTable
+                  columns={columns}
+                  data={assets}
+                  title="Liste des équipements"
+                  onViewAll={() => {}}
+                />
+                {meta && meta.last_page > 1 && (
+                  <div className="px-8 py-6 border-t border-slate-50 flex justify-end bg-slate-50/20">
+                    <Paginate
+                      currentPage={meta.current_page}
+                      totalPages={meta.last_page}
+                      onPageChange={setPage}
+                    />
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
-          {/* FICHE TECHNIQUE */}
+          {/* ── SIDE PANEL ── */}
+          {selectedAsset && (
+            <>
+              <div
+                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity"
+                onClick={() => setSelectedAsset(null)}
+              />
+              <div className="fixed right-0 top-0 h-full w-[440px] bg-white z-50 shadow-2xl rounded-l-[40px] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
+                <div className="p-8 border-b border-slate-50 space-y-4">
+                   <div className="flex justify-between items-center">
+                     <span className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase ${STATUS_STYLE[selectedAsset.status] ?? ""}`}>
+                        {STATUS_LABEL[selectedAsset.status] ?? selectedAsset.status}
+                     </span>
+                     <button onClick={() => setSelectedAsset(null)} className="p-2 hover:bg-slate-100 rounded-full transition">
+                        <X size={20} className="text-slate-400" />
+                     </button>
+                   </div>
+                   <div>
+                     <h2 className="text-3xl font-black text-slate-900 leading-tight">{selectedAsset.designation}</h2>
+                     <p className="text-slate-400 font-medium mt-1">ID #{selectedAsset.id} · {selectedAsset.code || "Sans code"}</p>
+                   </div>
+                </div>
 
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-1">
+                <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                   <section className="space-y-4">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Spécifications</h4>
+                      <div className="grid grid-cols-2 gap-y-4">
+                        {[
+                          { label: "Type", value: selectedAsset.typeAsset?.name },
+                          { label: "Sous-type", value: selectedAsset.subTypeAsset?.name },
+                          { label: "Site", value: selectedAsset.site?.nom },
+                          { label: "N° Série", value: selectedAsset.serial_number },
+                          { label: "Date acquisition", value: formatDate(selectedAsset.acquisition_date) },
+                          { label: "Valeur d'acquisition", value: formatMontant(selectedAsset.acquisition_value) },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">{label}</p>
+                            <p className="text-sm font-black text-slate-900 mt-0.5">{value || "—"}</p>
+                          </div>
+                        ))}
+                      </div>
+                   </section>
 
-            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
-              Fiche technique
-            </h2>
+                   {selectedAsset.description && (
+                     <section className="space-y-2">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Description</h4>
+                        <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100 italic">
+                          "{selectedAsset.description}"
+                        </p>
+                     </section>
+                   )}
+                </div>
 
-            <div className="divide-y divide-slate-50">
-
-              <div className="flex justify-between py-3">
-                <p className="text-xs text-slate-400">Site</p>
-                <p className="text-sm font-bold">{asset.site.nom}</p>
+                <div className="p-8 border-t border-slate-50 shrink-0">
+                   <Link href={`/manager/tickets?nouveau=1&asset_id=${selectedAsset.id}`} className="block w-full py-4 text-center rounded-2xl bg-slate-900 text-white font-black hover:bg-black transition shadow-xl shadow-slate-200">
+                      Signaler une anomalie
+                   </Link>
+                </div>
               </div>
-
-              <div className="flex justify-between py-3">
-                <p className="text-xs text-slate-400">Date d'entrée</p>
-                <p className="text-sm font-bold">{fmtDateLong(asset.date_entree)}</p>
-              </div>
-
-              <div className="flex justify-between py-3">
-                <p className="text-xs text-slate-400">Valeur</p>
-                <p className="text-sm font-bold">{fmtMontant(asset.valeur_entree)}</p>
-              </div>
-
-            </div>
-
-          </div>
+            </>
+          )}
 
         </main>
-
       </div>
-
     </div>
+  );
+}
+
+// ─── X Icon ──────────────────────────────────────────────────────────────────
+function X({ size, className }: { size: number; className?: string }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
   );
 }

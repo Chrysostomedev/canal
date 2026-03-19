@@ -116,31 +116,27 @@ function computeProviderStats(tickets: ProviderTicket[]): ProviderStats {
 
 export const ProviderService = {
   /**
-   * Charge tous les tickets du site (per_page=500),
-   * puis déduplique par provider → liste prestataires.
-   * Route réelle : GET /manager/ticket
+   * Liste tous les prestataires disponibles.
+   * Route réelle : GET /manager/providers
    */
   async getProviders(
     filters: ProviderFilters = {}
-  ): Promise<{ providers: Provider[]; rawTickets: ProviderTicket[] }> {
+  ): Promise<{ providers: Provider[]; meta?: any }> {
     const { data } = await api.get<
-      ApiResponse<PaginatedResponse<ProviderTicket>>
-    >("/manager/ticket", {
-      params: { per_page: 500, page: 1 },
+      ApiResponse<PaginatedResponse<Provider>>
+    >("/manager/providers", {
+      params: {
+        page: filters.page ?? 1,
+        per_page: filters.per_page ?? 500,
+        search: filters.search,
+        is_active: filters.is_active,
+      },
     });
 
-    const tickets = data.data?.items ?? [];
-    let providers = extractUniqueProviders(tickets);
-
-    // Filtrage client-side sur search
-    if (filters.search?.trim()) {
-      const v = filters.search.toLowerCase();
-      providers = providers.filter((p) =>
-        p.company_name?.toLowerCase().includes(v)
-      );
-    }
-
-    return { providers, rawTickets: tickets };
+    return {
+      providers: data.data?.items ?? [],
+      meta: data.data?.meta
+    };
   },
 
   /**
