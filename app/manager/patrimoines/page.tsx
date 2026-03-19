@@ -145,11 +145,10 @@ export default function PatrimoinesPage() {
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans tracking-tight">
       <Sidebar />
-
-      <div className="flex flex-col flex-1 pl-64">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
-        <main className="mt-20 p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           
           <PageHeader 
             title="Mon Patrimoine" 

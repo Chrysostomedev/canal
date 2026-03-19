@@ -8,13 +8,16 @@ import {
   User, Settings2, ShieldCheck, ChevronRight, X,
   Bell, Activity, Globe, Clock, Check, Pencil,
   Mail, Phone, Lock, Languages,
-  Zap, Radio, Users, Palette,
+  Zap, Radio, Users, Palette, Loader2,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 import ThemePicker from "@/components/ThemePicker";
 import { authService } from "../../../services/AuthService";
+import { useNotifications } from "../../../hooks/admin/useNotifications";
+import { useActivityLogs, ActivityLog } from "../../../hooks/common/useActivityLogs";
+import ActivityDetailsModal from "../../components/ActivityDetailsModal";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -84,6 +87,10 @@ function SettingsSidePanel({
   trackOn, setTrackOn,
   notifs, setNotifs,
   onSaveAdvanced,
+  activityLogs,
+  isLoadingLogs,
+  errorLogs,
+  onLogClick,
 }: {
   open: boolean;
   type: PanelType;
@@ -104,6 +111,10 @@ function SettingsSidePanel({
   notifs: Record<string, boolean>;
   setNotifs: (n: any) => void;
   onSaveAdvanced: () => void;
+  activityLogs?: any[];
+  isLoadingLogs?: boolean;
+  errorLogs?: string | null;
+  onLogClick?: (log: ActivityLog) => void;
 }) {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -308,27 +319,50 @@ function SettingsSidePanel({
                       <Clock size={11} /> Journal d'activité récente
                     </p>
                     <div className="space-y-2">
-                      {TRACK_LOGS.map((log, i) => (
-                        <div key={i} className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
-                          <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center shrink-0">
-                            <span className="text-xs font-black text-white">{log.user[0].toUpperCase()}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-slate-900 truncate">{log.user}</p>
-                            <p className="text-xs text-slate-500 truncate">
-                              {log.action}
-                              <span className="mx-1 text-slate-300">·</span>
-                              <span className="text-slate-400">{log.page}</span>
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {log.today && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-                            <span className="text-[10px] text-slate-400 font-medium">
-                              {log.today ? "Auj. " : "Hier "}{log.time}
-                            </span>
-                          </div>
+                      {errorLogs ? (
+                        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600">
+                          <p className="text-xs font-medium flex items-center gap-2">
+                             Une erreur est survenue : {errorLogs}
+                          </p>
+                          <button 
+                            onClick={() => window.location.reload()}
+                            className="text-[10px] font-bold underline mt-2 uppercase tracking-tight"
+                          >
+                            Réessayer
+                          </button>
                         </div>
-                      ))}
+                      ) : isLoadingLogs ? (
+                        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+                      ) : activityLogs?.length === 0 ? (
+                         <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                           <p className="text-xs text-slate-400 font-medium tracking-tight">Aucune activité enregistrée.</p>
+                         </div>
+                      ) : (
+                        activityLogs?.map((log, i) => (
+                          <div 
+                            key={i} 
+                            onClick={() => onLogClick?.(log)}
+                            className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition cursor-pointer group"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <span className="text-[10px] font-black text-white">{(log.user?.first_name?.[0] || 'A').toUpperCase()}</span>
+                            </div>
+                            <div className="flex-1 min-w-0 text-left">
+                              <p className="text-xs font-bold text-slate-900 truncate">{log.action}</p>
+                              <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                                {log.description}
+                                <span className="mx-1 text-slate-300">·</span>
+                                {log.ip_address}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {new Date(log.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} {new Date(log.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -407,6 +441,12 @@ export default function ParametresPage() {
     Object.fromEntries(NOTIFS.map(n => [n.key, n.defaultOn]))
   );
 
+  const { logs: activityLogs, loading: isLoadingLogs, error: logsError } = useActivityLogs();
+  const { unreadCount } = useNotifications();
+
+  const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
+  const [showLogModal, setShowLogModal] = useState(false);
+
   const [firstName, setFirstName] = useState("");
   const [lastName,  setLastName]  = useState("");
   const [email,     setEmail]     = useState("");
@@ -416,20 +456,11 @@ export default function ParametresPage() {
 
   // Load user on mount
   useEffect(() => {
-    const user = authService.getCurrentUser?.();
-    if (user) {
-      setFirstName(user.first_name ?? "");
-      setLastName(user.last_name  ?? "");
-      setEmail(user.email         ?? "");
-      setPhone(user.phone         ?? "");
-      setRole(user.role           ?? "admin");
-      setForm({
-        first_name: user.first_name ?? "",
-        last_name:  user.last_name  ?? "",
-        email:      user.email      ?? "",
-        phone:      user.phone      ?? "",
-      });
-    }
+    setFirstName(authService.getFirstName());
+    setLastName(authService.getLastName());
+    setEmail(authService.getEmail());
+    setRole(authService.getRole());
+    // On pourrait aussi fetcher le profil complet ici si besoin de plus de champs
     const savedAvatar = localStorage.getItem("avatarId");
     if (savedAvatar) setAvatarId(savedAvatar);
     const savedLang = localStorage.getItem("lang");
@@ -467,7 +498,7 @@ export default function ParametresPage() {
       key:    "notifications",
       Icon:   Bell,
       label:  "Notifications",
-      sub:    `${activeNotifCount}/${NOTIFS.length} activées`,
+      sub:    `${unreadCount} non lue(s)`,
       accent: "text-amber-600",
       bg:     "bg-amber-50",
     },
@@ -623,6 +654,19 @@ export default function ParametresPage() {
         notifs={notifs}
         setNotifs={setNotifs}
         onSaveAdvanced={handleSaveAdvanced}
+        activityLogs={activityLogs}
+        isLoadingLogs={isLoadingLogs}
+        errorLogs={logsError}
+        onLogClick={(log) => {
+          setSelectedLog(log);
+          setShowLogModal(true);
+        }}
+      />
+
+      <ActivityDetailsModal 
+        isOpen={showLogModal}
+        onClose={() => setShowLogModal(false)}
+        log={selectedLog}
       />
     </div>
   );

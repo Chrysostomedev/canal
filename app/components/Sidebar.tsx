@@ -18,8 +18,9 @@
 
 "use client";
 
-import { authService, UserRole } from "../../services/AuthService";
-import { useState, useEffect } from "react";
+import { authService } from "../../services/AuthService";
+import type { UserRole } from "../../services/AuthService";
+import React, { useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,13 +29,13 @@ import {
   ChevronDown, PieChart, Ticket, Calendar, Shield,
   FileText, FileSignature, AlertTriangle,
   ChartNoAxesColumnIncreasing, MapPinHouse, Users2,
-  Building2Icon, Layers, FolderSync, Bell, Wrench,
+  Layers, FolderSync, Bell, Wrench, User as UserIcon
 } from "lucide-react";
 
 // ─── Type MenuItem ────────────────────────────────────────────────────────────
 interface MenuItem {
   label: string;
-  icon: JSX.Element;
+  icon: ReactNode;
   href?: string;
   subItems?: MenuItem[];
 }
@@ -59,7 +60,7 @@ const MENU_ADMIN: MenuItem[] = [
         icon: <Building2 size={20} />,
         href: "/admin/patrimoines",
         subItems: [
-          { label: "Types", icon: <Building2Icon size={18} />, href: "/admin/patrimoines/type" },
+          { label: "Types", icon: <Building2 size={18} />, href: "/admin/patrimoines/type" },
           { label: "Sous-types", icon: <Building2 size={18} />, href: "/admin/patrimoines/sous_type" },
         ],
       },
@@ -93,10 +94,10 @@ const MENU_PROVIDER: MenuItem[] = [
   { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, href: "/provider/dashboard" },
   { label: "Tickets", icon: <Ticket size={20} />, href: "/provider/tickets" },
   { label: "Planning", icon: <Calendar size={20} />, href: "/provider/planning" },
-  { label: "Entretiens", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/provider/entretien" },
+  { label: "Entretien", icon: <Calendar size={20} />, href: "/provider/entretien" },
   { label: "Devis", icon: <FileSignature size={20} />, href: "/provider/devis" },
   { label: "Factures", icon: <FileText size={20} />, href: "/provider/factures" },
-  { label: "Interventions", icon: <Wrench size={20} />, href: "/provider/rapports" },
+  { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/provider/rapports" },
   { label: "Notifications", icon: <Bell size={20} />, href: "/provider/notifications" },
 ];
 
@@ -120,12 +121,12 @@ const MENU_MANAGER: MenuItem[] = [
     // Pas de sous-menus Type / Sous-type — réservés aux admins
   },
   { label: "Tickets", icon: <Ticket size={20} />, href: "/manager/tickets" },
-  { label: "Entretiens", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/manager/entretien" },
+  { label: "Entretien", icon: <Calendar size={20} />, href: "/manager/entretien" },
   { label: "Planning", icon: <Calendar size={20} />, href: "/manager/planning" },
   { label: "Prestataires", icon: <Users size={20} />, href: "/manager/prestataires" },
   { label: "Devis", icon: <FileSignature size={20} />, href: "/manager/devis" },
   { label: "Factures", icon: <FileText size={20} />, href: "/manager/factures" },
-  { label: "Interventions", icon: <Wrench size={20} />, href: "/manager/rapports" },
+  { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/manager/rapports" },
   { label: "Notifications", icon: <Bell size={20} />, href: "/manager/notifications" },
 ];
 
@@ -134,27 +135,32 @@ const MENU_MANAGER: MenuItem[] = [
 interface BottomItem {
   label: string;
   href: string;
-  icon: JSX.Element;
+  icon: ReactNode;
 }
 
 /** SUPER-ADMIN : paramètres + gestion des rôles */
 const BOTTOM_SUPER_ADMIN: BottomItem[] = [
   { label: "Gestion des rôles", href: "/admin/roles", icon: <Shield size={20} /> },
+  { label: "Audit Trail", href: "/admin/audit", icon: <FileText size={20} /> },
+  { label: "Profil", href: "/admin/profile", icon: <UserIcon size={20} /> },
   { label: "Paramètres", href: "/admin/parametres", icon: <Settings size={20} /> },
 ];
 
 /** ADMIN : paramètres uniquement (pas de gestion des rôles) */
 const BOTTOM_ADMIN: BottomItem[] = [
+  { label: "Profil", href: "/admin/profile", icon: <UserIcon size={20} /> },
   { label: "Paramètres", href: "/admin/parametres", icon: <Settings size={20} /> },
 ];
 
 /** PROVIDER */
 const BOTTOM_PROVIDER: BottomItem[] = [
+  { label: "Profil", href: "/provider/profile", icon: <UserIcon size={20} /> },
   { label: "Paramètres", href: "/provider/parametre", icon: <Settings size={20} /> },
 ];
 
 /** MANAGER */
 const BOTTOM_MANAGER: BottomItem[] = [
+  { label: "Profil", href: "/manager/profile", icon: <UserIcon size={20} /> },
   { label: "Paramètres", href: "/manager/parametres", icon: <Settings size={20} /> },
 ];
 

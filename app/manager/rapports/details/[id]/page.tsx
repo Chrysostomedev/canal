@@ -271,7 +271,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
-        <div className="flex-1 flex flex-col pl-64">
+        <div className="flex flex-col flex-1 overflow-hidden">
           <Navbar />
           <div className="flex-1 flex flex-col items-center justify-center gap-4">
              <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
@@ -286,7 +286,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
-        <div className="flex-1 flex flex-col pl-64">
+        <div className="flex flex-col flex-1 overflow-hidden">
           <Navbar />
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-6">
              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
@@ -314,9 +314,9 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
       <Sidebar />
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
-        <main className="mt-20 p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           
           {flash && (
             <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] px-8 py-4 rounded-[24px] shadow-2xl text-sm font-black border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${

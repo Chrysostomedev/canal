@@ -339,9 +339,9 @@ export default function TicketsPage() {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 space-y-10">
+        <main className="ml-64 mt-20 p-8 space-y-10 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader
             title="Mes tickets"
             subtitle="Gérez les signalements curatifs et le suivi des maintenances"

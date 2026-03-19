@@ -213,11 +213,11 @@ export default function ProviderDetailsPage() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex flex-col flex-1 overflow-hidden">
 
         <Navbar />
 
-        <main className="mt-20 p-8 space-y-8">
+        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
 
           {/* HEADER PROVIDER */}
 

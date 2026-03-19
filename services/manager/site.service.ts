@@ -5,15 +5,15 @@
 // ═══════════════════════════════════════════════════════════════
 
 import api from "../../core/axios";
-import type { ApiResponse, ManagerSite, SiteStats } from "../../types/manager.types";
+import type { ApiResponse, PaginatedResponse, ManagerSite, SiteStats } from "../../types/manager.types";
 
 export const SiteService = {
   /**
    * Récupère la liste des sites accessibles au manager.
    * (En pratique, un seul site est retourné côté backend.)
    */
-  async getSites(): Promise<ManagerSite[]> {
-    const { data } = await api.get<ApiResponse<ManagerSite[]>>("/manager/site");
+  async getSites(): Promise<PaginatedResponse<ManagerSite>> {
+    const { data } = await api.get<ApiResponse<PaginatedResponse<ManagerSite>>>("/manager/site");
     return data.data;
   },
 

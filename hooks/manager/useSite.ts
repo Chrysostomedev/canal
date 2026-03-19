@@ -19,7 +19,7 @@ export function useSite() {
       ]);
       
       // Le manager est généralement assigné à un seul site
-      setSite(sitesData[0] || null);
+      setSite(sitesData.items[0] || null);
       setStats(statsData);
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement des données du site");

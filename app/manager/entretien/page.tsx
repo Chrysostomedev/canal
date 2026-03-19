@@ -516,9 +516,9 @@ export default function ManagerEntretienPage() {
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
       <Sidebar />
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
-        <main className="mt-20 p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader title="Entretiens" subtitle="Gestion des entretiens préventifs et validation des rapports." />
 
           {(apiError || submitError) && (

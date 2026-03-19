@@ -17,10 +17,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ChevronDown } from "lucide-react";
-import { authService, getDashboardRoute, UserRole } from "../../services/AuthService";
+import { authService, getDashboardRoute } from "../../services/AuthService";
+import type { UserRole } from "../../services/AuthService";
 
 // ─── Pays CANAL+ Afrique ──────────────────────────────────────────────────────
 // Les drapeaux sont chargés depuis flagcdn.com (CDN fiable, SVG, code ISO 3166-1 alpha-2)
@@ -73,6 +74,11 @@ export default function LoginPage() {
     CANAL_COUNTRIES[0]
   );
   const [countryOpen, setCountryOpen] = useState(false);
+  const [currentYear, setCurrentYear] = useState<number | string>("--");
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
   // ──────────────────────────────────────────────────
 
   const handleLogin = async () => {
@@ -318,7 +324,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
-            © {new Date().getFullYear()} CANAL+ • Accès réservé aux utilisateurs autorisés
+            © {currentYear} CANAL+ • Accès réservé aux utilisateurs autorisés
           </div>
         </div>
       </div>

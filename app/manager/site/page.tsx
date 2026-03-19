@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Building2, Download, Eye, ChevronLeft,
-  MapPin, Copy, CheckCheck,
+  MapPin, Copy, CheckCheck, AlertTriangle
 } from "lucide-react";
 
 import Navbar      from "@/components/Navbar";
@@ -80,23 +80,7 @@ export default function SitePage() {
 
   const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
 
-  if (siteLoading) {
-    return (
-      <div className="flex min-h-screen bg-zinc-50 items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
-  if (siteError || !site) {
-    return (
-      <div className="flex min-h-screen bg-zinc-50 items-center justify-center">
-        <div className="text-red-500 font-bold bg-white p-6 rounded-2xl shadow-sm border border-red-100">
-          {siteError || "Impossible de charger les données du site."}
-        </div>
-      </div>
-    );
-  }
 
   // ── Colonnes table ──
   const columns: any[] = [
@@ -167,7 +151,21 @@ export default function SitePage() {
 
         <main className="ml-64 mt-20 p-6 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
 
-          {/* ── HEADER SITE ── */}
+          {siteLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : siteError || !site ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="text-red-500 font-bold bg-white p-8 rounded-2xl shadow-sm border border-red-100 text-center">
+                <AlertTriangle className="mx-auto mb-4 text-red-400" size={40} />
+                <p>{siteError || "Impossible de charger les données du site."}</p>
+                <p className="text-sm font-medium text-slate-400 mt-2">Vérifiez que ce manager est bien assigné à un site.</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* ── HEADER SITE ── */}
           <div className="bg-white flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl border border-slate-100 shadow-sm">
             <div className="space-y-4">
               <Link
@@ -280,6 +278,9 @@ export default function SitePage() {
                   )}
                 </div>
               </div>
+            </>
+          )}
+
             </>
           )}
 

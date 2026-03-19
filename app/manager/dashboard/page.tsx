@@ -9,7 +9,7 @@ import DonutChartCard from "@/components/DonutChartCard";
 import BarChartCard from "@/components/BarChartCard";
 import DataTable from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
-import { Eye } from "lucide-react";
+import { Eye, AlertTriangle } from "lucide-react";
 
 const MOIS_LABELS = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
 
@@ -47,28 +47,12 @@ export default function Dashboard() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen bg-zinc-50 items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
-  if (error || !stats) {
-    return (
-      <div className="flex min-h-screen bg-zinc-50 items-center justify-center">
-        <div className="text-red-500 font-bold bg-white p-6 rounded-2xl shadow-sm border border-red-100">
-          {error || "Une erreur est survenue lors du chargement du tableau de bord."}
-        </div>
-      </div>
-    );
-  }
 
   const buildBarData = () => {
     // Le backend renvoie déjà les volumes mensuels filtrés/agrégés
     const map: Record<number, number> = {};
-    stats.tendance_annuelle_maintenance.forEach((i: any) => {
+    stats?.tendance_annuelle_maintenance.forEach((i: any) => {
       if (i.annee === selectedYear) {
         map[i.mois] = i.total;
       }
@@ -82,11 +66,11 @@ export default function Dashboard() {
   };
 
   const buildDonutData = () =>
-    stats.sites_les_plus_frequentes.map((site: any, i: number) => ({
+    stats?.sites_les_plus_frequentes.map((site: any, i: number) => ({
       label: site.nom,
       value: site.total_tickets,
       color: DONUT_COLORS[i % DONUT_COLORS.length],
-    }));
+    })) || [];
 
   const handleOpenDetails = (ticket: any) => {
     const status = (ticket.status || "").toUpperCase();
@@ -147,6 +131,19 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col pl-64">
         <Navbar />
         <main className="flex-1 p-8 pt-24 space-y-8">
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (error || !stats) ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="text-red-500 font-bold bg-white p-8 rounded-2xl shadow-sm border border-red-100 text-center">
+                <AlertTriangle className="mx-auto mb-4 text-red-400" size={40} />
+                <p>{error || "Une erreur est survenue lors du chargement du tableau de bord."}</p>
+              </div>
+            </div>
+          ) : (
+            <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatsCard label="Nombre total de tickets" value={stats.kpis.nombre_total_tickets} />
             <StatsCard label="Tickets traités" value={stats.kpis.nombre_tickets_traités} />
@@ -193,6 +190,8 @@ export default function Dashboard() {
               />
             </div>
           </div>
+          </>
+          )}
         </main>
       </div>
 

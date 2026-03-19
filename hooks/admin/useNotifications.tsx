@@ -1,8 +1,9 @@
 // hooks/useNotifications.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import api from "../../core/axios"; // Adjust path as needed
+import { authService } from "../../services/AuthService";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,9 +36,17 @@ export const useNotifications = () => {
   const [initialized,   setInitialized]   = useState(false);
   const [unreadCount,   setUnreadCount]   = useState(0);
 
+  // Déterminez le préfixe de l'API en fonction du rôle
+  const apiPrefix = useMemo(() => {
+    const role = authService.getRole();
+    if (role === "MANAGER") return "/manager";
+    if (role === "PROVIDER") return "/provider";
+    return "/admin";
+  }, []);
+
   const fetchNotifications = useCallback(async () => {
     try {
-      const { data } = await api.get("/notifications");
+      const { data } = await api.get(`${apiPrefix}/notifications`);
       // L'API Laravel Paginator renvoie ça sous data.data.data
       const items = Array.isArray(data?.data?.data) 
         ? data.data.data 
@@ -77,7 +86,7 @@ export const useNotifications = () => {
     } finally {
       setInitialized(true);
     }
-  }, []);
+  }, [apiPrefix]);
 
   useEffect(() => {
     fetchNotifications();
@@ -88,7 +97,7 @@ export const useNotifications = () => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
     try {
-      await api.post(`/notifications/${id}/read`);
+      await api.post(`${apiPrefix}/notifications/${id}/read`);
     } catch (e) {
       console.error(e);
       // Rollback on fail
@@ -100,7 +109,7 @@ export const useNotifications = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
     try {
-      await api.post("/notifications/read-all");
+      await api.post(`${apiPrefix}/notifications/read-all`);
     } catch (e) {
       console.error(e);
       fetchNotifications();
@@ -110,7 +119,7 @@ export const useNotifications = () => {
   const remove = async (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
     try {
-      await api.delete(`/notifications/${id}`);
+      await api.delete(`${apiPrefix}/notifications/${id}`);
       fetchNotifications();
     } catch (e) {
       console.error(e);
