@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Eye, Filter, Download, X,
   Wrench, User, Tag, AlertTriangle, CheckCircle2,
-  CalendarDays, MapPin, Search, Plus, Clock
+  CalendarDays, MapPin, Search, Plus, Clock, Star
 } from "lucide-react";
 
 import ReusableForm from "@/components/ReusableForm";
@@ -139,7 +139,7 @@ function TicketSidePanel({
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Prestataire Assigné</p>
                 <p className="text-sm font-bold text-slate-900">{ticket.provider?.company_name || ticket.provider?.name || "En attente d'assignation"}</p>
-                <p className="text-xs text-slate-500 font-medium">{ticket.service?.name}</p>
+                <p className="text-xs text-slate-500 font-medium">{ticket.service?.name || "—"}</p>
               </div>
             </div>
 
@@ -175,9 +175,10 @@ export default function TicketsPage() {
     tickets, stats, meta, filters, isLoading, setFilters, refresh, exportTickets
   } = useTickets();
 
-  const { createTicket } = useTicketActions({
+  const { createTicket, rateTicket, isSubmitting } = useTicketActions({
     onSuccess: () => {
       setIsModalOpen(false);
+      setIsRateOpen(false);
       refresh();
     }
   });
@@ -185,6 +186,11 @@ export default function TicketsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isRateOpen, setIsRateOpen] = useState(false);
+  const [rateTicketId, setRateTicketId] = useState<number | null>(null);
+  const [rateValue, setRateValue] = useState(0);
+  const [rateHovered, setRateHovered] = useState(0);
+  const [rateComment, setRateComment] = useState("");
 
   const [assets, setAssets] = useState<Asset[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -403,9 +409,80 @@ export default function TicketsPage() {
         ticket={isDetailsOpen ? selectedTicket : null}
         onClose={() => setIsDetailsOpen(false)}
         onRate={(id) => {
-          window.location.href = `/manager/rapports?ticket_id=${id}`;
+          setRateTicketId(id);
+          setRateValue(0);
+          setRateComment("");
+          setIsDetailsOpen(false);
+          setIsRateOpen(true);
         }}
       />
+
+      {/* ── Modale notation ── */}
+      {isRateOpen && rateTicketId && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsRateOpen(false)} />
+          <div className="relative bg-white rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+            <div className="flex items-center justify-between px-8 py-6 border-b border-slate-50">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Noter l'intervention</h2>
+                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-widest">Ticket #{rateTicketId}</p>
+              </div>
+              <button onClick={() => setIsRateOpen(false)} className="p-2 hover:bg-slate-50 rounded-2xl transition">
+                <X size={18} className="text-slate-400" />
+              </button>
+            </div>
+            <div className="px-8 py-6 space-y-6">
+              {/* Étoiles */}
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] block">Note de satisfaction (facultatif)</label>
+                <div className="flex gap-3 justify-center py-4 bg-slate-50 rounded-3xl">
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const val = i + 1;
+                    const active = val <= (rateHovered || rateValue);
+                    return (
+                      <button key={i}
+                        onMouseEnter={() => setRateHovered(val)}
+                        onMouseLeave={() => setRateHovered(0)}
+                        onClick={() => setRateValue(rateValue === val ? 0 : val)}
+                        className={`transition-all duration-200 ${active ? "scale-110" : "scale-100"}`}>
+                        <Star size={36} className={active ? "fill-yellow-400 text-yellow-400" : "fill-slate-200 text-slate-200"} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Commentaire */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] block">Commentaire (facultatif)</label>
+                <textarea
+                  value={rateComment}
+                  onChange={e => setRateComment(e.target.value)}
+                  rows={3}
+                  placeholder="Ex: Travaux bien exécutés, site laissé propre..."
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-100 text-sm text-slate-900 placeholder-slate-300 outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all bg-slate-50/20 resize-none"
+                />
+              </div>
+            </div>
+            <div className="px-8 py-6 border-t border-slate-50 flex gap-3">
+              <button onClick={() => setIsRateOpen(false)} className="flex-1 py-3.5 rounded-2xl border border-slate-200 text-slate-600 text-sm font-black uppercase tracking-widest hover:bg-white transition-all">
+                Annuler
+              </button>
+              <button
+                disabled={isSubmitting}
+                onClick={async () => {
+                  await rateTicket(rateTicketId, { rating: rateValue || undefined, comment: rateComment || undefined } as any);
+                  setIsRateOpen(false);
+                  refresh();
+                }}
+                className="flex-1 py-3.5 rounded-2xl bg-slate-900 text-white text-sm font-black uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Star size={15} />}
+                Valider
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ReusableForm
         isOpen={isModalOpen}

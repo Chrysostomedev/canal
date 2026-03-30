@@ -717,6 +717,7 @@ export default function ProviderEntretienPage() {
   const [isPanelOpen, setIsPanelOpen]   = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportTargetTicket, setReportTargetTicket] = useState<any | null>(null);
+  const [isNewReportOpen, setIsNewReportOpen] = useState(false);
 
   const openPanel = (t: any) => { setSelectedTicket(t); setIsPanelOpen(true); };
   const closePanel = () => setIsPanelOpen(false);
@@ -728,11 +729,61 @@ export default function ProviderEntretienPage() {
   };
   const closeReport = () => { setIsReportOpen(false); setReportTargetTicket(null); };
 
-  const openNewReport = () => {
-    // Dans cette version, on laisse le formulaire gérer le choix du ticket ou on prend le premier disponible
-    const target = reports.find(r => r.status === "en_cours" || r.status === "planifié") ?? reports[0];
-    if (target) openReport(target);
-  };
+  const openNewReport = () => setIsNewReportOpen(true);
+
+  // Champs du formulaire "Nouveau rapport" — conformes à la logique métier backend
+  // Un rapport d'entretien préventif : result + dates + description + observations + photos
+  // Le ticket_id et intervention_type sont gérés automatiquement côté backend (planning)
+  const newReportFields: FieldConfig[] = [
+    {
+      name: "result",
+      label: "Résultat de la visite",
+      type: "select",
+      required: true,
+      options: [
+        { label: "RAS — Rien à signaler", value: "ras" },
+        { label: "Anomalie détectée", value: "anomalie" },
+        { label: "Résolu sur place", value: "resolu" },
+      ],
+      icon: <CheckCircle2 size={18} />,
+    },
+    {
+      name: "start_date",
+      label: "Date de début de l'intervention",
+      type: "date",
+      required: true,
+      icon: <CalendarDays size={18} />,
+    },
+    {
+      name: "end_date",
+      label: "Date de fin",
+      type: "date",
+      required: false,
+      icon: <CalendarDays size={18} />,
+    },
+    {
+      name: "description",
+      label: "Travaux effectués / Actions menées",
+      type: "rich-text",
+      required: true,
+      gridSpan: 2,
+    },
+    {
+      name: "findings",
+      label: "Observations / Anomalies constatées",
+      type: "rich-text",
+      required: false,
+      gridSpan: 2,
+    },
+    {
+      name: "attachments",
+      label: "Photos justificatives",
+      type: "image-upload",
+      required: false,
+      maxImages: 5,
+      gridSpan: 2,
+    },
+  ];
 
   const kpis = [
     { label: "Total rapports", value: stats?.total_reports ?? 0, delta: "", trend: "up" as const },
@@ -852,7 +903,6 @@ export default function ProviderEntretienPage() {
 
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-800">Liste des entretiens préventifs</h3>
               <span className="text-xs text-slate-400">{filteredReports.length} entretien{filteredReports.length > 1 ? "s" : ""}</span>
             </div>
             <div className="px-6 py-4">
@@ -892,6 +942,28 @@ export default function ProviderEntretienPage() {
           submitting={submitting}
         />
       )}
+
+      {/* Formulaire nouveau rapport via ReusableForm */}
+      <ReusableForm
+        isOpen={isNewReportOpen}
+        onClose={() => setIsNewReportOpen(false)}
+        title="Nouveau Rapport d'Entretien"
+        subtitle="Soumettez votre rapport d'intervention préventive"
+        fields={newReportFields}
+        submitLabel="Soumettre le rapport"
+        onSubmit={async (values) => {
+          const success = await createReport({
+            ticket_id: 0, // sera ignoré côté backend pour les entretiens préventifs
+            intervention_type: "preventif",
+            result: values.result as "ras" | "anomalie" | "resolu",
+            start_date: values.start_date as string,
+            end_date: values.end_date as string || undefined,
+            description: values.description as string || undefined,
+            findings: values.findings as string || undefined,
+          });
+          if (success) setIsNewReportOpen(false);
+        }}
+      />
     </div>
   );
 }

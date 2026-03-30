@@ -79,13 +79,11 @@ const MENU_ADMIN: MenuItem[] = [
     label: "Gestionnaires",
     icon: <Grid size={20} />,
     href: "/admin/gestionnaires",
-    subItems: [{ label: "Vue globale", icon: <PieChart size={20} />, href: "#" }],
   },
   {
     label: "Prestataires",
     icon: <Users size={20} />,
     href: "/admin/prestataires",
-    subItems: [{ label: "Details prestataires", icon: <Users2 size={20} />, href: "#" }],
   },
 ];
 
@@ -112,13 +110,6 @@ const MENU_MANAGER: MenuItem[] = [
     label: "Sites",
     icon: <MapPinHouse size={20} />,
     href: "/manager/site",
-    // Le manager voit ses propres sites — la page /manager/sites filtre côté back
-  },
-  {
-    label: "Patrimoines",
-    icon: <Building2 size={20} />,
-    href: "/manager/patrimoines",
-    // Pas de sous-menus Type / Sous-type — réservés aux admins
   },
   { label: "Tickets", icon: <Ticket size={20} />, href: "/manager/tickets" },
   { label: "Entretien", icon: <Calendar size={20} />, href: "/manager/entretien" },
@@ -166,22 +157,24 @@ const BOTTOM_MANAGER: BottomItem[] = [
 
 // ─── Mapping rôle → menus ─────────────────────────────────────────────────────
 const getMenuByRole = (role: string): MenuItem[] => {
-  switch (role) {
+  switch (role.toUpperCase()) {
     case "SUPER-ADMIN": return MENU_ADMIN;
-    case "ADMIN": return MENU_ADMIN;
-    case "PROVIDER": return MENU_PROVIDER;
-    case "MANAGER": return MENU_MANAGER;
-    default: return [];
+    case "ADMIN":       return MENU_ADMIN;
+    case "PROVIDER":
+    case "USER":        return MENU_PROVIDER;
+    case "MANAGER":     return MENU_MANAGER;
+    default:            return [];
   }
 };
 
 const getBottomByRole = (role: string): BottomItem[] => {
-  switch (role) {
+  switch (role.toUpperCase()) {
     case "SUPER-ADMIN": return BOTTOM_SUPER_ADMIN;
-    case "ADMIN": return BOTTOM_ADMIN;
-    case "PROVIDER": return BOTTOM_PROVIDER;
-    case "MANAGER": return BOTTOM_MANAGER;
-    default: return [];
+    case "ADMIN":       return BOTTOM_ADMIN;
+    case "PROVIDER":
+    case "USER":        return BOTTOM_PROVIDER;
+    case "MANAGER":     return BOTTOM_MANAGER;
+    default:            return [];
   }
 };
 
@@ -190,20 +183,19 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Rôle lu depuis le localStorage — stable après hydratation
-  const [role, setRole] = useState<string>("");
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [bottomItems, setBottomItems] = useState<BottomItem[]>([]);
+  // Lecture synchrone du rôle — évite le flash "menu vide" au premier render
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    const r = localStorage.getItem("user_role") ?? "";
+    return getMenuByRole(r);
+  });
+  const [bottomItems, setBottomItems] = useState<BottomItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    const r = localStorage.getItem("user_role") ?? "";
+    return getBottomByRole(r);
+  });
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  // ── Initialisation : lecture du rôle et construction des menus ──────────────
-  useEffect(() => {
-    const currentRole = authService.getRole();
-    setRole(currentRole);
-    setMenuItems(getMenuByRole(currentRole));
-    setBottomItems(getBottomByRole(currentRole));
-  }, []);
 
   // ── Auto-expansion du menu actif ────────────────────────────────────────────
   useEffect(() => {

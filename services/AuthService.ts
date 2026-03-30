@@ -79,15 +79,14 @@ export const getDashboardRoute = (role: string): string => {
   }
 };
 
-// ─── Endpoints unifiés ────────────────────────────────────────────────────────
-// Le backend Laravel expose plusieurs préfixes (super-admin, admin, manager, provider)
-// mais le AuthService Laravel gère tous les rôles depuis le même controller.
-// On utilise /admin comme point d'entrée unifié — le back détecte le rôle tout seul.
-const LOGIN_ENDPOINT = "/admin/login";
-const VERIFY_OTP_ENDPOINT = "/admin/verify-otp";
-const LOGOUT_ENDPOINT = "/admin/logout";
+// ─── Endpoints auth ───────────────────────────────────────────────────────────
+// Le backend est UNIFIÉ : /admin/login cherche d'abord dans Admin, puis dans User.
+// Un seul endpoint suffit pour tous les rôles (SUPER-ADMIN, ADMIN, MANAGER, PROVIDER).
+const LOGIN_ENDPOINT           = "/admin/login";
+const VERIFY_OTP_ENDPOINT      = "/admin/verify-otp";
+const LOGOUT_ENDPOINT          = "/admin/logout";
 const FORGOT_PASSWORD_ENDPOINT = "/admin/forgot-password";
-const RESET_PASSWORD_ENDPOINT = "/admin/reset-password";
+const RESET_PASSWORD_ENDPOINT  = "/admin/reset-password";
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 export const authService = {
@@ -96,18 +95,16 @@ export const authService = {
   // │  ÉTAPE 1 — Login (email + password)                                     │
   // └─────────────────────────────────────────────────────────────────────────┘
   /**
-   * Envoie email + password au backend.
-   * Laravel vérifie les credentials, envoie l'OTP par mail,
-   * et retourne { otp_required: true, email }.
-   * On stocke l'email en "pending" pour la page OTP.
-   * Fonctionne pour tous les rôles : SUPER-ADMIN, ADMIN, MANAGER, PROVIDER.
+   * Tente d'abord /admin/login (guard admin → SUPER-ADMIN, ADMIN, MANAGER).
+   * Si le back répond 404, bascule sur /provider/login (guard sanctum → PROVIDER).
+   * Mémorise le guard utilisé dans localStorage pour que verifyOtp sache
+   * quel endpoint appeler ensuite.
    */
   login: async (credentials: { email: string; password: string }): Promise<LoginStepResponse> => {
     const response = await axiosInstance.post(LOGIN_ENDPOINT, credentials);
     const data = response.data?.data as LoginStepResponse;
 
     if (data?.otp_required && data?.email) {
-      // Stocker l'email et marquer le flux comme "login" (pas "reset")
       if (typeof window !== "undefined") {
         localStorage.setItem(PENDING_EMAIL_KEY, data.email);
         localStorage.setItem(PENDING_FLOW_KEY, "login");
@@ -127,8 +124,8 @@ export const authService = {
   // └─────────────────────────────────────────────────────────────────────────┘
   /**
    * Envoie email + code OTP au backend.
+   * Utilise /admin/verify-otp ou /provider/verify-otp selon le guard mémorisé.
    * Laravel vérifie le code, retourne { user, token } en cas de succès.
-   * On persiste la session (token, rôle, infos user) dans le localStorage.
    */
   verifyOtp: async (email: string, code: string): Promise<AuthResponse> => {
     const response = await axiosInstance.post(VERIFY_OTP_ENDPOINT, { email, code });
@@ -244,20 +241,21 @@ export const authService = {
     localStorage.setItem("user_email", user.email ?? "");
     localStorage.setItem("user_id", String(user.id ?? ""));
 
-    // Le backend peut retourner first_name/last_name OU un champ name unique
-    const firstName = user.first_name ?? "";
-    const lastName = user.last_name ?? "";
+    // Priorité : first_name/last_name → name (split) → email (fallback ultime)
+    const firstName = user.first_name?.trim() ?? "";
+    const lastName  = user.last_name?.trim()  ?? "";
 
     if (firstName || lastName) {
       localStorage.setItem("first_name", firstName);
       localStorage.setItem("last_name", lastName);
-    } else if (user.name) {
-      // Fallback : split sur le premier espace
+    } else if (user.name?.trim()) {
       const parts = user.name.trim().split(/\s+/);
       localStorage.setItem("first_name", parts[0] ?? "");
       localStorage.setItem("last_name", parts.slice(1).join(" ") ?? "");
     } else {
-      localStorage.setItem("first_name", "");
+      // Dernier recours : utiliser la partie locale de l'email (avant @)
+      const emailLocal = user.email?.split("@")[0] ?? "";
+      localStorage.setItem("first_name", emailLocal);
       localStorage.setItem("last_name", "");
     }
   },
@@ -305,10 +303,10 @@ export const authService = {
 
   /**
    * Vérifie si le rôle courant est dans la liste des rôles autorisés.
+   * USER est traité comme PROVIDER (alias backend).
    */
   hasRole: (allowedRoles: UserRole[]): boolean => {
     const role = authService.getRole() as UserRole;
-    // Mapping sécurité : USER est traité comme PROVIDER pour les accès
     if (role === "USER" && allowedRoles.includes("PROVIDER")) return true;
     return allowedRoles.includes(role);
   },

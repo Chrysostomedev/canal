@@ -34,15 +34,34 @@ export interface Notification {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function mapApiToFrontend(api: ApiNotification): Notification {
+  const sourceStr = (api.data?.source || "système").toLowerCase();
+  let source: NotifSource = "système";
+  if (sourceStr.includes("ticket"))    source = "ticket";
+  else if (sourceStr.includes("rapport") || sourceStr.includes("report")) source = "rapport";
+  else if (sourceStr.includes("devis") || sourceStr.includes("quote"))    source = "devis";
+  else if (sourceStr.includes("facture") || sourceStr.includes("invoice")) source = "facture";
+  else if (sourceStr.includes("planning")) source = "planning";
+
+  // Génération automatique du lien selon la source (provider)
+  const entityId = api.data?.entity_id;
+  let autoHref = api.data?.href;
+  if (!autoHref) {
+    if (source === "ticket")   autoHref = "/provider/tickets";
+    else if (source === "rapport") autoHref = "/provider/rapports";
+    else if (source === "devis")   autoHref = "/provider/devis";
+    else if (source === "facture") autoHref = "/provider/factures";
+    else if (source === "planning") autoHref = "/provider/planning";
+  }
+
   return {
     id:          api.id,
-    source:      (api.data?.source as NotifSource) || "système",
+    source,
     title:       api.data?.title   || "Notification",
     summary:     api.data?.summary || api.data?.message || "Vous avez une nouvelle notification",
     body:        api.data?.body    || api.data?.message || "",
     entityId:    typeof api.data?.entity_id === "number" ? api.data.entity_id : undefined,
     entityLabel: api.data?.entity_label,
-    href:        api.data?.href,
+    href:        autoHref,
     read:        !!api.read_at,
     createdAt:   api.created_at,
   };

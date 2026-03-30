@@ -202,10 +202,7 @@ export default function DevisPage() {
             </div>
 
             <div className="p-8 space-y-6">
-               <div className="w-full max-w-md">
-                  <SearchInput onSearch={search} placeholder="Rechercher une référence ou un prestataire..." />
-               </div>
-
+             
                <DataTable
                  columns={columns}
                  data={quotes}

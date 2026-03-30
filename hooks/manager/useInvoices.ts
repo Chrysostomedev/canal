@@ -40,6 +40,24 @@ export function useInvoices(initialFilters: InvoiceFilters = {}) {
     setFiltersState((prev) => ({ ...prev, ...partial, page: 1 }));
   };
 
+  const search = (value: string) => {
+    setFilters({ search: value } as any);
+  };
+
+  const exportInvoices = async () => {
+    try {
+      const blob = await InvoiceService.exportInvoices(filters);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `factures_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erreur export factures", err);
+    }
+  };
+
   return {
     invoices: data,
     stats,
@@ -48,6 +66,8 @@ export function useInvoices(initialFilters: InvoiceFilters = {}) {
     isLoading,
     error,
     setFilters,
+    search,
     refresh: fetchData,
+    exportInvoices,
   };
 }

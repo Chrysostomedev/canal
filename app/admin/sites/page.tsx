@@ -702,7 +702,7 @@ export default function SitesPage() {
         value: String(m.id),
       })),
     },
-    { name: "email",             label: "Email du site",          type: "email" },
+    // { name: "email",             label: "Email du site",          type: "email" },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: [{ label: "Actif", value: "active" }, { label: "Inactif", value: "inactive" }],

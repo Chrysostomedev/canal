@@ -65,6 +65,27 @@ export const useNotifications = () => {
         else if (sourceStr.includes("devis") || sourceStr.includes("quote")) source = "devis";
         else if (sourceStr.includes("user") || sourceStr.includes("utilisateur")) source = "utilisateur";
 
+        // Génération automatique du lien de navigation selon le rôle + source
+        const role = authService.getRole();
+        const prefix = role === "MANAGER" ? "/manager" : role === "PROVIDER" ? "/provider" : "/admin";
+        const entityId = notifData.id || notifData.entity_id || notifData.ticket_id || notifData.asset_id;
+
+        let autoHref = notifData.url || notifData.action_url || notifData.href;
+        if (!autoHref && entityId) {
+          if (source === "ticket")      autoHref = `${prefix}/tickets`;
+          else if (source === "rapport") autoHref = `${prefix}/rapports`;
+          else if (source === "devis")   autoHref = `${prefix}/devis`;
+          else if (source === "facture") autoHref = `${prefix}/factures`;
+          else if (source === "planning") autoHref = `${prefix}/planning`;
+          else if (source === "site")    autoHref = `${prefix}/site`;
+          else if (source === "patrimoine") autoHref = `${prefix}/patrimoines`;
+        } else if (!autoHref) {
+          if (source === "ticket")      autoHref = `${prefix}/tickets`;
+          else if (source === "rapport") autoHref = `${prefix}/rapports`;
+          else if (source === "devis")   autoHref = `${prefix}/devis`;
+          else if (source === "facture") autoHref = `${prefix}/factures`;
+        }
+
         return {
           id: n.id,
           source: source,
@@ -73,7 +94,7 @@ export const useNotifications = () => {
           body: notifData.body || notifData.description || notifData.message || "",
           entityId: notifData.id || notifData.entity_id,
           entityLabel: notifData.label || notifData.reference,
-          href: notifData.url || notifData.action_url,
+          href: autoHref,
           read: n.read_at !== null,
           createdAt: n.created_at,
         };

@@ -1,50 +1,79 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { LogOut, AlertTriangle, BellDot } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { LogOut, AlertTriangle, Bell } from "lucide-react";
 import { authService } from "../../services/AuthService";
 import Link from "next/link";
+import NotificationPanel from "./NotificationPanel";
+import api from "../../core/axios";
 
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- * Mapping rôle → route notifications
- *
- * SUPER-ADMIN → /admin/notifications
- * ADMIN       → /admin/notifications
- * PROVIDER    → /provider/notifications
- * MANAGER     → /manager/notifications
- * ─────────────────────────────────────────────────────────────────────────────
- */
 const getNotificationsRoute = (role: string): string => {
   switch (role) {
     case "SUPER-ADMIN":
-      return "/admin/notifications";
-    case "ADMIN":
-      return "/admin/notifications";
-
-    case "PROVIDER":
-      return "/provider/notifications";
-
-    case "MANAGER":
-      return "/manager/notifications";
-
-    default:
-      return "#";
+    case "ADMIN":    return "/admin/notifications";
+    case "PROVIDER": return "/provider/notifications";
+    case "MANAGER":  return "/manager/notifications";
+    default:         return "#";
   }
 };
 
+const getApiPrefix = (role: string): string => {
+  if (role === "MANAGER")  return "/manager";
+  if (role === "PROVIDER") return "/provider";
+  return "/admin";
+};
+
+// ── Bande notif in-app ────────────────────────────────────────────────────────
+interface InAppBannerProps {
+  title: string;
+  body: string;
+  onClose: () => void;
+  href?: string;
+}
+
+function InAppBanner({ title, body, onClose, href }: InAppBannerProps) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 5000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-[9999] w-[360px] bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden animate-in slide-in-from-top-4 duration-300">
+      <div className="h-1 w-full bg-slate-900" />
+      <div className="flex items-start gap-3 px-4 py-3">
+        <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shrink-0 mt-0.5">
+          <Bell size={16} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-black text-slate-900 leading-tight truncate">{title}</p>
+          <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-snug">{body}</p>
+          {href && (
+            <a href={href} className="text-xs font-bold text-slate-900 underline underline-offset-2 mt-1 inline-block hover:text-black transition">
+              Voir →
+            </a>
+          )}
+        </div>
+        <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition shrink-0 text-slate-400 hover:text-slate-700">
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function RoleBadge({ role }: { role: string }) {
-  if (role === "super-admin")
+  const r = role.toLowerCase();
+  if (r === "super-admin")
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-theme-primary text-white">
         Super Admin
       </span>
     );
-  if (role === "admin" || role === "manager")
+  if (r === "admin" || r === "manager")
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-theme-light text-theme-primary border border-theme-light">
-        {role === "admin" ? "Admin" : "Manager"}
+        {r === "admin" ? "Admin" : "Manager"}
       </span>
     );
   return null;
@@ -56,18 +85,86 @@ export default function Navbar() {
   const [firstName, setFirstName] = useState("");
   const [lastName,  setLastName]  = useState("");
   const [role,      setRole]      = useState("");
-  const [notificationRoute, setNotificationRoute] = useState("#");
+  const [notifRoute, setNotifRoute] = useState("#");
+
+  // Notifications
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [banner, setBanner] = useState<{ title: string; body: string; href?: string } | null>(null);
+  const prevCountRef = useRef(0);
 
   useEffect(() => {
     const currentRole = authService.getRole();
-
     setFirstName(authService.getFirstName());
     setLastName(authService.getLastName());
     setRole(currentRole);
-
-    // Route notifications dynamique selon le rôle
-    setNotificationRoute(getNotificationsRoute(currentRole));
+    setNotifRoute(getNotificationsRoute(currentRole));
   }, []);
+
+  // Polling notifications — 15s si page active, 60s si en arrière-plan
+  const fetchUnread = useCallback(async () => {
+    const currentRole = authService.getRole();
+    if (!currentRole || !authService.isAuthenticated()) return;
+    const prefix = getApiPrefix(currentRole);
+    try {
+      const { data } = await api.get(`${prefix}/notifications/unread`);
+      const items: any[] = Array.isArray(data?.data?.data)
+        ? data.data.data
+        : Array.isArray(data?.data) ? data.data : [];
+      const count = items.length;
+
+      // Nouvelle notif détectée
+      if (count > prevCountRef.current && prevCountRef.current > 0) {
+        const newest = items[0];
+        const notifData = newest?.data ?? {};
+        const title = notifData.title || notifData.message || "Nouvelle notification";
+        const body  = notifData.body  || notifData.summary || notifData.message || "";
+        const href  = notifData.href  || notifData.action_url;
+
+        setBanner({ title, body, href });
+
+        // Son discret via Web Audio API (pas besoin de fichier audio)
+        try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.3);
+        } catch {}
+      }
+
+      prevCountRef.current = count;
+      setUnreadCount(count);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    fetchUnread();
+
+    // Polling adaptatif : 15s si visible, 60s si caché
+    let interval = setInterval(fetchUnread, 15_000);
+
+    const handleVisibility = () => {
+      clearInterval(interval);
+      if (document.visibilityState === "visible") {
+        fetchUnread(); // fetch immédiat au retour
+        interval = setInterval(fetchUnread, 15_000);
+      } else {
+        interval = setInterval(fetchUnread, 60_000);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [fetchUnread]);
 
   const handleLogout = async () => {
     try {
@@ -88,6 +185,16 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Bande notif in-app */}
+      {banner && (
+        <InAppBanner
+          title={banner.title}
+          body={banner.body}
+          href={banner.href}
+          onClose={() => setBanner(null)}
+        />
+      )}
+
       <header className="fixed top-0 left-64 w-[calc(100%-16rem)] flex justify-between items-center px-6 py-4 bg-white shadow border-b border-gray-200 z-30">
 
         {/* Infos utilisateur */}
@@ -101,25 +208,35 @@ export default function Navbar() {
               <RoleBadge role={role} />
             </div>
             <p className="text-gray-500 text-xs font-medium">
-              Bienvenue sur votre espace d'administration de Facility Management
+              Bienvenue sur votre espace de Facility Management
             </p>
           </div>
         </div>
 
         {/* Actions droite */}
-        <div className="flex items-center gap-4">
-          <Link
-            href={notificationRoute}
-            className="relative flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all"
+        <div className="flex items-center gap-3">
+
+          {/* Cloche notifications */}
+          <button
+            onClick={() => setIsPanelOpen(true)}
+            className="relative flex items-center gap-2.5 px-4 py-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all"
           >
-            <BellDot size={22} className="text-theme-primary" strokeWidth={2.5} />
-            <span
-              className="text-sm font-semibold tracking-tight"
-              style={{ color: "rgb(var(--color-text-primary))" }}
-            >
+            <div className="relative">
+              <Bell
+                size={20}
+                className={`transition-colors ${unreadCount > 0 ? "text-slate-900" : "text-slate-400"}`}
+                strokeWidth={unreadCount > 0 ? 2.5 : 2}
+              />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 animate-pulse">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </div>
+            <span className="text-sm font-semibold tracking-tight text-slate-700">
               Notifications
             </span>
-          </Link>
+          </button>
 
           <button
             onClick={() => setShowLogoutModal(true)}
@@ -129,6 +246,12 @@ export default function Navbar() {
           </button>
         </div>
       </header>
+
+      {/* Panel notifications */}
+      <NotificationPanel
+        isOpen={isPanelOpen}
+        onClose={() => { setIsPanelOpen(false); fetchUnread(); }}
+      />
 
       {/* Modal déconnexion */}
       {showLogoutModal && (
@@ -141,7 +264,7 @@ export default function Navbar() {
             <div className="space-y-3">
               <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Déconnexion de votre compte</h2>
               <p className="text-gray-500 text-lg leading-relaxed font-medium px-4">
-                Souhaitez-vous vous déconnecter ? Vous pourrez vous reconnecter facilement à tout moment avec vos identifiants.
+                Souhaitez-vous vous déconnecter ? Vous pourrez vous reconnecter facilement à tout moment.
               </p>
             </div>
             <div className="flex gap-4 w-full pt-4">

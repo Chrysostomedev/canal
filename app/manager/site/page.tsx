@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Building2, Download, Eye, ChevronLeft,
+  Building2, Download, Eye, ChevronLeft, ChevronRight,
   MapPin, Copy, CheckCheck, AlertTriangle
 } from "lucide-react";
 
@@ -132,12 +132,21 @@ export default function SitePage() {
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
-        <button
-          onClick={() => setSelectedAsset(row)}
-          className="flex items-center gap-2 font-bold text-slate-800 hover:text-blue-600 transition"
-        >
-          <Eye size={18} /> Aperçu
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSelectedAsset(row)}
+            className="flex items-center gap-2 font-bold text-slate-800 hover:text-blue-600 transition"
+          >
+            <Eye size={18} /> Aperçu
+          </button>
+          <Link
+            href={`/manager/patrimoines/${row.id}`}
+            className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center"
+            title="Voir le détail"
+          >
+            <ChevronRight size={15} className="text-slate-600 group-hover:text-white transition-all" />
+          </Link>
+        </div>
       ),
     },
   ];
