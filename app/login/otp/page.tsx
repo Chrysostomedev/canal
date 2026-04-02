@@ -28,7 +28,8 @@ import { Mail, ArrowLeft, ShieldCheck } from "lucide-react";
 import { authService, getDashboardRoute, UserRole } from "../../../services/AuthService";
 
 const OTP_LENGTH   = 6;
-const RESEND_DELAY = 30; // secondes avant de pouvoir renvoyer
+const RESEND_DELAY = 300; // 5 minutes — aligné sur le backend
+const MAX_ATTEMPTS = 3;   // 3 tentatives avant reset des champs
 
 export default function OtpPage() {
   const router = useRouter();
@@ -41,14 +42,18 @@ export default function OtpPage() {
   const [error, setError]         = useState("");
   const [success, setSuccess]     = useState("");
   const [email, setEmail]         = useState("");
+  const [attempts, setAttempts]   = useState(0); // compteur tentatives OTP
 
   const inputsRef    = useRef<(HTMLInputElement | null)[]>([]);
-  // Levé dès qu'on a un OTP valide — bloque le guard de mount pendant
-  // la fenêtre entre clearPendingEmail() et router.replace()
   const isNavigating = useRef(false);
+  // Guard exécuté une seule fois au mount — évite les re-runs sur re-render
+  const guardRan     = useRef(false);
 
   // ── Guard : récupère l'email pending, redirige si absent ──────────────────
   useEffect(() => {
+    if (guardRan.current) return;
+    guardRan.current = true;
+
     if (isNavigating.current) return;
 
     const pending = authService.getPendingEmail();
@@ -57,7 +62,8 @@ export default function OtpPage() {
       return;
     }
     setEmail(pending);
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Focus premier champ ───────────────────────────────────────────────────
   useEffect(() => {
@@ -131,8 +137,6 @@ export default function OtpPage() {
     setError("");
 
     try {
-      // POST /{prefix}/verify-otp — le préfixe est déterminé automatiquement
-      // par authService._prefix() depuis ce qui a été stocké en step 1
       const data = await authService.verifyOtp(currentEmail, code);
 
       if (data?.token && data?.user) {
@@ -152,17 +156,30 @@ export default function OtpPage() {
       const status   = axiosErr?.response?.status;
       const message  = axiosErr?.response?.data?.message;
 
-      if (status === 429) {
-        setError("Trop de tentatives. Compte temporairement bloqué. Réessayez plus tard.");
-      } else if (status === 401) {
-        setError(message || "Code incorrect. Vérifiez et réessayez.");
-      } else {
-        setError(message || "Erreur lors de la vérification. Réessayez.");
-      }
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
 
-      // Reset des champs OTP
-      setOtp(Array(OTP_LENGTH).fill(""));
-      setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
+      if (status === 429) {
+        setError("Trop de tentatives. Compte temporairement bloqué. Réessayez dans 5 minutes.");
+        // Reset champs sur blocage
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
+      } else if (newAttempts >= MAX_ATTEMPTS) {
+        // 3 tentatives épuisées → reset les champs
+        setError(`Code incorrect. ${MAX_ATTEMPTS} tentatives épuisées. Vérifiez votre email et réessayez.`);
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setAttempts(0);
+        setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
+      } else {
+        // Tentative échouée mais pas encore au max → garder les champs, juste afficher l'erreur
+        const remaining = MAX_ATTEMPTS - newAttempts;
+        setError(
+          message
+            ? `${message} (${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""})`
+            : `Code incorrect. ${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}.`
+        );
+        // Ne pas reset les champs — laisser l'utilisateur corriger
+      }
 
     } finally {
       setLoading(false);
@@ -300,7 +317,11 @@ export default function OtpPage() {
             ) : (
               <p className="text-xs text-gray-400">
                 Nouveau code disponible dans{" "}
-                <span className="font-semibold text-gray-600">{timer}s</span>
+                <span className="font-semibold text-gray-600">
+                  {timer >= 60
+                    ? `${Math.floor(timer / 60)}min ${timer % 60}s`
+                    : `${timer}s`}
+                </span>
               </p>
             )}
           </div>

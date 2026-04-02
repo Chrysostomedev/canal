@@ -57,6 +57,8 @@ export default function ForgetPassword({ email, onSuccess, backHref = "/login" }
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState("");
+  const [resetAttempts, setResetAttempts] = useState(0);
+  const MAX_RESET_ATTEMPTS = 3;
 
   // ── Email masqué ────────────────────────────────────────────────────────────
   const maskedEmail = email
@@ -139,8 +141,9 @@ export default function ForgetPassword({ email, onSuccess, backHref = "/login" }
       setSuccess("Mot de passe réinitialisé avec succès !");
       onSuccess?.();
 
-      // Redirection vers /login après 1.5s
-      setTimeout(() => router.replace(backHref), 1500);
+      // Redirection vers /login après 1.5s — window.location pour éviter
+      // les problèmes de composant démonté avec router.replace dans setTimeout
+      setTimeout(() => { window.location.href = backHref; }, 1500);
 
     } catch (err: unknown) {
       console.error("Erreur resetPassword:", err);
@@ -148,18 +151,28 @@ export default function ForgetPassword({ email, onSuccess, backHref = "/login" }
       const status   = axiosErr?.response?.status;
       const message  = axiosErr?.response?.data?.message;
 
-      if (status === 400) {
-        // Code OTP invalide / expiré — message précis retourné par Laravel
-        setError(message || "Code invalide ou expiré. Recommencez la procédure.");
-      } else if (status === 429) {
-        setError("Trop de tentatives. Réessayez dans quelques minutes.");
-      } else {
-        setError(message || "Une erreur est survenue. Réessayez.");
-      }
+      const newAttempts = resetAttempts + 1;
+      setResetAttempts(newAttempts);
 
-      // Reset du code OTP pour une nouvelle tentative
-      setOtp(Array(OTP_LENGTH).fill(""));
-      setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
+      if (status === 429) {
+        setError("Trop de tentatives. Réessayez dans quelques minutes.");
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setResetAttempts(0);
+        setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
+      } else if (newAttempts >= MAX_RESET_ATTEMPTS) {
+        setError("Code invalide ou expiré. Recommencez la procédure depuis le début.");
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setResetAttempts(0);
+        setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
+      } else {
+        const remaining = MAX_RESET_ATTEMPTS - newAttempts;
+        setError(
+          message
+            ? `${message} (${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""})`
+            : `Code incorrect. ${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}.`
+        );
+        // Ne pas reset les champs OTP — laisser corriger
+      }
 
     } finally {
       setLoading(false);
@@ -257,7 +270,7 @@ export default function ForgetPassword({ email, onSuccess, backHref = "/login" }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading || !!success}
-                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all text-sm disabled:opacity-50"
+                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all text-sm disabled:opacity-50 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                   required
                   minLength={8}
                   autoComplete="new-password"
@@ -293,6 +306,7 @@ export default function ForgetPassword({ email, onSuccess, backHref = "/login" }
                     "w-full pl-11 pr-12 py-3 rounded-xl border bg-gray-50 text-gray-900 placeholder-gray-400",
                     "focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white",
                     "transition-all text-sm disabled:opacity-50",
+                    "[&::-ms-reveal]:hidden [&::-ms-clear]:hidden",
                     confirmPassword && password !== confirmPassword
                       ? "border-red-300"
                       : confirmPassword && password === confirmPassword

@@ -174,10 +174,24 @@ export const ManagerService = {
    * POST /admin/managers
    * Crée un nouveau gestionnaire.
    * Côté backend : crée User + enregistre dans table managers + assigne rôle MANAGER.
+   * Le backend retourne initial_password dans la réponse pour que le front puisse le stocker.
    */
   async createManager(payload: CreateManagerPayload): Promise<Manager> {
     const response = await axios.post("/admin/managers", payload);
-    return response.data.data;
+    const data = response.data.data;
+    // Stocker le mot de passe initial si le backend le retourne
+    // (utile pour que le manager puisse le récupérer sur sa page profil)
+    if (data?.initial_password) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("initial_password", data.initial_password);
+      }
+    } else if (payload.password) {
+      // Si le mot de passe a été fourni explicitement, le stocker aussi
+      if (typeof window !== "undefined") {
+        localStorage.setItem("initial_password", payload.password);
+      }
+    }
+    return data;
   },
 
   /**

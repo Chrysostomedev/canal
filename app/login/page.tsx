@@ -68,6 +68,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState("");
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const MAX_LOGIN_ATTEMPTS = 2; // 2 tentatives avant de proposer le reset
 
   // ── Sélecteur de pays — Côte d'Ivoire par défaut ──
   const [selectedCountry, setSelectedCountry] = useState<(typeof CANAL_COUNTRIES)[number]>(
@@ -91,12 +93,9 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // authService.login() tente super-admin → admin → manager → provider
-      // et stocke automatiquement le préfixe endpoint pour les étapes suivantes
       const data = await authService.login({ email, password });
 
       if (data?.otp_required) {
-        // OTP envoyé par mail → aller sur la page de vérification
         router.push("/login/otp");
         return;
       }
@@ -115,7 +114,16 @@ export default function LoginPage() {
         message = "Identifiants invalides. Vérifiez votre email et mot de passe.";
       }
 
-      setError(message ?? "Une erreur est survenue. Réessayez.");
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+
+      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+        // Après 2 tentatives : suggérer le reset, ne pas refresh la page
+        setError(`${message ?? "Identifiants invalides."} Après ${MAX_LOGIN_ATTEMPTS} tentatives, pensez à réinitialiser votre mot de passe.`);
+      } else {
+        setError(message ?? "Une erreur est survenue. Réessayez.");
+      }
+      // Ne jamais faire de refresh — juste afficher l'erreur
     } finally {
       setLoading(false);
     }
@@ -263,7 +271,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all text-sm"
+                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all text-sm [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                   required
                   autoComplete="current-password"
                 />

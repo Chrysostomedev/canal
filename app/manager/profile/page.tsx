@@ -22,6 +22,7 @@ export default function ManagerProfilePage() {
   const [formData, setFormData] = useState({ 
     first_name: "", 
     last_name: "", 
+    email: "",
     phone: "" 
   });
   const [passwordData, setPasswordData] = useState({ 
@@ -29,6 +30,8 @@ export default function ManagerProfilePage() {
     password: "", 
     password_confirmation: "" 
   });
+  // Mot de passe initial stocké à la création du compte (si disponible)
+  const [initialPassword, setInitialPassword] = useState<string | null>(null);
 
   const showFlash = (type: "success" | "error", msg: string) => {
     setFlash({ type, msg });
@@ -37,13 +40,13 @@ export default function ManagerProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      // Endpoint unifié pour récupérer "me"
       const res = await axiosInstance.get("/manager/me");
       const data = res.data?.data ?? res.data;
       setProfile(data);
       setFormData({ 
         first_name: data.first_name || "", 
         last_name: data.last_name || "", 
+        email: data.email || "",
         phone: data.phone || "" 
       });
     } catch (e) {
@@ -54,17 +57,30 @@ export default function ManagerProfilePage() {
     }
   };
 
-  useEffect(() => { fetchProfile(); }, []);
+  useEffect(() => { 
+    fetchProfile();
+    // Récupérer le mot de passe initial stocké à la création du compte
+    const stored = localStorage.getItem("initial_password");
+    if (stored) setInitialPassword(stored);
+  }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await axiosInstance.put("/manager/profile", formData);
+      // Le backend exige email dans le payload (required|email)
+      await axiosInstance.put("/manager/profile", {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email || profile?.email,
+        phone: formData.phone,
+      });
       showFlash("success", "Profil mis à jour avec succès.");
       fetchProfile();
     } catch (e: any) {
-      showFlash("error", e.response?.data?.message || "Une erreur est survenue.");
+      const errors = e.response?.data?.errors;
+      const msg = errors ? Object.values(errors).flat().join(" ") : (e.response?.data?.message || "Une erreur est survenue.");
+      showFlash("error", msg);
     } finally { setSaving(false); }
   };
 
@@ -93,9 +109,12 @@ export default function ManagerProfilePage() {
     formDataObj.append("avatar", file);
     setSaving(true);
     try {
-      await axiosInstance.post("/manager/profile/avatar", formDataObj, { 
+      const res = await axiosInstance.post("/manager/profile/avatar", formDataObj, { 
         headers: { "Content-Type": "multipart/form-data" } 
       });
+      // Stocker l'URL de la photo dans localStorage pour la Navbar
+      const avatarUrl = res.data?.data?.url || res.data?.url;
+      if (avatarUrl) localStorage.setItem("profile_picture_url", avatarUrl);
       showFlash("success", "Photo de profil mise à jour.");
       fetchProfile();
     } catch (e) { showFlash("error", "Erreur lors de l'envoi de la photo."); }
@@ -292,13 +311,25 @@ export default function ManagerProfilePage() {
                   <div className="space-y-6">
                     <div className="space-y-2.5">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Mot de passe actuel</label>
-                      <input 
-                        type="password" 
-                        value={passwordData.current_password} 
-                        onChange={e => setPasswordData({...passwordData, current_password: e.target.value})} 
-                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900" 
-                        placeholder="••••••••" 
-                      />
+                      <div className="relative">
+                        <input 
+                          type="password" 
+                          value={passwordData.current_password} 
+                          onChange={e => setPasswordData({...passwordData, current_password: e.target.value})} 
+                          className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900" 
+                          placeholder="••••••••" 
+                        />
+                        {/* Bouton pour pré-remplir avec le mot de passe initial */}
+                        {initialPassword && (
+                          <button
+                            type="button"
+                            onClick={() => setPasswordData({...passwordData, current_password: initialPassword})}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-orange-500 hover:text-orange-700 uppercase tracking-widest border border-orange-200 bg-orange-50 px-3 py-1.5 rounded-xl transition"
+                          >
+                            Mot de passe initial
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2.5">

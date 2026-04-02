@@ -467,7 +467,14 @@ export default function TicketsPage() {
         await TicketService.updateTicket(editingTicket.id, formData);
         showFlash("success", "Ticket mis à jour avec succès.");
       } else {
-        await TicketService.createTicket(formData);
+        // Auto-calcul due_at : ticket curatif → planned_at + 72h
+        const payload = { ...formData };
+        if (payload.type === "curatif" && payload.planned_at && !payload.due_at) {
+          const planned = new Date(payload.planned_at);
+          planned.setHours(planned.getHours() + 72);
+          payload.due_at = planned.toISOString().slice(0, 10);
+        }
+        await TicketService.createTicket(payload);
         showFlash("success", "Ticket créé avec succès.");
       }
       await fetchTickets();
@@ -729,8 +736,13 @@ export default function TicketsPage() {
     },
     { name: "subject",    label: "Sujet",          type: "text" },
     { name: "planned_at", label: "Date planifiée", type: "date", required: true, icon: CalendarDays },
-    { name: "due_at",     label: "Date limite",    type: "date", required: true, icon: CalendarCheck },
-    // Description + Photos occupent toute la largeur (gridSpan: 2)
+    {
+      name: "due_at",
+      label: "Date limite (auto +72h si curatif)",
+      type: "date",
+      required: false, // calculé automatiquement si curatif + planned_at renseigné
+      icon: CalendarCheck,
+    },
     {
       name: "description", label: "Description", type: "rich-text", gridSpan: 2,
       placeholder: "Décrivez le problème ou l'intervention",

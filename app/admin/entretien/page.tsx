@@ -13,64 +13,51 @@ import {
     Copy, Check, CalendarDays, ClipboardList,
     ShieldCheck, PlayCircle, CheckSquare,
     AlertTriangle, Star, Send, ThumbsUp, ThumbsDown,
-    Wrench,
+    Wrench, RefreshCw,
 } from "lucide-react";
-import { useState } from "react";
-// cette page entretien est destiné pour les utilisateurs avec le role admin et super-admin avec lecture et consultation à ameliorer et créer un service et hooks dans le dossier hooks/admin et services/admin
+import { useState, useEffect } from "react";
+import { useReports } from "../../../hooks/admin/useReports";
+import { ReportService, InterventionReport } from "../../../services/admin/report.service";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type MaintenanceStatus =
     | "planifié" | "en_cours" | "rapporté" | "validé"
-    | "clos" | "rejeté" | "anomalie";
+    | "clos" | "rejeté" | "anomalie"
+    | "pending" | "validated" | "rejected" | "submitted";
 
 type AnomalyAction = "ras" | "immediate" | "devis";
 
-interface MaintenanceTicket {
-    id: number;
-    reference: string;
-    provider_name?: string;
-    site: { nom?: string; name?: string } | null;
-    site_id: number;
-    scheduled_date: string;
-    completed_date?: string;
-    status: MaintenanceStatus;
-    report?: {
-        observations: string;
-        anomaly_action: AnomalyAction;
-        rejection_reason?: string;
-        submitted_at?: string;
-        validated_at?: string;
-        rating?: number;
-        rating_comment?: string;
-    };
-    curative_ticket_id?: number;
-    created_at: string;
-}
-
 // ─── Static helpers ───────────────────────────────────────────────────────────
 
-const ALL_STATUSES: MaintenanceStatus[] = [
+const ALL_STATUSES = [
+    "pending", "validated", "rejected", "submitted",
     "planifié", "en_cours", "rapporté", "validé", "clos", "rejeté", "anomalie",
 ];
 
 const STATUS_LABELS: Record<string, string> = {
     planifié: "Planifié", en_cours: "En cours", rapporté: "Rapporté",
     validé: "Validé", clos: "Clôturé", rejeté: "Rejeté", anomalie: "Anomalie",
+    pending: "En attente", validated: "Validé", rejected: "Rejeté", submitted: "Soumis",
 };
 
 const STATUS_STYLES: Record<string, string> = {
     planifié: "border-blue-200   bg-blue-50   text-blue-700",
     en_cours: "border-amber-200  bg-amber-50  text-amber-700",
     rapporté: "border-violet-200 bg-violet-50 text-violet-700",
-    validé: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    clos: "border-slate-200  bg-slate-50  text-slate-500",
-    rejeté: "border-red-200    bg-red-50    text-red-700",
+    validé:   "border-emerald-200 bg-emerald-50 text-emerald-700",
+    clos:     "border-slate-200  bg-slate-50  text-slate-500",
+    rejeté:   "border-red-200    bg-red-50    text-red-700",
     anomalie: "border-orange-200 bg-orange-50 text-orange-700",
+    pending:   "border-amber-200  bg-amber-50  text-amber-700",
+    validated: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    rejected:  "border-red-200    bg-red-50    text-red-700",
+    submitted: "border-violet-200 bg-violet-50 text-violet-700",
 };
 
 const STATUS_DOT: Record<string, string> = {
     planifié: "#3b82f6", en_cours: "#f59e0b", rapporté: "#8b5cf6",
     validé: "#10b981", clos: "#94a3b8", rejeté: "#ef4444", anomalie: "#f97316",
+    pending: "#f59e0b", validated: "#10b981", rejected: "#ef4444", submitted: "#8b5cf6",
 };
 
 const WORKFLOW_STEPS = [
@@ -81,64 +68,7 @@ const WORKFLOW_STEPS = [
     { key: "clos", icon: CheckSquare, label: "Clôturé" },
 ];
 
-const MOCK_TICKETS: MaintenanceTicket[] = [
-    {
-        id: 1, reference: "ENT-2025-001",
-        provider_name: "Techni-Services SARL",
-        site: { nom: "Siège Social Abidjan" }, site_id: 1,
-        scheduled_date: "2025-07-15T08:00:00Z", status: "planifié",
-        created_at: "2025-07-01T10:00:00Z",
-    },
-    {
-        id: 2, reference: "ENT-2025-002",
-        provider_name: "ProMaintenance CI",
-        site: { nom: "Antenne Bouaké" }, site_id: 2,
-        scheduled_date: "2025-07-10T09:00:00Z",
-        completed_date: "2025-07-10T14:30:00Z", status: "rapporté",
-        report: {
-            observations: "Climatisation salle serveur défectueuse, filtre encrassé. Nettoyage effectué, remplacement filtre recommandé.",
-            anomaly_action: "devis",
-            submitted_at: "2025-07-10T15:00:00Z",
-        },
-        created_at: "2025-06-28T10:00:00Z",
-    },
-    {
-        id: 3, reference: "ENT-2025-003",
-        provider_name: "Techni-Services SARL",
-        site: { nom: "Agence Plateau" }, site_id: 3,
-        scheduled_date: "2025-07-05T08:00:00Z", status: "clos",
-        report: {
-            observations: "RAS. Tous les équipements sont en bon état de fonctionnement. Vérification complète effectuée.",
-            anomaly_action: "ras",
-            validated_at: "2025-07-06T09:00:00Z",
-            submitted_at: "2025-07-05T16:00:00Z",
-            rating: 5, rating_comment: "Rapport très complet et détaillé.",
-        },
-        created_at: "2025-06-20T10:00:00Z",
-    },
-    {
-        id: 4, reference: "ENT-2025-004",
-        provider_name: "Facili-Tech Abidjan",
-        site: { nom: "Datacenter Yopougon" }, site_id: 4,
-        scheduled_date: "2025-07-12T08:00:00Z", status: "rejeté",
-        report: {
-            observations: "Rapport incomplet.",
-            anomaly_action: "ras",
-            rejection_reason: "Photos des équipements vérifiés absentes.",
-            submitted_at: "2025-07-12T13:00:00Z",
-        },
-        created_at: "2025-06-25T10:00:00Z",
-    },
-    {
-        id: 5, reference: "ENT-2025-005",
-        provider_name: "ProMaintenance CI",
-        site: { nom: "Siège Social Abidjan" }, site_id: 1,
-        scheduled_date: "2025-07-18T08:00:00Z", status: "en_cours",
-        created_at: "2025-07-02T10:00:00Z",
-    },
-];
-
-const formatDate = (d: string) =>
+const formatDate = (d?: string | null) =>
     d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -593,121 +523,145 @@ function MaintenancePreviewPanel({
     );
 }
 
-// ─── Page principale Manager ──────────────────────────────────────────────────
+// ─── Page principale Admin/Super-Admin ───────────────────────────────────────
 
 export default function ManagerEntretienPage() {
     const router = useRouter();
 
-    const [tickets, setTickets] = useState<MaintenanceTicket[]>(MOCK_TICKETS);
+    const {
+        reports,
+        stats,
+        isLoading,
+        error: apiError,
+        fetchReports,
+        fetchStats,
+        validateReport: validateReportHook,
+        rejectReport: rejectReportHook,
+    } = useReports();
+
     const [statusFilter, setStatusFilter] = useState("");
-    const [selectedTicket, setSelectedTicket] = useState<MaintenanceTicket | null>(null);
+    const [selectedTicket, setSelectedTicket] = useState<InterventionReport | null>(null);
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [isValidationOpen, setIsValidationOpen] = useState(false);
-    const [validationTarget, setValidationTarget] = useState<MaintenanceTicket | null>(null);
+    const [validationTarget, setValidationTarget] = useState<InterventionReport | null>(null);
     const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    const openPanel = (t: MaintenanceTicket) => { setSelectedTicket(t); setIsPanelOpen(true); };
+    useEffect(() => {
+        fetchReports();
+        fetchStats();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const openPanel = (t: InterventionReport) => { setSelectedTicket(t); setIsPanelOpen(true); };
     const closePanel = () => setIsPanelOpen(false);
-    const openValidation = (t: MaintenanceTicket) => {
+    const openValidation = (t: InterventionReport) => {
         setValidationTarget(t); setIsPanelOpen(false); setIsValidationOpen(true);
     };
     const closeValidation = () => { setIsValidationOpen(false); setValidationTarget(null); };
 
-    const filtered = statusFilter ? tickets.filter(t => t.status === statusFilter) : tickets;
+    const filtered = statusFilter ? reports.filter(t => t.status === statusFilter) : reports;
+
+    const pendingCount = reports.filter(t => t.status === "submitted" || t.status === "rapporté" || t.status === "pending").length;
 
     const kpis = [
-        { label: "Total entretiens", value: tickets.length, delta: "", trend: "up" as const },
-        { label: "À valider", value: tickets.filter(t => t.status === "rapporté").length, delta: "", trend: "up" as const },
-        { label: "Validés", value: tickets.filter(t => t.status === "validé").length, delta: "", trend: "up" as const },
-        { label: "Clôturés", value: tickets.filter(t => t.status === "clos").length, delta: "", trend: "up" as const },
-    ];
-
-    const actions = [
-        { label: "Exporter", icon: Download, onClick: () => alert("Export XLSX"), variant: "secondary" as const },
+        { label: "Total entretiens", value: stats?.total_reports ?? reports.length, delta: "", trend: "up" as const },
+        { label: "À valider",        value: pendingCount, delta: "", trend: "up" as const },
+        { label: "Validés",          value: stats?.validated_reports ?? reports.filter(t => t.status === "validated" || t.status === "validé").length, delta: "", trend: "up" as const },
+        { label: "Note moyenne",     value: stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : "—", delta: "", trend: "up" as const },
     ];
 
     const handleValidate = async (data: { rating: number; comment: string }) => {
         if (!validationTarget) return;
         setSubmitting(true);
-        await new Promise(r => setTimeout(r, 900));
-        setTickets(prev => prev.map(t =>
-            t.id === validationTarget.id
-                ? { ...t, status: "validé", report: { ...t.report!, rating: data.rating, rating_comment: data.comment, validated_at: new Date().toISOString() } }
-                : t
-        ));
-        setSubmitting(false);
-        closeValidation();
-        setSubmitSuccess("Rapport validé et transmis à l'administrateur !");
-        setTimeout(() => setSubmitSuccess(null), 4000);
+        setSubmitError(null);
+        try {
+            await validateReportHook(validationTarget.id, {
+                result: "RAS",
+                rating: data.rating,
+                comment: data.comment,
+            });
+            closeValidation();
+            setSubmitSuccess("Rapport validé avec succès !");
+            setTimeout(() => setSubmitSuccess(null), 4000);
+        } catch (err: any) {
+            setSubmitError(err?.response?.data?.message || "Erreur lors de la validation");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleReject = async (reason: string) => {
         if (!validationTarget) return;
         setSubmitting(true);
-        await new Promise(r => setTimeout(r, 900));
-        setTickets(prev => prev.map(t =>
-            t.id === validationTarget.id
-                ? { ...t, status: "rejeté", report: { ...t.report!, rejection_reason: reason } }
-                : t
-        ));
-        setSubmitting(false);
-        closeValidation();
-        setSubmitSuccess("Rapport rejeté. Le prestataire sera notifié.");
-        setTimeout(() => setSubmitSuccess(null), 4000);
+        setSubmitError(null);
+        try {
+            await rejectReportHook(validationTarget.id, { reason });
+            closeValidation();
+            setSubmitSuccess("Rapport rejeté. Le prestataire sera notifié.");
+            setTimeout(() => setSubmitSuccess(null), 4000);
+        } catch (err: any) {
+            setSubmitError(err?.response?.data?.message || "Erreur lors du rejet");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const columns = [
         {
             header: "Référence", key: "reference",
-            render: (_: any, row: MaintenanceTicket) => (
-                <span className="font-black text-slate-900 text-sm">{row.reference}</span>
+            render: (_: any, row: InterventionReport) => (
+                <span className="font-black text-slate-900 text-sm">
+                    {(row as any).reference || `#${row.id}`}
+                </span>
             ),
         },
         {
             header: "Prestataire", key: "provider",
-            render: (_: any, row: MaintenanceTicket) => (
-                <span className="text-xs text-slate-600 font-medium">{row.provider_name ?? "—"}</span>
+            render: (_: any, row: InterventionReport) => (
+                <span className="text-xs text-slate-600 font-medium">
+                    {row.provider?.company_name ?? row.provider?.name ?? "—"}
+                </span>
             ),
         },
         {
             header: "Site", key: "site",
-            render: (_: any, row: MaintenanceTicket) => (
-                <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? row.site?.name ?? "—"}</span>
+            render: (_: any, row: InterventionReport) => (
+                <span className="text-xs text-slate-600 font-medium">
+                    {row.site?.nom ?? row.site?.name ?? "—"}
+                </span>
             ),
         },
         {
-            header: "Date planifiée", key: "scheduled_date",
-            render: (_: any, row: MaintenanceTicket) => (
+            header: "Date", key: "start_date",
+            render: (_: any, row: InterventionReport) => (
                 <span className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
                     <CalendarDays size={12} className="text-slate-400" />
-                    {formatDate(row.scheduled_date)}
+                    {formatDate(row.start_date ?? row.created_at)}
                 </span>
             ),
         },
         {
             header: "Statut", key: "status",
-            render: (_: any, row: MaintenanceTicket) => <StatusBadge status={row.status} />,
+            render: (_: any, row: InterventionReport) => <StatusBadge status={row.status ?? "pending"} />,
         },
         {
             header: "Note", key: "rating",
-            render: (_: any, row: MaintenanceTicket) => (
-                row.report?.rating
-                    ? <StarRating value={row.report.rating} readonly />
+            render: (_: any, row: InterventionReport) => (
+                row.rating
+                    ? <StarRating value={row.rating} readonly />
                     : <span className="text-xs text-slate-300 font-medium">—</span>
             ),
         },
         {
             header: "Actions", key: "actions",
-            render: (_: any, row: MaintenanceTicket) => (
+            render: (_: any, row: InterventionReport) => (
                 <div className="flex items-center gap-2">
                     <button onClick={() => openPanel(row)}
                         className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600 hover:text-slate-900">
                         <Eye size={16} />
                     </button>
-                    {/* Bouton validation rapide si rapporté */}
-                    {row.status === "rapporté" && (
+                    {(row.status === "submitted" || row.status === "rapporté" || row.status === "pending") && (
                         <button
                             onClick={() => openValidation(row)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600
@@ -717,7 +671,7 @@ export default function ManagerEntretienPage() {
                         </button>
                     )}
                     <button
-                        onClick={() => router.push(`/manager/entretiens/${row.id}`)}
+                        onClick={() => router.push(`/admin/rapports/details/${row.id}`)}
                         className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition">
                         <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
                     </button>
@@ -738,23 +692,23 @@ export default function ManagerEntretienPage() {
                         subtitle="Consultez et validez les rapports d'entretien préventif soumis par les prestataires"
                     />
 
-                    {submitError && (
+                    {(apiError || submitError) && (
                         <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
-                            <AlertCircle size={15} className="shrink-0" /> {submitError}
+                            <AlertCircle size={15} className="shrink-0" /> {apiError || submitError}
                         </div>
                     )}
 
-                    {/* Bandeau "À valider" si rapports en attente */}
-                    {tickets.filter(t => t.status === "rapporté").length > 0 && (
+                    {/* Bandeau "À valider" */}
+                    {pendingCount > 0 && (
                         <div className="flex items-center gap-3 bg-violet-50 border border-violet-200 text-violet-800
               px-5 py-4 rounded-2xl text-sm font-semibold">
                             <ClipboardList size={16} className="shrink-0 text-violet-600" />
                             <span>
-                                <strong>{tickets.filter(t => t.status === "rapporté").length} rapport{tickets.filter(t => t.status === "rapporté").length > 1 ? "s" : ""}</strong>
+                                <strong>{pendingCount} rapport{pendingCount > 1 ? "s" : ""}</strong>
                                 {" "}en attente de validation
                             </span>
                             <button
-                                onClick={() => setStatusFilter("rapporté")}
+                                onClick={() => setStatusFilter("submitted")}
                                 className="ml-auto text-xs font-black text-violet-600 hover:text-violet-800 underline underline-offset-2"
                             >
                                 Voir →
@@ -773,7 +727,9 @@ export default function ManagerEntretienPage() {
                                 className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold
                   rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900 transition cursor-pointer">
                                 <option value="">Tous les statuts</option>
-                                {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                                {["pending","submitted","validated","rejected"].map(s => (
+                                    <option key={s} value={s}>{STATUS_LABELS[s] ?? s}</option>
+                                ))}
                             </select>
                             {statusFilter && (
                                 <button onClick={() => setStatusFilter("")}
@@ -782,7 +738,9 @@ export default function ManagerEntretienPage() {
                                 </button>
                             )}
                         </div>
-                        <ActionGroup actions={actions} />
+                        <ActionGroup actions={[
+                            { label: "Actualiser", icon: RefreshCw, onClick: () => { fetchReports(); fetchStats(); }, variant: "secondary" as const },
+                        ]} />
                     </div>
 
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -790,9 +748,15 @@ export default function ManagerEntretienPage() {
                             <h3 className="text-sm font-bold text-slate-800">Entretiens préventifs</h3>
                             <span className="text-xs text-slate-400">{filtered.length} entretien{filtered.length > 1 ? "s" : ""}</span>
                         </div>
-                        <div className="px-6 py-4">
-                            <DataTable columns={columns} data={filtered} onViewAll={() => { }} />
-                        </div>
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center p-20 gap-4">
+                                <div className="w-8 h-8 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin" />
+                            </div>
+                        ) : (
+                            <div className="px-6 py-4">
+                                <DataTable columns={columns} data={filtered} onViewAll={() => {}} />
+                            </div>
+                        )}
                     </div>
 
                 </main>
@@ -811,7 +775,7 @@ export default function ManagerEntretienPage() {
 
             {isValidationOpen && validationTarget && (
                 <ValidationModal
-                    ticket={validationTarget}
+                    ticket={validationTarget as any}
                     onClose={closeValidation}
                     onValidate={handleValidate}
                     onReject={handleReject}

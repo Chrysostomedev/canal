@@ -86,6 +86,7 @@ export default function Navbar() {
   const [lastName,  setLastName]  = useState("");
   const [role,      setRole]      = useState("");
   const [notifRoute, setNotifRoute] = useState("#");
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
   // Notifications
   const [unreadCount, setUnreadCount] = useState(0);
@@ -99,6 +100,23 @@ export default function Navbar() {
     setLastName(authService.getLastName());
     setRole(currentRole);
     setNotifRoute(getNotificationsRoute(currentRole));
+    // Charger la photo de profil depuis localStorage ou l'API
+    const storedPic = localStorage.getItem("profile_picture_url");
+    if (storedPic) setProfilePicture(storedPic);
+    else {
+      // Fetch depuis l'API pour avoir la photo à jour
+      const prefix = getApiPrefix(currentRole);
+      if (currentRole && authService.isAuthenticated()) {
+        api.get(`${prefix}/me`).then(res => {
+          const data = res.data?.data ?? res.data;
+          if (data?.profile_picture_path) {
+            const url = data.url || `${process.env.NEXT_PUBLIC_API_URL}/storage/${data.profile_picture_path}`;
+            setProfilePicture(url);
+            localStorage.setItem("profile_picture_url", url);
+          }
+        }).catch(() => {});
+      }
+    }
   }, []);
 
   // Polling notifications — 15s si page active, 60s si en arrière-plan
@@ -199,8 +217,13 @@ export default function Navbar() {
 
         {/* Infos utilisateur */}
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-theme-primary text-white font-black flex items-center justify-center text-sm tracking-wide shrink-0">
-            {getInitials()}
+          <div className="w-10 h-10 rounded-full bg-theme-primary text-white font-black flex items-center justify-center text-sm tracking-wide shrink-0 overflow-hidden">
+            {profilePicture ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profilePicture} alt="Profil" className="object-cover w-full h-full" />
+            ) : (
+              getInitials()
+            )}
           </div>
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2">

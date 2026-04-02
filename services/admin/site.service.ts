@@ -198,9 +198,9 @@ export const getSiteStats = async () => {
   return response.data?.data ?? response.data;
 };
 
-// ── Managers (rôle manager) — FIX (Bug 1) : parsing robuste
+// ── Managers (rôle manager) — filtre par role_slug comme attendu par AdminsController
 export const getManagers = async (): Promise<Manager[]> => {
-  const response = await axios.get("/admin/admins", { params: { role: "MANAGER" } });
+  const response = await axios.get("/admin/admins", { params: { role_slug: "MANAGER" } });
   return parseManagersResponse(response.data);
 };
 

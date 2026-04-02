@@ -25,14 +25,33 @@ api.interceptors.request.use(
 );
 
 // === RESPONSE INTERCEPTOR ===
+// Liste des endpoints d'auth qui peuvent légitimement retourner 401
+// sans que ça signifie "session expirée → rediriger vers /login"
+const AUTH_ENDPOINTS = [
+  "/admin/verify-otp",
+  "/admin/login",
+  "/admin/forgot-password",
+  "/admin/reset-password",
+  "/provider/verify-otp",
+  "/provider/login",
+];
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (typeof window !== "undefined") {
       if (error.response?.status === 401) {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem("user_role");
-        window.location.href = "/login";
+        // Ne pas rediriger si on est sur un endpoint d'auth —
+        // c'est une erreur métier (mauvais code OTP, mauvais mdp),
+        // pas une session expirée. Laisser le composant gérer l'erreur.
+        const requestUrl: string = error.config?.url ?? "";
+        const isAuthEndpoint = AUTH_ENDPOINTS.some(ep => requestUrl.includes(ep));
+
+        if (!isAuthEndpoint) {
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem("user_role");
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

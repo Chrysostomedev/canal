@@ -80,11 +80,6 @@ const MENU_ADMIN: MenuItem[] = [
     icon: <Grid size={20} />,
     href: "/admin/gestionnaires",
   },
-  {
-    label: "Prestataires",
-    icon: <Users size={20} />,
-    href: "/admin/prestataires",
-  },
 ];
 
 /** PROVIDER — ses propres pages uniquement */
@@ -132,7 +127,7 @@ interface BottomItem {
 /** SUPER-ADMIN : paramètres + gestion des rôles */
 const BOTTOM_SUPER_ADMIN: BottomItem[] = [
   { label: "Gestion des rôles", href: "/admin/roles", icon: <Shield size={20} /> },
-  { label: "Audit Trail", href: "/admin/audit", icon: <FileText size={20} /> },
+  // { label: "Audit Trail", href: "/admin/audit", icon: <FileText size={20} /> },
   { label: "Profil", href: "/admin/profile", icon: <UserIcon size={20} /> },
   { label: "Paramètres", href: "/admin/parametres", icon: <Settings size={20} /> },
 ];

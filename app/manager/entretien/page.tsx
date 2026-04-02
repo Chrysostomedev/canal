@@ -425,6 +425,7 @@ export default function ManagerEntretienPage() {
         rating: data.rating,
         comment: data.comment,
       });
+      // Refresh depuis l'API pour avoir les données à jour
       refresh();
       closeValidation();
       setSubmitSuccess("Rapport validé !");
@@ -445,6 +446,7 @@ export default function ManagerEntretienPage() {
         result: "ANOMALIE",
         comment: `REJET: ${reason}`,
       });
+      // Refresh depuis l'API pour avoir les données à jour
       refresh();
       closeValidation();
       setSubmitSuccess("Rapport rejeté !");
