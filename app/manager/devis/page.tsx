@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
@@ -90,19 +89,19 @@ export default function DevisPage() {
       key: "provider",
       render: (_, row) => (
          <div className="flex flex-col">
-            <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || "—"}</span>
+            <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || " E}</span>
          </div>
       )
     },
     {
       header: "Site",
       key: "site",
-      render: (_, row) => <span className="text-slate-600 font-medium">{row.site?.nom || row.site?.name || "—"}</span>
+      render: (_, row) => <span className="text-slate-600 font-medium">{row.site?.nom || row.site?.name || " E}</span>
     },
     {
       header: "Date",
       key: "created_at",
-      render: (val) => <span className="text-slate-500">{val ? new Date(val as string).toLocaleDateString() : "—"}</span>
+      render: (val) => <span className="text-slate-500">{val ? new Date(val as string).toLocaleDateString() : " E}</span>
     },
     {
       header: "Montant TTC",
@@ -150,12 +149,11 @@ export default function DevisPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
-      <Sidebar />
+    <div className="
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader
             title="Devis"
             subtitle="Consultez et validez les devis transmis par vos prestataires."

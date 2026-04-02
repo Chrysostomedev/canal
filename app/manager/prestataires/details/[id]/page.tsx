@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import Paginate from "@/components/Paginate";
 import StatsCard from "@/components/StatsCard";
 import ActionGroup from "@/components/ActionGroup";
@@ -211,8 +210,6 @@ export default function ProviderDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-
       <div className="flex flex-col flex-1 overflow-hidden">
 
         <Navbar />

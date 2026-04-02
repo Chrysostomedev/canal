@@ -41,7 +41,7 @@ export default function AdminLoading() {
         </aside>
   
         {/* ── Contenu principal ── */}
-        <div className="flex-1 pl-64 flex flex-col">
+        <div className="flex-1  flex flex-col">
           <header className="fixed top-0 left-64 w-[calc(100%-16rem)] h-[72px] bg-white border-b border-slate-100 z-30 flex items-center justify-between px-8">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse shrink-0" />

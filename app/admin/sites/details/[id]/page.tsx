@@ -544,7 +544,6 @@ export default function SiteDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
-      <Sidebar />
       <div className="flex-1 flex flex-col pl-64">
         <Navbar />
 

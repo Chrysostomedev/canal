@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import StatsCard from "@/components/StatsCard";
 
 import { ReportService, InterventionReport, ValidateReportPayload } from "../../../../../services/admin/report.service";
@@ -272,7 +271,6 @@ export default function ReportDetailPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
       <div className="flex-1 flex flex-col pl-64">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">

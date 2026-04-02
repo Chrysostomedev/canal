@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
@@ -14,10 +13,10 @@ import { Ticket, ProviderUpdatableStatus } from "../../../services/provider/prov
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const formatHeures = (h: number | null | undefined) =>
-  h != null ? `${h}h` : "—";
+  h != null ? `${h}h` : " E;
 
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return " E;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -112,14 +111,14 @@ export default function ProviderTicketsPage() {
       key: "subject",
       render: (_: any, row: Ticket) => (
         <span className="font-medium text-slate-900 text-sm max-w-[200px] truncate block">
-          {row.subject ?? "—"}
+          {row.subject ?? " E}
         </span>
       ),
     },
     {
       header: "Site",
       key: "site",
-      render: (_: any, row: Ticket) => <span className="text-sm text-slate-600">{row.site?.nom ?? "—"}</span>,
+      render: (_: any, row: Ticket) => <span className="text-sm text-slate-600">{row.site?.nom ?? " E}</span>,
     },
     {
       header: "Type",
@@ -163,7 +162,7 @@ export default function ProviderTicketsPage() {
   const kpis1 = [
     { label: "Coût moyen / ticket",  value: stats?.cout_moyen_par_ticket          ?? 0, isCurrency: true, delta: "", trend: "up" as const },
    // AVANt
-// APRÈS
+// APRÁE
 { label: "Total tickets",    value: stats?.total    ?? 0, delta: "", trend: "up" as const },
 { label: "Tickets en cours", value: stats?.en_cours ?? 0, delta: "", trend: "up" as const },
 { label: "Tickets clôturés", value: stats?.clotures ?? 0, delta: "", trend: "up" as const },
@@ -176,13 +175,12 @@ export default function ProviderTicketsPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900">
-      <Sidebar />
+    <div className="
 
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
 
           <div className="flex items-center justify-between">
             <PageHeader
@@ -396,9 +394,9 @@ function TicketDetailPanel({
 
           {/* Infos */}
           {[
-            { icon: <MapPin size={13} />,       label: "Site",            value: ticket.site?.nom ?? "—" },
-            { icon: <Wrench size={13} />,       label: "Actif",           value: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "—" },
-            { icon: <AlertTriangle size={13} />,label: "Service",         value: ticket.service?.name ?? "—" },
+            { icon: <MapPin size={13} />,       label: "Site",            value: ticket.site?.nom ?? " E },
+            { icon: <Wrench size={13} />,       label: "Actif",           value: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : " E },
+            { icon: <AlertTriangle size={13} />,label: "Service",         value: ticket.service?.name ?? " E },
             { icon: <Clock size={13} />,        label: "Planifié le",     value: formatDate(ticket.planned_at) },
             { icon: <Clock size={13} />,        label: "Échéance",        value: formatDate(ticket.due_at) },
             { icon: <CheckCircle2 size={13} />, label: "Résolu le",       value: formatDate(ticket.resolved_at) },

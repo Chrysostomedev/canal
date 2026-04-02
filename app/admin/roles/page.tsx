@@ -9,16 +9,15 @@ import {
 } from "lucide-react";
 import axiosInstance from "../../../core/axios";
 
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════╁E
 // DONNÉES STATIQUES
-// ═══════════════════════════════════════
+// ══════════════════════════════════════╁E
 
 const ROLES_CONFIG: Record<string, {
   label: string; badge: string; dot: string; icon: any; count: number; description: string;
@@ -102,9 +101,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════╁E
 // SIDE PANEL UTILISATEUR
-// ═══════════════════════════════════════
+// ══════════════════════════════════════╁E
 
 function UserSidePanel({ user, onClose, onToggleStatus }: {
   user: User | null; onClose: () => void;
@@ -213,10 +212,10 @@ function UserSidePanel({ user, onClose, onToggleStatus }: {
   );
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════╁E
 // ADD ADMIN SIDE PANEL
-// POST /admin/admins — role_slug: admin | super-admin
-// ═══════════════════════════════════════
+// POST /admin/admins  Erole_slug: admin | super-admin
+// ══════════════════════════════════════╁E
 
 const EMPTY_FORM = { name: "", email: "", phone: "", password: "", role_slug: "admin" as "admin" | "super-admin" };
 
@@ -262,7 +261,7 @@ function AddAdminSidePanel({ open, onClose, onSuccess }: {
         email:  form.email,
         phone:  form.phone,
         role:   form.role_slug,
-        site:   "—",
+        site:   " E,
         status: "active",
         joined: new Date().toLocaleDateString("fr-FR"),
       });
@@ -340,7 +339,7 @@ function AddAdminSidePanel({ open, onClose, onSuccess }: {
             </div>
           )}
 
-          {/* Sélecteur de rôle — visuels */}
+          {/* Sélecteur de rôle  Evisuels */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
               <Shield size={10} /> Rôle
@@ -423,9 +422,9 @@ function AddAdminSidePanel({ open, onClose, onSuccess }: {
   );
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════╁E
 // PAGE
-// ═══════════════════════════════════════
+// ══════════════════════════════════════╁E
 
 export default function RolesPage() {
   const [loading,      setLoading]      = useState(true);
@@ -488,7 +487,7 @@ export default function RolesPage() {
         name: u.first_name + " " + u.last_name,
         role: (u.roles?.[0]?.name || u.role_name || roleFilter).toLowerCase(),
         site: u.manager?.site?.nom || u.provider?.company_name || "N/A",
-        phone: u.phone || u.phone_number || "—",
+        phone: u.phone || u.phone_number || " E,
         email: u.email,
         status: u.status === 1 || u.is_active || u.status === "active" ? "active" : "inactive",
         joined: new Date(u.created_at).toLocaleDateString("fr-FR"),
@@ -620,12 +619,11 @@ export default function RolesPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
           <PageHeader
             title="Gestion des rôles & Utilisateurs"
             subtitle="Gérez les rôles, permissions et accès de tous les utilisateurs"

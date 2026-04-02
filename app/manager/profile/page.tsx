@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import axiosInstance from "../../../core/axios";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 
@@ -130,8 +129,7 @@ export default function ManagerProfilePage() {
   };
 
   if (loading) return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+    <div className="
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
@@ -142,11 +140,10 @@ export default function ManagerProfilePage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
-      <Sidebar />
+    <div className="
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader title="Mon Profil" subtitle="Gérez vos informations personnelles et votre sécurité" />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
@@ -218,7 +215,7 @@ export default function ManagerProfilePage() {
                     <div className="flex flex-col min-w-0">
                       <span className="text-[10px] font-black text-slate-400 uppercase">Depuis le</span>
                       <span className="text-slate-700 font-bold text-sm">
-                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : "—"}
+                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : " E}
                       </span>
                     </div>
                   </div>

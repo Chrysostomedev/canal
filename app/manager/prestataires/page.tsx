@@ -73,16 +73,15 @@ export default function PrestatairesPage() {
     { label: "Total prestataires",       value: apiStats?.total_providers ?? 0, trend: "up" as const },
     { label: "Prestataires actifs",      value: apiStats?.active_providers ?? 0, trend: "up" as const },
     { label: "Prestataires inactifs",    value: apiStats?.inactive_providers ?? 0, trend: "down" as const },
-    { label: "Délai moyen intervention", value: apiStats?.average_intervention_time || "—", trend: "up" as const },
+    { label: "Délai moyen intervention", value: apiStats?.average_intervention_time || " E, trend: "up" as const },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
-      <Sidebar />
+    <div className="
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader title="Prestataires" subtitle="Consultez et gérez vos prestataires de services." />
 
           {apiError && (
@@ -159,7 +158,7 @@ export default function PrestatairesPage() {
             phone:      selectedProvider.user?.phone,
             email:      selectedProvider.user?.email,
             category:   selectedProvider.service?.name,
-            dateEntree: selectedProvider.date_entree || "—",
+            dateEntree: selectedProvider.date_entree || " E,
             status:     selectedProvider.is_active ? "Actif" : "Inactif",
             avatar:     <ProviderAvatar name={selectedProvider.company_name} size="lg" />,
             stats: {

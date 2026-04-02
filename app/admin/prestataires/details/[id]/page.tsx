@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import Paginate from "@/components/Paginate";
 import StatsCard from "@/components/StatsCard";
 import ActionGroup from "@/components/ActionGroup";
@@ -244,7 +243,6 @@ export default function ProviderDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
       <div className="flex-1 flex flex-col pl-64">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">

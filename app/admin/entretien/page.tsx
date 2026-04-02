@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
@@ -69,7 +68,7 @@ const WORKFLOW_STEPS = [
 ];
 
 const formatDate = (d?: string | null) =>
-    d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+    d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : " E;
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -201,7 +200,7 @@ function ValidationModal({
     const canReject = rejectReason.trim().length > 10;
 
     const anomalyLabels: Record<AnomalyAction, { label: string; icon: any; color: string }> = {
-        ras: { label: "RAS — Rien à signaler", icon: CheckCircle2, color: "text-emerald-600" },
+        ras: { label: "RAS  ERien à signaler", icon: CheckCircle2, color: "text-emerald-600" },
         immediate: { label: "Résolue sur place", icon: Wrench, color: "text-amber-600" },
         devis: { label: "Nécessite un devis", icon: FileText, color: "text-orange-600" },
     };
@@ -229,7 +228,7 @@ function ValidationModal({
                             </div>
                             <h2 className="text-xl font-black text-slate-900">{ticket.reference}</h2>
                             <p className="text-slate-400 text-xs mt-0.5">
-                                {ticket.provider_name} · {ticket.site?.nom ?? "—"} · {formatDate(ticket.scheduled_date)}
+                                {ticket.provider_name} · {ticket.site?.nom ?? " E} · {formatDate(ticket.scheduled_date)}
                             </p>
                         </div>
                         <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition mt-1">
@@ -388,7 +387,7 @@ function MaintenancePreviewPanel({
     };
 
     const anomalyLabels: Record<AnomalyAction, { label: string; icon: any; color: string }> = {
-        ras: { label: "RAS — Rien à signaler", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+        ras: { label: "RAS  ERien à signaler", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
         immediate: { label: "Résolue sur place", icon: Wrench, color: "text-amber-600 bg-amber-50 border-amber-100" },
         devis: { label: "Nécessite un devis", icon: FileText, color: "text-orange-600 bg-orange-50 border-orange-100" },
     };
@@ -435,8 +434,8 @@ function MaintenancePreviewPanel({
                                     </div>
                                 )
                             },
-                            { label: "Prestataire", value: ticket.provider_name ?? "—" },
-                            { label: "Site", value: ticket.site?.nom ?? ticket.site?.name ?? "—" },
+                            { label: "Prestataire", value: ticket.provider_name ?? " E },
+                            { label: "Site", value: ticket.site?.nom ?? ticket.site?.name ?? " E },
                             { label: "Date planifiée", value: formatDate(ticket.scheduled_date) },
                             ...(ticket.completed_date ? [{ label: "Date réalisée", value: formatDate(ticket.completed_date) }] : []),
                             ...(ticket.curative_ticket_id ? [{ label: "Ticket curatif lié", value: `#${ticket.curative_ticket_id}` }] : []),
@@ -568,7 +567,7 @@ export default function ManagerEntretienPage() {
         { label: "Total entretiens", value: stats?.total_reports ?? reports.length, delta: "", trend: "up" as const },
         { label: "À valider",        value: pendingCount, delta: "", trend: "up" as const },
         { label: "Validés",          value: stats?.validated_reports ?? reports.filter(t => t.status === "validated" || t.status === "validé").length, delta: "", trend: "up" as const },
-        { label: "Note moyenne",     value: stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : "—", delta: "", trend: "up" as const },
+        { label: "Note moyenne",     value: stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : " E, delta: "", trend: "up" as const },
     ];
 
     const handleValidate = async (data: { rating: number; comment: string }) => {
@@ -620,7 +619,7 @@ export default function ManagerEntretienPage() {
             header: "Prestataire", key: "provider",
             render: (_: any, row: InterventionReport) => (
                 <span className="text-xs text-slate-600 font-medium">
-                    {row.provider?.company_name ?? row.provider?.name ?? "—"}
+                    {row.provider?.company_name ?? row.provider?.name ?? " E}
                 </span>
             ),
         },
@@ -628,7 +627,7 @@ export default function ManagerEntretienPage() {
             header: "Site", key: "site",
             render: (_: any, row: InterventionReport) => (
                 <span className="text-xs text-slate-600 font-medium">
-                    {row.site?.nom ?? row.site?.name ?? "—"}
+                    {row.site?.nom ?? row.site?.name ?? " E}
                 </span>
             ),
         },
@@ -650,7 +649,7 @@ export default function ManagerEntretienPage() {
             render: (_: any, row: InterventionReport) => (
                 row.rating
                     ? <StarRating value={row.rating} readonly />
-                    : <span className="text-xs text-slate-300 font-medium">—</span>
+                    : <span className="text-xs text-slate-300 font-medium"> E/span>
             ),
         },
         {
@@ -681,11 +680,10 @@ export default function ManagerEntretienPage() {
     ];
 
     return (
-        <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-            <Sidebar />
+        <div className="
             <div className="flex-1 flex flex-col">
                 <Navbar />
-                <main className="ml-64 mt-20 p-6 space-y-8">
+                <main className="mt-20 p-6 space-y-8">
 
                     <PageHeader
                         title="Entretiens"
@@ -711,7 +709,7 @@ export default function ManagerEntretienPage() {
                                 onClick={() => setStatusFilter("submitted")}
                                 className="ml-auto text-xs font-black text-violet-600 hover:text-violet-800 underline underline-offset-2"
                             >
-                                Voir →
+                                Voir ↁE
                             </button>
                         </div>
                     )}

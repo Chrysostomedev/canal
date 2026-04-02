@@ -10,7 +10,6 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
@@ -21,27 +20,27 @@ import ReusableForm from "@/components/ReusableForm";
 import { useQuotes } from "../../../hooks/admin/useQuotes";
 import { Quote } from "../../../services/admin/quote.service";
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // HELPERS
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 const formatMontant = (v?: number): string => {
-  if (!v && v !== 0) return "—";
+  if (!v && v !== 0) return " E;
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
   return `${v.toLocaleString("fr-FR")} FCFA`;
 };
 
 const formatDate = (iso?: string): string => {
-  if (!iso) return "—";
+  if (!iso) return " E;
   return new Date(iso).toLocaleDateString("fr-FR", {
     day: "2-digit", month: "2-digit", year: "numeric",
   });
 };
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // STATUTS
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 const STATUS_STYLES: Record<string, string> = {
   pending:  "border-slate-300 bg-slate-100 text-slate-700",
@@ -65,9 +64,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ═══════════════════════════════════════════════
-// PDF PREVIEW MODAL — plein écran
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
+// PDF PREVIEW MODAL  Eplein écran
+// ══════════════════════════════════════════════╁E
 
 function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
   return (
@@ -101,9 +100,9 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
   );
 }
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // FILTER DROPDOWN
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 function FilterDropdown({
   isOpen, onClose, filters, onApply,
@@ -163,11 +162,11 @@ function FilterDropdown({
   );
 }
 
-// ═══════════════════════════════════════════════
-// SIDE PANEL DEVIS — exact comme la capture
+// ══════════════════════════════════════════════╁E
+// SIDE PANEL DEVIS  Eexact comme la capture
 // Croix haut gauche, champs label/valeur, statut
-// avec boutons ✓ ✗ inline, pièces jointes PDF
-// ═══════════════════════════════════════════════
+// avec boutons ✁E✁Einline, pièces jointes PDF
+// ══════════════════════════════════════════════╁E
 
 function QuoteSidePanel({
   quote, onClose, onApprove, onReject,
@@ -197,8 +196,8 @@ function QuoteSidePanel({
   const taxAmount = quote.tax_amount ?? totalHT * 0.18;
   const totalTTC  = quote.amount_ttc ?? totalHT + taxAmount;
 
-  const providerName = quote.provider?.name ?? "—";
-  const siteName     = quote.site?.nom ?? quote.site?.name ?? "—";
+  const providerName = quote.provider?.name ?? " E;
+  const siteName     = quote.site?.nom ?? quote.site?.name ?? " E;
   const ticketRef    = quote.ticket?.reference ?? quote.ticket?.title ?? `#${quote.ticket_id}`;
 
   // Fichiers PDF liés au devis (quote.pdf_paths si dispo, sinon mock vide)
@@ -261,7 +260,7 @@ function QuoteSidePanel({
               </div>
             ))}
 
-            {/* Statut — avec boutons ✓ ✗ inline si pending */}
+            {/* Statut  Eavec boutons ✁E✁Einline si pending */}
             <div className="flex items-center justify-between py-3">
               <p className="text-xs text-slate-400 font-medium">Statut</p>
               <div className="flex items-center gap-2">
@@ -273,14 +272,14 @@ function QuoteSidePanel({
                       className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center hover:bg-emerald-100 transition"
                       title="Approuver"
                     >
-                      <span className="text-emerald-600 font-black text-sm">✓</span>
+                      <span className="text-emerald-600 font-black text-sm">✁E/span>
                     </button>
                     <button
                       onClick={() => setRejectMode(true)}
                       className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center hover:bg-red-100 transition"
                       title="Rejeter"
                     >
-                      <span className="text-red-500 font-black text-sm">✗</span>
+                      <span className="text-red-500 font-black text-sm">✁E/span>
                     </button>
                   </>
                 )}
@@ -386,7 +385,7 @@ function QuoteSidePanel({
             </div>
           )}
 
-          {/* ── Pièce(s) jointe(s) — style exact de la capture ── */}
+          {/* ── Pièce(s) jointe(s)  Estyle exact de la capture ── */}
           {pdfFiles.length > 0 && (
             <div>
               <p className="text-xs text-slate-400 font-medium mb-3">Pièce jointe</p>
@@ -424,7 +423,7 @@ function QuoteSidePanel({
             </div>
           )}
 
-          {/* Statut final — approuvé */}
+          {/* Statut final  Eapprouvé */}
           {isApproved && (
             <div className="flex items-center gap-2 py-3.5 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold">
               <CheckCircle2 size={16} />
@@ -447,9 +446,9 @@ function QuoteSidePanel({
 }
 
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // PAGE PRINCIPALE
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 export default function DevisPage() {
   const filterRef = useRef<HTMLDivElement>(null);
@@ -565,14 +564,14 @@ export default function DevisPage() {
   const columns = [
     { header: "Référence",   key: "reference",  render: (_: any, row: Quote) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
     { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `#${row.ticket_id}` },
-    { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.name ?? "—" },
-    { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? "—" },
+    { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.name ?? " E },
+    { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? " E },
     { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
     { header: "Date",        key: "created_at", render: (_: any, row: Quote) => formatDate(row.created_at) },
     { header: "Statut",      key: "status",     render: (_: any, row: Quote) => <StatusBadge status={row.status} /> },
    
     
-    // Colonne Actions APRÈS :
+    // Colonne Actions APRÁE :
     {
       header: "Actions", key: "actions",
       render: (_: any, row: Quote) => (
@@ -594,11 +593,10 @@ export default function DevisPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
           <PageHeader title="Devis" subtitle="Ce menu vous permet de consulter et gérer les devis des prestataires" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

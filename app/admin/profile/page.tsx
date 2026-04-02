@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import axiosInstance from "../../../core/axios";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 
@@ -118,8 +117,7 @@ export default function AdminProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
+      <div className="
         <div className="flex-1 flex flex-col items-center justify-center">
           <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
           <p className="mt-4 text-slate-500 font-medium">Chargement du profil...</p>
@@ -129,12 +127,11 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-8 max-w-5xl mx-auto w-full space-y-8">
+        <main className="mt-20 p-8 max-w-5xl mx-auto w-full space-y-8">
           <PageHeader 
             title="Mon Profil" 
             subtitle="Gérez vos informations personnelles et la sécurité de votre compte" 

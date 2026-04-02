@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import ActionGroup from "@/components/ActionGroup";
 import StatsCard from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
@@ -85,10 +84,10 @@ export default function PlanningPage() {
         reference: `#${String(selectedPlanning.id).padStart(7, "0")}`,
         description: selectedPlanning.description,
         fields: [
-          { label: "Site", value: selectedPlanning.site?.nom ?? "—" },
-          { label: "Prestataire", value: selectedPlanning.provider?.company_name ?? selectedPlanning.provider?.name ?? "—" },
-          { label: "Responsable", value: selectedPlanning.responsable_name ?? "—" },
-          { label: "Téléphone", value: selectedPlanning.responsable_phone ?? "—" },
+          { label: "Site", value: selectedPlanning.site?.nom ?? " E },
+          { label: "Prestataire", value: selectedPlanning.provider?.company_name ?? selectedPlanning.provider?.name ?? " E },
+          { label: "Responsable", value: selectedPlanning.responsable_name ?? " E },
+          { label: "Téléphone", value: selectedPlanning.responsable_phone ?? " E },
           { label: "Date début", value: new Date(selectedPlanning.date_debut).toLocaleString("fr-FR") },
           { label: "Date fin", value: new Date(selectedPlanning.date_fin).toLocaleString("fr-FR") },
           {
@@ -102,13 +101,12 @@ export default function PlanningPage() {
     : null;
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
-      <Sidebar />
+    <div className="
 
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader
             title="Planning"
             subtitle="Consultez le calendrier des interventions planifiées sur vos sites."

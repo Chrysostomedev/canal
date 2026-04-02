@@ -31,14 +31,14 @@ import { AssetService, CompanyAsset } from "../../../services/admin/asset.servic
 // ─────────────────────────────────────────────────────────────
 
 const fmtMontant = (v?: number | null) => {
-  if (v == null) return "—";
+  if (v == null) return " E;
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v} FCFA`;
 };
 
 const fmtDate = (iso?: string | null) => {
-  if (!iso) return "—";
+  if (!iso) return " E;
   const d = new Date(iso);
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
 };
@@ -65,7 +65,7 @@ const ST_DOT: Record<string, string> = {
 
 const exportToExcel = (assets: CompanyAsset[]) => {
   const wb = XLSX.utils.book_new();
-  const brandRow = ["▶  CANAL+  |  Export Patrimoine  —  " + new Date().toLocaleDateString("fr-FR")];
+  const brandRow = ["▶  CANAL+  |  Export Patrimoine   E " + new Date().toLocaleDateString("fr-FR")];
   const headers = [
     "ID", "Codification", "Désignation", "Famille / Type",
     "Sous-type", "Site", "Statut", "Criticité",
@@ -73,12 +73,12 @@ const exportToExcel = (assets: CompanyAsset[]) => {
   ];
   const rows = assets.map(a => [
     a.id, a.codification, a.designation,
-    a.type?.name    ?? "—",
-    a.sub_type?.name ?? "—",
-    a.site?.nom     ?? "—",
+    a.type?.name    ?? " E,
+    a.sub_type?.name ?? " E,
+    a.site?.nom     ?? " E,
     ST_LABEL[a.status] ?? a.status,
-    a.criticite === "critique" ? "Critique" : a.criticite === "non_critique" ? "Non critique" : "—",
-    a.valeur_entree ?? "—",
+    a.criticite === "critique" ? "Critique" : a.criticite === "non_critique" ? "Non critique" : " E,
+    a.valeur_entree ?? " E,
     fmtDate(a.date_entree),
   ]);
   const wsData = [brandRow, [], headers, ...rows];
@@ -268,12 +268,12 @@ function AssetSidePanel({ asset, onClose, onEdit }: {
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <div className="divide-y divide-slate-50">
             {[
-              { l: "Type",           v: asset.type?.name    ?? "—" },
-              { l: "Sous-type",      v: asset.subType?.name ?? "—" },
-              { l: "Site",           v: asset.site?.nom     ?? "—" },
+              { l: "Type",           v: asset.type?.name    ?? " E },
+              { l: "Sous-type",      v: asset.subType?.name ?? " E },
+              { l: "Site",           v: asset.site?.nom     ?? " E },
               { l: "Valeur entrée",  v: fmtMontant(asset.valeur_entree) },
               { l: "Date entrée",    v: fmtDate(asset.date_entree) },
-              { l: "Criticité",      v: asset.criticite === "critique" ? "Critique" : asset.criticite === "non_critique" ? "Non critique" : "—" },
+              { l: "Criticité",      v: asset.criticite === "critique" ? "Critique" : asset.criticite === "non_critique" ? "Non critique" : " E },
             ].map((r, i) => (
               <div key={i} className="flex items-center justify-between py-3">
                 <p className="text-xs text-slate-400 font-medium">{r.l}</p>
@@ -298,7 +298,7 @@ function AssetSidePanel({ asset, onClose, onEdit }: {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PREVIEW IMPORT MODAL — PATRIMOINE
+// PREVIEW IMPORT MODAL  EPATRIMOINE
 // ─────────────────────────────────────────────────────────────
 
 type ValidationStatus = "ok" | "warning" | "error";
@@ -380,7 +380,7 @@ const BADGE: Record<ValidationStatus, { bg: string; text: string; icon: React.Re
 };
 
 function fmtCell(v: any): string {
-  if (v == null || v === "") return "—";
+  if (v == null || v === "") return " E;
   if (v instanceof Date) return v.toLocaleDateString("fr-FR");
   return String(v);
 }
@@ -424,14 +424,14 @@ function parsePatrimoine(file: File): Promise<ParsedPreview> {
           headers.forEach(col => {
             // ── Colonne requise ABSENTE du fichier (colonne fantôme)
             if (missingRequired.includes(col) && !fileKeys.includes(col)) {
-              cells[col] = { status: "error", message: `Colonne "${col}" absente du fichier — obligatoire` };
+              cells[col] = { status: "error", message: `Colonne "${col}" absente du fichier  Eobligatoire` };
               rowStatus  = "error";
               return;
             }
 
             // ── Colonne INCONNUE (hors schéma Patrimoines)
             if (!PATRIMOINE_KNOWN_COLS.has(col)) {
-              cells[col] = { status: "warning", message: `Colonne inconnue — ignorée à l'import` };
+              cells[col] = { status: "warning", message: `Colonne inconnue  Eignorée à l'import` };
               if (rowStatus !== "error") rowStatus = "warning";
               return;
             }
@@ -540,7 +540,7 @@ function PatrimoinePreviewModal({
               <FileSpreadsheet size={16} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 leading-tight">Prévisualisation — Import Patrimoine</h2>
+              <h2 className="text-base font-black text-slate-900 leading-tight">Prévisualisation  EImport Patrimoine</h2>
               {file && <p className="text-xs text-slate-400 font-mono mt-0.5 truncate max-w-[320px]">{file.name}</p>}
             </div>
           </div>
@@ -599,7 +599,7 @@ function PatrimoinePreviewModal({
                   {totallyIncompat ? (
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 border border-red-300 px-3 py-1.5 rounded-lg">
-                        <AlertCircle size={12} /> Fichier incompatible — ce n'est pas un fichier Patrimoines
+                        <AlertCircle size={12} /> Fichier incompatible  Ece n'est pas un fichier Patrimoines
                       </span>
                       {missingRequired.length > 0 && (
                         <span className="text-[10px] text-red-500 font-semibold pl-1">
@@ -615,7 +615,7 @@ function PatrimoinePreviewModal({
                   ) : hasErrors ? (
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
-                        <AlertCircle size={12} /> {parsed.summary.errors} ligne{parsed.summary.errors > 1 ? "s" : ""} bloquante{parsed.summary.errors > 1 ? "s" : ""} — à corriger
+                        <AlertCircle size={12} /> {parsed.summary.errors} ligne{parsed.summary.errors > 1 ? "s" : ""} bloquante{parsed.summary.errors > 1 ? "s" : ""}  Eà corriger
                       </span>
                       {missingRequired.length > 0 && (
                         <span className="text-[10px] text-red-500 font-semibold pl-1">
@@ -636,7 +636,7 @@ function PatrimoinePreviewModal({
                     </div>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
-                      <ShieldCheck size={12} /> Fichier compatible — prêt à importer
+                      <ShieldCheck size={12} /> Fichier compatible  Eprêt à importer
                     </span>
                   )}
                 </div>
@@ -736,7 +736,7 @@ function PatrimoinePreviewModal({
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-sm ${hasErrors ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-slate-900 text-white hover:bg-black"}`}
             >
               {confirming ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué — erreurs à corriger" : "Confirmer l'import"}
+              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué  Eerreurs à corriger" : "Confirmer l'import"}
             </button>
           </div>
         </div>
@@ -812,7 +812,7 @@ export default function PatrimoinesPage() {
     }
   };
 
-  // ── Intercepte la sélection de fichier → ouvre la preview au lieu d'importer direct
+  // ── Intercepte la sélection de fichier ↁEouvre la preview au lieu d'importer direct
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -871,35 +871,35 @@ export default function PatrimoinesPage() {
     },
     { name: "date_entree",   label: "Date d'entrée",   type: "date",   required: true, icon: CalendarClock },
     { name: "valeur_entree", label: "Valeur d'entrée", type: "number", required: true },
-    { name: "dimension",     label: "Dimension",       type: "text", required: false },
+    { name: "dimension",     label: "Dimension",       type: "text", required: false, placeholder: "22 m "},
     { name: "description",   label: "Description",     type: "rich-text", gridSpan: 2 },
     { name: "images",        label: "Photos",          type: "image-upload", gridSpan: 2, maxImages: 3 },
   ];
 
   const columns = [
-    {
-      header: "Photos",
-      key: "images",
-      render: (_: any, row: CompanyAsset) => {
-        const imgs: string[] = (row as any).images ?? [];
-        if (!imgs.length) return <span className="text-slate-300 text-xs">—</span>;
-        return (
-          <div className="flex items-center">
-            {imgs.slice(0, 3).map((src, i) => (
-              <div key={i} className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white shrink-0" style={{ zIndex: 3 - i, marginLeft: i > 0 ? "-10px" : "0" }}>
-                <img src={src} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-            {imgs.length > 3 && (
-              <div className="w-9 h-9 rounded-xl bg-slate-100 ring-2 ring-white flex items-center justify-center shrink-0" style={{ zIndex: 0, marginLeft: "-10px" }}>
-                <span className="text-[10px] font-bold text-slate-500">+{imgs.length - 3}</span>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
+    // {
+    //   header: "Photos",
+    //   key: "images",
+    //   render: (_: any, row: CompanyAsset) => {
+    //     const imgs: string[] = (row as any).images ?? [];
+    //     if (!imgs.length) return <span className="text-slate-300 text-xs"> E/span>;
+    //     return (
+    //       <div className="flex items-center">
+    //         {imgs.slice(0, 3).map((src, i) => (
+    //           <div key={i} className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white shrink-0" style={{ zIndex: 3 - i, marginLeft: i > 0 ? "-10px" : "0" }}>
+    //             <img src={src} alt="" className="w-full h-full object-cover" />
+    //           </div>
+    //         ))}
+    //         {imgs.length > 3 && (
+    //           <div className="w-9 h-9 rounded-xl bg-slate-100 ring-2 ring-white flex items-center justify-center shrink-0" style={{ zIndex: 0, marginLeft: "-10px" }}>
+    //             <span className="text-[10px] font-bold text-slate-500">+{imgs.length - 3}</span>
+    //           </div>
+    //         )}
+    //       </div>
+    //     );
+    //   },
+    // },
+    { 
       header: "Codification", key: "codification",
       render: (_: any, row: CompanyAsset) => (
         <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg whitespace-nowrap">{row.codification}</span>
@@ -914,7 +914,7 @@ export default function PatrimoinesPage() {
     {
       header: "Type", key: "type",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-600">{row.type?.name ?? "—"}</span>
+        <span className="text-sm text-slate-600">{row.type?.name ?? " E}</span>
       ),
     },
     {
@@ -926,7 +926,7 @@ export default function PatrimoinesPage() {
     {
       header: "Site", key: "site",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-600">{row.site?.nom ?? "—"}</span>
+        <span className="text-sm text-slate-600">{row.site?.nom ?? " E}</span>
       ),
     },
     {
@@ -969,9 +969,8 @@ export default function PatrimoinesPage() {
   const totalPages = meta?.last_page ?? 1;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex flex-col flex-1 pl-64">
+    <div className="
+      <div className="flex flex-col flex-1 ">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">
 
@@ -1012,7 +1011,7 @@ export default function PatrimoinesPage() {
 
             <div className="flex items-center gap-2 shrink-0">
 
-              {/* Import — ouvre la prévisualisation */}
+              {/* Import  Eouvre la prévisualisation */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
                 {importLoading
                   ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />

@@ -83,7 +83,6 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
   if (loading) return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
       <div className="flex flex-col flex-1"><Navbar />
         <div className="ml-64 mt-20 flex items-center justify-center h-64">
           <div className="w-10 h-10 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin" />
@@ -94,7 +93,6 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
   if (error || !asset) return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
       <div className="flex flex-col flex-1"><Navbar />
         <div className="ml-64 mt-20 flex items-center justify-center h-64">
           <div className="text-center space-y-3">
@@ -116,7 +114,6 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans tracking-tight">
-      <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">

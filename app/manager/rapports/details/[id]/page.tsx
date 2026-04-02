@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import StatsCard from "@/components/StatsCard";
 
 import { useReport } from "../../../../../hooks/manager/useReport";
@@ -270,7 +269,6 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
           <Navbar />
           <div className="flex-1 flex flex-col items-center justify-center gap-4">
@@ -285,7 +283,6 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   if (error || !report) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
           <Navbar />
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-6">
@@ -313,7 +310,6 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
-      <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">

@@ -9,7 +9,6 @@ import {
 
 import ReusableForm from "@/components/ReusableForm";
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import DataTable from "@/components/DataTable";
 import StatsCard from "@/components/StatsCard";
 import Paginate from "@/components/Paginate";
@@ -23,9 +22,9 @@ import { Ticket, Asset } from "../../../types/manager.types";
 import { Service } from "@services/manager/service.service";
 
 // ── HELPERS ──
-const formatHeures = (h?: number | null) => h != null ? `${h}h` : "—";
+const formatHeures = (h?: number | null) => h != null ? `${h}h` : " E;
 const formatDate = (iso?: string | null) => {
-  if (!iso) return "—";
+  if (!iso) return " E;
   return new Date(iso).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
@@ -37,20 +36,20 @@ const formatDate = (iso?: string | null) => {
 
 // ── STATUTS & PRIORITÉS ──
 const STATUS_LABELS: Record<string, string> = {
-  'SIGNALÉ': "Signalé", 'VALIDÉ': "Validé", 'ASSIGNÉ': "Assigné", 'EN_COURS': "En cours",
-  'EN_TRAITEMENT': "En cours", 'RAPPORTÉ': "Rapporté", 'ÉVALUÉ': "Évalué", 'CLOS': "Clôturé",
+  'SIGNALÁE: "Signalé", 'VALIDÁE: "Validé", 'ASSIGNÁE: "Assigné", 'EN_COURS': "En cours",
+  'EN_TRAITEMENT': "En cours", 'RAPPORTÁE: "Rapporté", 'ÉVALUÁE: "Évalué", 'CLOS': "Clôturé",
   'signalez': "Signalé", 'validé': "Validé", 'assigné': "Assigné", 'en_cours': "En cours",
   'rapporté': "Rapporté", 'évalué': "Évalué", 'clos': "Clôturé",
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  'SIGNALÉ': "border-slate-300 bg-slate-100 text-slate-700",
-  'VALIDÉ': "border-blue-400 bg-blue-50 text-blue-700",
-  'ASSIGNÉ': "border-violet-400 bg-violet-50 text-violet-700",
+  'SIGNALÁE: "border-slate-300 bg-slate-100 text-slate-700",
+  'VALIDÁE: "border-blue-400 bg-blue-50 text-blue-700",
+  'ASSIGNÁE: "border-violet-400 bg-violet-50 text-violet-700",
   'EN_COURS': "border-orange-400 bg-orange-50 text-orange-600",
   'EN_TRAITEMENT': "border-orange-400 bg-orange-50 text-orange-600",
-  'RAPPORTÉ': "border-amber-400 bg-amber-50 text-amber-700",
-  'ÉVALUÉ': "border-green-500 bg-green-50 text-green-700",
+  'RAPPORTÁE: "border-amber-400 bg-amber-50 text-amber-700",
+  'ÉVALUÁE: "border-green-500 bg-green-50 text-green-700",
   'CLOS': "border-black bg-black text-white",
 };
 
@@ -67,9 +66,9 @@ const PRIORITY_STYLES: Record<string, string> = {
 
 // ── COMPOSANTS INTERNES ──
 function StatusBadge({ status }: { status: string }) {
-  const s = status?.toUpperCase() || 'SIGNALÉ';
+  const s = status?.toUpperCase() || 'SIGNALÁE;
   return (
-    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-tight ${STATUS_STYLES[s] || STATUS_STYLES['SIGNALÉ']}`}>
+    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-tight ${STATUS_STYLES[s] || STATUS_STYLES['SIGNALÁE]}`}>
       {STATUS_LABELS[s] || s}
     </span>
   );
@@ -139,7 +138,7 @@ function TicketSidePanel({
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Prestataire Assigné</p>
                 <p className="text-sm font-bold text-slate-900">{ticket.provider?.company_name || ticket.provider?.name || "En attente d'assignation"}</p>
-                <p className="text-xs text-slate-500 font-medium">{ticket.service?.name || "—"}</p>
+                <p className="text-xs text-slate-500 font-medium">{ticket.service?.name || " E}</p>
               </div>
             </div>
 
@@ -155,7 +154,7 @@ function TicketSidePanel({
         </div>
 
         <div className="px-8 py-8 border-t border-slate-100 shrink-0 bg-slate-50/30">
-          {ticket.status === 'RAPPORTÉ' && (
+          {ticket.status === 'RAPPORTÁE && (
             <button
               onClick={() => onRate(ticket.id)}
               className="w-full py-4 rounded-2xl bg-slate-900 text-white text-sm font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-slate-200"
@@ -343,11 +342,10 @@ export default function TicketsPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 space-y-10 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="mt-20 p-8 space-y-10 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader
             title="Mes tickets"
             subtitle="Gérez les signalements curatifs et le suivi des maintenances"

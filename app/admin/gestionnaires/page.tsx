@@ -3,10 +3,10 @@
 /**
  * app/admin/gestionnaires/page.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Page liste gestionnaires — refonte UI :
+ * Page liste gestionnaires  Erefonte UI :
  *  - Filtre avec dropdown propre (ref click-outside)
- *  - Boutons Exporter + Importer (importer → toast "en cours de développement")
- *  - Profil → side panel à droite (ManagerProfilPanel)
+ *  - Boutons Exporter + Importer (importer ↁEtoast "en cours de développement")
+ *  - Profil ↁEside panel à droite (ManagerProfilPanel)
  *  - Palette noir/blanc/gris uniquement
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -68,7 +68,7 @@ export default function GestionnairesPage() {
     setTimeout(() => setFlash(null), 3000);
   };
 
-   // ── Import / Export — endpoints pas encore en ligne ──
+   // ── Import / Export  Eendpoints pas encore en ligne ──
    const handleExport = () =>
     showFlash("error", "Fonctionnalité d'export en cours de développement.");
   const handleImport = () =>
@@ -109,11 +109,10 @@ export default function GestionnairesPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
 
           {/* ── En-tête ────────────────────────────────────────────────── */}
           <PageHeader
@@ -208,7 +207,7 @@ export default function GestionnairesPage() {
                     </div>
 
                     {/*
-                     * ── Filtre site — COMMENTÉ, préparé pour future API ───
+                     * ── Filtre site  ECOMMENTÁE préparé pour future API ───
                      * TODO: décommenter quand l'API supportera ce filtre
                      *
                      * <div>
@@ -287,10 +286,10 @@ export default function GestionnairesPage() {
                     phone={m.phone}
                     role={m.role?.name ?? "Manager"}
                     status={m.is_active !== false ? "Actif" : "Inactif"}
-                    // onProfilClick → ouvre le side panel à droite
+                    // onProfilClick ↁEouvre le side panel à droite
                     onProfilClick={() => setSelectedManager(m)}
                     /*
-                     * ── site — COMMENTÉ, préparé pour future API ─────────
+                     * ── site  ECOMMENTÁE préparé pour future API ─────────
                      * site={m.managed_site?.nom}
                      */
                   />

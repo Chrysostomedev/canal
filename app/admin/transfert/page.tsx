@@ -18,16 +18,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowRightLeft, Building2, Filter, X, Eye,
-  Info, Search, RotateCcw, Calendar, User, Hash,
-  Upload, CheckCircle2, XCircle, ChevronRight, RefreshCw, AlertCircle,
+  Search, RotateCcw, Calendar, User,
+  Upload, CheckCircle2, XCircle, RefreshCw, AlertCircle,
 } from "lucide-react";
 
 import Navbar       from "@/components/Navbar";
-import Sidebar      from "@/components/Sidebar";
 import PageHeader   from "@/components/PageHeader";
 import StatsCard    from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
@@ -35,10 +33,16 @@ import Paginate     from "@/components/Paginate";
 import { FieldConfig } from "@/components/ReusableForm";
 
 import { getSites, Site } from "../../../services/admin/site.service";
-import { transfertService, TransferRecord, TransferStatus, formatTransferDate, getActorName } from "../../../services/admin/transfertService";
+import {
+  transfertService,
+  TransferRecord,
+  TransferStatus,
+  formatTransferDate,
+  getActorName,
+} from "../../../services/admin/transfertService";
 import { useTransferts } from "../../../hooks/admin/useTransferts";
 
-// ─── Statuts — styles sémantiques conservés ───────────────────────────────────
+// ─── Statuts — styles sémantiques ─────────────────────────────────────────────
 const STATUT_STYLES: Record<string, string> = {
   effectué: "bg-green-50 text-green-700 border-green-200",
   en_cours: "bg-blue-50  text-blue-700  border-blue-200",
@@ -184,7 +188,8 @@ interface TransferFiltersUI { status?: TransferStatus | ""; }
 function TransferFilterDropdown({
   isOpen, onClose, filters, onApply,
 }: {
-  isOpen: boolean; onClose: () => void;
+  isOpen: boolean;
+  onClose: () => void;
   filters: TransferFiltersUI;
   onApply: (f: TransferFiltersUI) => void;
 }) {
@@ -217,8 +222,12 @@ function TransferFilterDropdown({
           { val: "en_cours", label: "En cours" },
           { val: "annulé",   label: "Annulé"   },
         ].map(o => (
-          <Pill key={o.val} active={(local.status ?? "") === o.val} label={o.label}
-            onClick={() => setLocal({ ...local, status: (o.val as TransferStatus) || undefined })} />
+          <Pill
+            key={o.val}
+            active={(local.status ?? "") === o.val}
+            label={o.label}
+            onClick={() => setLocal({ ...local, status: (o.val as TransferStatus) || undefined })}
+          />
         ))}
       </div>
       <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
@@ -345,200 +354,201 @@ export default function TransfertPage() {
 
   // Chargement sites pour la modal
   useEffect(() => {
-    getSites(undefined, 1, 200).then(d => setSites(d.items)).catch(() => setSites([]));
+    getSites(undefined, 1, 200)
+      .then(d => setSites(d.items))
+      .catch(() => setSites([]));
   }, []);
 
   // Fermeture filtre au clic extérieur
   useEffect(() => {
-    const h = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(e.target as Node))
         setFiltersOpen(false);
     };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const activeFilters = [filters.status].filter(Boolean).length;
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans">
-      <Sidebar />
-      <div className="flex flex-col flex-1 pl-64">
-        <Navbar />
+    // ✅ FIX : suppression du div wrapper fantôme dont le className n'était
+    // jamais fermé → un seul div racine avec les classes Tailwind correctes
+    <div className="flex flex-col flex-1">
+      <Navbar />
 
-        <main className="mt-20 p-8 space-y-8">
+      <main className="mt-20 p-8 space-y-8">
 
-          <PageHeader
-            title="Transferts inter-sites"
-            subtitle="Historique et gestion des relocalisations d'équipements entre sites"
-          />
+        <PageHeader
+          title="Transferts inter-sites"
+          subtitle="Historique et gestion des relocalisations d'équipements entre sites"
+        />
 
-          {/* Erreur globale */}
-          {error && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
-              <AlertCircle size={16} className="shrink-0" />
-              <span>{error}</span>
-              <button
-                onClick={refresh}
-                className="ml-auto flex items-center gap-1.5 text-xs font-bold underline hover:no-underline"
-              >
-                <RefreshCw size={12} /> Réessayer
-              </button>
-            </div>
+        {/* Erreur globale */}
+        {error && (
+          <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
+            <AlertCircle size={16} className="shrink-0" />
+            <span>{error}</span>
+            <button
+              onClick={refresh}
+              className="ml-auto flex items-center gap-1.5 text-xs font-bold underline hover:no-underline"
+            >
+              <RefreshCw size={12} /> Réessayer
+            </button>
+          </div>
+        )}
+
+        {/* KPIs — depuis /stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statsLoading ? <StatsSkeleton count={4} /> : (
+            <>
+              <StatsCard label="Total transferts"  value={stats?.total_transfers      ?? 0} delta="+0%" trend="up" />
+              <StatsCard label="Effectués"         value={stats?.completed_transfers  ?? 0} delta="+0%" trend="up" />
+              <StatsCard label="En cours"          value={stats?.pending_transfers    ?? 0} delta="+0%" trend="up" />
+              <StatsCard label="Sites impliqués"   value={stats?.involved_sites_count ?? 0} delta="+0%" trend="up" />
+            </>
           )}
+        </div>
 
-          {/* KPIs — depuis /stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {statsLoading ? <StatsSkeleton count={4} /> : (
-              <>
-                <StatsCard label="Total transferts"  value={stats?.total_transfers      ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Effectués"         value={stats?.completed_transfers  ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="En cours"          value={stats?.pending_transfers    ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Sites impliqués"   value={stats?.involved_sites_count ?? 0} delta="+0%" trend="up" />
-              </>
+        {/* Barre d'actions */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Recherche */}
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Rechercher un transfert..."
+                className="pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-theme-primary focus:ring-1 focus:ring-theme-primary w-64 transition"
+              />
+            </div>
+
+            {/* Badge filtre actif */}
+            {filters.status && (
+              <span className="flex items-center gap-1.5 bg-theme-primary text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                {STATUT_LABELS[filters.status]}
+                <button onClick={() => setFilters({})}><X size={10} /></button>
+              </span>
             )}
           </div>
 
-          {/* Barre d'actions */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Recherche */}
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Rechercher un transfert..."
-                  className="pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-theme-primary focus:ring-1 focus:ring-theme-primary w-64 transition"
-                />
-              </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Filtre dropdown */}
+            <div className="relative" ref={filterRef}>
+              <button
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
+                  filtersOpen || activeFilters > 0
+                    ? "bg-theme-primary text-white border-theme-primary"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Filter size={14} /> Filtrer
+                {activeFilters > 0 && (
+                  <span className="ml-1 bg-white text-theme-primary text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                    {activeFilters}
+                  </span>
+                )}
+              </button>
+              <TransferFilterDropdown
+                isOpen={filtersOpen}
+                onClose={() => setFiltersOpen(false)}
+                filters={{ status: filters.status as TransferStatus | "" }}
+                onApply={f => { setFilters({ ...filters, status: f.status }); setFiltersOpen(false); }}
+              />
+            </div>
 
-              {/* Badge filtre actif */}
-              {filters.status && (
-                <span className="flex items-center gap-1.5 bg-theme-primary text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                  {STATUT_LABELS[filters.status]}
-                  <button onClick={() => { setFilters({}); }}><X size={10} /></button>
-                </span>
+            {/* Export */}
+            <button
+              onClick={handleExport}
+              disabled={exportLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-50"
+            >
+              <Upload size={14} />
+              {exportLoading ? "Export..." : "Exporter"}
+            </button>
+
+            {/* Nouveau transfert */}
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold hover:opacity-90 transition shadow-sm"
+            >
+              <ArrowRightLeft size={15} /> Nouveau transfert
+            </button>
+          </div>
+        </div>
+
+        {/* Grille de cartes */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 h-48 animate-pulse">
+                  <div className="h-4 w-32 bg-gray-200 rounded mb-3" />
+                  <div className="h-3 w-48 bg-gray-100 rounded mb-5" />
+                  <div className="flex gap-3">
+                    <div className="flex-1 h-16 bg-gray-100 rounded-xl" />
+                    <div className="w-8 h-8 bg-gray-200 rounded-full self-center" />
+                    <div className="flex-1 h-16 bg-gray-200 rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : transfers.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-100 py-16 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+                <RotateCcw size={20} className="text-slate-400" />
+              </div>
+              <p className="text-slate-400 text-sm font-medium">Aucun transfert trouvé</p>
+              {(search || activeFilters > 0) && (
+                <button
+                  onClick={() => { setSearch(""); setFilters({}); }}
+                  className="text-xs text-theme-primary font-bold underline hover:opacity-70"
+                >
+                  Réinitialiser les filtres
+                </button>
               )}
             </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Filtre dropdown */}
-              <div className="relative" ref={filterRef}>
-                <button
-                  onClick={() => setFiltersOpen(!filtersOpen)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
-                    filtersOpen || activeFilters > 0
-                      ? "bg-theme-primary text-white border-theme-primary"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <Filter size={14} /> Filtrer
-                  {activeFilters > 0 && (
-                    <span className="ml-1 bg-white text-theme-primary text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
-                      {activeFilters}
-                    </span>
-                  )}
-                </button>
-                <TransferFilterDropdown
-                  isOpen={filtersOpen}
-                  onClose={() => setFiltersOpen(false)}
-                  filters={{ status: filters.status as TransferStatus | "" }}
-                  onApply={f => { setFilters({ ...filters, status: f.status }); setFiltersOpen(false); }}
-                />
-              </div>
-
-              {/* Export */}
-              <button
-                onClick={handleExport}
-                disabled={exportLoading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-50"
-              >
-                <Upload size={14} />
-                {exportLoading ? "Export..." : "Exporter"}
-              </button>
-
-              {/* Nouveau transfert */}
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold hover:opacity-90 transition shadow-sm"
-              >
-                <ArrowRightLeft size={15} /> Nouveau transfert
-              </button>
-            </div>
-          </div>
-
-          {/* Grille de cartes */}
-          <div className="space-y-4">
-            {loading ? (
+          ) : (
+            <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 h-48 animate-pulse">
-                    <div className="h-4 w-32 bg-gray-200 rounded mb-3" />
-                    <div className="h-3 w-48 bg-gray-100 rounded mb-5" />
-                    <div className="flex gap-3">
-                      <div className="flex-1 h-16 bg-gray-100 rounded-xl" />
-                      <div className="w-8 h-8 bg-gray-200 rounded-full self-center" />
-                      <div className="flex-1 h-16 bg-gray-200 rounded-xl" />
-                    </div>
-                  </div>
+                {transfers.map(record => (
+                  <TransferCard
+                    key={record.id}
+                    record={record}
+                    onUpdateStatus={handleUpdateStatus}
+                    actionLoading={actionLoading}
+                  />
                 ))}
               </div>
-            ) : transfers.length === 0 ? (
-              <div className="bg-white rounded-3xl border border-slate-100 py-16 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
-                  <RotateCcw size={20} className="text-slate-400" />
+
+              {/* Pagination côté serveur */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs text-slate-400">
+                    Page {currentPage} sur {totalPages} · {total} transfert{total > 1 ? "s" : ""}
+                  </p>
+                  <Paginate
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
-                <p className="text-slate-400 text-sm font-medium">Aucun transfert trouvé</p>
-                {(search || activeFilters > 0) && (
-                  <button
-                    onClick={() => { setSearch(""); setFilters({}); }}
-                    className="text-xs text-theme-primary font-bold underline hover:opacity-70"
-                  >
-                    Réinitialiser les filtres
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {transfers.map(record => (
-                    <TransferCard
-                      key={record.id}
-                      record={record}
-                      onUpdateStatus={handleUpdateStatus}
-                      actionLoading={actionLoading}
-                    />
-                  ))}
-                </div>
+              )}
+            </>
+          )}
+        </div>
 
-                {/* Pagination côté serveur */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-2">
-                    <p className="text-xs text-slate-400">
-                      Page {currentPage} sur {totalPages} · {total} transfert{total > 1 ? "s" : ""}
-                    </p>
-                    <Paginate
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+      </main>
 
-        </main>
-      </div>
-
-      {/* Modal nouveau transfert */}
+      {/* Modal nouveau transfert — en dehors du <main> pour éviter tout z-index conflict */}
       <NewTransferModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         sites={sites}
-        onSuccess={() => { refresh(); }}
+        onSuccess={refresh}
       />
     </div>
   );

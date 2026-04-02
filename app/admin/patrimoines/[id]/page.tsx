@@ -160,7 +160,6 @@ export default function PatrimoineDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
       <div className="flex flex-col flex-1 pl-64">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">

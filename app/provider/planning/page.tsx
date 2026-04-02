@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import ActionGroup from "@/components/ActionGroup";
 import StatsCard from "@/components/StatsCard";
 import PageHeader from "@/components/PageHeader";
@@ -42,14 +41,14 @@ function Toast({ toast }: { toast: ToastType }) {
   );
 }
 
-// ─── Stats cards builder — même pattern que la page admin ─────────────────────
+// ─── Stats cards builder  Emême pattern que la page admin ─────────────────────
 
 function buildStatsCards(stats: any, isLoading: boolean) {
   if (isLoading || !stats) {
     return [
-      { label: "Nombre total de plannings", value: "—", delta: "", trend: "up" as const },
-      { label: "Plannings en cours",        value: "—", delta: "", trend: "up" as const },
-      { label: "Plannings en retard",       value: "—", delta: "", trend: "up" as const },
+      { label: "Nombre total de plannings", value: " E, delta: "", trend: "up" as const },
+      { label: "Plannings en cours",        value: " E, delta: "", trend: "up" as const },
+      { label: "Plannings en retard",       value: " E, delta: "", trend: "up" as const },
     ];
   }
   return [
@@ -110,7 +109,7 @@ export default function ProviderPlanningPage() {
     },
   ];
 
-  // ── Format pour SideDetailsPanel — même structure que la page admin ─────────
+  // ── Format pour SideDetailsPanel  Emême structure que la page admin ─────────
   const formattedSelectedEvent = selectedPlanning
     ? {
         title:       selectedPlanning.codification,
@@ -120,7 +119,7 @@ export default function ProviderPlanningPage() {
           { label: "Site",         value: getSiteName(selectedPlanning.site) },
           { label: "Prestataire",  value: getProviderName(selectedPlanning.provider) },
           { label: "Responsable",  value: selectedPlanning.responsable_name },
-          { label: "Téléphone",    value: selectedPlanning.responsable_phone ?? "—" },
+          { label: "Téléphone",    value: selectedPlanning.responsable_phone ?? " E },
           {
             label: "Date de début",
             value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
@@ -143,17 +142,16 @@ export default function ProviderPlanningPage() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-8 space-y-8">
+        <main className="mt-20 p-8 space-y-8">
 
           {/* Erreur globale */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-xl text-sm font-medium">
-              ⚠️ {error}
+              ⚠�E�E{error}
             </div>
           )}
 
@@ -175,7 +173,7 @@ export default function ProviderPlanningPage() {
           </div>
 
           {/*
-            MainCard — même composant que la page admin.
+            MainCard  Emême composant que la page admin.
             Il gère CalendarGrid, MiniCalendar, EventLegend, SideDetailsPanel.
             On lui passe onEditClick et onDeleteClick vides car le provider
             ne peut pas modifier/supprimer un planning.

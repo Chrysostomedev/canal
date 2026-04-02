@@ -7,7 +7,6 @@ import {
   ChevronRight, ArrowUpRight, User, Loader2
 } from "lucide-react";
 import axiosInstance from "../../../core/axios";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 import StatsCard from "@/components/StatsCard";
@@ -133,12 +132,11 @@ export default function AuditTrailPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-8 space-y-8">
+        <main className="mt-20 p-8 space-y-8">
           <PageHeader 
             title="Audit Trail" 
             subtitle="Traçabilité complète des actions effectuées sur la plateforme" 

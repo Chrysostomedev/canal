@@ -8,7 +8,6 @@ import { Check, Copy, Eye, Filter, Download, Upload, TicketPlus, X,
 
 import ReusableForm from "@/components/ReusableForm";
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import DataTable from "@/components/DataTable";
 import StatsCard from "@/components/StatsCard";
 import Paginate from "@/components/Paginate";
@@ -25,15 +24,15 @@ import { resolveManagerName, resolveManagerPhone } from "../../../services/admin
 import * as PlanningService from "../../../services/admin/planningService";
 import axiosInstance from "../../../core/axios";
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // HELPERS
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 const formatHeures = (h: number | null | undefined) =>
-  h !== null && h !== undefined ? `${h}h` : "—";
+  h !== null && h !== undefined ? `${h}h` : " E;
 
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return " E;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -41,37 +40,37 @@ const formatDate = (iso?: string | null): string => {
   return time === "00:00" ? date : `${date} à ${time}`;
 };
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // STATUTS
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 const STATUS_LABELS: Record<string, string> = {
-  SIGNALÉ:  "Signalé",
-  VALIDÉ:   "Validé",
-  ASSIGNÉ:  "Assigné",
+  SIGNALÁE  "Signalé",
+  VALIDÁE   "Validé",
+  ASSIGNÁE  "Assigné",
   EN_COURS: "En cours",
-  RAPPORTÉ: "Rapporté",
-  ÉVALUÉ:   "Évalué",
+  RAPPORTÁE "Rapporté",
+  ÉVALUÁE   "Évalué",
   CLOS:     "Clôturé",
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  SIGNALÉ:  "border-slate-300  bg-slate-100   text-slate-700",
-  VALIDÉ:   "border-blue-400   bg-blue-50     text-blue-700",
-  ASSIGNÉ:  "border-violet-400 bg-violet-50   text-violet-700",
+  SIGNALÁE  "border-slate-300  bg-slate-100   text-slate-700",
+  VALIDÁE   "border-blue-400   bg-blue-50     text-blue-700",
+  ASSIGNÁE  "border-violet-400 bg-violet-50   text-violet-700",
   EN_COURS: "border-orange-400 bg-orange-50   text-orange-600",
-  RAPPORTÉ: "border-amber-400  bg-amber-50    text-amber-700",
-  ÉVALUÉ:   "border-green-500  bg-green-50    text-green-700",
+  RAPPORTÁE "border-amber-400  bg-amber-50    text-amber-700",
+  ÉVALUÁE   "border-green-500  bg-green-50    text-green-700",
   CLOS:     "border-black      bg-black       text-white",
 };
 
 const STATUS_DOT_COLORS: Record<string, string> = {
-  SIGNALÉ:  "#94a3b8",
-  VALIDÉ:   "#3b82f6",
-  ASSIGNÉ:  "#8b5cf6",
+  SIGNALÁE  "#94a3b8",
+  VALIDÁE   "#3b82f6",
+  ASSIGNÁE  "#8b5cf6",
   EN_COURS: "#f97316",
-  RAPPORTÉ: "#f59e0b",
-  ÉVALUÉ:   "#22c55e",
+  RAPPORTÁE "#f59e0b",
+  ÉVALUÁE   "#22c55e",
   CLOS:     "#000000",
 };
 
@@ -83,9 +82,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ═══════════════════════════════════════════════
-// PRIORITÉ
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
+// PRIORITÁE
+// ══════════════════════════════════════════════╁E
 
 const PRIORITY_STYLES: Record<string, string> = {
   faible:   "bg-slate-100 text-slate-600",
@@ -106,9 +105,9 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // FILTER DROPDOWN
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 interface TicketFilters { status?: string; type?: string; priority?: string; }
 
@@ -149,12 +148,12 @@ function FilterDropdown({
           <div className="flex flex-col gap-1.5">
             {[
               { val: "",         label: "Tous les statuts" },
-               { val: "SIGNALÉ",  label: "Signalé"  },
-               { val: "VALIDÉ",   label: "Validé"   },
-               { val: "ASSIGNÉ",  label: "Assigné"  },
+               { val: "SIGNALÁE,  label: "Signalé"  },
+               { val: "VALIDÁE,   label: "Validé"   },
+               { val: "ASSIGNÁE,  label: "Assigné"  },
                { val: "EN_COURS", label: "En cours" },
-               { val: "RAPPORTÉ", label: "Rapporté" },
-               { val: "ÉVALUÉ",   label: "Évalué"   },
+               { val: "RAPPORTÁE, label: "Rapporté" },
+               { val: "ÉVALUÁE,   label: "Évalué"   },
                { val: "CLOS",     label: "Clôturé"  },
             ].map(o => (
               <Pill key={o.val} val={o.val} current={local.status ?? ""} label={o.label}
@@ -214,9 +213,9 @@ function FilterDropdown({
   );
 }
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // TICKET SIDE PANEL
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 function TicketSidePanel({
   ticket, onClose, onEdit, onWorkflowAction,
@@ -241,13 +240,13 @@ function TicketSidePanel({
     (ticket as any).provider?.company_name ??
     (ticket as any).provider?.user?.name   ??
     (ticket as any).provider?.name         ??
-    (ticket.provider_id ? `Prestataire #${ticket.provider_id}` : "—");
+    (ticket.provider_id ? `Prestataire #${ticket.provider_id}` : " E);
 
-  const siteName    = ticket.site?.nom ?? "—";
+  const siteName    = ticket.site?.nom ?? " E;
   const assetLabel  = ticket.asset
     ? `${ticket.asset.designation}${ticket.asset.codification ? ` · ${ticket.asset.codification}` : ""}`
-    : "—";
-  const serviceName = ticket.service?.name ?? "—";
+    : " E;
+  const serviceName = ticket.service?.name ?? " E;
 
   const infoRows: Array<{ Icon: any; label: string; value?: string | null; custom?: React.ReactNode }> = [
     { 
@@ -322,7 +321,7 @@ function TicketSidePanel({
                 </div>
                 {row.custom
                   ? row.custom
-                  : <p className="text-sm font-bold text-slate-900 text-right truncate max-w-[60%]">{row.value ?? "—"}</p>
+                  : <p className="text-sm font-bold text-slate-900 text-right truncate max-w-[60%]">{row.value ?? " E}</p>
                 }
               </div>
             ))}
@@ -348,7 +347,7 @@ function TicketSidePanel({
         </div>
 
         <div className="px-7 py-5 border-t border-slate-100 shrink-0 space-y-3">
-          {ticket.status === "SIGNALÉ" && (
+          {ticket.status === "SIGNALÁE && (
             <button
               onClick={() => onWorkflowAction?.("assign", ticket)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-700 transition"
@@ -357,7 +356,7 @@ function TicketSidePanel({
             </button>
           )}
 
-          {ticket.status === "RAPPORTÉ" && (
+          {ticket.status === "RAPPORTÁE && (
             <button
               onClick={() => onWorkflowAction?.("validate", ticket)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition"
@@ -366,7 +365,7 @@ function TicketSidePanel({
             </button>
           )}
 
-          {ticket.status === "ÉVALUÉ" && (
+          {ticket.status === "ÉVALUÁE && (
             <button
               onClick={() => onWorkflowAction?.("close", ticket)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-black text-white text-sm font-bold hover:bg-gray-900 transition"
@@ -396,9 +395,9 @@ function TicketSidePanel({
   );
 }
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // PAGE PRINCIPALE
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 export default function TicketsPage() {
   const {
@@ -467,7 +466,7 @@ export default function TicketsPage() {
         await TicketService.updateTicket(editingTicket.id, formData);
         showFlash("success", "Ticket mis à jour avec succès.");
       } else {
-        // Auto-calcul due_at : ticket curatif → planned_at + 72h
+        // Auto-calcul due_at : ticket curatif ↁEplanned_at + 72h
         const payload = { ...formData };
         if (payload.type === "curatif" && payload.planned_at && !payload.due_at) {
           const planned = new Date(payload.planned_at);
@@ -622,7 +621,7 @@ export default function TicketsPage() {
       key: "images",
       render: (_: any, row: Ticket) => {
         const imgs: string[] = (row as any).images ?? [];
-        if (!imgs.length) return <span className="text-slate-300 text-xs">—</span>;
+        if (!imgs.length) return <span className="text-slate-300 text-xs"> E/span>;
         return (
           <div className="flex items-center">
             {imgs.slice(0, 3).map((src, i) => (
@@ -654,11 +653,11 @@ export default function TicketsPage() {
     {
       header: "Sujet", key: "subject",
       render: (_: any, row: Ticket) =>
-        <span className="font-medium text-slate-900 text-sm max-w-[200px] truncate block">{row.subject ?? "—"}</span>,
+        <span className="font-medium text-slate-900 text-sm max-w-[200px] truncate block">{row.subject ?? " E}</span>,
     },
     {
       header: "Site", key: "site",
-      render: (_: any, row: Ticket) => row.site?.nom ?? "—",
+      render: (_: any, row: Ticket) => row.site?.nom ?? " E,
     },
     {
       header: "Prestataire", key: "provider",
@@ -667,7 +666,7 @@ export default function TicketsPage() {
           (row as any).provider?.company_name ??
           (row as any).provider?.user?.name   ??
           (row as any).provider?.name         ??
-          (row.provider_id ? `#${row.provider_id}` : "—");
+          (row.provider_id ? `#${row.provider_id}` : " E);
         return <span className="text-sm text-slate-700">{name}</span>;
       },
     },
@@ -828,12 +827,11 @@ export default function TicketsPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
           <PageHeader title="Tickets" subtitle="Suivez et gérez tous vos tickets d'intervention" />
 
           {/* Flash */}

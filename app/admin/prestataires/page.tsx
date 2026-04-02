@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import SearchInput from "@/components/SearchInput";
 import ReusableForm from "@/components/ReusableForm";
 import StatsCard from "@/components/StatsCard";
@@ -20,9 +19,9 @@ import { useProviders } from "../../../hooks/admin/useProviders";
 import { ProviderService, Provider } from "../../../services/admin/provider.service";
 import { useServices } from "../../../hooks/admin/useServices";
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // FILTER DROPDOWN
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 interface ProviderFilters { is_active?: boolean; service_id?: number; }
 
@@ -128,9 +127,9 @@ function ProviderFilterDropdown({
   );
 }
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 // PAGE
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════════╁E
 
 export default function PrestatairesPage() {
   const router = useRouter();
@@ -204,7 +203,7 @@ export default function PrestatairesPage() {
   };
 
   // ── Champs formulaire création prestataire ──
-  // Structure : Infos société → Responsable → Médias (logo + photos)
+  // Structure : Infos société ↁEResponsable ↁEMédias (logo + photos)
   const prestFields = [
 
     // ── BLOC 1 : Informations société ──
@@ -276,16 +275,15 @@ export default function PrestatairesPage() {
     { label: "Total prestataires",       value: stats?.total_providers           ?? 0,  delta: "+0%", trend: "up"   as const },
     { label: "Prestataires actifs",      value: stats?.active_providers          ?? 0,  delta: "+0%", trend: "up"   as const },
     { label: "Prestataires inactifs",    value: stats?.inactive_providers        ?? 0,  delta: "+0%", trend: "down" as const },
-    { label: "Délai moyen intervention", value: stats?.average_intervention_time ?? "—",              delta: "+0%", trend: "up"   as const },
+    { label: "Délai moyen intervention", value: stats?.average_intervention_time ?? " E,              delta: "+0%", trend: "up"   as const },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
           <PageHeader
             title="Prestataires"
             subtitle="Gérez tous vos prestataires de services"
@@ -404,10 +402,10 @@ export default function PrestatairesPage() {
                     key={p.id}
                     id={p.id}
                     name={p.company_name ?? "Prestataire"}
-                    location={p.city ?? "—"}
-                    category={p.service?.name ?? "—"}
-                    phone={p.user?.phone ?? "—"}
-                    email={p.user?.email ?? "—"}
+                    location={p.city ?? " E}
+                    category={p.service?.name ?? " E}
+                    phone={p.user?.phone ?? " E}
+                    email={p.user?.email ?? " E}
                     rating={p.rating ?? 0}
                     status={p.is_active ? "Actif" : "Inactif"}
                     logo={p.logoUrl}
@@ -450,11 +448,11 @@ export default function PrestatairesPage() {
         onClose={() => setSelectedProvider(null)}
         provider={selectedProvider ? {
           name:       selectedProvider.company_name  ?? "Prestataire",
-          location:   selectedProvider.city          ?? "—",
-          phone:      selectedProvider.user?.phone   ?? "—",
-          email:      selectedProvider.user?.email   ?? "—",
-          category:   selectedProvider.service?.name ?? "—",
-          dateEntree: selectedProvider.date_entree   ?? "—",
+          location:   selectedProvider.city          ?? " E,
+          phone:      selectedProvider.user?.phone   ?? " E,
+          email:      selectedProvider.user?.email   ?? " E,
+          category:   selectedProvider.service?.name ?? " E,
+          dateEntree: selectedProvider.date_entree   ?? " E,
           status:     selectedProvider.is_active ? "Actif" : "Inactif",
           logo:       selectedProvider.logoUrl,
           stats: {

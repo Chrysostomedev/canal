@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Eye, Download, Upload, Building2 } from "lucide-react";
 
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import DataTable from "@/components/DataTable";
 import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
@@ -145,17 +144,16 @@ export default function PatrimoinesPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
           <PageHeader
             title="Type de patrimoine"
             subtitle="Ce menu vous permet de voir les différents patrimoines disponibles"
           />
 
-          {/* Barre d'actions — PAS de filtre sur cette vue */}
+          {/* Barre d'actions  EPAS de filtre sur cette vue */}
           <div className="shrink-0 flex justify-end items-center gap-3">
 
             {/* Import */}

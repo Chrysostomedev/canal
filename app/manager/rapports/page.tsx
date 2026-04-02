@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
@@ -20,7 +19,7 @@ import { InterventionReport } from "../../../types/manager.types";
 
 // ─────────────── HELPERS ───────────────
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return " E;
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 };
 
@@ -58,7 +57,7 @@ function TypeBadge({ type }: { type?: string }) {
 }
 
 function StarRating({ value }: { value?: number | null }) {
-  if (!value) return <span className="text-slate-400 text-xs">—</span>;
+  if (!value) return <span className="text-slate-400 text-xs"> E/span>;
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
@@ -72,8 +71,8 @@ function StarRating({ value }: { value?: number | null }) {
 function ReportSidePanel({ report, onClose }: { report: InterventionReport | null; onClose: () => void }) {
   if (!report) return null;
 
-  const providerName = report.provider?.company_name ?? report.provider?.name ?? "—";
-  const siteName = report.site?.nom ?? report.site?.name ?? "—";
+  const providerName = report.provider?.company_name ?? report.provider?.name ?? " E;
+  const siteName = report.site?.nom ?? report.site?.name ?? " E;
   const ticketSubject = report.ticket?.subject ?? `Ticket #${report.ticket_id}`;
 
   return (
@@ -140,14 +139,14 @@ export default function RapportsPage() {
     { label: "Total rapports",   value: stats?.total ?? 0, delta: "", trend: "up" as const },
     { label: "Rapports validés", value: stats?.validated ?? 0, delta: "", trend: "up" as const },
     { label: "En attente",       value: stats?.pending ?? 0, delta: "", trend: "up" as const },
-    { label: "Note moyenne",     value: stats?.average_rating ? `${stats.average_rating}/5` : "—", delta: "", trend: "up" as const },
+    { label: "Note moyenne",     value: stats?.average_rating ? `${stats.average_rating}/5` : " E, delta: "", trend: "up" as const },
   ];
 
   const columns = [
     { header: "ID",         key: "id",        render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">#{row.id}</span> },
     { header: "Ticket",     key: "ticket" as any,    render: (_: any, row: InterventionReport) => row.ticket?.subject ?? `#${row.ticket_id}` },
-    { header: "Prestataire",key: "provider" as any,  render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? "—" },
-    { header: "Site",       key: "site" as any,      render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? "—" },
+    { header: "Prestataire",key: "provider" as any,  render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? " E },
+    { header: "Site",       key: "site" as any,      render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? " E },
     { header: "Type",       key: "intervention_type" as any,      render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
     { header: "Date",       key: "created_at",render: (_: any, row: InterventionReport) => formatDate(row.created_at) },
     { header: "Statut",     key: "status",    render: (_: any, row: InterventionReport) => <StatusBadge status={row.status} /> },
@@ -164,11 +163,10 @@ export default function RapportsPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
-      <Sidebar />
+    <div className="
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader
             title="Rapports d'intervention"
             subtitle="Analysez et validez les rapports techniques soumis par vos prestataires."

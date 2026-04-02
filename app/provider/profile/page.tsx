@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import axiosInstance from "../../../core/axios";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 
@@ -88,8 +87,7 @@ export default function ProviderProfilePage() {
   };
 
   if (loading) return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
       </div>
@@ -97,11 +95,10 @@ export default function ProviderProfilePage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 max-w-5xl mx-auto w-full space-y-8">
+        <main className="mt-20 p-8 max-w-5xl mx-auto w-full space-y-8">
           <PageHeader title="Mon Profil" subtitle="Gérez vos informations de Prestataire" />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -124,7 +121,7 @@ export default function ProviderProfilePage() {
                 </div>
                 <div className="w-full mt-8 pt-8 border-t border-slate-50 space-y-4 text-left">
                   <div className="flex items-center gap-3 text-sm"><Mail size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">{profile?.email}</span></div>
-                  <div className="flex items-center gap-3 text-sm"><Phone size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">{profile?.phone || "—"}</span></div>
+                  <div className="flex items-center gap-3 text-sm"><Phone size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">{profile?.phone || " E}</span></div>
                   <div className="flex items-center gap-3 text-sm"><Calendar size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">Membre depuis {new Date(profile?.created_at).toLocaleDateString()}</span></div>
                 </div>
               </div>

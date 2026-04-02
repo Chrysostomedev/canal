@@ -32,7 +32,6 @@ import {
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 
 import { useTransferDetail } from "../../../../hooks/admin/useTransferts";
 import {
@@ -146,9 +145,6 @@ export default function TransferDetailPage({
 
     return (
       <div className="flex min-h-screen bg-gray-50">
-
-        <Sidebar />
-
         <div className="flex flex-col flex-1 pl-64">
 
           <Navbar />
@@ -183,9 +179,6 @@ export default function TransferDetailPage({
 
     return (
       <div className="flex min-h-screen bg-gray-50">
-
-        <Sidebar />
-
         <div className="flex flex-col flex-1 pl-64">
 
           <Navbar />
@@ -262,9 +255,6 @@ export default function TransferDetailPage({
   return (
 
     <div className="flex min-h-screen bg-gray-50">
-
-      <Sidebar />
-
       <div className="flex flex-col flex-1 pl-64">
 
         <Navbar />

@@ -1,10 +1,10 @@
 /**
  * app/provider/dashboard/page.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Dashboard Provider — branché sur l'AuthService unifié.
+ * Dashboard Provider  Ebranché sur l'AuthService unifié.
  *
  * CHANGEMENTS vs version originale :
- *   - Import : `providerAuthService` → `authService` (service unifié)
+ *   - Import : `providerAuthService` ↁE`authService` (service unifié)
  *   - Guard  : `authService.isAuthenticated()` + `authService.hasRole(["PROVIDER"])`
  *   - Logout : `authService.logout()` (redirige automatiquement vers /login)
  *   - Aucune logique métier / UI modifiée
@@ -15,7 +15,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
@@ -29,10 +28,10 @@ import {
   Intervention,
 } from "../../../services/provider/providerDashboardService";
 
-// ✅ Import unique — authService unifié remplace providerAuthService
+// ✁EImport unique  EauthService unifié remplace providerAuthService
 import { authService } from "../../../services/AuthService";
 
-// ─── Statuts — inchangés ──────────────────────────────────────────────────────
+// ─── Statuts  Einchangés ──────────────────────────────────────────────────────
 const STATUS_STYLES: Record<string, string> = {
   signalez: "border-slate-300 text-slate-700 bg-gray-100",
   validé: "border-blue-400 text-blue-600 bg-blue-50",
@@ -53,7 +52,7 @@ const STATUS_LABELS: Record<string, string> = {
   clos: "Clos",
 };
 
-// ─── Helper : convertit une Intervention Laravel → format EventListCard ───────
+// ─── Helper : convertit une Intervention Laravel ↁEformat EventListCard ───────
 function toEventItem(i: Intervention) {
   const date = new Date(i.date_debut);
   const now = new Date();
@@ -128,7 +127,7 @@ export default function ProviderDashboard() {
       setData(result);
     } catch (err: any) {
       if (err.response?.status === 401) {
-        // Token expiré → logout propre via authService (nettoie ls + redirige /login)
+        // Token expiré ↁElogout propre via authService (nettoie ls + redirige /login)
         authService.logout();
         return;
       }
@@ -142,10 +141,10 @@ export default function ProviderDashboard() {
   };
 
   useEffect(() => {
-    // ✅ Guard unifié :
+    // ✁EGuard unifié :
     //   1. Vérifie qu'il y a un token + un rôle valide (isAuthenticated)
     //   2. Vérifie que le rôle est bien PROVIDER (hasRole)
-    //   → Sinon redirige vers /login (pas /provider/login — page unifiée)
+    //   ↁESinon redirige vers /login (pas /provider/login  Epage unifiée)
     if (!authService.isAuthenticated() || !authService.hasRole(["PROVIDER"])) {
       router.replace("/login");
       return;
@@ -185,7 +184,7 @@ export default function ProviderDashboard() {
     setIsDetailsOpen(true);
   };
 
-  // ── Colonnes DataTable — inchangées ───────────────────────────────────────
+  // ── Colonnes DataTable  Einchangées ───────────────────────────────────────
   const columns = [
     { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
     { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
@@ -220,11 +219,9 @@ export default function ProviderDashboard() {
 
   // ── Rendu ──────────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen bg-zinc-50">
+    <div className="
 
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex-1 flex flex-col ">
 
         <Navbar />
 
@@ -249,10 +246,10 @@ export default function ProviderDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {loading ? <StatsSkeleton count={4} /> : (
               <>
-                <StatsCard label="Total tickets" value={stats?.tickets.total ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Tickets en cours" value={stats?.tickets.en_cours ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Tickets clôturés" value={stats?.tickets.clotures ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Total devis" value={stats?.devis.total ?? 0} delta="+0%" trend="up" />
+                <StatsCard label="Total tickets" value={stats?.tickets.total ?? 0} delta="+0%" trend="up" href="/provider/tickets" />
+                <StatsCard label="Tickets en cours" value={stats?.tickets.en_cours ?? 0} delta="+0%" trend="up" href="/provider/tickets" />
+                <StatsCard label="Tickets clôturés" value={stats?.tickets.clotures ?? 0} delta="+0%" trend="up" href="/provider/tickets" />
+                <StatsCard label="Total devis" value={stats?.devis.total ?? 0} delta="+0%" trend="up" href="/provider/devis" />
               </>
             )}
           </div>
@@ -261,10 +258,10 @@ export default function ProviderDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {loading ? <StatsSkeleton count={4} /> : (
               <>
-                <StatsCard label="Devis en attente" value={stats?.devis.en_attente ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Factures totales" value={stats?.factures.total ?? 0} delta="+0%" trend="up" />
-                <StatsCard label="Factures payées" value={stats?.factures.payees ?? 0} delta="+0%" trend="up" isCurrency={false} />
-                <StatsCard label="Factures en attente" value={stats?.factures.en_attente ?? 0} delta="+0%" trend="up" />
+                <StatsCard label="Devis en attente" value={stats?.devis.en_attente ?? 0} delta="+0%" trend="up" href="/provider/devis" />
+                <StatsCard label="Factures totales" value={stats?.factures.total ?? 0} delta="+0%" trend="up" href="/provider/factures" />
+                <StatsCard label="Factures payées" value={stats?.factures.payees ?? 0} delta="+0%" trend="up" isCurrency={false} href="/provider/factures" />
+                <StatsCard label="Factures en attente" value={stats?.factures.en_attente ?? 0} delta="+0%" trend="up" href="/provider/factures" />
               </>
             )}
           </div>
@@ -305,7 +302,7 @@ export default function ProviderDashboard() {
         </main>
       </div>
 
-      {/* Panel détails ticket — inchangé */}
+      {/* Panel détails ticket  Einchangé */}
       <SideDetailsPanel
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}

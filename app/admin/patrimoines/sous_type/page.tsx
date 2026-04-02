@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Eye, Filter, Download, Upload, Building2, X } from "lucide-react";
 
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import DataTable from "@/components/DataTable";
 import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
@@ -15,7 +14,7 @@ import { useSubTypeAssets } from "../../../../hooks/admin/useSubTypeAssets";
 import { useTypes } from "../../../../hooks/admin/useTypes";
 import { SubTypeAssetService } from "../../../../services/admin/sub-type-asset.service";
 
-// ── Dropdown filtre par type — style CANAL+ noir/blanc ──
+// ── Dropdown filtre par type  Estyle CANAL+ noir/blanc ──
 function FilterDropdown({
   isOpen,
   onClose,
@@ -244,11 +243,10 @@ export default function SousTypePage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Sidebar />
+    <div className="
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="ml-64 mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
           <PageHeader
             title="Sous-type de patrimoine"
             subtitle="Ce menu vous permet de voir les sous-types disponibles"
@@ -274,7 +272,7 @@ export default function SousTypePage() {
               {exportLoading ? "Export..." : "Exporter"}
             </button>
 
-            {/* Filtre par type — dropdown CANAL+ */}
+            {/* Filtre par type  Edropdown CANAL+ */}
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setFiltersOpen(!filtersOpen)}

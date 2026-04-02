@@ -7,6 +7,7 @@ import { authService } from "../../services/AuthService";
 import Link from "next/link";
 import NotificationPanel from "./NotificationPanel";
 import api from "../../core/axios";
+import { useSidebar } from "./Sidebar";
 
 const getNotificationsRoute = (role: string): string => {
   switch (role) {
@@ -81,6 +82,9 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Navbar() {
   const router = useRouter();
+  const { collapsed } = useSidebar();
+  const leftOffset = collapsed ? "left-16" : "left-64";
+  const widthCalc  = collapsed ? "w-[calc(100%-4rem)]" : "w-[calc(100%-16rem)]";
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName,  setLastName]  = useState("");
@@ -213,7 +217,7 @@ export default function Navbar() {
         />
       )}
 
-      <header className="fixed top-0 left-64 w-[calc(100%-16rem)] flex justify-between items-center px-6 py-4 bg-white shadow border-b border-gray-200 z-30">
+      <header className={`fixed top-0 ${leftOffset} ${widthCalc} flex justify-between items-center px-4 py-3 bg-white shadow border-b border-gray-200 z-30 transition-all duration-300`}>
 
         {/* Infos utilisateur */}
         <div className="flex items-center gap-4">

@@ -375,7 +375,7 @@ export default function SettingsPageShared({ unreadCount = 0 }: SettingsPageShar
 
         <main className="flex-1 overflow-y-auto">
           {/* Centrage vertical + horizontal avec padding généreux */}
-          <div className="min-h-full flex flex-col px-6 py-10 ml-64">
+          <div className="min-h-full flex flex-col px-6 py-10">
             <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col gap-8">
 
               <PageHeader title="Paramètres" subtitle="Gérez votre compte et vos préférences" />

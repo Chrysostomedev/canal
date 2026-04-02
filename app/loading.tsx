@@ -48,7 +48,7 @@ export default function AdminLoading() {
         </aside>
   
         {/* ── Contenu principal ── */}
-        <div className="flex-1 pl-64 flex flex-col">
+        <div className="flex-1  flex flex-col">
   
           {/* Navbar skeleton */}
           <header className="fixed top-0 left-64 w-[calc(100%-16rem)] h-[72px] bg-white border-b border-slate-100 z-30 flex items-center justify-between px-8">
@@ -104,13 +104,13 @@ export default function AdminLoading() {
               </div>
             </div>
   
-            {/* Content card skeleton — s'adapte aux grilles cartes OU aux tables */}
+            {/* Content card skeleton  Es'adapte aux grilles cartes OU aux tables */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-6">
   
               {/* Search bar */}
               <div className="w-72 h-10 bg-slate-50 rounded-xl animate-pulse" />
   
-              {/* Grille cartes (3 colonnes — préstataires, sites) */}
+              {/* Grille cartes (3 colonnes  Epréstataires, sites) */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="bg-slate-50 rounded-2xl p-5 space-y-4 border border-slate-100">

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useDashboard } from "../../../hooks/manager/useDashboard";
-import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DonutChartCard from "@/components/DonutChartCard";
@@ -77,7 +76,7 @@ export default function Dashboard() {
     const statusColor =
       status === "CLOS" ? "#000" :
       status === "EN_COURS" ? "#f97316" :
-      status === "ÉVALUÉ" ? "#22c55e" : "#64748b";
+      status === "ÉVALUÁE ? "#22c55e" : "#64748b";
 
     setSelectedTicket({
       title: ticket.subject ?? `Ticket #${ticket.id}`,
@@ -126,9 +125,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col pl-64">
+    <div className="
+      <div className="flex-1 flex flex-col ">
         <Navbar />
         <main className="flex-1 p-8 pt-24 space-y-8">
           {isLoading ? (
@@ -145,18 +143,14 @@ export default function Dashboard() {
           ) : (
             <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatsCard label="Nombre total de tickets" value={stats.kpis.nombre_total_tickets} />
-            <StatsCard label="Tickets traités" value={stats.kpis.nombre_tickets_traités} />
-            <StatsCard label="Tickets non traités" value={stats.kpis.nombre_tickets_non_traités} />
+            <StatsCard label="Nombre total de tickets" value={stats.kpis.nombre_total_tickets} href="/manager/tickets" />
+            <StatsCard label="Tickets traités" value={stats.kpis.nombre_tickets_traités} href="/manager/tickets" />
+            <StatsCard label="Tickets non traités" value={stats.kpis.nombre_tickets_non_traités} href="/manager/tickets" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <StatsCard label="Mes prestataires" value={stats.kpis.nombre_prestataires} />
-            <StatsCard
-              label="Coût de maintenance de mon site"
-              value={stats.kpis.cout_global_maintenance}
-              isCurrency
-            />
+            <StatsCard label="Mes prestataires" value={stats.kpis.nombre_prestataires} href="/manager/prestataires" />
+            <StatsCard label="Coût de maintenance de mon site" value={stats.kpis.cout_global_maintenance} isCurrency href="/manager/factures" />
           </div>
 
           <section className="grid grid-cols-1 lg:grid-cols-8 gap-12">
