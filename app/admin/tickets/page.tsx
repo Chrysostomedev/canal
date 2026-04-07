@@ -12,6 +12,7 @@ import DataTable from "@/components/DataTable";
 import StatsCard from "@/components/StatsCard";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
+import Sidebar from "@/components/Sidebar";
 import { FieldConfig } from "@/components/ReusableForm";
 
 import { useTickets } from "../../../hooks/admin/useTickets";
@@ -24,15 +25,15 @@ import { resolveManagerName, resolveManagerPhone } from "../../../services/admin
 import * as PlanningService from "../../../services/admin/planningService";
 import axiosInstance from "../../../core/axios";
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // HELPERS
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 const formatHeures = (h: number | null | undefined) =>
-  h !== null && h !== undefined ? `${h}h` : " E;
+  h !== null && h !== undefined ? `${h}h` : "";
 
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return " E;
+  if (!iso) return "";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -40,38 +41,38 @@ const formatDate = (iso?: string | null): string => {
   return time === "00:00" ? date : `${date} à ${time}`;
 };
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // STATUTS
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 const STATUS_LABELS: Record<string, string> = {
-  SIGNALÁE  "Signalé",
-  VALIDÁE   "Validé",
-  ASSIGNÁE  "Assigné",
+  SIGNALÉ: "Signalé",
+  VALIDÉ: "Validé",
+  ASSIGNÉ: "Assigné",
   EN_COURS: "En cours",
-  RAPPORTÁE "Rapporté",
-  ÉVALUÁE   "Évalué",
-  CLOS:     "Clôturé",
+  RAPPORTÉ: "Rapporté",
+  ÉVALUÉ: "Évalué",
+  CLOS: "Clôturé",
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  SIGNALÁE  "border-slate-300  bg-slate-100   text-slate-700",
-  VALIDÁE   "border-blue-400   bg-blue-50     text-blue-700",
-  ASSIGNÁE  "border-violet-400 bg-violet-50   text-violet-700",
-  EN_COURS: "border-orange-400 bg-orange-50   text-orange-600",
-  RAPPORTÁE "border-amber-400  bg-amber-50    text-amber-700",
-  ÉVALUÁE   "border-green-500  bg-green-50    text-green-700",
-  CLOS:     "border-black      bg-black       text-white",
+  SIGNALÉ: "border-slate-300 bg-slate-100 text-slate-700",
+  VALIDÉ: "border-blue-400 bg-blue-50 text-blue-700",
+  ASSIGNÉ: "border-violet-400 bg-violet-50 text-violet-700",
+  EN_COURS: "border-orange-400 bg-orange-50 text-orange-600",
+  RAPPORTÉ: "border-amber-400 bg-amber-50 text-amber-700",
+  ÉVALUÉ: "border-green-500 bg-green-50 text-green-700",
+  CLOS: "border-black bg-black text-white",
 };
 
 const STATUS_DOT_COLORS: Record<string, string> = {
-  SIGNALÁE  "#94a3b8",
-  VALIDÁE   "#3b82f6",
-  ASSIGNÁE  "#8b5cf6",
+  SIGNALÉ: "#94a3b8",
+  VALIDÉ: "#3b82f6",
+  ASSIGNÉ: "#8b5cf6",
   EN_COURS: "#f97316",
-  RAPPORTÁE "#f59e0b",
-  ÉVALUÁE   "#22c55e",
-  CLOS:     "#000000",
+  RAPPORTÉ: "#f59e0b",
+  ÉVALUÉ: "#22c55e",
+  CLOS: "#000000",
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -82,15 +83,15 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ══════════════════════════════════════════════╁E
-// PRIORITÁE
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
+// PRIORITÉ
+// ══════════════════════════════════════════════
 
 const PRIORITY_STYLES: Record<string, string> = {
-  faible:   "bg-slate-100 text-slate-600",
-  moyenne:  "bg-blue-50   text-blue-700",
-  haute:    "bg-orange-50 text-orange-700",
-  critique: "bg-red-100   text-red-700",
+  faible: "bg-slate-100 text-slate-600",
+  moyenne: "bg-blue-50 text-blue-700",
+  haute: "bg-orange-50 text-orange-700",
+  critique: "bg-red-100 text-red-700",
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -105,9 +106,9 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // FILTER DROPDOWN
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 interface TicketFilters { status?: string; type?: string; priority?: string; }
 
@@ -148,13 +149,13 @@ function FilterDropdown({
           <div className="flex flex-col gap-1.5">
             {[
               { val: "",         label: "Tous les statuts" },
-               { val: "SIGNALÁE,  label: "Signalé"  },
-               { val: "VALIDÁE,   label: "Validé"   },
-               { val: "ASSIGNÁE,  label: "Assigné"  },
-               { val: "EN_COURS", label: "En cours" },
-               { val: "RAPPORTÁE, label: "Rapporté" },
-               { val: "ÉVALUÁE,   label: "Évalué"   },
-               { val: "CLOS",     label: "Clôturé"  },
+              { val: "SIGNALÉ",  label: "Signalé"  },
+              { val: "VALIDÉ",   label: "Validé"   },
+              { val: "ASSIGNÉ",  label: "Assigné"  },
+              { val: "EN_COURS", label: "En cours" },
+              { val: "RAPPORTÉ", label: "Rapporté" },
+              { val: "ÉVALUÉ",   label: "Évalué"   },
+              { val: "CLOS",     label: "Clôturé"  },
             ].map(o => (
               <Pill key={o.val} val={o.val} current={local.status ?? ""} label={o.label}
                 onClick={() => setLocal({ ...local, status: o.val || undefined })} />
@@ -198,13 +199,13 @@ function FilterDropdown({
       <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
         <button
           onClick={() => { setLocal({}); onApply({}); onClose(); }}
-          className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition"
+          className="flex-1 py-1.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition"
         >
           Réinitialiser
         </button>
         <button
           onClick={() => { onApply(local); onClose(); }}
-          className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
+          className="flex-1 py-1.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
         >
           Appliquer
         </button>
@@ -213,9 +214,9 @@ function FilterDropdown({
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // TICKET SIDE PANEL
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 function TicketSidePanel({
   ticket, onClose, onEdit, onWorkflowAction,
@@ -240,13 +241,13 @@ function TicketSidePanel({
     (ticket as any).provider?.company_name ??
     (ticket as any).provider?.user?.name   ??
     (ticket as any).provider?.name         ??
-    (ticket.provider_id ? `Prestataire #${ticket.provider_id}` : " E);
+    (ticket.provider_id ? `Prestataire #${ticket.provider_id}` : "");
 
-  const siteName    = ticket.site?.nom ?? " E;
+  const siteName    = ticket.site?.nom ?? "";
   const assetLabel  = ticket.asset
     ? `${ticket.asset.designation}${ticket.asset.codification ? ` · ${ticket.asset.codification}` : ""}`
-    : " E;
-  const serviceName = ticket.service?.name ?? " E;
+    : "";
+  const serviceName = ticket.service?.name ?? "";
 
   const infoRows: Array<{ Icon: any; label: string; value?: string | null; custom?: React.ReactNode }> = [
     { 
@@ -321,7 +322,7 @@ function TicketSidePanel({
                 </div>
                 {row.custom
                   ? row.custom
-                  : <p className="text-sm font-bold text-slate-900 text-right truncate max-w-[60%]">{row.value ?? " E}</p>
+                  : <p className="text-sm font-bold text-slate-900 text-right truncate max-w-[60%]">{row.value ?? ""}</p>
                 }
               </div>
             ))}
@@ -347,7 +348,7 @@ function TicketSidePanel({
         </div>
 
         <div className="px-7 py-5 border-t border-slate-100 shrink-0 space-y-3">
-          {ticket.status === "SIGNALÁE && (
+          {ticket.status === "SIGNALÉ" && (
             <button
               onClick={() => onWorkflowAction?.("assign", ticket)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-700 transition"
@@ -356,7 +357,7 @@ function TicketSidePanel({
             </button>
           )}
 
-          {ticket.status === "RAPPORTÁE && (
+          {ticket.status === "RAPPORTÉ" && (
             <button
               onClick={() => onWorkflowAction?.("validate", ticket)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition"
@@ -365,7 +366,7 @@ function TicketSidePanel({
             </button>
           )}
 
-          {ticket.status === "ÉVALUÁE && (
+          {ticket.status === "ÉVALUÉ" && (
             <button
               onClick={() => onWorkflowAction?.("close", ticket)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-black text-white text-sm font-bold hover:bg-gray-900 transition"
@@ -395,9 +396,9 @@ function TicketSidePanel({
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // PAGE PRINCIPALE
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 export default function TicketsPage() {
   const {
@@ -443,7 +444,7 @@ export default function TicketsPage() {
     return () => clearTimeout(t);
   }, [flashMessage]);
 
-  const showFlash = (type: "success"|"error", message: string) =>
+  const showFlash = (type: "success" | "error", message: string) =>
     setFlashMessage({ type, message });
 
   const activeCount = [filters.status, filters.type, filters.priority].filter(Boolean).length;
@@ -466,7 +467,6 @@ export default function TicketsPage() {
         await TicketService.updateTicket(editingTicket.id, formData);
         showFlash("success", "Ticket mis à jour avec succès.");
       } else {
-        // Auto-calcul due_at : ticket curatif ↁEplanned_at + 72h
         const payload = { ...formData };
         if (payload.type === "curatif" && payload.planned_at && !payload.due_at) {
           const planned = new Date(payload.planned_at);
@@ -571,16 +571,14 @@ export default function TicketsPage() {
       });
 
       const blob = new Blob([response.data], {
-        type: response.headers["content-type"] ??
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type: response.headers["content-type"] ?? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      const url   = URL.createObjectURL(blob);
-      const link  = document.createElement("a");
-      link.href   = url;
-      const cd    = (response.headers["content-disposition"] as string) ?? "";
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const cd = (response.headers["content-disposition"] as string) ?? "";
       const match = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-      link.download = match?.[1]?.replace(/['"]/g, "") ??
-        `tickets_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.download = match?.[1]?.replace(/['"]/g, "") ?? `tickets_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -613,60 +611,32 @@ export default function TicketsPage() {
     }
   };
 
-  // ── Colonnes DataTable ──
-  // Note : "Photos" affiche les images du ticket en vignettes empilées (max 3 + compteur)
   const columns: any[] = [
-    {
+    /* {
       header: "Photos",
       key: "images",
-      render: (_: any, row: Ticket) => {
-        const imgs: string[] = (row as any).images ?? [];
-        if (!imgs.length) return <span className="text-slate-300 text-xs"> E/span>;
-        return (
-          <div className="flex items-center">
-            {imgs.slice(0, 3).map((src, i) => (
-              <div
-                key={i}
-                className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white shrink-0"
-                style={{ zIndex: 3 - i, marginLeft: i > 0 ? "-10px" : "0" }}
-              >
-                <img src={src} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-            {imgs.length > 3 && (
-              <div
-                className="w-9 h-9 rounded-xl bg-slate-100 ring-2 ring-white flex items-center justify-center shrink-0"
-                style={{ zIndex: 0, marginLeft: "-10px" }}
-              >
-                <span className="text-[10px] font-bold text-slate-500">+{imgs.length - 3}</span>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
+      ...
+    }, */
     {
-      header: "Codification", key: "id",
+      header: "Codification", key: "codification",
       render: (_: any, row: Ticket) =>
-        <span className="font-black text-slate-900 text-sm">#{row.id}</span>,
+        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg whitespace-nowrap">
+          {(row as any).asset?.codification ?? `#${row.id}`}
+        </span>,
     },
     {
       header: "Sujet", key: "subject",
       render: (_: any, row: Ticket) =>
-        <span className="font-medium text-slate-900 text-sm max-w-[200px] truncate block">{row.subject ?? " E}</span>,
+        <span className="font-medium text-slate-900 text-sm max-w-[200px] truncate block">{row.subject ?? ""}</span>,
     },
     {
       header: "Site", key: "site",
-      render: (_: any, row: Ticket) => row.site?.nom ?? " E,
+      render: (_: any, row: Ticket) => row.site?.nom ?? "",
     },
     {
       header: "Prestataire", key: "provider",
       render: (_: any, row: Ticket) => {
-        const name =
-          (row as any).provider?.company_name ??
-          (row as any).provider?.user?.name   ??
-          (row as any).provider?.name         ??
-          (row.provider_id ? `#${row.provider_id}` : " E);
+        const name = (row as any).provider?.company_name ?? (row as any).provider?.user?.name ?? (row as any).provider?.name ?? (row.provider_id ? `Prestataire #${row.provider_id}` : "-");
         return <span className="text-sm text-slate-700">{name}</span>;
       },
     },
@@ -701,7 +671,6 @@ export default function TicketsPage() {
     },
   ];
 
-  // ── Formulaire création d'un ticket (tous les champs métier) ──
   const ticketFields: FieldConfig[] = [
     {
       name: "site_id", label: "Site", type: "select", required: true,
@@ -737,21 +706,19 @@ export default function TicketsPage() {
     { name: "planned_at", label: "Date planifiée", type: "date", required: true, icon: CalendarDays },
     {
       name: "due_at",
-      label: "Date limite (auto +72h si curatif)",
+      label: "Date limite",
       type: "date",
-      required: false, // calculé automatiquement si curatif + planned_at renseigné
+      required: false,
       icon: CalendarCheck,
     },
     {
       name: "description", label: "Description", type: "rich-text", gridSpan: 2,
-      placeholder: "Décrivez le problème ou l'intervention",
     },
     {
       name: "images", label: "Photos", type: "image-upload", gridSpan: 2, maxImages: 3,
     },
   ];
 
-  // ── Formulaire édition d'un ticket (statut + commentaire + photos) ──
   const editFields: FieldConfig[] = [
     {
       name: "status", label: "Statut", type: "select", required: true,
@@ -768,11 +735,10 @@ export default function TicketsPage() {
     { name: "images",      label: "Photos",      type: "image-upload", gridSpan: 2, maxImages: 3 },
   ];
 
-  // ── Formulaire Planning ──
   const planningFields: FieldConfig[] = [
     {
       name: "site_id", label: "Site", type: "select", required: true,
-      disabled: !!selectedTicket, // Désactivé si on vient d'un ticket
+      disabled: !!selectedTicket,
       options: sites.map((s: any) => ({ label: s.nom, value: String(s.id) })),
     },
     {
@@ -784,8 +750,6 @@ export default function TicketsPage() {
     },
     { name: "date_debut", label: "Date de début", type: "date", required: true },
     { name: "date_fin",   label: "Date de fin",   type: "date", required: true },
-    { name: "responsable_name",  label: "Nom du responsable",       type: "text", required: false, disabled: true },
-    { name: "responsable_phone", label: "Téléphone du responsable", type: "text", required: false, disabled: true },
     { name: "description", label: "Description", type: "rich-text", gridSpan: 2 },
   ];
 
@@ -812,7 +776,6 @@ export default function TicketsPage() {
     { name: "comment", label: "Commentaire", type: "rich-text", gridSpan: 2 },
   ];
 
-  // ── KPIs ──
   const kpis1 = [
     { label: "Coût moyen / ticket", value: stats?.cout_moyen_par_ticket ?? 0,         isCurrency: true, delta: "+0%", trend: "up" as const },
     { label: "Total tickets",       value: stats?.nombre_total_tickets ?? 0,           delta: "+0%",     trend: "up" as const },
@@ -827,14 +790,13 @@ export default function TicketsPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <>
+      <div className="flex-1 flex flex-col min-h-screen">
         <Navbar />
 
         <main className="mt-20 p-6 space-y-8">
           <PageHeader title="Tickets" subtitle="Suivez et gérez tous vos tickets d'intervention" />
 
-          {/* Flash */}
           {flashMessage && (
             <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
               flashMessage.type === "success"
@@ -845,19 +807,15 @@ export default function TicketsPage() {
             </div>
           )}
 
-          {/* KPIs row 1 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {kpis1.map((k, i) => <StatsCard key={i} {...k} />)}
           </div>
 
-          {/* KPIs row 2 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {kpis2.map((k, i) => <StatsCard key={i} {...k} />)}
           </div>
 
-          {/* ── Barre d'actions ── */}
           <div className="flex items-center justify-between gap-3">
-            {/* Gauche : badges filtres actifs */}
             <div className="flex items-center gap-2 flex-wrap min-h-[36px]">
               {activeCount === 0 && (
                 <p className="text-xs text-slate-400 font-medium">Aucun filtre actif</p>
@@ -882,9 +840,7 @@ export default function TicketsPage() {
               )}
             </div>
 
-            {/* Droite : boutons d'action */}
             <div className="flex items-center gap-3 shrink-0">
-              {/* Importer */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
                 {importLoading
                   ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
@@ -894,7 +850,6 @@ export default function TicketsPage() {
                 <input type="file" accept=".xlsx,.xls,.csv" className="hidden" disabled={importLoading} onChange={handleImport} />
               </label>
 
-              {/* Exporter */}
               <button
                 onClick={handleExport}
                 disabled={exportLoading}
@@ -907,7 +862,6 @@ export default function TicketsPage() {
                 Exporter
               </button>
 
-              {/* Filtrer */}
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
@@ -933,7 +887,6 @@ export default function TicketsPage() {
                 />
               </div>
 
-              {/* Nouveau Ticket */}
               <button
                 onClick={() => { setEditingTicket(null); setIsModalOpen(true); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
@@ -943,7 +896,6 @@ export default function TicketsPage() {
             </div>
           </div>
 
-          {/* ── Table ── */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="py-16 text-center text-slate-400 text-sm">
@@ -967,7 +919,6 @@ export default function TicketsPage() {
         </main>
       </div>
 
-      {/* ── Ticket Side Panel ── */}
       <TicketSidePanel
         ticket={isDetailsOpen ? selectedTicket : null}
         onClose={() => { setIsDetailsOpen(false); setSelectedTicket(null); }}
@@ -975,7 +926,6 @@ export default function TicketsPage() {
         onWorkflowAction={handleWorkflowAction}
       />
 
-      {/* ── Formulaire création / édition ── */}
       <ReusableForm
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingTicket(null); }}
@@ -995,7 +945,6 @@ export default function TicketsPage() {
         submitLabel={editingTicket ? "Mettre à jour" : "Créer le ticket"}
       />
 
-      {/* Modale Assigner */}
       <ReusableForm
         isOpen={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
@@ -1006,7 +955,6 @@ export default function TicketsPage() {
         submitLabel="Assigner"
       />
 
-      {/* Modale Valider */}
       <ReusableForm
         isOpen={isValidModalOpen}
         onClose={() => setIsValidModalOpen(false)}
@@ -1017,7 +965,6 @@ export default function TicketsPage() {
         submitLabel="Valider"
       />
 
-      {/* Modale Planning */}
       <ReusableForm
         isOpen={isPlanningModalOpen}
         onClose={() => setIsPlanningModalOpen(false)}
@@ -1029,14 +976,12 @@ export default function TicketsPage() {
           return {
             site_id: String(selectedTicket.site_id),
             provider_id: String(selectedTicket.provider_id),
-            responsable_name: site ? resolveManagerName(site) : "",
-            responsable_phone: site ? resolveManagerPhone(site) : "",
             description: `Maintenance préventive issue du ticket #${selectedTicket.id}`,
           };
         })() : {}}
         onSubmit={handlePlanningSubmit}
         submitLabel="Créer le planning"
       />
-    </div>
+    </>
   );
 }

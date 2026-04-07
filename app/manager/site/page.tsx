@@ -18,14 +18,14 @@ import { useAssets } from "../../../hooks/manager/useAssets";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatMontant = (v?: number | null) => {
-  if (!v && v !== 0) return " E;
+  if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v} FCFA`;
 };
 
 const formatDate = (iso?: string | null) => {
-  if (!iso) return " E;
+  if (!iso) return "-";
   const d = new Date(iso);
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
 };
@@ -95,17 +95,17 @@ export default function SitePage() {
     },
     {
       header: "Type", key: "typeAsset",
-      render: (_: any, row: any) => row.typeAsset?.name ?? " E,
+      render: (_: any, row: any) => row.typeAsset?.name ?? "-",
     },
     {
       header: "Sous-type", key: "subTypeAsset",
-      render: (_: any, row: any) => row.subTypeAsset?.name ?? " E,
+      render: (_: any, row: any) => row.subTypeAsset?.name ?? "-",
     },
     {
       header: "Codification", key: "code",
       render: (_: any, row: any) => (
         <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-          {row.code ?? row.serial_number ?? " E}
+          {row.code ?? row.serial_number ?? "-"}
         </span>
       ),
     },
@@ -152,9 +152,7 @@ export default function SitePage() {
   ];
 
   return (
-    <div className="
-
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
         <main className="mt-20 p-6 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
@@ -257,7 +255,7 @@ export default function SitePage() {
                     onClick={() => setSelectedAsset(null)}
                     className="text-xs text-slate-400 hover:text-black mb-2"
                   >
-                    ✁EFermer
+                    Fermer
                   </button>
                   <h2 className="text-2xl font-black">{selectedAsset.designation}</h2>
                   <span className={`inline-block px-3 py-1 rounded-xl border text-xs font-bold ${STATUS_STYLE[selectedAsset.status] ?? ""}`}>
@@ -267,12 +265,12 @@ export default function SitePage() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 text-sm text-slate-700">
                   {[
                     { label: "ID",            value: `#${selectedAsset.id}` },
-                    { label: "Codification",  value: selectedAsset.code ?? selectedAsset.serial_number ?? " E },
-                    { label: "Type",          value: selectedAsset.typeAsset?.name ?? " E },
-                    { label: "Sous-type",     value: selectedAsset.subTypeAsset?.name ?? " E },
+                    { label: "Codification",  value: selectedAsset.code ?? selectedAsset.serial_number ?? "-" },
+                    { label: "Type",          value: selectedAsset.typeAsset?.name ?? "-" },
+                    { label: "Sous-type",     value: selectedAsset.subTypeAsset?.name ?? "-" },
                     { label: "Date d'entrée", value: formatDate(selectedAsset.acquisition_date) },
                     { label: "Valeur",        value: formatMontant(selectedAsset.acquisition_value) },
-                    { label: "Site",          value: selectedAsset.site?.nom ?? " E },
+                    { label: "Site",          value: selectedAsset.site?.nom ?? "-" },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between border-b border-slate-50 pb-2">
                       <span className="text-slate-400 font-medium">{label}</span>

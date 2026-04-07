@@ -89,19 +89,19 @@ export default function DevisPage() {
       key: "provider",
       render: (_, row) => (
          <div className="flex flex-col">
-            <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || " E}</span>
+            <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || "-"}</span>
          </div>
       )
     },
     {
       header: "Site",
       key: "site",
-      render: (_, row) => <span className="text-slate-600 font-medium">{row.site?.nom || row.site?.name || " E}</span>
+      render: (_, row) => <span className="text-slate-600 font-medium">{row.site?.nom || row.site?.name || "-"}</span>
     },
     {
       header: "Date",
       key: "created_at",
-      render: (val) => <span className="text-slate-500">{val ? new Date(val as string).toLocaleDateString() : " E}</span>
+      render: (val) => <span className="text-slate-500">{val ? new Date(val as string).toLocaleDateString() : "-"}</span>
     },
     {
       header: "Montant TTC",
@@ -149,8 +149,7 @@ export default function DevisPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">

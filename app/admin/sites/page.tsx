@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import Navbar       from "@/components/Navbar";
-import Sidebar      from "@/components/Sidebar";
+
 import SiteCard     from "@/components/SiteCard";
 import StatsCard    from "@/components/StatsCard";
 import Paginate     from "@/components/Paginate";
@@ -22,9 +22,9 @@ import { FieldConfig } from "@/components/ReusableForm";
 import { useSites } from "../../../hooks/admin/useSites";
 import { exportSites, importSites, downloadSiteImportTemplate, resolveManagerName } from "../../../services/admin/site.service";
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // HELPERS
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 const formatMontant = (v: number | null | undefined): string => {
   if (!v) return "0";
@@ -33,9 +33,9 @@ const formatMontant = (v: number | null | undefined): string => {
   return String(v);
 };
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // FILTER DROPDOWN
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 interface SiteFiltersState { status?: string; }
 
@@ -91,9 +91,9 @@ function SiteFilterDropdown({
   );
 }
 
-// ══════════════════════════════════════════════╁E
-// PREVIEW IMPORT MODAL  ESITE
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
+// PREVIEW IMPORT MODAL - SITE
+// ══════════════════════════════════════════════
 
 type ValidationStatus = "ok" | "warning" | "error";
 
@@ -191,7 +191,7 @@ const BADGE: Record<ValidationStatus, { bg: string; text: string; icon: React.Re
 };
 
 function fmtCell(v: any): string {
-  if (v == null || v === "") return " E;
+  if (v == null || v === "") return "-";
   if (v instanceof Date) return v.toLocaleDateString("fr-FR");
   return String(v);
 }
@@ -226,7 +226,7 @@ function parseSite(file: File): Promise<ParsedPreview> {
         const knownColsInFile = fileKeys.filter(c => SITE_KNOWN_COLS.has(c));
         const compatRatio     = knownColsInFile.length / SITE_KNOWN_COLS.size;
 
-        // Si aucune colonne connue n'est présente ↁEfichier complètement incompatible
+        // Si aucune colonne connue n'est présente ...fichier complètement incompatible
         const totallyIncompatible = knownColsInFile.length === 0 || missingRequired.length === SITE_REQUIRED_COLS.length;
 
         // Construit les headers : priorité d'abord, inconnus à la fin marqués
@@ -243,14 +243,14 @@ function parseSite(file: File): Promise<ParsedPreview> {
           headers.forEach(col => {
             // ── Colonne requise MANQUANTE dans le fichier (colonne fantôme)
             if (missingRequired.includes(col) && !fileKeys.includes(col)) {
-              cells[col] = { status: "error", message: `Colonne "${col}" absente du fichier  Eobligatoire` };
+              cells[col] = { status: "error", message: `Colonne "${col}" absente du fichier - obligatoire` };
               rowStatus  = "error";
               return;
             }
 
             // ── Colonne INCONNUE (pas dans le schéma Sites)
             if (!SITE_KNOWN_COLS.has(col)) {
-              cells[col] = { status: "warning", message: `Colonne inconnue  Eignorée à l'import` };
+              cells[col] = { status: "warning", message: `Colonne inconnue - ignorée à l'import` };
               if (rowStatus !== "error") rowStatus = "warning";
               return;
             }
@@ -359,7 +359,7 @@ function SitePreviewModal({
               <FileSpreadsheet size={16} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 leading-tight">Prévisualisation  EImport Sites</h2>
+              <h2 className="text-base font-black text-slate-900 leading-tight">Prévisualisation - Import Sites</h2>
               {file && <p className="text-xs text-slate-400 font-mono mt-0.5 truncate max-w-[320px]">{file.name}</p>}
             </div>
           </div>
@@ -418,7 +418,7 @@ function SitePreviewModal({
                   {totallyIncompat ? (
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 border border-red-300 px-3 py-1.5 rounded-lg">
-                        <AlertCircle size={12} /> Fichier incompatible  Ece n'est pas un fichier Sites
+                        <AlertCircle size={12} /> Fichier incompatible - ce n'est pas un fichier Sites
                       </span>
                       {missingRequired.length > 0 && (
                         <span className="text-[10px] text-red-500 font-semibold pl-1">
@@ -434,7 +434,7 @@ function SitePreviewModal({
                   ) : hasErrors ? (
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
-                        <AlertCircle size={12} /> {parsed.summary.errors} ligne{parsed.summary.errors > 1 ? "s" : ""} bloquante{parsed.summary.errors > 1 ? "s" : ""}  Eà corriger
+                        <AlertCircle size={12} /> {parsed.summary.errors} ligne{parsed.summary.errors > 1 ? "s" : ""} bloquante{parsed.summary.errors > 1 ? "s" : ""} - à corriger
                       </span>
                       {missingRequired.length > 0 && (
                         <span className="text-[10px] text-red-500 font-semibold pl-1">
@@ -455,7 +455,7 @@ function SitePreviewModal({
                     </div>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
-                      <ShieldCheck size={12} /> Fichier compatible  Eprêt à importer
+                      <ShieldCheck size={12} /> Fichier compatible - prêt à importer
                     </span>
                   )}
                 </div>
@@ -555,7 +555,7 @@ function SitePreviewModal({
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-sm ${hasErrors ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-slate-900 text-white hover:bg-black"}`}
             >
               {confirming ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué  Eerreurs à corriger" : "Confirmer l'import"}
+              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué - erreurs à corriger" : "Confirmer l'import"}
             </button>
           </div>
         </div>
@@ -564,9 +564,9 @@ function SitePreviewModal({
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // PAGE PRINCIPALE
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 export default function SitesPage() {
   const [isModalOpen,   setIsModalOpen]   = useState(false);
@@ -666,7 +666,7 @@ export default function SitesPage() {
     }
   };
 
-  // ── Intercepte la sélection de fichier ↁEouvre la preview au lieu d'importer direct
+  // ── Intercepte la sélection de fichier ...ouvre la preview au lieu d'importer direct
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -736,11 +736,11 @@ export default function SitesPage() {
     },
     { label: "Tickets en cours",    value: ticketsEnCours, delta: "+0%", trend: "up"   as const },
     { label: "Tickets clôturés",    value: ticketsClos,    delta: "+0%", trend: "up"   as const },
-    { label: "Site le plus visité", value: stats?.site_le_plus_visite?.nom ?? " E, delta: "", trend: "up" as const },
+    { label: "Site le plus visité", value: stats?.site_le_plus_visite?.nom ?? "-", delta: "", trend: "up" as const },
   ];
 
   return (
-    <div className="
+    <>
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
@@ -795,7 +795,7 @@ export default function SitesPage() {
                 <Download size={14} /> Modèle
               </button>
 
-              {/* Importer  Eouvre la prévisualisation */}
+              {/* Importer - ouvre la prévisualisation */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
                 {importLoading
                   ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
@@ -895,6 +895,6 @@ export default function SitesPage() {
         onConfirmImport={handleConfirmedImport}
         file={previewFile}
       />
-    </div>
+    </>
   );
 }

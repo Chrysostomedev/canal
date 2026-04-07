@@ -117,8 +117,7 @@ export default function AdminProfilePage() {
 
   if (loading) {
     return (
-      <div className="
-        <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center">
           <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
           <p className="mt-4 text-slate-500 font-medium">Chargement du profil...</p>
         </div>
@@ -127,8 +126,7 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
 
         <main className="mt-20 p-8 max-w-5xl mx-auto w-full space-y-8">
@@ -346,6 +344,6 @@ export default function AdminProfilePage() {
           </div>
         )}
       </div>
-    </div>
+    
   );
 }

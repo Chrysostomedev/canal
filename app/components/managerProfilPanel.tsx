@@ -3,9 +3,9 @@
 /**
  * ManagerProfilPanel.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Side panel profil gestionnaire — s'ouvre à droite en overlay
+ * Side panel profil gestionnaire - s'ouvre à droite en overlay
  * Affiche toutes les infos du manager sélectionné
- * Design : blanc / noir / gris — cohérent avec GestCard
+ * Design : blanc / noir / gris - cohérent avec GestCard
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -103,7 +103,7 @@ export default function ManagerProfilPanel({
               </p>
 
               <InfoRow icon={<Mail size={13} className="text-slate-400" />} label="Email" value={manager.email} />
-              <InfoRow icon={<Phone size={13} className="text-slate-400" />} label="Téléphone" value={manager.phone || "—"} />
+              <InfoRow icon={<Phone size={13} className="text-slate-400" />} label="Téléphone" value={manager.phone || "-"} />
             </div>
 
             {/* ── Infos système ────────────────────────────────────────── */}
@@ -113,17 +113,17 @@ export default function ManagerProfilPanel({
               </p>
 
               <InfoRow icon={<Hash size={13} className="text-slate-400" />} label="ID Utilisateur" value={`#${manager.id}`} />
-              <InfoRow icon={<Hash size={13} className="text-slate-400" />} label="ID Manager" value={manager.manager?.id ? `#${manager.manager.id}` : "—"} />
+              <InfoRow icon={<Hash size={13} className="text-slate-400" />} label="ID Manager" value={manager.manager?.id ? `#${manager.manager.id}` : "-"} />
               <InfoRow icon={<User size={13} className="text-slate-400" />} label="Rôle" value={manager.role?.name ?? "MANAGER"} />
 
               {/*
-               * ── Site géré — COMMENTÉ, préparé pour future API ────────────
+               * ── Site géré - COMMENTÉ, préparé pour future API ────────────
                * TODO: décommenter quand l'API retournera managed_site
                *
                * <InfoRow
                *   icon={<MapPin size={13} className="text-slate-400" />}
                *   label="Site assigné"
-               *   value={manager.managed_site?.nom || "—"}
+               *   value={manager.managed_site?.nom || "-"}
                * />
                */}
             </div>

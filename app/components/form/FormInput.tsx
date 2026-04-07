@@ -129,7 +129,7 @@ export const ImageUpload = ({
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      {/* Drop zone — hidden when full */}
+      {/* Drop zone - hidden when full */}
       {canAdd && (
         <div
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}

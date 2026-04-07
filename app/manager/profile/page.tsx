@@ -129,8 +129,7 @@ export default function ManagerProfilePage() {
   };
 
   if (loading) return (
-    <div className="
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
@@ -140,8 +139,7 @@ export default function ManagerProfilePage() {
   );
 
   return (
-    <div className="
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader title="Mon Profil" subtitle="Gérez vos informations personnelles et votre sécurité" />
@@ -215,7 +213,7 @@ export default function ManagerProfilePage() {
                     <div className="flex flex-col min-w-0">
                       <span className="text-[10px] font-black text-slate-400 uppercase">Depuis le</span>
                       <span className="text-slate-700 font-bold text-sm">
-                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : " E}
+                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : "-"}
                       </span>
                     </div>
                   </div>
@@ -382,6 +380,6 @@ export default function ManagerProfilePage() {
           </div>
         )}
       </div>
-    </div>
+    
   );
 }

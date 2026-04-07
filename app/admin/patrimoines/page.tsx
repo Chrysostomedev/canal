@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 
 import Navbar       from "@/components/Navbar";
-import Sidebar      from "@/components/Sidebar";
+
 import PageHeader   from "@/components/PageHeader";
 import StatsCard    from "@/components/StatsCard";
-import DataTable    from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import ReusableForm from "@/components/ReusableForm";
 import Paginate     from "@/components/Paginate";
 import { FieldConfig } from "@/components/ReusableForm";
@@ -31,16 +31,27 @@ import { AssetService, CompanyAsset } from "../../../services/admin/asset.servic
 // ─────────────────────────────────────────────────────────────
 
 const fmtMontant = (v?: number | null) => {
-  if (v == null) return " E;
+  if (v == null) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v} FCFA`;
 };
 
 const fmtDate = (iso?: string | null) => {
-  if (!iso) return " E;
+  if (!iso) return "-";
   const d = new Date(iso);
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
+};
+
+/**
+ * Formate une date ISO pour l'attribut 'value' d'un <input type="date">
+ * Format attendu : YYYY-MM-DD
+ */
+const fmtDateForInput = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10); // Extrait YYYY-MM-DD
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -65,7 +76,7 @@ const ST_DOT: Record<string, string> = {
 
 const exportToExcel = (assets: CompanyAsset[]) => {
   const wb = XLSX.utils.book_new();
-  const brandRow = ["▶  CANAL+  |  Export Patrimoine   E " + new Date().toLocaleDateString("fr-FR")];
+  const brandRow = ["▶  CANAL+  |  Export Patrimoine  - " + new Date().toLocaleDateString("fr-FR")];
   const headers = [
     "ID", "Codification", "Désignation", "Famille / Type",
     "Sous-type", "Site", "Statut", "Criticité",
@@ -73,12 +84,12 @@ const exportToExcel = (assets: CompanyAsset[]) => {
   ];
   const rows = assets.map(a => [
     a.id, a.codification, a.designation,
-    a.type?.name    ?? " E,
-    a.sub_type?.name ?? " E,
-    a.site?.nom     ?? " E,
+    a.type?.name    ?? "-",
+    a.subType?.name ?? "-",
+    a.site?.nom     ?? "-",
     ST_LABEL[a.status] ?? a.status,
-    a.criticite === "critique" ? "Critique" : a.criticite === "non_critique" ? "Non critique" : " E,
-    a.valeur_entree ?? " E,
+    a.criticite === "critique" ? "Critique" : a.criticite === "non_critique" ? "Non critique" : "-",
+    a.valeur_entree ?? "-",
     fmtDate(a.date_entree),
   ]);
   const wsData = [brandRow, [], headers, ...rows];
@@ -268,12 +279,12 @@ function AssetSidePanel({ asset, onClose, onEdit }: {
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <div className="divide-y divide-slate-50">
             {[
-              { l: "Type",           v: asset.type?.name    ?? " E },
-              { l: "Sous-type",      v: asset.subType?.name ?? " E },
-              { l: "Site",           v: asset.site?.nom     ?? " E },
+              { l: "Type",           v: asset.type?.name    ?? "-" },
+              { l: "Sous-type",      v: (asset as any).sub_type?.name ?? asset.subType?.name ?? "-" },
+              { l: "Site",           v: asset.site?.nom     ?? "-" },
               { l: "Valeur entrée",  v: fmtMontant(asset.valeur_entree) },
               { l: "Date entrée",    v: fmtDate(asset.date_entree) },
-              { l: "Criticité",      v: asset.criticite === "critique" ? "Critique" : asset.criticite === "non_critique" ? "Non critique" : " E },
+              { l: "Criticité",      v: asset.criticite === "critique" ? "Critique" : asset.criticite === "non_critique" ? "Non critique" : "-" },
             ].map((r, i) => (
               <div key={i} className="flex items-center justify-between py-3">
                 <p className="text-xs text-slate-400 font-medium">{r.l}</p>
@@ -298,7 +309,7 @@ function AssetSidePanel({ asset, onClose, onEdit }: {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PREVIEW IMPORT MODAL  EPATRIMOINE
+// PREVIEW IMPORT MODAL - PATRIMOINE
 // ─────────────────────────────────────────────────────────────
 
 type ValidationStatus = "ok" | "warning" | "error";
@@ -380,7 +391,7 @@ const BADGE: Record<ValidationStatus, { bg: string; text: string; icon: React.Re
 };
 
 function fmtCell(v: any): string {
-  if (v == null || v === "") return " E;
+  if (v == null || v === "") return "-";
   if (v instanceof Date) return v.toLocaleDateString("fr-FR");
   return String(v);
 }
@@ -424,14 +435,14 @@ function parsePatrimoine(file: File): Promise<ParsedPreview> {
           headers.forEach(col => {
             // ── Colonne requise ABSENTE du fichier (colonne fantôme)
             if (missingRequired.includes(col) && !fileKeys.includes(col)) {
-              cells[col] = { status: "error", message: `Colonne "${col}" absente du fichier  Eobligatoire` };
+              cells[col] = { status: "error", message: `Colonne "${col}" absente du fichier - obligatoire` };
               rowStatus  = "error";
               return;
             }
 
             // ── Colonne INCONNUE (hors schéma Patrimoines)
             if (!PATRIMOINE_KNOWN_COLS.has(col)) {
-              cells[col] = { status: "warning", message: `Colonne inconnue  Eignorée à l'import` };
+              cells[col] = { status: "warning", message: `Colonne inconnue - ignorée à l'import` };
               if (rowStatus !== "error") rowStatus = "warning";
               return;
             }
@@ -540,7 +551,7 @@ function PatrimoinePreviewModal({
               <FileSpreadsheet size={16} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 leading-tight">Prévisualisation  EImport Patrimoine</h2>
+              <h2 className="text-base font-black text-slate-900 leading-tight">Prévisualisation - Import Patrimoine</h2>
               {file && <p className="text-xs text-slate-400 font-mono mt-0.5 truncate max-w-[320px]">{file.name}</p>}
             </div>
           </div>
@@ -599,7 +610,7 @@ function PatrimoinePreviewModal({
                   {totallyIncompat ? (
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 border border-red-300 px-3 py-1.5 rounded-lg">
-                        <AlertCircle size={12} /> Fichier incompatible  Ece n'est pas un fichier Patrimoines
+                        <AlertCircle size={12} /> Fichier incompatible - ce n'est pas un fichier Patrimoines
                       </span>
                       {missingRequired.length > 0 && (
                         <span className="text-[10px] text-red-500 font-semibold pl-1">
@@ -615,7 +626,7 @@ function PatrimoinePreviewModal({
                   ) : hasErrors ? (
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
-                        <AlertCircle size={12} /> {parsed.summary.errors} ligne{parsed.summary.errors > 1 ? "s" : ""} bloquante{parsed.summary.errors > 1 ? "s" : ""}  Eà corriger
+                        <AlertCircle size={12} /> {parsed.summary.errors} ligne{parsed.summary.errors > 1 ? "s" : ""} bloquante{parsed.summary.errors > 1 ? "s" : ""} - à corriger
                       </span>
                       {missingRequired.length > 0 && (
                         <span className="text-[10px] text-red-500 font-semibold pl-1">
@@ -636,7 +647,7 @@ function PatrimoinePreviewModal({
                     </div>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
-                      <ShieldCheck size={12} /> Fichier compatible  Eprêt à importer
+                      <ShieldCheck size={12} /> Fichier compatible - prêt à importer
                     </span>
                   )}
                 </div>
@@ -736,7 +747,7 @@ function PatrimoinePreviewModal({
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-sm ${hasErrors ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-slate-900 text-white hover:bg-black"}`}
             >
               {confirming ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué  Eerreurs à corriger" : "Confirmer l'import"}
+              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué - erreurs à corriger" : "Confirmer l'import"}
             </button>
           </div>
         </div>
@@ -812,7 +823,7 @@ export default function PatrimoinesPage() {
     }
   };
 
-  // ── Intercepte la sélection de fichier ↁEouvre la preview au lieu d'importer direct
+  // ── Intercepte la sélection de fichier - ouvre la preview au lieu d'importer direct
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -876,29 +887,7 @@ export default function PatrimoinesPage() {
     { name: "images",        label: "Photos",          type: "image-upload", gridSpan: 2, maxImages: 3 },
   ];
 
-  const columns = [
-    // {
-    //   header: "Photos",
-    //   key: "images",
-    //   render: (_: any, row: CompanyAsset) => {
-    //     const imgs: string[] = (row as any).images ?? [];
-    //     if (!imgs.length) return <span className="text-slate-300 text-xs"> E/span>;
-    //     return (
-    //       <div className="flex items-center">
-    //         {imgs.slice(0, 3).map((src, i) => (
-    //           <div key={i} className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white shrink-0" style={{ zIndex: 3 - i, marginLeft: i > 0 ? "-10px" : "0" }}>
-    //             <img src={src} alt="" className="w-full h-full object-cover" />
-    //           </div>
-    //         ))}
-    //         {imgs.length > 3 && (
-    //           <div className="w-9 h-9 rounded-xl bg-slate-100 ring-2 ring-white flex items-center justify-center shrink-0" style={{ zIndex: 0, marginLeft: "-10px" }}>
-    //             <span className="text-[10px] font-bold text-slate-500">+{imgs.length - 3}</span>
-    //           </div>
-    //         )}
-    //       </div>
-    //     );
-    //   },
-    // },
+  const columns: ColumnConfig<CompanyAsset>[] = [
     { 
       header: "Codification", key: "codification",
       render: (_: any, row: CompanyAsset) => (
@@ -914,19 +903,31 @@ export default function PatrimoinesPage() {
     {
       header: "Type", key: "type",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-600">{row.type?.name ?? " E}</span>
+        <span className="text-sm text-slate-600">{row.type?.name ?? "-"}</span>
       ),
     },
     {
-      header: "Sous-type", key: "subType",
+      header: "Photo/Image", key: "photo",
+      render: (_: any, row: CompanyAsset) => {
+        const imgs: string[] = (row as any).images ?? [];
+        if (!imgs.length) return <span className="text-slate-300 text-xs">-</span>;
+        return (
+          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white">
+            <img src={imgs[0]} alt="" className="w-full h-full object-cover" />
+          </div>
+        );
+      },
+    },
+    {
+      header: "Sous-type", key: "sub_type_company_asset_id" as keyof CompanyAsset,
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-600">{row.sub_type?.name ?? row.subType?.name ?? "-"}</span>
+        <span className="text-sm text-slate-600">{(row as any).sub_type?.name ?? row.subType?.name ?? "-"}</span>
       ),
     },
     {
       header: "Site", key: "site",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-600">{row.site?.nom ?? " E}</span>
+        <span className="text-sm text-slate-600">{row.site?.nom ?? "-"}</span>
       ),
     },
     {
@@ -969,8 +970,8 @@ export default function PatrimoinesPage() {
   const totalPages = meta?.last_page ?? 1;
 
   return (
-    <div className="
-      <div className="flex flex-col flex-1 ">
+    <>
+      <div className="flex flex-col flex-1">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">
 
@@ -1011,7 +1012,7 @@ export default function PatrimoinesPage() {
 
             <div className="flex items-center gap-2 shrink-0">
 
-              {/* Import  Eouvre la prévisualisation */}
+              {/* Import - ouvre la prévisualisation */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
                 {importLoading
                   ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
@@ -1105,11 +1106,13 @@ export default function PatrimoinesPage() {
         initialValues={editingData ? {
           type_company_asset_id:     String(editingData.type_company_asset_id     ?? ""),
           sub_type_company_asset_id: String(editingData.sub_type_company_asset_id ?? ""),
-          site_id:     String((editingData.site as any)?.id ?? ""),
+          // Récupération de l'ID du site (soit via l'objet 'site', soit via 'site_id' direct)
+          site_id:     String(editingData.site_id ?? (editingData.site as any)?.id ?? ""),
           designation: editingData.designation,
           status:      editingData.status,
           criticite:   editingData.criticite ?? "non_critique",
-          date_entree:   editingData.date_entree   ?? "",
+          // Formatage obligatoire pour que le champ date HTML5 reconnaisse la valeur
+          date_entree:   fmtDateForInput(editingData.date_entree),
           valeur_entree: editingData.valeur_entree  ?? "",
           description:   editingData.description    ?? "",
         } : {}}
@@ -1124,6 +1127,6 @@ export default function PatrimoinesPage() {
         onConfirmImport={handleConfirmedImport}
         file={previewFile}
       />
-    </div>
+    </>
   );
 }

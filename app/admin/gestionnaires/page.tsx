@@ -3,10 +3,10 @@
 /**
  * app/admin/gestionnaires/page.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Page liste gestionnaires  Erefonte UI :
+ * Page liste gestionnaires - refonte UI :
  *  - Filtre avec dropdown propre (ref click-outside)
- *  - Boutons Exporter + Importer (importer ↁEtoast "en cours de développement")
- *  - Profil ↁEside panel à droite (ManagerProfilPanel)
+ *  - Boutons Exporter + Importer (importer ...toast "en cours de développement")
+ *  - Profil ...side panel à droite (ManagerProfilPanel)
  *  - Palette noir/blanc/gris uniquement
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -15,9 +15,8 @@ import { useState, useRef, useEffect } from "react";
 import { Filter, Upload, Download, PlusCircle, Search, Users, UserCheck, UserX } from "lucide-react";
 
 import Navbar               from "@/components/Navbar";
-import Sidebar              from "@/components/Sidebar";
 import SearchInput          from "@/components/SearchInput";
-import ReusableForm         from "@/components/ReusableForm";
+import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import StatsCard            from "@/components/StatsCard";
 import Paginate             from "@/components/Paginate";
 import PageHeader           from "@/components/PageHeader";
@@ -68,7 +67,7 @@ export default function GestionnairesPage() {
     setTimeout(() => setFlash(null), 3000);
   };
 
-   // ── Import / Export  Eendpoints pas encore en ligne ──
+   // ── Import / Export - endpoints pas encore en ligne ──
    const handleExport = () =>
     showFlash("error", "Fonctionnalité d'export en cours de développement.");
   const handleImport = () =>
@@ -82,12 +81,12 @@ export default function GestionnairesPage() {
   ];
 
   // ── Champs formulaire création ─────────────────────────────────────────────
-  const gestFields = [
+  const gestFields: FieldConfig[] = [
     { name: "first_name", label: "Prénom",        type: "text",  required: true },
     { name: "last_name",  label: "Nom",            type: "text",  required: true },
     { name: "email",      label: "Email",          type: "email", required: true },
     { name: "phone",      label: "Téléphone",      type: "text"                  },
-    { name: "password",   label: "Mot de passe",   type: "text"                  },
+    { name: "password",   label: "Mot de passe",   type: "password"              },
   ];
 
   // ── Création ───────────────────────────────────────────────────────────────
@@ -109,9 +108,8 @@ export default function GestionnairesPage() {
   };
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
-        <Navbar />
+    <div className="flex-1 flex flex-col min-h-screen">
+      <Navbar />
         <main className="mt-20 p-6 space-y-8">
 
           {/* ── En-tête ────────────────────────────────────────────────── */}
@@ -207,7 +205,7 @@ export default function GestionnairesPage() {
                     </div>
 
                     {/*
-                     * ── Filtre site  ECOMMENTÁE préparé pour future API ───
+                     * ── Filtre site - COMMENTÁE préparé pour future API ───
                      * TODO: décommenter quand l'API supportera ce filtre
                      *
                      * <div>
@@ -286,10 +284,10 @@ export default function GestionnairesPage() {
                     phone={m.phone}
                     role={m.role?.name ?? "Manager"}
                     status={m.is_active !== false ? "Actif" : "Inactif"}
-                    // onProfilClick ↁEouvre le side panel à droite
+                    // onProfilClick ...ouvre le side panel à droite
                     onProfilClick={() => setSelectedManager(m)}
                     /*
-                     * ── site  ECOMMENTÁE préparé pour future API ─────────
+                     * ── site - COMMENTÁE préparé pour future API ─────────
                      * site={m.managed_site?.nom}
                      */
                   />
@@ -323,9 +321,6 @@ export default function GestionnairesPage() {
           />
 
         </main>
-      </div>
-
-      {/* ── Side panel profil (s'ouvre à droite) ──────────────────────── */}
       <ManagerProfilPanel
         isOpen={!!selectedManager}
         onClose={() => setSelectedManager(null)}

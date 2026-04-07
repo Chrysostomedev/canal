@@ -251,7 +251,7 @@ export default function ListNotifs() {
         )}
       </div>
 
-      {/* ── NotificationPanel — s'ouvre au clic, détail direct ───────── */}
+      {/* ── NotificationPanel - s'ouvre au clic, détail direct ───────── */}
       <NotificationPanel
         isOpen={panelOpen}
         onClose={handleClose}

@@ -51,7 +51,7 @@ const WORKFLOW_STEPS = [
 ];
 
 const formatDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : " E;
+  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "-";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -201,7 +201,7 @@ function ValidationModal({
               </div>
               <h2 className="text-xl font-black text-slate-900">{ticket.reference || `#${ticket.id}`}</h2>
               <p className="text-slate-400 text-xs mt-0.5">
-                {ticket.provider?.name} · {ticket.site?.nom ?? " E} · {formatDate(ticket.start_date)}
+                {ticket.provider?.name} · {ticket.site?.nom ?? "-"} · {formatDate(ticket.start_date)}
               </p>
             </div>
             <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition mt-1">
@@ -347,8 +347,8 @@ function MaintenancePreviewPanel({
           <div className="space-y-0 text-sm">
              {[
                { label: "Référence", value: ticket.reference || `#${ticket.id}` },
-               { label: "Prestataire", value: ticket.provider?.name ?? " E },
-               { label: "Site", value: ticket.site?.nom ?? " E },
+               { label: "Prestataire", value: ticket.provider?.name ?? "-" },
+               { label: "Site", value: ticket.site?.nom ?? "-" },
                { label: "Date réalisation", value: formatDate(ticket.start_date) },
              ].map((f, i) => (
                 <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50">
@@ -461,7 +461,7 @@ export default function ManagerEntretienPage() {
     { label: "Total entretiens",   value: apiStats?.total ?? 0, trend: "up" as const },
     { label: "À valider",          value: tickets?.filter(t => t.status === "submitted").length ?? 0, trend: "up" as const },
     { label: "Validés",            value: apiStats?.validated ?? 0, trend: "up" as const },
-    { label: "Note moyenne",       value: apiStats?.average_rating ? `${apiStats.average_rating}/5` : " E, trend: "up" as const },
+    { label: "Note moyenne",       value: apiStats?.average_rating ? `${apiStats.average_rating}/5` : "-", trend: "up" as const },
   ];
 
   const columns: ColumnConfig<InterventionReport>[] = [
@@ -471,11 +471,11 @@ export default function ManagerEntretienPage() {
     },
     {
       header: "Prestataire", key: "provider",
-      render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600 font-medium">{row.provider?.name ?? " E}</span>,
+      render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600 font-medium">{row.provider?.name ?? "-"}</span>,
     },
     {
       header: "Site", key: "site",
-      render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? " E}</span>,
+      render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? "-"}</span>,
     },
     {
       header: "Date", key: "start_date",
@@ -492,7 +492,7 @@ export default function ManagerEntretienPage() {
     },
     {
       header: "Note", key: "rating",
-      render: (_: any, row: InterventionReport) => row.rating ? <StarRating value={row.rating} readonly /> : <span className="text-xs text-slate-300"> E/span>,
+      render: (_: any, row: InterventionReport) => row.rating ? <StarRating value={row.rating} readonly /> : <span className="text-xs text-slate-300">-</span>,
     },
     {
       header: "Actions", key: "actions",
@@ -515,7 +515,7 @@ export default function ManagerEntretienPage() {
   ];
 
   return (
-    <div className="
+    <>
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
@@ -560,6 +560,6 @@ export default function ManagerEntretienPage() {
       {isValidationOpen && validationTarget && <ValidationModal ticket={validationTarget} onClose={closeValidation} onValidate={handleValidate} onReject={handleReject} submitting={submitting} />}
       {isPanelOpen && selectedTicket && <MaintenancePreviewPanel ticket={selectedTicket} onClose={closePanel} onOpenValidation={openValidation} />}
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
-    </div>
+    </>
   );
 }

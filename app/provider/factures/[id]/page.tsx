@@ -37,7 +37,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── PDF Preview Modal — centre plein écran ───────────────────────────────────
+// ─── PDF Preview Modal - centre plein écran ───────────────────────────────────
 
 function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
   return (
@@ -66,7 +66,7 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
   );
 }
 
-// ─── FlowStep — Flux : Rapport → Devis → Facture ─────────────────────────────
+// ─── FlowStep - Flux : Rapport → Devis → Facture ─────────────────────────────
 
 interface FlowStepProps {
   label: string;
@@ -114,7 +114,7 @@ export default function ProviderFacturesDetailPage() {
     const load = async () => {
       setLoading(true); setError("");
       try {
-        // GET /provider/invoice/{id} — charge avec interventionReport, quote, provider, site, attachments
+        // GET /provider/invoice/{id} - charge avec interventionReport, quote, provider, site, attachments
         const data = await providerInvoiceService.getInvoiceById(invoiceId);
         setInvoice(data);
       } catch (e: any) {
@@ -249,7 +249,7 @@ export default function ProviderFacturesDetailPage() {
                 {/* Colonne gauche */}
                 <div className="lg:col-span-2 space-y-6">
 
-                  {/* Flux de traitement — Rapport → Devis → Facture */}
+                  {/* Flux de traitement - Rapport → Devis → Facture */}
                   <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">
                       Flux de traitement
@@ -316,14 +316,14 @@ export default function ProviderFacturesDetailPage() {
                         <div className="px-4 py-3 bg-red-50 border-t border-red-100">
                           <div className="flex items-center gap-2 text-red-700 font-bold text-sm">
                             <AlertTriangle size={16} />
-                            Facture en retard — Échéance dépassée
+                            Facture en retard - Échéance dépassée
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Rapport lié — description ou findings */}
+                  {/* Rapport lié - description ou findings */}
                   {(report?.description || report?.findings) && (
                     <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
@@ -454,8 +454,8 @@ export default function ProviderFacturesDetailPage() {
                       <div className="space-y-2.5">
                         {[
                           { label: "Nom",       value: getProviderName(invoice.provider) },
-                          { label: "Email",     value: invoice.provider.email ?? "—"     },
-                          { label: "Téléphone", value: invoice.provider.phone ?? "—"     },
+                          { label: "Email",     value: invoice.provider.email ?? "-"     },
+                          { label: "Téléphone", value: invoice.provider.phone ?? "-"     },
                         ].map((f, i) => (
                           <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
                             <span className="text-xs text-slate-400 font-medium">{f.label}</span>
@@ -472,7 +472,7 @@ export default function ProviderFacturesDetailPage() {
         </main>
       </div>
 
-      {/* PDF Preview Modal — centre */}
+      {/* PDF Preview Modal - centre */}
       {pdfPreview && (
         <PdfPreviewModal url={pdfPreview.url} name={pdfPreview.name} onClose={() => setPdfPreview(null)} />
       )}

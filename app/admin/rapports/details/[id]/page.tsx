@@ -18,7 +18,7 @@ import { ReportService, InterventionReport, ValidateReportPayload } from "../../
 // ═══════════════════════════════════════════════
 
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 };
 
@@ -95,7 +95,7 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
 }
 
 // ═══════════════════════════════════════════════
-// VALIDATE MODAL — notation + commentaire
+// VALIDATE MODAL - notation + commentaire
 // ═══════════════════════════════════════════════
 
 function ValidateModal({
@@ -258,8 +258,8 @@ export default function ReportDetailPage() {
   const isValidated  = report?.status === "validated";
   const pdfs         = (report?.attachments ?? []).filter(a => a.file_type === "document");
   const photos       = (report?.attachments ?? []).filter(a => a.file_type === "photo");
-  const providerName = report?.provider?.company_name ?? report?.provider?.name ?? "—";
-  const siteName     = report?.site?.nom ?? report?.site?.name ?? "—";
+  const providerName = report?.provider?.company_name ?? report?.provider?.name ?? "-";
+  const siteName     = report?.site?.nom ?? report?.site?.name ?? "-";
 
   // KPIs dynamiques depuis le rapport
   const kpis = [
@@ -313,7 +313,7 @@ export default function ReportDetailPage() {
               </div>
             </div>
 
-            {/* Bloc droit — info validation + bouton */}
+            {/* Bloc droit - info validation + bouton */}
             <div className="flex flex-col gap-4">
               <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 flex flex-col gap-4 min-w-[300px]">
                 <div className="flex flex-col gap-2 text-sm">
@@ -405,7 +405,7 @@ export default function ReportDetailPage() {
               )}
             </div>
 
-            {/* Sidebar droite — docs PDF + infos */}
+            {/* Sidebar droite - docs PDF + infos */}
             <div className="space-y-6">
 
               {/* Documents PDF */}
@@ -460,9 +460,9 @@ export default function ReportDetailPage() {
                   <div className="space-y-2.5">
                     {[
                       { label: "ID",      value: `#${report.ticket.id}` },
-                      { label: "Sujet",   value: report.ticket.subject ?? "—" },
+                      { label: "Sujet",   value: report.ticket.subject ?? "-" },
                       { label: "Type",    value: report.ticket.type === "curatif" ? "Curatif" : "Préventif" },
-                      { label: "Statut",  value: report.ticket.status ?? "—" },
+                      { label: "Statut",  value: report.ticket.status ?? "-" },
                     ].map((f, i) => (
                       <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
                         <span className="text-xs text-slate-400 font-medium">{f.label}</span>

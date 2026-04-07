@@ -2,7 +2,7 @@
  * AuthService.ts
  * ──────────────────────────────────────────────────────────────────────────────
  * Service d'authentification unifié — gère tous les rôles :
- *   SUPER-ADMIN · ADMIN · MANAGER · PROVIDER
+ *   SUPER-ADMIN · ADMIN · MANAGER · PROVIDER · SUPPLIER
  *
  * Flux complet :
  *   1. login()         → POST /admin/login          → OTP envoyé par mail
@@ -19,6 +19,7 @@
  *   ADMIN       → /admin/dashboard
  *   MANAGER     → /manager/dashboard
  *   PROVIDER    → /provider/dashboard
+ *   SUPPLIER    → /provider/dashboard (par défaut)
  * ──────────────────────────────────────────────────────────────────────────────
  */
 
@@ -31,7 +32,7 @@ const PENDING_EMAIL_KEY = "pending_otp_email"; // Email en attente de vérificat
 const PENDING_FLOW_KEY = "pending_otp_flow";  // "login" | "reset" — distingue les deux flux OTP
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-export type UserRole = "SUPER-ADMIN" | "ADMIN" | "MANAGER" | "PROVIDER" | "USER";
+export type UserRole = "SUPER-ADMIN" | "ADMIN" | "MANAGER" | "PROVIDER" | "SUPPLIER" | "USER";
 
 /** Flux OTP en cours — permet à la page OTP de savoir quoi faire après validation */
 export type OtpFlow = "login" | "reset";
@@ -66,12 +67,12 @@ export const getDashboardRoute = (role: string): string => {
   const normalizedRole = role.toUpperCase();
   switch (normalizedRole) {
     case "SUPER-ADMIN":
-      return "/admin/dashboard";
     case "ADMIN":
       return "/admin/dashboard";
     case "MANAGER":
       return "/manager/dashboard";
     case "PROVIDER":
+    case "SUPPLIER":
     case "USER": // Sécurité : Mapper USER vers PROVIDER
       return "/provider/dashboard";
     default:
@@ -79,28 +80,25 @@ export const getDashboardRoute = (role: string): string => {
   }
 };
 
-// ─── Endpoints auth ───────────────────────────────────────────────────────────
-// Le backend est UNIFIÉ : /admin/login cherche d'abord dans Admin, puis dans User.
-// Un seul endpoint suffit pour tous les rôles (SUPER-ADMIN, ADMIN, MANAGER, PROVIDER).
-const LOGIN_ENDPOINT           = "/admin/login";
-const VERIFY_OTP_ENDPOINT      = "/admin/verify-otp";
-const LOGOUT_ENDPOINT          = "/admin/logout";
+// ─── Endpoints unifiés ────────────────────────────────────────────────────────
+const LOGIN_ENDPOINT = "/admin/login";
+const VERIFY_OTP_ENDPOINT = "/admin/verify-otp";
+const LOGOUT_ENDPOINT = "/admin/logout";
 const FORGOT_PASSWORD_ENDPOINT = "/admin/forgot-password";
-const RESET_PASSWORD_ENDPOINT  = "/admin/reset-password";
+const RESET_PASSWORD_ENDPOINT = "/admin/reset-password";
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 export const authService = {
 
   // ┌─────────────────────────────────────────────────────────────────────────┐
   // │  ÉTAPE 1 — Login (email + password)                                     │
-  // └─────────────────────────────────────────────────────────────────────────┘
+  // └─────────────────────────────────────────────────────────────────────────┐
   /**
-   * Tente d'abord /admin/login (guard admin → SUPER-ADMIN, ADMIN, MANAGER).
-   * Si le back répond 404, bascule sur /provider/login (guard sanctum → PROVIDER).
-   * Mémorise le guard utilisé dans localStorage pour que verifyOtp sache
-   * quel endpoint appeler ensuite.
+   * Envoie email + password au backend.
+   * Laravel vérifie les credentials, envoie l'OTP par mail,
+   * et retourne { otp_required: true, email }.
    */
-  login: async (credentials: { email: string; password: string }): Promise<LoginStepResponse> => {
+  login: async (credentials: { email: string; password: string; country: string }): Promise<LoginStepResponse> => {
     const response = await axiosInstance.post(LOGIN_ENDPOINT, credentials);
     const data = response.data?.data as LoginStepResponse;
 
@@ -115,18 +113,13 @@ export const authService = {
   },
 
   /** Alias pour compatibilité avec le code existant sur login/page.tsx */
-  loginAdmin: async (credentials: { email: string; password: string }): Promise<LoginStepResponse> => {
+  loginAdmin: async (credentials: { email: string; password: string; country: string }): Promise<LoginStepResponse> => {
     return authService.login(credentials);
   },
 
   // ┌─────────────────────────────────────────────────────────────────────────┐
   // │  ÉTAPE 2 — Vérification OTP (connexion)                                 │
   // └─────────────────────────────────────────────────────────────────────────┘
-  /**
-   * Envoie email + code OTP au backend.
-   * Utilise /admin/verify-otp ou /provider/verify-otp selon le guard mémorisé.
-   * Laravel vérifie le code, retourne { user, token } en cas de succès.
-   */
   verifyOtp: async (email: string, code: string): Promise<AuthResponse> => {
     const response = await axiosInstance.post(VERIFY_OTP_ENDPOINT, { email, code });
     const data = response.data?.data as AuthResponse;
@@ -154,7 +147,6 @@ export const authService = {
     // Laravel retourne { success: true, message: "..." }
     await axiosInstance.post(FORGOT_PASSWORD_ENDPOINT, { email });
 
-    // Stocker l'email + marquer le flux comme "reset"
     if (typeof window !== "undefined") {
       localStorage.setItem(PENDING_EMAIL_KEY, email);
       localStorage.setItem(PENDING_FLOW_KEY, "reset");
@@ -180,11 +172,8 @@ export const authService = {
     password: string;
     password_confirmation: string;
   }): Promise<void> => {
-    // POST /admin/reset-password { email, code, password, password_confirmation }
-    // Laravel valide : email|required, code|size:6, password|min:8|confirmed
     await axiosInstance.post(RESET_PASSWORD_ENDPOINT, data);
 
-    // Nettoyer email pending + flux après succès
     if (typeof window !== "undefined") {
       localStorage.removeItem(PENDING_EMAIL_KEY);
       localStorage.removeItem(PENDING_FLOW_KEY);
@@ -196,13 +185,10 @@ export const authService = {
   // └─────────────────────────────────────────────────────────────────────────┘
   logout: async (): Promise<void> => {
     try {
-      // POST /admin/logout — Laravel révoque le token Sanctum
       await axiosInstance.post(LOGOUT_ENDPOINT);
     } catch (error) {
-      // On continue même si le logout back échoue (token expiré, réseau, etc.)
       console.warn("Erreur logout backend (ignorée):", error);
     } finally {
-      // Nettoyage complet du localStorage dans tous les cas
       const keys = [
         AUTH_TOKEN_KEY,
         USER_ROLE_KEY,
@@ -241,30 +227,22 @@ export const authService = {
     localStorage.setItem("user_email", user.email ?? "");
     localStorage.setItem("user_id", String(user.id ?? ""));
 
-    // Priorité : first_name/last_name → name (split) → email (fallback ultime)
-    const firstName = user.first_name?.trim() ?? "";
-    const lastName  = user.last_name?.trim()  ?? "";
+    const firstName = user.first_name ?? "";
+    const lastName = user.last_name ?? "";
 
     if (firstName || lastName) {
       localStorage.setItem("first_name", firstName);
       localStorage.setItem("last_name", lastName);
-    } else if (user.name?.trim()) {
+    } else if (user.name) {
       const parts = user.name.trim().split(/\s+/);
       localStorage.setItem("first_name", parts[0] ?? "");
       localStorage.setItem("last_name", parts.slice(1).join(" ") ?? "");
     } else {
-      // Dernier recours : utiliser la partie locale de l'email (avant @)
-      const emailLocal = user.email?.split("@")[0] ?? "";
-      localStorage.setItem("first_name", emailLocal);
+      localStorage.setItem("first_name", "");
       localStorage.setItem("last_name", "");
     }
   },
 
-  /**
-   * À appeler APRÈS que router.replace(dashboardRoute) est déclenché.
-   * Nettoie l'email OTP temporaire et le flux pending.
-   * Voir le commentaire "ORDRE CRITIQUE" dans login/otp/page.tsx.
-   */
   clearPendingEmail: (): void => {
     if (typeof window !== "undefined") {
       localStorage.removeItem(PENDING_EMAIL_KEY);
@@ -281,7 +259,6 @@ export const authService = {
   getEmail: (): string => typeof window !== "undefined" ? localStorage.getItem("user_email") ?? "" : "",
   getUserId: (): string => typeof window !== "undefined" ? localStorage.getItem("user_id") ?? "" : "",
   getPendingEmail: (): string => typeof window !== "undefined" ? localStorage.getItem(PENDING_EMAIL_KEY) ?? "" : "",
-  /** Retourne le flux OTP en cours : "login" | "reset" | "" */
   getPendingFlow: (): OtpFlow | "" => typeof window !== "undefined" ? (localStorage.getItem(PENDING_FLOW_KEY) as OtpFlow) ?? "" : "",
 
   getToken: (): string | null => {
@@ -289,25 +266,17 @@ export const authService = {
     return localStorage.getItem(AUTH_TOKEN_KEY);
   },
 
-  /**
-   * Vérifie si l'utilisateur est authentifié (token + rôle valide).
-   * Utilisé par les guards de route.
-   */
   isAuthenticated: (): boolean => {
     if (typeof window === "undefined") return false;
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
-    const validRoles: UserRole[] = ["SUPER-ADMIN", "ADMIN", "MANAGER", "PROVIDER", "USER"];
+    const validRoles: UserRole[] = ["SUPER-ADMIN", "ADMIN", "MANAGER", "PROVIDER", "SUPPLIER", "USER"];
     return !!token && !!role && validRoles.includes(role);
   },
 
-  /**
-   * Vérifie si le rôle courant est dans la liste des rôles autorisés.
-   * USER est traité comme PROVIDER (alias backend).
-   */
   hasRole: (allowedRoles: UserRole[]): boolean => {
     const role = authService.getRole() as UserRole;
-    if (role === "USER" && allowedRoles.includes("PROVIDER")) return true;
+    if (role === "USER" && (allowedRoles.includes("PROVIDER") || allowedRoles.includes("SUPPLIER"))) return true;
     return allowedRoles.includes(role);
   },
 };

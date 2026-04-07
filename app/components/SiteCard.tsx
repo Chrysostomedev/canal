@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { MapPin, Phone, Mail, ArrowUpRight } from "lucide-react";
+import { MapPin, Phone, Mail, ArrowUpRight, Ticket } from "lucide-react";
 import { Site } from "../../services/admin/site.service";
 
 interface SiteCardProps {
@@ -62,8 +62,9 @@ export default function SiteCard({ site }: SiteCardProps) {
       </div>
 
       <div className="flex gap-2">
-        <div className="bg-theme-primary text-white rounded-2xl px-6 py-4 text-xl font-bold flex items-center justify-center min-w-[80px]">
-          {site.effectifs ?? 0}
+        <div className="bg-theme-primary text-white rounded-2xl px-6 py-4 text-xl font-bold flex items-center justify-center gap-2 min-w-[80px]" title="Nombre de tickets">
+          <Ticket size={24} />
+          {site.tickets_count ?? 0}
         </div>
         <Link
           href={detailUrl}

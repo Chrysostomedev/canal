@@ -89,7 +89,7 @@ export function DayCell({ day, currentMonth = true, events, onClick, onDrop, dat
                 >
                   {event.label}
                 </p>
-                {event.time && event.time !== "—" && (
+                {event.time && event.time !== "-" && (
                   <p className="text-[10px] text-slate-400 font-medium mt-0.5">
                     {event.time}
                   </p>

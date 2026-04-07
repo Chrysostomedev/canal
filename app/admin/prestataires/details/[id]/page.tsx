@@ -111,7 +111,7 @@ export default function ProviderDetailsPage() {
       if (formData.date_entree) payload.date_entree = formData.date_entree;
       if (formData.description) payload.description = formData.description;
 
-      // users imbriqué — seulement si au moins un champ rempli
+      // users imbriqué - seulement si au moins un champ rempli
       const usersPayload: any = {};
       if (formData["users.first_name"]) usersPayload.first_name = formData["users.first_name"];
       if (formData["users.last_name"]) usersPayload.last_name = formData["users.last_name"];
@@ -243,7 +243,7 @@ export default function ProviderDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">
 

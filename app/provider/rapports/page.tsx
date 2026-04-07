@@ -72,7 +72,7 @@ function ResultBadge({ result }: { result?: string }) {
   );
 }
 function StarRow({ value }: { value?: number|null }) {
-  if (!value) return <span className="text-slate-400 text-xs"> E/span>;
+  if (!value) return <span className="text-slate-400 text-xs">-</span>;
   return (
     <div className="flex gap-0.5">
       {Array.from({length:5},(_,i)=>(
@@ -438,10 +438,10 @@ export default function ProviderRapportsPage() {
     ? parseFloat(stats.average_rating) : (stats?.average_rating??0);
 
   const kpis = [
-    {label:"Total rapports",   value: statsLoading?" E:(stats?.total_reports     ??0), delta:"", trend:"up" as const},
-    {label:"Rapports validés", value: statsLoading?" E:(stats?.validated_reports  ??0), delta:"", trend:"up" as const},
-    {label:"En attente",       value: statsLoading?" E:(stats?.pending_reports    ??0), delta:"", trend:"up" as const},
-    {label:"Note moyenne",     value: statsLoading?" E:(avgRating>0?`${avgRating.toFixed(1)}/5`:" E), delta:"", trend:"up" as const},
+    {label:"Total rapports",   value: statsLoading?"-":(stats?.total_reports     ??0), delta:"", trend:"up" as const},
+    {label:"Rapports validés", value: statsLoading?"-":(stats?.validated_reports  ??0), delta:"", trend:"up" as const},
+    {label:"En attente",       value: statsLoading?"-":(stats?.pending_reports    ??0), delta:"", trend:"up" as const},
+    {label:"Note moyenne",     value: statsLoading?"-":(avgRating>0?`${avgRating.toFixed(1)}/5`:"-"), delta:"", trend:"up" as const},
   ];
 
   const pageActions = [
@@ -478,8 +478,7 @@ export default function ProviderRapportsPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar/>
         <main className="mt-20 p-6 space-y-8">
           <PageHeader

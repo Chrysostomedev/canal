@@ -31,6 +31,7 @@ export interface Site {
   phone_responsable?: string | null;
   created_at?:        string;
   updated_at?:        string;
+  tickets_count?:     number;
 }
 
 export interface Manager {

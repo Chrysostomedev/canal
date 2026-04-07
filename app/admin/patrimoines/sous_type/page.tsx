@@ -14,7 +14,7 @@ import { useSubTypeAssets } from "../../../../hooks/admin/useSubTypeAssets";
 import { useTypes } from "../../../../hooks/admin/useTypes";
 import { SubTypeAssetService } from "../../../../services/admin/sub-type-asset.service";
 
-// ── Dropdown filtre par type  Estyle CANAL+ noir/blanc ──
+// ── Dropdown filtre par type - style CANAL+ noir/blanc ──
 function FilterDropdown({
   isOpen,
   onClose,
@@ -243,8 +243,7 @@ export default function SousTypePage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
           <PageHeader
@@ -272,7 +271,7 @@ export default function SousTypePage() {
               {exportLoading ? "Export..." : "Exporter"}
             </button>
 
-            {/* Filtre par type  Edropdown CANAL+ */}
+            {/* Filtre par type - dropdown CANAL+ */}
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setFiltersOpen(!filtersOpen)}
@@ -363,6 +362,6 @@ export default function SousTypePage() {
           )}
         </main>
       </div>
-    </div>
+    
   );
 }

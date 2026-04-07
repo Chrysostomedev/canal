@@ -543,9 +543,9 @@ export default function ProviderEntretienDetailPage() {
                       <div className="space-y-2.5">
                         {[
                           { label: "ID",     value: `#${report.ticket.id}` },
-                          { label: "Sujet",  value: report.ticket.subject ?? "—" },
+                          { label: "Sujet",  value: report.ticket.subject ?? "-" },
                           { label: "Type",   value: report.ticket.type === "curatif" ? "Curatif" : "Préventif" },
-                          { label: "Statut", value: report.ticket.status ?? "—" },
+                          { label: "Statut", value: report.ticket.status ?? "-" },
                         ].map((f, i) => (
                           <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
                             <span className="text-xs text-slate-400 font-medium">{f.label}</span>
@@ -562,8 +562,8 @@ export default function ProviderEntretienDetailPage() {
                       <div className="space-y-2.5">
                         {[
                           { label: "Nom",       value: getProviderName(report.provider) },
-                          { label: "Email",     value: report.provider.email ?? "—" },
-                          { label: "Téléphone", value: report.provider.phone ?? "—" },
+                          { label: "Email",     value: report.provider.email ?? "-" },
+                          { label: "Téléphone", value: report.provider.phone ?? "-" },
                         ].map((f, i) => (
                           <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
                             <span className="text-xs text-slate-400 font-medium">{f.label}</span>

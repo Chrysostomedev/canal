@@ -104,13 +104,13 @@ export default function AdminLoading() {
               </div>
             </div>
   
-            {/* Content card skeleton  Es'adapte aux grilles cartes OU aux tables */}
+            {/* Content card skeleton - s'adapte aux grilles cartes OU aux tables */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-6">
   
               {/* Search bar */}
               <div className="w-72 h-10 bg-slate-50 rounded-xl animate-pulse" />
   
-              {/* Grille cartes (3 colonnes  Epréstataires, sites) */}
+              {/* Grille cartes (3 colonnes - préstataires, sites) */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="bg-slate-50 rounded-2xl p-5 space-y-4 border border-slate-100">

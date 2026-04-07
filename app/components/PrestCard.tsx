@@ -32,7 +32,7 @@ export default function PrestCard({
   onTicketsClick,
 }: PrestCardProps) {
 
-  // Lien vers la page details avec l'id réel — plus de query params
+  // Lien vers la page details avec l'id réel - plus de query params
   const detailUrl = `/admin/prestataires/details/${id}`;
 
   const renderStars = (note: number) =>
@@ -44,7 +44,7 @@ export default function PrestCard({
       />
     ));
 
-  // Première lettre sécurisée — évite le crash si name est null/vide
+  // Première lettre sécurisée - évite le crash si name est null/vide
   const initial = name?.charAt(0)?.toUpperCase() ?? "?";
 
   return (

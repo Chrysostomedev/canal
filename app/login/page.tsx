@@ -1,7 +1,7 @@
 /**
  * app/login/page.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Page de connexion UNIFIÉE — tous les rôles sur la même page.
+ * Page de connexion UNIFIÉE - tous les rôles sur la même page.
  *
  * Flux :
  *   1. L'utilisateur saisit email + password
@@ -10,7 +10,7 @@
  *   4. On stocke l'email pending + le préfixe endpoint dans le localStorage
  *   5. Redirection vers /login/otp
  *
- * NOTE : Pas de sélection de rôle côté front — le backend détecte le rôle automatiquement.
+ * NOTE : Pas de sélection de rôle côté front - le backend détecte le rôle automatiquement.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -68,10 +68,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState("");
-  const [loginAttempts, setLoginAttempts] = useState(0);
-  const MAX_LOGIN_ATTEMPTS = 2; // 2 tentatives avant de proposer le reset
 
-  // ── Sélecteur de pays — Côte d'Ivoire par défaut ──
+  // ── Sélecteur de pays - Côte d'Ivoire par défaut ──
   const [selectedCountry, setSelectedCountry] = useState<(typeof CANAL_COUNTRIES)[number]>(
     CANAL_COUNTRIES[0]
   );
@@ -93,37 +91,38 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const data = await authService.login({ email, password });
+      // authService.login() tente super-admin → admin → manager → provider
+      // et stocke automatiquement le préfixe endpoint pour les étapes suivantes
+      const data = await authService.login({ email, password, country: selectedCountry.code });
 
       if (data?.otp_required) {
+        // OTP envoyé par mail → aller sur la page de vérification
         router.push("/login/otp");
         return;
       }
 
-      // Fallback si le backend répond sans OTP (connexion directe — rare)
+      // Fallback si le backend répond sans OTP (connexion directe - rare)
       const role = authService.getRole() as UserRole;
       router.push(getDashboardRoute(role));
 
     } catch (err: unknown) {
       console.error("Erreur login:", err);
-      const axiosErr = err as { response?: { data?: { message?: string; error?: string }; status?: number } };
+      const axiosErr = err as { response?: { data?: { message?: string; error?: string; success?: boolean }; status?: number } };
       const status   = axiosErr?.response?.status;
       let message    = axiosErr?.response?.data?.message || axiosErr?.response?.data?.error;
 
-      if (status === 401 || !message) {
+      if (status === 403) {
+        // Erreur spécifique au cloisonnement par pays
+        message = message || "Ce compte n'est pas autorisé pour le pays sélectionné.";
+      } else if (status === 401 || !message) {
         message = "Identifiants invalides. Vérifiez votre email et mot de passe.";
       }
 
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-
-      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-        // Après 2 tentatives : suggérer le reset, ne pas refresh la page
-        setError(`${message ?? "Identifiants invalides."} Après ${MAX_LOGIN_ATTEMPTS} tentatives, pensez à réinitialiser votre mot de passe.`);
-      } else {
-        setError(message ?? "Une erreur est survenue. Réessayez.");
+      setError(message);
+      // On log uniquement le message pour éviter les overlays de dev trop agressifs
+      if (process.env.NODE_ENV === 'development') {
+        console.warn("[Auth] Échec connexion:", message);
       }
-      // Ne jamais faire de refresh — juste afficher l'erreur
     } finally {
       setLoading(false);
     }
@@ -271,7 +270,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all text-sm [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all text-sm"
                   required
                   autoComplete="current-password"
                 />

@@ -132,9 +132,8 @@ export default function AuditTrailPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
-        <Navbar />
+    <div className="flex-1 flex flex-col">
+      <Navbar />
 
         <main className="mt-20 p-8 space-y-8">
           <PageHeader 
@@ -209,6 +208,5 @@ export default function AuditTrailPage() {
           </div>
         </main>
       </div>
-    </div>
   );
 }

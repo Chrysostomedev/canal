@@ -6,7 +6,7 @@ import StatsCard from "@/components/StatsCard";
 import ListCard from "@/components/ListCard";
 import DonutChartCard from "@/components/DonutChartCard";
 import BarChartCard from "@/components/BarChartCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye } from "lucide-react";
 import { useDashboard } from "../../../hooks/admin/useDashboard";
@@ -150,8 +150,17 @@ export default function Dashboard() {
   };
 
   // ── Colonnes du DataTable ──────────────────────
+  type DashboardTicket = {
+    id: number;
+    subject?: string;
+    site?: { nom: string };
+    service?: { name: string };
+    type: string;
+    status: string;
+    planned_at?: string;
+  };
 
-  const columns = [
+  const columns: ColumnConfig<DashboardTicket>[] = [
     {
       header: "ID ticket",
       key: "id",
@@ -170,6 +179,7 @@ export default function Dashboard() {
     {
       header: "Service",
       key: "service",
+      // Ajout d'un fallback "-" si l'ID du service est nul (Image 3 du feedback utilisateur)
       render: (_: any, row: any) => row.service?.name ?? "-",
     },
     {
@@ -336,6 +346,7 @@ export default function Dashboard() {
             {/* DataTable avec navigation "Voir tous" */}
             <div className="px-6 py-4">
               <DataTable
+                title="Tickets Récents"
                 columns={columns}
                 data={dashboard?.tickets_recents ?? []}
                 onViewAll={() => (window.location.href = "/admin/tickets")}

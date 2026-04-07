@@ -138,7 +138,7 @@ export default function ServicesPage() {
   ];
 
   // ── Champs formulaire ──
-  // Seulement name + description  Econforme au validator Laravel
+  // Seulement name + description - conforme au validator Laravel
   const serviceFields: FieldConfig[] = [
     {
       name: "name",
@@ -157,8 +157,7 @@ export default function ServicesPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
           <PageHeader
@@ -166,7 +165,7 @@ export default function ServicesPage() {
             subtitle="Gestion des services disponibles pour les prestataires"
           />
 
-          {/* Barre d'actions  Epas de filtre pour les services */}
+          {/* Barre d'actions - pas de filtre pour les services */}
           <div className="shrink-0 flex justify-end items-center gap-3">
 
             {/* Import */}
@@ -195,7 +194,7 @@ export default function ServicesPage() {
             </button>
           </div>
 
-          {/* Table  Epas de pagination (Services::all() retourne tout) */}
+          {/* Table - pas de pagination (Services::all() retourne tout) */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <DataTable
               columns={columns}
@@ -238,6 +237,6 @@ export default function ServicesPage() {
           )}
         </main>
       </div>
-    </div>
+    
   );
 }

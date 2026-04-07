@@ -17,14 +17,14 @@ import { useAssets } from "../../../hooks/manager/useAssets";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatMontant = (v?: number | null) => {
-  if (!v && v !== 0) return " E;
+  if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v.toLocaleString("fr-FR")} FCFA`;
 };
 
 const formatDate = (iso?: string | null) => {
-  if (!iso) return " E;
+  if (!iso) return "-";
   const d = new Date(iso);
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
 };
@@ -93,13 +93,13 @@ export default function PatrimoinesPage() {
     },
     {
       header: "Type", key: "typeAsset",
-      render: (_: any, row: any) => row.typeAsset?.name ?? " E,
+      render: (_: any, row: any) => row.typeAsset?.name ?? "-",
     },
     {
       header: "Codification", key: "code",
       render: (_: any, row: any) => (
         <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-          {row.code ?? row.serial_number ?? " E}
+          {row.code ?? row.serial_number ?? "-"}
         </span>
       ),
     },
@@ -114,7 +114,7 @@ export default function PatrimoinesPage() {
     {
       header: "Site", key: "site",
       render: (_: any, row: any) => (
-        <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? " E}</span>
+        <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? "-"}</span>
       ),
     },
     {
@@ -143,8 +143,7 @@ export default function PatrimoinesPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
@@ -248,7 +247,7 @@ export default function PatrimoinesPage() {
                         ].map(({ label, value }) => (
                           <div key={label}>
                             <p className="text-[10px] text-slate-400 font-bold uppercase">{label}</p>
-                            <p className="text-sm font-black text-slate-900 mt-0.5">{value || " E}</p>
+                            <p className="text-sm font-black text-slate-900 mt-0.5">{value || "-"}</p>
                           </div>
                         ))}
                       </div>

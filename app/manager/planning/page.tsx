@@ -84,10 +84,10 @@ export default function PlanningPage() {
         reference: `#${String(selectedPlanning.id).padStart(7, "0")}`,
         description: selectedPlanning.description,
         fields: [
-          { label: "Site", value: selectedPlanning.site?.nom ?? " E },
-          { label: "Prestataire", value: selectedPlanning.provider?.company_name ?? selectedPlanning.provider?.name ?? " E },
-          { label: "Responsable", value: selectedPlanning.responsable_name ?? " E },
-          { label: "Téléphone", value: selectedPlanning.responsable_phone ?? " E },
+          { label: "Site", value: selectedPlanning.site?.nom ?? "-" },
+          { label: "Prestataire", value: selectedPlanning.provider?.company_name ?? selectedPlanning.provider?.name ?? "-" },
+          { label: "Responsable", value: selectedPlanning.responsable_name ?? "-" },
+          { label: "Téléphone", value: selectedPlanning.responsable_phone ?? "-" },
           { label: "Date début", value: new Date(selectedPlanning.date_debut).toLocaleString("fr-FR") },
           { label: "Date fin", value: new Date(selectedPlanning.date_fin).toLocaleString("fr-FR") },
           {
@@ -101,9 +101,7 @@ export default function PlanningPage() {
     : null;
 
   return (
-    <div className="
-
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
@@ -160,6 +158,6 @@ export default function PlanningPage() {
       </div>
 
       <Toast toast={toast} />
-    </div>
+    
   );
 }

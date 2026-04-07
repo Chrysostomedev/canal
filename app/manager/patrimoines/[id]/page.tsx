@@ -17,14 +17,14 @@ import type { Asset, Ticket } from "../../../../types/manager.types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (v?: number | null) => {
-  if (!v && v !== 0) return "—";
+  if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v.toLocaleString("fr-FR")} FCFA`;
 };
 
 const fmtDate = (iso?: string | null) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
 };
@@ -189,7 +189,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                     <p className="text-xs text-slate-400 font-medium">{label}</p>
-                    <p className="text-sm font-bold text-slate-900">{value || "—"}</p>
+                    <p className="text-sm font-bold text-slate-900">{value || "-"}</p>
                   </div>
                 ))}
               </div>

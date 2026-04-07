@@ -283,7 +283,7 @@ export default function DevisDetailsPage() {
 
             {quote.history.map((h)=>(
               <div key={h.id} className="text-sm mb-2">
-                {h.action} — {h.performed_by_name} — {formatDate(h.created_at)}
+                {h.action} - {h.performed_by_name} - {formatDate(h.created_at)}
               </div>
             ))}
 

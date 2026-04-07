@@ -41,14 +41,14 @@ function Toast({ toast }: { toast: ToastType }) {
   );
 }
 
-// ─── Stats cards builder  Emême pattern que la page admin ─────────────────────
+// ─── Stats cards builder - même pattern que la page admin ─────────────────────
 
 function buildStatsCards(stats: any, isLoading: boolean) {
   if (isLoading || !stats) {
     return [
-      { label: "Nombre total de plannings", value: " E, delta: "", trend: "up" as const },
-      { label: "Plannings en cours",        value: " E, delta: "", trend: "up" as const },
-      { label: "Plannings en retard",       value: " E, delta: "", trend: "up" as const },
+      { label: "Nombre total de plannings", value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en cours",        value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en retard",       value: "-", delta: "", trend: "up" as const },
     ];
   }
   return [
@@ -109,7 +109,7 @@ export default function ProviderPlanningPage() {
     },
   ];
 
-  // ── Format pour SideDetailsPanel  Emême structure que la page admin ─────────
+  // ── Format pour SideDetailsPanel - même structure que la page admin ─────────
   const formattedSelectedEvent = selectedPlanning
     ? {
         title:       selectedPlanning.codification,
@@ -119,7 +119,7 @@ export default function ProviderPlanningPage() {
           { label: "Site",         value: getSiteName(selectedPlanning.site) },
           { label: "Prestataire",  value: getProviderName(selectedPlanning.provider) },
           { label: "Responsable",  value: selectedPlanning.responsable_name },
-          { label: "Téléphone",    value: selectedPlanning.responsable_phone ?? " E },
+          { label: "Téléphone",    value: selectedPlanning.responsable_phone ?? "-" },
           {
             label: "Date de début",
             value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
@@ -142,7 +142,7 @@ export default function ProviderPlanningPage() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="
+    <>
       <div className="flex-1 flex flex-col">
         <Navbar />
 
@@ -151,7 +151,7 @@ export default function ProviderPlanningPage() {
           {/* Erreur globale */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-xl text-sm font-medium">
-              ⚠�E�E{error}
+              ⚠️ {error}
             </div>
           )}
 
@@ -173,7 +173,7 @@ export default function ProviderPlanningPage() {
           </div>
 
           {/*
-            MainCard  Emême composant que la page admin.
+            MainCard - même composant que la page admin.
             Il gère CalendarGrid, MiniCalendar, EventLegend, SideDetailsPanel.
             On lui passe onEditClick et onDeleteClick vides car le provider
             ne peut pas modifier/supprimer un planning.
@@ -193,6 +193,6 @@ export default function ProviderPlanningPage() {
       </div>
 
       <Toast toast={toast} />
-    </div>
+    </>
   );
 }

@@ -16,6 +16,7 @@ export interface CompanyAsset {
   id: number;
   type_company_asset_id: number;
   sub_type_company_asset_id: number;
+  site_id: number;
 
   // Relations eager-loaded — clés exactes du back Laravel
   type:    { id: number; code: string; name: string } | null;

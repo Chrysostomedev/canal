@@ -75,7 +75,7 @@ export default function CalendarGrid({
     const events: CalendarEvent[] = filtered.map((p) => ({
       id:       p.id,
       label:    p.codification,
-      time:     p.date_debut.split("T")[1]?.slice(0, 5) ?? "—",
+      time:     p.date_debut.split("T")[1]?.slice(0, 5) ?? "-",
       color:    STATUS_COLORS[p.status] ?? "#000000",
       status:   p.status,
       planning: p,

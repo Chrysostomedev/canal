@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Filter, Download, Upload, Building2,
-  Eye, ChevronLeft, MapPin, Phone, Mail, CalendarClock, X, Copy, CheckCheck,
+  Eye, ChevronLeft, MapPin, Phone, Mail, CalendarClock, X, Copy, CheckCheck, Pencil,
 } from "lucide-react";
 
 import Navbar      from "@/components/Navbar";
@@ -13,7 +13,7 @@ import Sidebar     from "@/components/Sidebar";
 import Paginate    from "@/components/Paginate";
 import StatsCard   from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
-import DataTable   from "@/components/DataTable";
+import DataTable, { ColumnConfig }  from "@/components/DataTable";
 import { FieldConfig } from "@/components/ReusableForm";
 
 import { useTypes }         from "../../../../../hooks/admin/useTypes";
@@ -25,7 +25,9 @@ import {
   resolveManagerName,
   resolveManagerPhone,
   resolveManagerEmail,
+  updateSite,
 } from "../../../../../services/admin/site.service";
+import { useSites } from "../../../../../hooks/admin/useSites";
 import axiosInstance from "../../../../../core/axios";
 
 // ═══════════════════════════════════════════════
@@ -33,19 +35,30 @@ import axiosInstance from "../../../../../core/axios";
 // ═══════════════════════════════════════════════
 
 const formatMontant = (v: number | null | undefined): string => {
-  if (!v && v !== 0) return "—";
+  if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 !== 0 ? 1 : 0)}M FCFA`;
   if (v >= 1_000)     return `${(v / 1_000).toFixed(v % 1_000 !== 0 ? 1 : 0)}K FCFA`;
   return `${v} FCFA`;
 };
 
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
   const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   return time === "00:00" ? date : `${date} à ${time}`;
+};
+
+/**
+ * Formate une date ISO pour l'attribut 'value' d'un <input type="date">
+ * Indispensable pour le pré-remplissage du formulaire de modification.
+ */
+const fmtDateForInput = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
 };
 
 // ═══════════════════════════════════════════════
@@ -138,7 +151,7 @@ function AssetFilterDropdown({
           </div>
         </div>
 
-        {/* Type — sélection efface le sous-type si incompatible */}
+        {/* Type - sélection efface le sous-type si incompatible */}
         {types.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Type / Famille</p>
@@ -153,7 +166,7 @@ function AssetFilterDropdown({
           </div>
         )}
 
-        {/* Sous-type — filtré selon le type sélectionné */}
+        {/* Sous-type - filtré selon le type sélectionné */}
         {filteredSubTypes.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
@@ -196,9 +209,9 @@ function AssetSidePanel({
 }) {
   if (!patrimoine) return null;
 
-  const typeName    = patrimoine.type?.name    ?? "—";
-  const subTypeName = patrimoine.subType?.name ?? "—";
-  const siteName    = patrimoine.site?.nom     ?? "—";
+  const typeName    = patrimoine.type?.name    ?? "-";
+  const subTypeName = patrimoine.subType?.name ?? "-";
+  const siteName    = patrimoine.site?.nom     ?? "-";
 
   const infoRows = [
     { label: "Famille / Type",  value: typeName    },
@@ -287,6 +300,8 @@ export default function SiteDetailsPage() {
   const [isDetailsOpen,      setIsDetailsOpen]      = useState(false);
   const [patrimoines,        setPatrimoines]        = useState<CompanyAsset[]>([]);
   const [loadingPatrimoines, setLoadingPatrimoines] = useState(false);
+  const [isEditSiteModalOpen,setIsEditSiteModalOpen]= useState(false);
+  const { managers, managersLoading, fetchManagers } = useSites();
   const [filtersOpen,        setFiltersOpen]        = useState(false);
   const [filters,            setFilters]            = useState<AssetFilters>({});
   const [currentPage,        setCurrentPage]        = useState(1);
@@ -312,9 +327,10 @@ export default function SiteDetailsPage() {
       .then(data => setSite(data))
       .catch(() => setSite(null))
       .finally(() => setLoadingSite(false));
+    fetchManagers();
   }, [siteId]);
 
-  // ── Fetch stats — comparaison en Number pour éviter string vs number
+  // ── Fetch stats - comparaison en Number pour éviter string vs number
   useEffect(() => {
     if (!siteId) return;
     getSiteStats()
@@ -387,6 +403,23 @@ export default function SiteDetailsPage() {
     }
   };
 
+  const handleUpdateSite = async (formData: any) => {
+    try {
+      const payload = {
+        ...formData,
+        manager_id: formData.manager_id ? Number(formData.manager_id) : undefined,
+      };
+      await updateSite(siteId, payload);
+      setFlashMessage({ type: "success", message: "Site mis à jour avec succès." });
+      setIsEditSiteModalOpen(false);
+      // Refresh site data
+      const data = await getSiteById(siteId);
+      setSite(data);
+    } catch (err: any) {
+      setFlashMessage({ type: "error", message: err?.response?.data?.message ?? "Erreur lors de la mise à jour." });
+    }
+  };
+
   // ── Export
   const handleExport = async () => {
     if (exportLoading) return;
@@ -437,10 +470,11 @@ export default function SiteDetailsPage() {
     }
   };
 
-  // ── Colonnes DataTable — clés exactes du back (type, subType, site.nom)
-  const columns = [
+  // ── Colonnes DataTable - clés exactes du back (type, subType, site.nom)
+  // Utilisation de as keyof CompanyAsset pour satisfaire TypeScript sur les clés imbriquées ou calculées
+  const columns: ColumnConfig<CompanyAsset>[] = [
     {
-      header: "ID", key: "id",
+      header: "ID", key: "id" as any,
       render: (_: any, row: CompanyAsset) => (
         <div className="flex items-center">
           <span className="font-black text-slate-900 text-sm">#{row.id}</span>
@@ -451,13 +485,13 @@ export default function SiteDetailsPage() {
     {
       header: "Type", key: "type",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-700">{row.type?.name ?? "—"}</span>
+        <span className="text-sm text-slate-700">{row.type?.name ?? "-"}</span>
       ),
     },
     {
       header: "Sous-type", key: "subType",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-700">{row.subType?.name ?? "—"}</span>
+        <span className="text-sm text-slate-700">{row.subType?.name ?? "-"}</span>
       ),
     },
     {
@@ -503,7 +537,7 @@ export default function SiteDetailsPage() {
     },
   ];
 
-  // ── Champs formulaire — codification retirée (générée auto par le back)
+  // ── Champs formulaire - codification retirée (générée auto par le back)
   const assetFields: FieldConfig[] = [
     {
       name: "type_company_asset_id", label: "Famille / Type", type: "select", required: true,
@@ -536,15 +570,16 @@ export default function SiteDetailsPage() {
   ];
 
   // ── Infos du site via helpers robustes
-  const siteName    = site?.nom        ?? "—";
-  const location    = site?.localisation ?? "—";
+  const siteName    = site?.nom        ?? "-";
+  const location    = site?.localisation ?? "-";
   const responsible = resolveManagerName(site);
   const phone       = resolveManagerPhone(site);
   const email       = resolveManagerEmail(site);
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
-      <div className="flex-1 flex flex-col pl-64">
+      {/* suppression de pl-64 car déjà géré par AppShell dans le layout admin */}
+      <div className="flex-1 flex flex-col">
         <Navbar />
 
         <main className="mt-20 p-8 space-y-8">
@@ -591,7 +626,7 @@ export default function SiteDetailsPage() {
                   </div>
                 ) : (
                   <>
-                    {responsible !== "—" && <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>}
+                    {responsible !== "-" && <h3 className="text-xl font-bold text-slate-900">{responsible}</h3>}
                     <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
                       <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Phone size={16} className="text-slate-900" /></div>
                       {phone}
@@ -603,6 +638,14 @@ export default function SiteDetailsPage() {
                   </>
                 )}
               </div>
+
+              {/* Bouton modifier le site */}
+              <button
+                onClick={() => setIsEditSiteModalOpen(true)}
+                className="flex items-center justify-center gap-2 bg-slate-900 text-white py-3 px-6 rounded-2xl font-bold hover:bg-black transition-colors"
+              >
+                <Pencil size={16} /> Modifier le site
+              </button>
             </div>
           </div>
 
@@ -739,15 +782,61 @@ export default function SiteDetailsPage() {
         initialValues={editingData ? {
           type_company_asset_id:     String((editingData as any).type_company_asset_id     ?? ""),
           sub_type_company_asset_id: String((editingData as any).sub_type_company_asset_id ?? ""),
+          site_id:       String(siteId), // On force l'ID du site actuel
           designation:   editingData.designation,
           status:        editingData.status,
           criticite:     editingData.criticite ?? "non_critique",
-          date_entree:   editingData.date_entree ?? "",
+          date_entree:   fmtDateForInput(editingData.date_entree),
           valeur_entree: editingData.valeur_entree ?? "",
           description:   editingData.description ?? "",
         } : {}}
         onSubmit={handleCreateOrUpdate}
         submitLabel={editingData ? "Mettre à jour" : "Enregistrer"}
+      />
+
+      <ReusableForm
+        isOpen={isEditSiteModalOpen}
+        onClose={() => setIsEditSiteModalOpen(false)}
+        title="Modifier le site"
+        subtitle="Modifiez les informations de ce site"
+        fields={[
+          { name: "nom",               label: "Nom du site",            type: "text",   required: true },
+          { name: "ref_contrat",       label: "Référence contrat",      type: "text",   required: true },
+          {
+            name: "manager_id",
+            label: managersLoading ? "Gestionnaire (chargement...)" : "Gestionnaire",
+            type: "select",
+            disabled: managersLoading,
+            options: managers.map((m: any) => ({
+              label: resolveManagerName(m) || `Manager #${m.id}`,
+              value: String(m.id),
+            })),
+          },
+          {
+            name: "status", label: "Statut", type: "select", required: true,
+            options: [{ label: "Actif", value: "active" }, { label: "Inactif", value: "inactive" }],
+          },
+          { name: "effectifs",        label: "Effectifs",                type: "number" },
+          { name: "loyer",            label: "Loyer mensuel (FCFA)",     type: "number" },
+          { name: "superficie",       label: "Superficie (m²)",          type: "number" },
+          { name: "localisation",     label: "Localisation",             type: "text", gridSpan: 2 },
+          { name: "date_deb_contrat", label: "Date de début de contrat", type: "date" },
+          { name: "date_fin_contrat", label: "Date de fin de contrat",   type: "date" },
+        ]}
+        initialValues={{
+          nom: site?.nom ?? "",
+          ref_contrat: site?.ref_contrat ?? "",
+          manager_id: String(site?.manager_id ?? site?.manager?.id ?? ""),
+          status: site?.status ?? "active",
+          effectifs: site?.effectifs ?? "",
+          loyer: site?.loyer ?? "",
+          superficie: site?.superficie ?? "",
+          localisation: site?.localisation ?? "",
+          date_deb_contrat: fmtDateForInput(site?.date_deb_contrat),
+          date_fin_contrat: fmtDateForInput(site?.date_fin_contrat),
+        }}
+        onSubmit={handleUpdateSite}
+        submitLabel="Mettre à jour le site"
       />
     </div>
   );

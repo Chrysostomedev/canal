@@ -3,8 +3,8 @@
 /**
  * GestCard.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Carte gestionnaire — Design ultra-soft professionnel (CANAL+)
- * Palette : blanc / noir / gris uniquement — zéro couleur vive
+ * Carte gestionnaire - Design ultra-soft professionnel (CANAL+)
+ * Palette : blanc / noir / gris uniquement - zéro couleur vive
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -19,7 +19,7 @@ interface GestCardProps {
   email: string;
   phone?: string;
   role?: string;
-  site?: string; // préparé pour future API — voir commentaires
+  site?: string; // préparé pour future API - voir commentaires
   status: "Actif" | "Inactif";
   avatar?: string;
   onProfilClick?: () => void;
@@ -78,7 +78,7 @@ export default function GestCard({
           </div>
         </div>
 
-        {/* Badge statut — seule distinction visuelle */}
+        {/* Badge statut - seule distinction visuelle */}
         <span className={`
           mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest flex-shrink-0
           ${isActive ? "bg-green-600 text-white" : "bg-red-400 text-white"}
@@ -95,25 +95,19 @@ export default function GestCard({
 
         <div className="flex items-center gap-2.5">
           <Mail size={12} className="text-slate-300 flex-shrink-0" />
-          <span className="text-[12px] text-slate-500 truncate">{email || "—"}</span>
+          <span className="text-[12px] text-slate-500 truncate">{email || "-"}</span>
         </div>
 
         <div className="flex items-center gap-2.5">
           <Phone size={12} className="text-slate-300 flex-shrink-0" />
-          <span className="text-[12px] text-slate-500">{phone || "—"}</span>
+          <span className="text-[12px] text-slate-500">{phone || "-"}</span>
         </div>
 
-        {/*
-         * ── Site géré — COMMENTÉ, préparé pour future API ─────────────────
-         * TODO: décommenter quand le backend retournera managed_site
-         *
-         * {site && (
-         *   <div className="flex items-center gap-2.5">
-         *     <MapPin size={12} className="text-slate-300 flex-shrink-0" />
-         *     <span className="text-[12px] text-slate-500 truncate">{site}</span>
-         *   </div>
-         * )}
-         */}
+        {site && (
+          <div className="flex items-center gap-2.5">
+            <span className="text-[12px] text-slate-500 truncate">Site géré : {site}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Actions ─────────────────────────────────────────────────────── */}

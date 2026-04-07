@@ -124,7 +124,7 @@ export default function MainCard({
         </div>
       </div>
 
-      {/* 3. SideDetailsPanel — données réelles */}
+      {/* 3. SideDetailsPanel - données réelles */}
       <SideDetailsPanel
         isOpen={isPanelOpen}
         onClose={onPanelClose}

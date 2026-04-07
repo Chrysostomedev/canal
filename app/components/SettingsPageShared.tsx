@@ -2,9 +2,9 @@
 
 /**
  * SettingsPageShared.tsx
- * Composant partagé pour la page Paramètres — tous les rôles.
+ * Composant partagé pour la page Paramètres - tous les rôles.
  * Traçabilité visible uniquement pour ADMIN et SUPER-ADMIN.
- * Apparence commentée — thème noir ardoise par défaut.
+ * Apparence commentée - thème noir ardoise par défaut.
  */
 
 import { useState, useEffect } from "react";
@@ -103,7 +103,7 @@ function SettingsSidePanel({
     { key: "notifications", Icon: Bell,      label: "Notifications" },
     ...(isAdmin ? [{ key: "tracking", Icon: Activity, label: "Traçabilité" }] : []),
     { key: "language",      Icon: Languages, label: "Langue"        },
-    // Apparence commentée — thème noir ardoise par défaut
+    // Apparence commentée - thème noir ardoise par défaut
     // { key: "appearance", Icon: Palette, label: "Apparence" },
   ];
 
@@ -183,7 +183,7 @@ function SettingsSidePanel({
             </div>
           )}
 
-          {/* Traçabilité — admin/super-admin uniquement */}
+          {/* Traçabilité - admin/super-admin uniquement */}
           {advTab === "tracking" && isAdmin && (
             <div className="space-y-6">
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -285,7 +285,7 @@ function SettingsSidePanel({
             </div>
           )}
 
-          {/* Apparence — commentée, thème noir ardoise par défaut */}
+          {/* Apparence - commentée, thème noir ardoise par défaut */}
           {/* {advTab === "appearance" && <ThemePicker />} */}
 
         </div>
@@ -363,7 +363,7 @@ export default function SettingsPageShared({ unreadCount = 0 }: SettingsPageShar
       bg:     "bg-sky-50",
       ring:   "ring-sky-200",
     },
-    // Apparence commentée — thème noir ardoise par défaut
+    // Apparence commentée - thème noir ardoise par défaut
     // { key: "appearance", Icon: Palette, label: "Apparence", sub: "Thème de couleur", accent: "text-purple-600", bg: "bg-purple-50", ring: "ring-purple-200" },
   ] as const;
 

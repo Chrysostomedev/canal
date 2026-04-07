@@ -144,8 +144,7 @@ export default function PatrimoinesPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
           <PageHeader
@@ -153,7 +152,7 @@ export default function PatrimoinesPage() {
             subtitle="Ce menu vous permet de voir les différents patrimoines disponibles"
           />
 
-          {/* Barre d'actions  EPAS de filtre sur cette vue */}
+          {/* Barre d'actions - PAS de filtre sur cette vue */}
           <div className="shrink-0 flex justify-end items-center gap-3">
 
             {/* Import */}
@@ -224,6 +223,6 @@ export default function PatrimoinesPage() {
           )}
         </main>
       </div>
-    </div>
+    
   );
 }

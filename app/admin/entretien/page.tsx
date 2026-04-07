@@ -17,6 +17,7 @@ import {
 import { useState, useEffect } from "react";
 import { useReports } from "../../../hooks/admin/useReports";
 import { ReportService, InterventionReport } from "../../../services/admin/report.service";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type MaintenanceStatus =
@@ -68,7 +69,7 @@ const WORKFLOW_STEPS = [
 ];
 
 const formatDate = (d?: string | null) =>
-    d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : " E;
+    d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "-";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -100,10 +101,10 @@ function StatusBadge({ status }: { status: string }) {
 
 // ─── WorkflowProgress ─────────────────────────────────────────────────────────
 
-function WorkflowProgress({ status }: { status: MaintenanceStatus }) {
-    const effectiveIdx = status === "rejeté" || status === "anomalie"
+function WorkflowProgress({ status }: { status: string }) {
+    const effectiveIdx = status === "rejeté" || status === "anomalie" || status === "rejected"
         ? WORKFLOW_STEPS.findIndex(s => s.key === "rapporté")
-        : WORKFLOW_STEPS.findIndex(s => s.key === status);
+        : WORKFLOW_STEPS.findIndex(s => s.key === status || STATUS_LABELS[s.key] === status);
 
     return (
         <div className="flex items-start gap-0 w-full">
@@ -185,7 +186,7 @@ function StarRating({
 function ValidationModal({
     ticket, onClose, onValidate, onReject, submitting,
 }: {
-    ticket: MaintenanceTicket;
+    ticket: InterventionReport;
     onClose: () => void;
     onValidate: (data: { rating: number; comment: string }) => void;
     onReject: (reason: string) => void;
@@ -198,16 +199,6 @@ function ValidationModal({
 
     const canValidate = rating > 0;
     const canReject = rejectReason.trim().length > 10;
-
-    const anomalyLabels: Record<AnomalyAction, { label: string; icon: any; color: string }> = {
-        ras: { label: "RAS  ERien à signaler", icon: CheckCircle2, color: "text-emerald-600" },
-        immediate: { label: "Résolue sur place", icon: Wrench, color: "text-amber-600" },
-        devis: { label: "Nécessite un devis", icon: FileText, color: "text-orange-600" },
-    };
-
-    const anomaly = ticket.report?.anomaly_action
-        ? anomalyLabels[ticket.report.anomaly_action]
-        : null;
 
     return (
         <>
@@ -226,9 +217,9 @@ function ValidationModal({
                                     Validation du rapport
                                 </span>
                             </div>
-                            <h2 className="text-xl font-black text-slate-900">{ticket.reference}</h2>
+                            <h2 className="text-xl font-black text-slate-900">{(ticket as any).reference || `#${ticket.id}`}</h2>
                             <p className="text-slate-400 text-xs mt-0.5">
-                                {ticket.provider_name} · {ticket.site?.nom ?? " E} · {formatDate(ticket.scheduled_date)}
+                                {ticket.provider?.company_name ?? ticket.provider?.name ?? "-"} · {ticket.site?.nom ?? "-"} · {formatDate(ticket.start_date)}
                             </p>
                         </div>
                         <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition mt-1">
@@ -244,14 +235,8 @@ function ValidationModal({
                                 Rapport soumis par le prestataire
                             </p>
                             <p className="text-sm text-slate-700 leading-relaxed">
-                                {ticket.report?.observations ?? "Aucune observation."}
+                                {ticket.description ?? "Aucune observation."}
                             </p>
-                            {anomaly && (
-                                <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                                    <anomaly.icon size={13} className={anomaly.color} />
-                                    <span className={`text-xs font-bold ${anomaly.color}`}>{anomaly.label}</span>
-                                </div>
-                            )}
                         </div>
 
                         {/* Toggle Valider / Rejeter */}
@@ -303,7 +288,7 @@ function ValidationModal({
                                         onChange={e => setComment(e.target.value)}
                                         placeholder="Observations sur la qualité du rapport, points à améliorer…"
                                         className="w-full bg-slate-50 rounded-2xl p-4 text-sm text-slate-700 placeholder:text-slate-400
-                      outline-none focus:ring-2 focus:ring-slate-900 transition resize-none"
+                       outline-none focus:ring-2 focus:ring-slate-900 transition resize-none"
                                     />
                                 </div>
 
@@ -342,7 +327,7 @@ function ValidationModal({
                                         onChange={e => setRejectReason(e.target.value)}
                                         placeholder="Expliquez précisément pourquoi ce rapport est incomplet ou inexact…"
                                         className="w-full bg-red-50 rounded-2xl p-4 text-sm text-slate-700 placeholder:text-red-300
-                      outline-none focus:ring-2 focus:ring-red-400 transition resize-none border border-red-100"
+                       outline-none focus:ring-2 focus:ring-red-400 transition resize-none border border-red-100"
                                     />
                                     <p className="text-[10px] text-slate-400">
                                         Minimum 10 caractères · {rejectReason.length} / 500
@@ -376,20 +361,15 @@ function ValidationModal({
 function MaintenancePreviewPanel({
     ticket, onClose, onOpenValidation,
 }: {
-    ticket: MaintenanceTicket;
+    ticket: InterventionReport;
     onClose: () => void;
-    onOpenValidation: (t: MaintenanceTicket) => void;
+    onOpenValidation: (t: InterventionReport) => void;
 }) {
     const [copied, setCopied] = useState(false);
+    const reference = (ticket as any).reference || `#${ticket.id}`;
     const copyRef = () => {
-        navigator.clipboard.writeText(ticket.reference);
+        navigator.clipboard.writeText(reference);
         setCopied(true); setTimeout(() => setCopied(false), 2000);
-    };
-
-    const anomalyLabels: Record<AnomalyAction, { label: string; icon: any; color: string }> = {
-        ras: { label: "RAS  ERien à signaler", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-        immediate: { label: "Résolue sur place", icon: Wrench, color: "text-amber-600 bg-amber-50 border-amber-100" },
-        devis: { label: "Nécessite un devis", icon: FileText, color: "text-orange-600 bg-orange-50 border-orange-100" },
     };
 
     return (
@@ -412,11 +392,11 @@ function MaintenancePreviewPanel({
                     {/* Workflow */}
                     <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Progression</p>
-                        <WorkflowProgress status={ticket.status} />
-                        {(ticket.status === "rejeté" || ticket.status === "anomalie") && (
+                        <WorkflowProgress status={ticket.status ?? "pending"} />
+                        {(ticket.status === "rejeté" || ticket.status === "rejected") && (
                             <div className="mt-4 flex items-center gap-2 text-xs font-bold text-red-600">
                                 <AlertTriangle size={12} />
-                                {ticket.status === "rejeté" ? "Rapport rejeté par le gestionnaire" : "Anomalie détectée"}
+                                {ticket.status === "rejected" || ticket.status === "rejeté" ? "Rapport rejeté par le gestionnaire" : "Anomalie détectée"}
                             </div>
                         )}
                     </div>
@@ -427,18 +407,17 @@ function MaintenancePreviewPanel({
                             {
                                 label: "Référence", render: () => (
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-slate-900 text-sm">{ticket.reference}</span>
+                                        <span className="font-bold text-slate-900 text-sm">{reference}</span>
                                         <button onClick={copyRef} className="p-1 hover:bg-slate-100 rounded-md transition">
                                             {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} className="text-slate-400" />}
                                         </button>
                                     </div>
                                 )
                             },
-                            { label: "Prestataire", value: ticket.provider_name ?? " E },
-                            { label: "Site", value: ticket.site?.nom ?? ticket.site?.name ?? " E },
-                            { label: "Date planifiée", value: formatDate(ticket.scheduled_date) },
-                            ...(ticket.completed_date ? [{ label: "Date réalisée", value: formatDate(ticket.completed_date) }] : []),
-                            ...(ticket.curative_ticket_id ? [{ label: "Ticket curatif lié", value: `#${ticket.curative_ticket_id}` }] : []),
+                            { label: "Prestataire", value: ticket.provider?.company_name ?? ticket.provider?.name ?? "-" },
+                            { label: "Site", value: ticket.site?.nom ?? ticket.site?.name ?? "-" },
+                            { label: "Date planifiée", value: formatDate(ticket.start_date) },
+                            ...(ticket.validated_at ? [{ label: "Date réalisée", value: formatDate(ticket.validated_at) }] : []),
                         ].map((f, i) => (
                             <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                                 <p className="text-xs text-slate-400 font-medium">{f.label}</p>
@@ -448,58 +427,41 @@ function MaintenancePreviewPanel({
                         ))}
                         <div className="flex items-center justify-between py-3">
                             <p className="text-xs text-slate-400 font-medium">Statut</p>
-                            <StatusBadge status={ticket.status} />
+                            <StatusBadge status={ticket.status ?? "pending"} />
                         </div>
                     </div>
 
                     {/* Rapport */}
-                    {ticket.report && (
-                        <>
-                            <div>
-                                <p className="text-xs text-slate-400 font-medium mb-2">Observations du rapport</p>
-                                <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-                                    {ticket.report.observations}
+                    <div>
+                        <p className="text-xs text-slate-400 font-medium mb-2">Observations du rapport</p>
+                        <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            {ticket.description ?? "Aucune observation."}
+                        </p>
+                    </div>
+
+                    {/* Note si déjà évaluée */}
+                    {ticket.rating && (
+                        <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Évaluation</p>
+                            <StarRating value={ticket.rating} readonly />
+                            {ticket.manager_comment && (
+                                <p className="text-xs text-amber-700 mt-2 leading-relaxed">
+                                    "{ticket.manager_comment}"
                                 </p>
-                            </div>
-
-                            {/* Constat */}
-                            {ticket.report.anomaly_action && (() => {
-                                const a = anomalyLabels[ticket.report.anomaly_action!];
-                                if (!a) return null;
-                                const Icon = a.icon;
-                                return (
-                                    <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-bold ${a.color}`}>
-                                        <Icon size={15} />
-                                        {a.label}
-                                    </div>
-                                );
-                            })()}
-
-                            {/* Note si déjà évaluée */}
-                            {ticket.report.rating && (
-                                <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Évaluation</p>
-                                    <StarRating value={ticket.report.rating} readonly />
-                                    {ticket.report.rating_comment && (
-                                        <p className="text-xs text-amber-700 mt-2 leading-relaxed">
-                                            "{ticket.report.rating_comment}"
-                                        </p>
-                                    )}
-                                </div>
                             )}
-                        </>
+                        </div>
                     )}
 
                     {/* Motif rejet */}
-                    {ticket.status === "rejeté" && ticket.report?.rejection_reason && (
+                    {(ticket.status === "rejected" || ticket.status === "rejeté") && ticket.rejection_reason && (
                         <div className="bg-red-50 rounded-xl p-4 border border-red-100">
                             <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Motif de rejet</p>
-                            <p className="text-sm text-red-700 leading-relaxed">{ticket.report.rejection_reason}</p>
+                            <p className="text-sm text-red-700 leading-relaxed">{ticket.rejection_reason}</p>
                         </div>
                     )}
 
                     {/* CTA Valider si rapporté */}
-                    {ticket.status === "rapporté" && (
+                    {(ticket.status === "submitted" || ticket.status === "pending") && (
                         <button
                             onClick={() => onOpenValidation(ticket)}
                             className="w-full py-3.5 rounded-2xl bg-slate-900 text-white text-sm font-black
@@ -510,10 +472,10 @@ function MaintenancePreviewPanel({
                         </button>
                     )}
 
-                    {ticket.status === "clos" && (
+                    {ticket.status === "validated" && (
                         <div className="flex items-center gap-2 py-3.5 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold">
                             <CheckCircle2 size={16} />
-                            Clôturé le {formatDate(ticket.report?.validated_at ?? "")}
+                            Clôturé le {formatDate(ticket.validated_at)}
                         </div>
                     )}
                 </div>
@@ -561,13 +523,13 @@ export default function ManagerEntretienPage() {
 
     const filtered = statusFilter ? reports.filter(t => t.status === statusFilter) : reports;
 
-    const pendingCount = reports.filter(t => t.status === "submitted" || t.status === "rapporté" || t.status === "pending").length;
+    const pendingCount = reports.filter(t => t.status === "submitted" || t.status === "pending").length;
 
     const kpis = [
         { label: "Total entretiens", value: stats?.total_reports ?? reports.length, delta: "", trend: "up" as const },
         { label: "À valider",        value: pendingCount, delta: "", trend: "up" as const },
-        { label: "Validés",          value: stats?.validated_reports ?? reports.filter(t => t.status === "validated" || t.status === "validé").length, delta: "", trend: "up" as const },
-        { label: "Note moyenne",     value: stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : " E, delta: "", trend: "up" as const },
+        { label: "Validés",          value: stats?.validated_reports ?? reports.filter(t => t.status === "validated").length, delta: "", trend: "up" as const },
+        { label: "Note moyenne",     value: stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : "-", delta: "", trend: "up" as const },
     ];
 
     const handleValidate = async (data: { rating: number; comment: string }) => {
@@ -583,6 +545,8 @@ export default function ManagerEntretienPage() {
             closeValidation();
             setSubmitSuccess("Rapport validé avec succès !");
             setTimeout(() => setSubmitSuccess(null), 4000);
+            fetchReports();
+            fetchStats();
         } catch (err: any) {
             setSubmitError(err?.response?.data?.message || "Erreur lors de la validation");
         } finally {
@@ -599,6 +563,8 @@ export default function ManagerEntretienPage() {
             closeValidation();
             setSubmitSuccess("Rapport rejeté. Le prestataire sera notifié.");
             setTimeout(() => setSubmitSuccess(null), 4000);
+            fetchReports();
+            fetchStats();
         } catch (err: any) {
             setSubmitError(err?.response?.data?.message || "Erreur lors du rejet");
         } finally {
@@ -619,7 +585,7 @@ export default function ManagerEntretienPage() {
             header: "Prestataire", key: "provider",
             render: (_: any, row: InterventionReport) => (
                 <span className="text-xs text-slate-600 font-medium">
-                    {row.provider?.company_name ?? row.provider?.name ?? " E}
+                    {row.provider?.company_name ?? row.provider?.name ?? "-"}
                 </span>
             ),
         },
@@ -627,7 +593,7 @@ export default function ManagerEntretienPage() {
             header: "Site", key: "site",
             render: (_: any, row: InterventionReport) => (
                 <span className="text-xs text-slate-600 font-medium">
-                    {row.site?.nom ?? row.site?.name ?? " E}
+                    {row.site?.nom ?? row.site?.name ?? "-"}
                 </span>
             ),
         },
@@ -649,7 +615,7 @@ export default function ManagerEntretienPage() {
             render: (_: any, row: InterventionReport) => (
                 row.rating
                     ? <StarRating value={row.rating} readonly />
-                    : <span className="text-xs text-slate-300 font-medium"> E/span>
+                    : <span className="text-xs text-slate-300 font-medium">-</span>
             ),
         },
         {
@@ -660,7 +626,7 @@ export default function ManagerEntretienPage() {
                         className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600 hover:text-slate-900">
                         <Eye size={16} />
                     </button>
-                    {(row.status === "submitted" || row.status === "rapporté" || row.status === "pending") && (
+                    {(row.status === "submitted" || row.status === "pending") && (
                         <button
                             onClick={() => openValidation(row)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600
@@ -680,7 +646,7 @@ export default function ManagerEntretienPage() {
     ];
 
     return (
-        <div className="
+        <>
             <div className="flex-1 flex flex-col">
                 <Navbar />
                 <main className="mt-20 p-6 space-y-8">
@@ -709,7 +675,7 @@ export default function ManagerEntretienPage() {
                                 onClick={() => setStatusFilter("submitted")}
                                 className="ml-auto text-xs font-black text-violet-600 hover:text-violet-800 underline underline-offset-2"
                             >
-                                Voir ↁE
+                                Voir ...
                             </button>
                         </div>
                     )}
@@ -773,13 +739,13 @@ export default function ManagerEntretienPage() {
 
             {isValidationOpen && validationTarget && (
                 <ValidationModal
-                    ticket={validationTarget as any}
+                    ticket={validationTarget}
                     onClose={closeValidation}
                     onValidate={handleValidate}
                     onReject={handleReject}
                     submitting={submitting}
                 />
             )}
-        </div>
+        </>
     );
 }

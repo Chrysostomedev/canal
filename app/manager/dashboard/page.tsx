@@ -76,7 +76,7 @@ export default function Dashboard() {
     const statusColor =
       status === "CLOS" ? "#000" :
       status === "EN_COURS" ? "#f97316" :
-      status === "ÉVALUÁE ? "#22c55e" : "#64748b";
+      status === "ÉVALUÉ" ? "#22c55e" : "#64748b";
 
     setSelectedTicket({
       title: ticket.subject ?? `Ticket #${ticket.id}`,
@@ -125,7 +125,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="
+    <>
       <div className="flex-1 flex flex-col ">
         <Navbar />
         <main className="flex-1 p-8 pt-24 space-y-8">
@@ -197,6 +197,6 @@ export default function Dashboard() {
         fields={selectedTicket?.fields || []}
         descriptionContent={selectedTicket?.description}
       />
-    </div>
+    </>
   );
 }

@@ -106,7 +106,7 @@ function QuotePreviewPanel({ quote, onClose }: { quote: Quote; onClose: () => vo
       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed right-0 top-0 h-full w-[420px] bg-white z-50 shadow-2xl flex flex-col rounded-l-3xl overflow-hidden">
 
-        {/* Header  Ecroix haut gauche comme admin */}
+        {/* Header - croix haut gauche comme admin */}
         <div className="flex items-start px-6 pt-6 pb-0 shrink-0">
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition -ml-1">
             <X size={18} className="text-slate-500" />
@@ -134,7 +134,7 @@ function QuotePreviewPanel({ quote, onClose }: { quote: Quote; onClose: () => vo
                 ),
               },
               { label: "Ticket", value: quote.ticket?.subject ?? quote.ticket?.title ?? `#${quote.ticket_id}` },
-              { label: "Site", value: quote.site?.nom ?? quote.site?.name ?? " E },
+              { label: "Site", value: quote.site?.nom ?? quote.site?.name ?? "-" },
               { label: "Montant HT", value: formatCurrency(quote.amount_ht) },
               { label: `TVA (${quote.tax_rate ?? 18}%)`, value: formatCurrency(quote.tax_amount) },
               { label: "Date", value: formatDate(quote.created_at) },
@@ -278,7 +278,7 @@ export default function ProviderDevisPage() {
     createQuote, exportXlsx,
   } = useProviderQuotes();
 
-  // ── Champs formulaire  Emême pattern que DevisPage admin ─────────────────
+  // ── Champs formulaire - même pattern que DevisPage admin ─────────────────
   const quoteFields: FieldConfig[] = [
     {
       name: "ticket_id",
@@ -316,7 +316,7 @@ export default function ProviderDevisPage() {
       ticket_id: parseInt(formData.ticket_id),
       description: formData.description || undefined,
       tax_rate: parseFloat(formData.tax_rate) || 18,
-      // Items par défaut  Ele prestataire les saisit dans le formulaire
+      // Items par défaut - le prestataire les saisit dans le formulaire
       items: formData.items ?? [
         { designation: "Prestation", quantity: 1, unit_price: 0 },
       ],
@@ -329,22 +329,22 @@ export default function ProviderDevisPage() {
   const kpis = [
     {
       label: "Total devis",
-      value: statsLoading ? " E : (stats?.total ?? 0),
+      value: statsLoading ? "-" : (stats?.total ?? 0),
       delta: "", trend: "up" as const,
     },
     {
       label: "En attente",
-      value: statsLoading ? " E : (stats?.pending ?? 0),
+      value: statsLoading ? "-" : (stats?.pending ?? 0),
       delta: "", trend: "up" as const,
     },
     {
       label: "Approuvés",
-      value: statsLoading ? " E : (stats?.approved ?? 0),
+      value: statsLoading ? "-" : (stats?.approved ?? 0),
       delta: "", trend: "up" as const,
     },
     {
       label: "Montant approuvé",
-      value: statsLoading ? " E : formatCurrency(stats?.total_approved_amount ?? 0),
+      value: statsLoading ? "-" : formatCurrency(stats?.total_approved_amount ?? 0),
       delta: "", trend: "up" as const,
     },
   ];
@@ -414,7 +414,7 @@ export default function ProviderDevisPage() {
           >
             <Eye size={18} />
           </button>
-          {/* Détails  Epage [id] */}
+          {/* Détails - page [id] */}
           <button
             onClick={() => router.push(`/provider/devis/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center"
@@ -427,8 +427,7 @@ export default function ProviderDevisPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
 
@@ -457,7 +456,7 @@ export default function ProviderDevisPage() {
           {/* Toolbar : filtre SELECT + ActionGroup */}
           <div className="shrink-0 flex justify-between items-center gap-4">
 
-            {/* Filtre par statut  Eselect standard */}
+            {/* Filtre par statut - select standard */}
             <div className="flex items-center gap-2">
               <Filter size={15} className="text-slate-400 shrink-0" />
               <select
@@ -509,12 +508,12 @@ export default function ProviderDevisPage() {
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
       {submitError && <Toast msg={submitError} type="error" />}
 
-      {/* Panel aperçu  Eslide droite */}
+      {/* Panel aperçu - slide droite */}
       {isPanelOpen && selectedQuote && (
         <QuotePreviewPanel quote={selectedQuote} onClose={closePanel} />
       )}
 
-      {/* ReusableForm  Eslide droite, même pattern admin */}
+      {/* ReusableForm - slide droite, même pattern admin */}
       <ReusableForm
         isOpen={isCreateOpen}
         onClose={closeCreate}

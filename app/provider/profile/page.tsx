@@ -87,16 +87,14 @@ export default function ProviderProfilePage() {
   };
 
   if (loading) return (
-    <div className="
-      <div className="flex-1 flex flex-col items-center justify-center">
+    <div className="flex-1 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
       </div>
     </div>
   );
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-8 max-w-5xl mx-auto w-full space-y-8">
           <PageHeader title="Mon Profil" subtitle="Gérez vos informations de Prestataire" />
@@ -121,7 +119,7 @@ export default function ProviderProfilePage() {
                 </div>
                 <div className="w-full mt-8 pt-8 border-t border-slate-50 space-y-4 text-left">
                   <div className="flex items-center gap-3 text-sm"><Mail size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">{profile?.email}</span></div>
-                  <div className="flex items-center gap-3 text-sm"><Phone size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">{profile?.phone || " E}</span></div>
+                  <div className="flex items-center gap-3 text-sm"><Phone size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">{profile?.phone || "-"}</span></div>
                   <div className="flex items-center gap-3 text-sm"><Calendar size={16} className="text-slate-400" /><span className="text-slate-600 font-medium">Membre depuis {new Date(profile?.created_at).toLocaleDateString()}</span></div>
                 </div>
               </div>
@@ -169,6 +167,6 @@ export default function ProviderProfilePage() {
         </main>
         {flash && <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[300] px-6 py-4 rounded-2xl shadow-2xl text-sm font-black flex items-center gap-3 border ${flash.type === "success" ? "text-emerald-800 bg-emerald-50 border-emerald-100" : "text-red-800 bg-red-50 border-red-100"}`}>{flash.msg}</div>}
       </div>
-    </div>
+    
   );
 }

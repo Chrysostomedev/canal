@@ -1,9 +1,9 @@
 /**
  * app/login/otp/page.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Page de vérification OTP — utilisée pour les deux flux :
+ * Page de vérification OTP - utilisée pour les deux flux :
  *   - "login"  : connexion 2FA → après succès, redirection vers le dashboard
- *   - "reset"  : (non utilisé ici — le flux reset passe par ForgetPassword)
+ *   - "reset"  : (non utilisé ici - le flux reset passe par ForgetPassword)
  *
  * Fonctionnement :
  *   1. Guard au mount : vérifie que PENDING_EMAIL_KEY existe → sinon /login
@@ -28,7 +28,7 @@ import { Mail, ArrowLeft, ShieldCheck } from "lucide-react";
 import { authService, getDashboardRoute, UserRole } from "../../../services/AuthService";
 
 const OTP_LENGTH   = 6;
-const RESEND_DELAY = 300; // 5 minutes — aligné sur le backend
+const RESEND_DELAY = 300; // 5 minutes - aligné sur le backend
 const MAX_ATTEMPTS = 3;   // 3 tentatives avant reset des champs
 
 export default function OtpPage() {
@@ -46,7 +46,7 @@ export default function OtpPage() {
 
   const inputsRef    = useRef<(HTMLInputElement | null)[]>([]);
   const isNavigating = useRef(false);
-  // Guard exécuté une seule fois au mount — évite les re-runs sur re-render
+  // Guard exécuté une seule fois au mount - évite les re-runs sur re-render
   const guardRan     = useRef(false);
 
   // ── Guard : récupère l'email pending, redirige si absent ──────────────────
@@ -129,7 +129,7 @@ export default function OtpPage() {
 
   // ── Submit OTP ────────────────────────────────────────────────────────────
   const submitOtp = async (code: string) => {
-    // Lecture directe localStorage — évite le stale closure sur le state email
+    // Lecture directe localStorage - évite le stale closure sur le state email
     const currentEmail = authService.getPendingEmail() || email;
     if (code.length !== OTP_LENGTH || !currentEmail) return;
 
@@ -143,7 +143,7 @@ export default function OtpPage() {
         const role  = data.user.role as UserRole;
         const route = getDashboardRoute(role);
 
-        // ORDRE CRITIQUE — voir JSDoc en haut de fichier
+        // ORDRE CRITIQUE - voir JSDoc en haut de fichier
         isNavigating.current = true;
         authService.clearPendingEmail();
         setSuccess("Code validé ! Redirection en cours…");
@@ -178,7 +178,7 @@ export default function OtpPage() {
             ? `${message} (${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""})`
             : `Code incorrect. ${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}.`
         );
-        // Ne pas reset les champs — laisser l'utilisateur corriger
+        // Ne pas reset les champs - laisser l'utilisateur corriger
       }
 
     } finally {

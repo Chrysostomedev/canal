@@ -87,7 +87,7 @@ export default function FacturesPage() {
       key: "provider",
       render: (_, row) => (
          <div className="flex flex-col">
-            <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || " E}</span>
+            <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || "-"}</span>
             <span className="text-[10px] text-slate-400 uppercase font-black">{row.provider?.phone || "Pas de tel"}</span>
          </div>
       )
@@ -95,12 +95,12 @@ export default function FacturesPage() {
     {
       header: "Site",
       key: "site",
-      render: (_, row) => <span className="text-slate-600 font-medium">{row.site?.nom || row.site?.name || " E}</span>
+      render: (_, row) => <span className="text-slate-600 font-medium">{row.site?.nom || row.site?.name || "-"}</span>
     },
     {
       header: "Date",
       key: "invoice_date",
-      render: (val) => <span className="text-slate-500">{val ? new Date(val as string).toLocaleDateString() : " E}</span>
+      render: (val) => <span className="text-slate-500">{val ? new Date(val as string).toLocaleDateString() : "-"}</span>
     },
     {
       header: "Montant TTC",
@@ -151,8 +151,7 @@ export default function FacturesPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">

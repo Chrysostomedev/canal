@@ -21,20 +21,20 @@ import { AssetService, CompanyAsset } from "../../../../services/admin/asset.ser
 // ─────────────────────────────────────────────────────────────
 
 const fmtMontant = (v?: number | null) => {
-  if (v == null) return "—";
+  if (v == null) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v} FCFA`;
 };
 
 const fmtDate = (iso?: string | null) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
 };
 
 const fmtDateLong = (iso?: string | null) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
 };
@@ -104,8 +104,8 @@ function AlerteBanner({ alerte, remaining, dateFin }: {
   if (alerte === "ok") return null;
   const cfg = {
     expire:     { bg: "bg-red-50 border-red-200",      icon: <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />,    title: "Équipement amorti",           msg: `Fin de vie dépassée depuis le ${fmtDate(dateFin.toISOString())}. Statut suggéré : HORS USAGE.`,              text: "text-red-700" },
-    warning_3m: { bg: "bg-orange-50 border-orange-200", icon: <AlertTriangle size={16} className="text-orange-600 shrink-0 mt-0.5" />, title: `Rappel — ${remaining}j restants`, msg: `Fin de vie dans moins de 3 mois (${fmtDate(dateFin.toISOString())}). Prévoyez le remplacement.`, text: "text-orange-700" },
-    warning_6m: { bg: "bg-yellow-50 border-yellow-200", icon: <Clock size={16} className="text-yellow-600 shrink-0 mt-0.5" />,        title: `Alerte — ${remaining}j restants`, msg: `Fin de vie estimée le ${fmtDate(dateFin.toISOString())}. Planifiez la maintenance.`,                text: "text-yellow-700" },
+    warning_3m: { bg: "bg-orange-50 border-orange-200", icon: <AlertTriangle size={16} className="text-orange-600 shrink-0 mt-0.5" />, title: `Rappel - ${remaining}j restants`, msg: `Fin de vie dans moins de 3 mois (${fmtDate(dateFin.toISOString())}). Prévoyez le remplacement.`, text: "text-orange-700" },
+    warning_6m: { bg: "bg-yellow-50 border-yellow-200", icon: <Clock size={16} className="text-yellow-600 shrink-0 mt-0.5" />,        title: `Alerte - ${remaining}j restants`, msg: `Fin de vie estimée le ${fmtDate(dateFin.toISOString())}. Planifiez la maintenance.`,                text: "text-yellow-700" },
   }[alerte];
   return (
     <div className={`flex items-start gap-3 p-4 rounded-2xl border ${cfg.bg}`}>
@@ -138,16 +138,16 @@ export default function PatrimoineDetailsPage() {
 
   const amort = computeAmort(asset);
 
-  const typeName    = asset?.type?.name    ?? "—";
-  const subTypeName = asset?.subType?.name ?? "—";
-  const siteName    = asset?.site?.nom     ?? "—";
+  const typeName    = asset?.type?.name    ?? "-";
+  const subTypeName = asset?.subType?.name ?? "-";
+  const siteName    = asset?.site?.nom     ?? "-";
   const siteId      = (asset?.site as any)?.id ?? null;
 
   const kpis = [
     { label: "Valeur d'entrée",    value: fmtMontant(asset?.valeur_entree),  delta: "", trend: "up"   as const },
     { label: "Valeur résiduelle",  value: fmtMontant(amort?.residual),       delta: "", trend: "down" as const },
-    { label: "Jours restants",     value: amort ? Math.max(0, amort.remaining) : "—", delta: "", trend: (amort?.alerte !== "ok" ? "down" : "up") as const },
-    { label: "Consommé",           value: amort ? `${Math.round(amort.pct)}%` : "—",  delta: "", trend: "up" as const },
+    { label: "Jours restants",     value: amort ? Math.max(0, amort.remaining) : "-", delta: "", trend: (amort?.alerte !== "ok" ? "down" : "up") as const },
+    { label: "Consommé",           value: amort ? `${Math.round(amort.pct)}%` : "-",  delta: "", trend: "up" as const },
   ];
 
   // Jalons timeline amortissement
@@ -236,7 +236,7 @@ export default function PatrimoineDetailsPage() {
               {/* Contenu principal */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-                {/* Colonne 2/3 — Amortissement + description */}
+                {/* Colonne 2/3 - Amortissement + description */}
                 <div className="xl:col-span-2 space-y-6">
 
                   {/* Bloc amortissement */}
@@ -302,7 +302,7 @@ export default function PatrimoineDetailsPage() {
                   )}
                 </div>
 
-                {/* Colonne 1/3 — Fiche technique + Timeline statuts */}
+                {/* Colonne 1/3 - Fiche technique + Timeline statuts */}
                 <div className="space-y-6">
 
                   {/* Fiche technique */}

@@ -6,7 +6,7 @@
  * Modale centrale de prévisualisation d'import Excel/CSV.
  * Réutilisable pour PATRIMOINES et SITES (et tout autre entité future).
  *
- * Usage — Patrimoines :
+ * Usage - Patrimoines :
  *   <PreviewImportModal
  *     isOpen={previewOpen}
  *     onClose={() => setPreviewOpen(false)}
@@ -15,7 +15,7 @@
  *     mode="patrimoine"
  *   />
  *
- * Usage — Sites :
+ * Usage - Sites :
  *   <PreviewImportModal
  *     isOpen={previewOpen}
  *     onClose={() => setPreviewOpen(false)}
@@ -316,7 +316,7 @@ function parseAndValidate(file: File, mode: ImportMode): Promise<ParsedPreview> 
 // ─────────────────────────────────────────────────────────────
 
 const fmtCellValue = (v: any): string => {
-  if (v == null || v === "") return "—";
+  if (v == null || v === "") return "-";
   if (v instanceof Date) return v.toLocaleDateString("fr-FR");
   return String(v);
 };
@@ -517,7 +517,7 @@ export default function PreviewImportModal({
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
                       <ShieldCheck size={12} />
-                      Fichier compatible — prêt à importer
+                      Fichier compatible - prêt à importer
                     </span>
                   )}
                 </div>
@@ -725,7 +725,7 @@ export default function PreviewImportModal({
                 ? <Loader2 size={14} className="animate-spin" />
                 : <Upload size={14} />
               }
-              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué — erreurs à corriger" : "Confirmer l'import"}
+              {confirming ? "Import en cours…" : hasErrors ? "Import bloqué - erreurs à corriger" : "Confirmer l'import"}
             </button>
           </div>
         </div>

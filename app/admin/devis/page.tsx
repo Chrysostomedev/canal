@@ -12,35 +12,35 @@ import {
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
-import ReusableForm from "@/components/ReusableForm";
+import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 
 import { useQuotes } from "../../../hooks/admin/useQuotes";
-import { Quote } from "../../../services/admin/quote.service";
+import { Quote, QuoteService } from "../../../services/admin/quote.service";
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // HELPERS
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 const formatMontant = (v?: number): string => {
-  if (!v && v !== 0) return " E;
+  if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
   return `${v.toLocaleString("fr-FR")} FCFA`;
 };
 
 const formatDate = (iso?: string): string => {
-  if (!iso) return " E;
+  if (!iso) return "-";
   return new Date(iso).toLocaleDateString("fr-FR", {
     day: "2-digit", month: "2-digit", year: "numeric",
   });
 };
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // STATUTS
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
   pending:  "border-slate-300 bg-slate-100 text-slate-700",
@@ -64,9 +64,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ══════════════════════════════════════════════╁E
-// PDF PREVIEW MODAL  Eplein écran
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
+// PDF PREVIEW MODAL - plein écran
+// ══════════════════════════════════════════════
 
 function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
   return (
@@ -100,9 +100,9 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // FILTER DROPDOWN
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 function FilterDropdown({
   isOpen, onClose, filters, onApply,
@@ -162,11 +162,11 @@ function FilterDropdown({
   );
 }
 
-// ══════════════════════════════════════════════╁E
-// SIDE PANEL DEVIS  Eexact comme la capture
+// ══════════════════════════════════════════════
+// SIDE PANEL DEVIS - exact comme la capture
 // Croix haut gauche, champs label/valeur, statut
-// avec boutons ✁E✁Einline, pièces jointes PDF
-// ══════════════════════════════════════════════╁E
+// avec boutons inline, pièces jointes PDF
+// ══════════════════════════════════════════════
 
 function QuoteSidePanel({
   quote, onClose, onApprove, onReject,
@@ -196,8 +196,8 @@ function QuoteSidePanel({
   const taxAmount = quote.tax_amount ?? totalHT * 0.18;
   const totalTTC  = quote.amount_ttc ?? totalHT + taxAmount;
 
-  const providerName = quote.provider?.name ?? " E;
-  const siteName     = quote.site?.nom ?? quote.site?.name ?? " E;
+  const providerName = quote.provider?.name ?? "-";
+  const siteName     = quote.site?.nom ?? quote.site?.name ?? "-";
   const ticketRef    = quote.ticket?.reference ?? quote.ticket?.title ?? `#${quote.ticket_id}`;
 
   // Fichiers PDF liés au devis (quote.pdf_paths si dispo, sinon mock vide)
@@ -260,7 +260,7 @@ function QuoteSidePanel({
               </div>
             ))}
 
-            {/* Statut  Eavec boutons ✁E✁Einline si pending */}
+            {/* Statut - avec boutons inline si pending */}
             <div className="flex items-center justify-between py-3">
               <p className="text-xs text-slate-400 font-medium">Statut</p>
               <div className="flex items-center gap-2">
@@ -272,14 +272,14 @@ function QuoteSidePanel({
                       className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center hover:bg-emerald-100 transition"
                       title="Approuver"
                     >
-                      <span className="text-emerald-600 font-black text-sm">✁E/span>
+                      <span className="text-emerald-600 font-black text-sm">✓</span>
                     </button>
                     <button
                       onClick={() => setRejectMode(true)}
                       className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center hover:bg-red-100 transition"
                       title="Rejeter"
                     >
-                      <span className="text-red-500 font-black text-sm">✁E/span>
+                      <span className="text-red-500 font-black text-sm">✕</span>
                     </button>
                   </>
                 )}
@@ -385,7 +385,7 @@ function QuoteSidePanel({
             </div>
           )}
 
-          {/* ── Pièce(s) jointe(s)  Estyle exact de la capture ── */}
+          {/* ── Pièce(s) jointe(s) - style exact de la capture ── */}
           {pdfFiles.length > 0 && (
             <div>
               <p className="text-xs text-slate-400 font-medium mb-3">Pièce jointe</p>
@@ -423,7 +423,7 @@ function QuoteSidePanel({
             </div>
           )}
 
-          {/* Statut final  Eapprouvé */}
+          {/* Statut final - approuvé */}
           {isApproved && (
             <div className="flex items-center gap-2 py-3.5 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold">
               <CheckCircle2 size={16} />
@@ -446,9 +446,9 @@ function QuoteSidePanel({
 }
 
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // PAGE PRINCIPALE
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 export default function DevisPage() {
   const filterRef = useRef<HTMLDivElement>(null);
@@ -523,36 +523,32 @@ export default function DevisPage() {
     { label: "Montant approuvé",  value: statsLoading ? 0 : (stats?.total_approved_amount ?? 0), delta: "+20%", trend: "up" as const, isCurrency: true },
   ];
 
-    // ── Champs formulaire création ─────────────────────────────────────────────
-  const quoteFields = [
-    { name: "ticket_id", label: "Ticket",        type: "text",  required: true },
-    { name: "provider_id",  label: "Prestataire",            type: "text",  required: true },
-    { name: "site_id",      label: "Site",          type: "text", required: true },
-    { name: "amount_ttc",      label: "Téléphone",      type: "number"                  },
-    { name: "created_at", label: "Date ", type: "date", required: true, icon: CalendarDays },
-    { name: "status",   label: "Statut",   type: "select", required: true,
-      options: [
-       
-        { label: "en attente", value: "pending" },   
-        { label: "Revisé", value: "revision" },  
-      ],
-    },
+  // ── Champs formulaire création ─────────────────────────────────────────────
+  const quoteFields: FieldConfig[] = [
+    { name: "ticket_id", label: "Ticket ID",     type: "number", required: true },
+    { name: "provider_id", label: "Prestataire ID", type: "number", required: true },
+    { name: "site_id",     label: "Site ID",        type: "number", required: true },
+    { name: "description", label: "Description",    type: "textarea", required: true },
+    { name: "amount_ht",   label: "Montant HT",     type: "number", required: true },
   ];
 
   // ── Création ───────────────────────────────────────────────────────────────
   const handleCreate = async (formData: any) => {
     try {
       await QuoteService.createQuote({
-        reference: formData.first_name,
-        ticket_id:  formData.ticket_id,
-        provider:      formData.provider_id,
-        montant: formData.amount_ttc,
-        status: formData.status,
-        site:      formData.site_id,
-
-        date:   formData.created_at || undefined,
+        ticket_id:   Number(formData.ticket_id),
+        provider_id: Number(formData.provider_id),
+        site_id:     Number(formData.site_id),
+        description: formData.description,
+        items: [
+          {
+            designation: "Prestation générale",
+            quantity: 1,
+            unit_price: Number(formData.amount_ht),
+          }
+        ],
       });
-      showFlash("success", "Gestionnaire créé avec succès");
+      showFlash("success", "Devis créé avec succès");
       setIsCreateModalOpen(false);
       fetchQuotes();
     } catch (err: any) {
@@ -561,17 +557,17 @@ export default function DevisPage() {
   };
 
   
-  const columns = [
+  const columns: ColumnConfig<Quote>[] = [
     { header: "Référence",   key: "reference",  render: (_: any, row: Quote) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
     { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `#${row.ticket_id}` },
-    { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.name ?? " E },
-    { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? " E },
+    { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.name ?? "-" },
+    { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? "-" },
     { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
     { header: "Date",        key: "created_at", render: (_: any, row: Quote) => formatDate(row.created_at) },
     { header: "Statut",      key: "status",     render: (_: any, row: Quote) => <StatusBadge status={row.status} /> },
    
     
-    // Colonne Actions APRÁE :
+    // Colonne Actions APRÈS :
     {
       header: "Actions", key: "actions",
       render: (_: any, row: Quote) => (
@@ -593,7 +589,7 @@ export default function DevisPage() {
   ];
 
   return (
-    <div className="
+    <>
       <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
@@ -654,7 +650,7 @@ export default function DevisPage() {
           )}
 
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <DataTable columns={columns} data={isLoading ? [] : paginated} onViewAll={() => {}} />
+            <DataTable title="Liste des devis" columns={columns} data={isLoading ? [] : paginated} onViewAll={() => {}} />
             <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
               <Paginate currentPage={currentPage} totalPages={totalPages || 1} onPageChange={setCurrentPage} />
             </div>
@@ -680,6 +676,6 @@ export default function DevisPage() {
         
         </main>
       </div>
-    </div>
+    </>
   );
 }

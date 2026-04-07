@@ -10,25 +10,25 @@ import {
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
 
 import { useReports } from "../../../hooks/admin/useReports";
 import { InterventionReport, ReportService, ValidateReportPayload } from "../../../services/admin/report.service";
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // HELPERS
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return " E;
+  if (!iso) return "-";
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 };
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // STATUTS
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
   validated: "border-black bg-black text-white",
@@ -61,7 +61,7 @@ function TypeBadge({ type }: { type?: string }) {
 }
 
 function StarRating({ value }: { value?: number | null }) {
-  if (!value) return <span className="text-slate-400 text-xs"> E/span>;
+  if (!value) return <span className="text-slate-400 text-xs">-</span>;
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
@@ -71,9 +71,9 @@ function StarRating({ value }: { value?: number | null }) {
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // PDF PREVIEW MODAL
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
   return (
@@ -102,9 +102,9 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
   );
 }
 
-// ══════════════════════════════════════════════╁E
-// VALIDATION MODAL  Enotation étoiles + commentaire
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
+// VALIDATION MODAL - notation étoiles + commentaire
+// ══════════════════════════════════════════════
 
 function ValidateModal({
   report, onClose, onConfirm,
@@ -121,7 +121,7 @@ function ValidateModal({
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await onConfirm({ rating: rating || null, comment: comment || null });
+      await onConfirm({ rating: rating || null, comment: comment || null, result: report.intervention_type === "preventif" ? "RAS" : "ANOMALIE" });
       onClose();
     } finally {
       setLoading(false);
@@ -212,9 +212,9 @@ function ValidateModal({
   );
 }
 
-// ══════════════════════════════════════════════╁E
-// SIDE PANEL RAPPORT  Evisualisation + PDF + validation
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
+// SIDE PANEL RAPPORT - visualisation + PDF + validation
+// ══════════════════════════════════════════════
 
 function ReportSidePanel({
   report, onClose, onValidate,
@@ -233,8 +233,8 @@ function ReportSidePanel({
   const isValidated  = report.status === "validated";
   const pdfs         = (report.attachments ?? []).filter(a => a.file_type === "document");
   const photos       = (report.attachments ?? []).filter(a => a.file_type === "photo");
-  const providerName = report.provider?.company_name ?? report.provider?.name ?? " E;
-  const siteName     = report.site?.nom ?? report.site?.name ?? " E;
+  const providerName = report.provider?.company_name ?? report.provider?.name ?? "-";
+  const siteName     = report.site?.nom ?? report.site?.name ?? "-";
   const ticketSubject = report.ticket?.subject ?? `Ticket #${report.ticket_id}`;
 
   return (
@@ -376,7 +376,7 @@ function ReportSidePanel({
           )}
         </div>
 
-        {/* Footer  EValider */}
+        {/* Footer - Valider */}
         {!isValidated && (
           <div className="px-6 py-5 border-t border-slate-100 shrink-0">
             <button
@@ -408,9 +408,9 @@ function ReportSidePanel({
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // FILTER DROPDOWN
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 function FilterDropdown({
   isOpen, onClose, filters, onApply,
@@ -488,9 +488,9 @@ function FilterDropdown({
   );
 }
 
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 // PAGE PRINCIPALE
-// ══════════════════════════════════════════════╁E
+// ══════════════════════════════════════════════
 
 export default function RapportsPage() {
  
@@ -554,17 +554,17 @@ export default function RapportsPage() {
     { label: "En attente",        value: statsLoading ? 0 : (stats?.pending_reports   ?? 0), delta: "+0%",  trend: "up" as const },
     {
       label: "Note moyenne",
-      value: statsLoading ? " E : (stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : " E),
+      value: statsLoading ? "-" : (stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : "-"),
       delta: "+0%", trend: "up" as const,
     },
   ];
 
-  const columns = [
+  const columns: ColumnConfig<InterventionReport>[] = [
     { header: "ID",          key: "id",         render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">#{row.id}</span> },
     { header: "Ticket",      key: "ticket",     render: (_: any, row: InterventionReport) => row.ticket?.subject ?? `#${row.ticket_id}` },
-    { header: "Prestataire", key: "provider",   render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? " E },
-    { header: "Site",        key: "site",       render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? " E },
-    { header: "Type",        key: "type",       render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
+    { header: "Prestataire", key: "provider",   render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? "-" },
+    { header: "Site",        key: "site",       render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? "-" },
+    { header: "Type",        key: "intervention_type", render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
     { header: "Date",        key: "created_at", render: (_: any, row: InterventionReport) => formatDate(row.created_at) },
     { header: "Note",        key: "rating",     render: (_: any, row: InterventionReport) => <StarRating value={row.rating} /> },
     { header: "Statut",      key: "status",     render: (_: any, row: InterventionReport) => <StatusBadge status={row.status} /> },
@@ -602,8 +602,7 @@ export default function RapportsPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
           <PageHeader title="Rapports d'intervention" subtitle="Visualisez et validez les rapports soumis par vos prestataires" />
@@ -655,7 +654,7 @@ export default function RapportsPage() {
           )}
 
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <DataTable columns={columns} data={isLoading ? [] : paginated} onViewAll={() => {}} />
+            <DataTable title="Rapports d'intervention" columns={columns} data={isLoading ? [] : paginated} onViewAll={() => {}} />
             <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
               <Paginate currentPage={currentPage} totalPages={totalPages || 1} onPageChange={setCurrentPage} />
             </div>
@@ -665,9 +664,9 @@ export default function RapportsPage() {
             report={isDetailsOpen ? selectedReport : null}
             onClose={() => { setIsDetailsOpen(false); setSelectedReport(null); }}
             onValidate={async (reportWithPayload) => {
-              await handleValidate(
+              handleValidate(
                 reportWithPayload,
-                { rating: reportWithPayload.rating, comment: reportWithPayload.manager_comment }
+                { rating: reportWithPayload.rating, comment: reportWithPayload.manager_comment, result: reportWithPayload.intervention_type === "preventif" ? "RAS" : "ANOMALIE" }
               );
             }}
           />
@@ -681,6 +680,5 @@ export default function RapportsPage() {
           )}
         </main>
       </div>
-    </div>
   );
 }

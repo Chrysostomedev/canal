@@ -60,7 +60,7 @@ export default function EventLegend({ search = "", plannings }: EventLegendProps
         </div>
       </div>
 
-      {/* ── Événements à venir — DYNAMIQUES ── */}
+      {/* ── Événements à venir - DYNAMIQUES ── */}
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-slate-400">Événements à venir</h3>
 

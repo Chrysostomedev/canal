@@ -29,7 +29,7 @@ import {
   ChevronLeft, Phone, Mail, ShieldCheck,
   Pencil, UserCircle2,
   /**
-   * ── Icônes pour tickets — importées mais commentées pour future API ──────
+   * ── Icônes pour tickets - importées mais commentées pour future API ──────
    * Filter, Eye, TicketPlus, Upload,
    */
 } from "lucide-react";
@@ -39,7 +39,7 @@ import Sidebar         from "@/components/Sidebar";
 import ReusableForm    from "@/components/ReusableForm";
 import ActionGroup     from "@/components/ActionGroup";
 /**
- * ── Composants pour tickets — importés mais commentés pour future API ───────
+ * ── Composants pour tickets - importés mais commentés pour future API ───────
  * import StatsCard      from "@/components/StatsCard";
  * import DataTable      from "@/components/DataTable";
  * import Paginate       from "@/components/Paginate";
@@ -78,7 +78,7 @@ export default function GestionnaireDetailsPage() {
   } | null>(null);
 
   /**
-   * ── État tickets — PRÉPARÉ pour future API ────────────────────────────────
+   * ── État tickets - PRÉPARÉ pour future API ────────────────────────────────
    * TODO: Décommenter quand GET /admin/managers/{id}/tickets sera disponible
    *
    * const [tickets, setTickets]       = useState<any[]>([]);
@@ -110,7 +110,7 @@ export default function GestionnaireDetailsPage() {
   };
 
   /**
-   * ── Fetch tickets du manager — PRÉPARÉ pour future API ───────────────────
+   * ── Fetch tickets du manager - PRÉPARÉ pour future API ───────────────────
    * TODO: Décommenter quand la route sera disponible
    *
    * const fetchTickets = async () => {
@@ -136,7 +136,7 @@ export default function GestionnaireDetailsPage() {
   }, [managerId]);
 
   /**
-   * ── Refetch tickets quand page ou filtre change — PRÉPARÉ ────────────────
+   * ── Refetch tickets quand page ou filtre change - PRÉPARÉ ────────────────
    * useEffect(() => {
    *   if (managerId) fetchTickets();
    * }, [ticketPage, ticketFilter, managerId]);
@@ -157,7 +157,7 @@ export default function GestionnaireDetailsPage() {
     .filter(Boolean).join(" ") || "Gestionnaire";
 
   // ── Mise à jour manager ────────────────────────────────────────────────────
-  // PUT /admin/managers/{id} — tous les champs sont "sometimes" (optionnels)
+  // PUT /admin/managers/{id} - tous les champs sont "sometimes" (optionnels)
   const handleUpdate = async (formData: any) => {
     try {
       const payload: any = {};
@@ -178,7 +178,7 @@ export default function GestionnaireDetailsPage() {
   };
 
   /**
-   * ── KPIs tickets — PRÉPARÉS pour future API ───────────────────────────────
+   * ── KPIs tickets - PRÉPARÉS pour future API ───────────────────────────────
    * TODO: Décommenter et brancher sur detail?.stats quand disponible
    *
    * const kpis = [
@@ -196,7 +196,7 @@ export default function GestionnaireDetailsPage() {
     { name: "email",      label: "Email",            type: "email", defaultValue: manager?.email      },
     { name: "phone",      label: "Téléphone",        type: "text",  defaultValue: manager?.phone      },
     /**
-     * ── Champ site — COMMENTÉ, préparé pour future API ──────────────────────
+     * ── Champ site - COMMENTÉ, préparé pour future API ──────────────────────
      * TODO: Décommenter quand l'API supportera l'assignation de site
      *
      * {
@@ -210,7 +210,7 @@ export default function GestionnaireDetailsPage() {
   ];
 
   /**
-   * ── Colonnes DataTable tickets — PRÉPARÉES pour future API ───────────────
+   * ── Colonnes DataTable tickets - PRÉPARÉES pour future API ───────────────
    * TODO: Décommenter quand les tickets managers seront disponibles
    *
    * const columns = [
@@ -301,7 +301,7 @@ export default function GestionnaireDetailsPage() {
               </div>
 
               {/*
-               * ── Site géré — COMMENTÉ, préparé pour future API ────────────
+               * ── Site géré - COMMENTÉ, préparé pour future API ────────────
                * TODO: Décommenter quand l'API retournera managed_site
                *
                * {manager?.managed_site && (
@@ -323,21 +323,21 @@ export default function GestionnaireDetailsPage() {
                   <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
                     <Mail size={16} className="text-slate-900" />
                   </div>
-                  {manager?.email ?? "—"}
+                  {manager?.email ?? "-"}
                 </div>
 
                 <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
                   <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
                     <Phone size={16} className="text-slate-900" />
                   </div>
-                  {manager?.phone ?? "—"}
+                  {manager?.phone ?? "-"}
                 </div>
 
                 <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
                   <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
                     <UserCircle2 size={16} className="text-slate-900" />
                   </div>
-                  ID Manager : #{manager?.manager?.id ?? "—"}
+                  ID Manager : #{manager?.manager?.id ?? "-"}
                 </div>
               </div>
 
@@ -352,7 +352,7 @@ export default function GestionnaireDetailsPage() {
           </div>
 
           {/*
-           * ── Section KPIs tickets — PRÉPARÉE pour future API ──────────────
+           * ── Section KPIs tickets - PRÉPARÉE pour future API ──────────────
            * TODO: Décommenter et brancher sur detail?.stats
            *
            * <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -361,7 +361,7 @@ export default function GestionnaireDetailsPage() {
            */}
 
           {/*
-           * ── Section tableau tickets — PRÉPARÉE pour future API ────────────
+           * ── Section tableau tickets - PRÉPARÉE pour future API ────────────
            * TODO: Décommenter quand GET /admin/managers/{id}/tickets sera dispo
            *
            * <div className="flex justify-end">
@@ -400,7 +400,7 @@ export default function GestionnaireDetailsPage() {
       </div>
 
       {/*
-       * ── SideDetailsPanel ticket — PRÉPARÉ pour future API ───────────────
+       * ── SideDetailsPanel ticket - PRÉPARÉ pour future API ───────────────
        * <SideDetailsPanel
        *   isOpen={isDetailsOpen}
        *   onClose={() => setIsDetailsOpen(false)}

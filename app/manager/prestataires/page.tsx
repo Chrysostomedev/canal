@@ -73,12 +73,11 @@ export default function PrestatairesPage() {
     { label: "Total prestataires",       value: apiStats?.total_providers ?? 0, trend: "up" as const },
     { label: "Prestataires actifs",      value: apiStats?.active_providers ?? 0, trend: "up" as const },
     { label: "Prestataires inactifs",    value: apiStats?.inactive_providers ?? 0, trend: "down" as const },
-    { label: "Délai moyen intervention", value: apiStats?.average_intervention_time || " E, trend: "up" as const },
+    { label: "Délai moyen intervention", value: apiStats?.average_intervention_time || "-", trend: "up" as const },
   ];
 
   return (
-    <div className="
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
@@ -158,7 +157,7 @@ export default function PrestatairesPage() {
             phone:      selectedProvider.user?.phone,
             email:      selectedProvider.user?.email,
             category:   selectedProvider.service?.name,
-            dateEntree: selectedProvider.date_entree || " E,
+            dateEntree: selectedProvider.date_entree || "-",
             status:     selectedProvider.is_active ? "Actif" : "Inactif",
             avatar:     <ProviderAvatar name={selectedProvider.company_name} size="lg" />,
             stats: {

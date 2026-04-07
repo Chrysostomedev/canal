@@ -85,7 +85,7 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
   );
 }
 
-// ─── Side Panel  Eslide droite ────────────────────────────────────────────────
+// ─── Side Panel - slide droite ────────────────────────────────────────────────
 
 function InvoiceSidePanel({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
   const [copied,     setCopied]     = useState(false);
@@ -196,7 +196,7 @@ function InvoiceSidePanel({ invoice, onClose }: { invoice: Invoice; onClose: () 
           {invoice.payment_status === "overdue" && (
             <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-bold">
               <AlertTriangle size={16} />
-              Facture en retard  Econtactez l'administrateur
+              Facture en retard - contactez l'administrateur
             </div>
           )}
 
@@ -311,7 +311,7 @@ export default function ProviderFacturesPage() {
     },
     {
       name:  "amount_ht",
-      label: "Montant HT (FCFA)  Esi pas de devis approuvé",
+      label: "Montant HT (FCFA) - si pas de devis approuvé",
       type:  "number",
     },
     {
@@ -351,16 +351,16 @@ export default function ProviderFacturesPage() {
     });
   };
 
-  // ── KPIs  Ecalqués sur la page admin ──────────────────────────────────────
+  // ── KPIs - calqués sur la page admin ──────────────────────────────────────
   const totalInvoices = stats?.total_invoices ?? 0;
   const totalAmount   = toNum(stats?.total_amount);
   const avgCost       = totalInvoices > 0 ? Math.round(totalAmount / totalInvoices) : 0;
 
   const kpis = [
-    { label: "Coût moyen par facture",   value: statsLoading ? " E : formatMontant(avgCost),      delta: "", trend: "up" as const },
-    { label: "Nombre total de factures", value: statsLoading ? " E : totalInvoices,               delta: "", trend: "up" as const },
-    { label: "Factures en attente",      value: statsLoading ? " E : (stats?.total_unpaid  ?? 0), delta: "", trend: "up" as const },
-    { label: "Factures payées",          value: statsLoading ? " E : (stats?.total_paid    ?? 0), delta: "", trend: "up" as const },
+    { label: "Coût moyen par facture",   value: statsLoading ? "-" : formatMontant(avgCost),      delta: "", trend: "up" as const },
+    { label: "Nombre total de factures", value: statsLoading ? "-" : totalInvoices,               delta: "", trend: "up" as const },
+    { label: "Factures en attente",      value: statsLoading ? "-" : (stats?.total_unpaid  ?? 0), delta: "", trend: "up" as const },
+    { label: "Factures payées",          value: statsLoading ? "-" : (stats?.total_paid    ?? 0), delta: "", trend: "up" as const },
   ];
 
   // ── ActionGroup ───────────────────────────────────────────────────────────
@@ -417,7 +417,7 @@ export default function ProviderFacturesPage() {
           >
             <Eye size={18} />
           </button>
-          {/* Détails ↁEpage [id] */}
+          {/* Détails ...page [id] */}
           <button
             onClick={() => router.push(`/provider/factures/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center"
@@ -433,8 +433,7 @@ export default function ProviderFacturesPage() {
   const totalPages = meta?.last_page ?? 1;
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
 
@@ -539,12 +538,12 @@ export default function ProviderFacturesPage() {
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
       {submitError   && <Toast msg={submitError}   type="error"   />}
 
-      {/* Panel aperçu  Eslide droite */}
+      {/* Panel aperçu - slide droite */}
       {isPanelOpen && selectedInvoice && (
         <InvoiceSidePanel invoice={selectedInvoice} onClose={closePanel} />
       )}
 
-      {/* ReusableForm création  Eslide droite, même pattern admin */}
+      {/* ReusableForm création - slide droite, même pattern admin */}
       <ReusableForm
         isOpen={isCreateOpen}
         onClose={closeCreate}

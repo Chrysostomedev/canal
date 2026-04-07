@@ -133,7 +133,7 @@ const MOCK_TICKETS: MaintenanceTicket[] = [
 ];
 
 const formatDate = (d: string) =>
-  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : " E;
+  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "-";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -238,7 +238,7 @@ function QuickDevisModal({
                 <span className="text-xs font-black text-orange-600 uppercase tracking-widest">Devis requis</span>
               </div>
               <h2 className="text-xl font-black text-slate-900">Émettre un devis</h2>
-              <p className="text-slate-400 text-xs mt-0.5">Entretien {ticketRef}  Eanomalie non traitable sur place</p>
+              <p className="text-slate-400 text-xs mt-0.5">Entretien {ticketRef} - anomalie non traitable sur place</p>
             </div>
             <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition">
               <X size={18} className="text-slate-500" />
@@ -373,21 +373,21 @@ function ReportFormPanel({
   const radioOptions: { value: AnomalyAction; label: string; desc: string; icon: any; color: string }[] = [
     {
       value: "ras",
-      label: "RAS  ERien à signaler",
+      label: "RAS - Rien à signaler",
       desc: "Tout est en bon état. Le ticket sera clôturé automatiquement.",
       icon: CheckCircle2,
       color: "emerald",
     },
     {
       value: "immediate",
-      label: "Anomalie  ERésolue sur place",
+      label: "Anomalie - Résolue sur place",
       desc: "Une anomalie a été détectée et traitée immédiatement.",
       icon: Wrench,
       color: "amber",
     },
     {
       value: "devis",
-      label: "Anomalie  ENécessite un devis",
+      label: "Anomalie - Nécessite un devis",
       desc: "Intervention ultérieure requise. Un devis sera émis.",
       icon: FileText,
       color: "orange",
@@ -426,7 +426,7 @@ function ReportFormPanel({
           <p className="text-slate-400 text-xs mt-0.5">
             {isRejected
               ? `Motif : ${ticket.report?.rejection_reason ?? "Voir ci-dessous"}`
-              : `Entretien ${ticket.reference}  E${ticket.site?.nom ?? ""}`}
+              : `Entretien ${ticket.reference} - ${ticket.site?.nom ?? ""}`}
           </p>
         </div>
 
@@ -455,7 +455,7 @@ function ReportFormPanel({
             />
           </div>
 
-          {/* Radio  EConstat de la visite */}
+          {/* Radio - Constat de la visite */}
           <div className="flex flex-col gap-3">
             <label className="text-sm font-bold text-slate-900">
               Constat de la visite <span className="text-red-500">*</span>
@@ -509,7 +509,7 @@ function ReportFormPanel({
                           onClick={(e) => { e.stopPropagation(); setShowDevisModal(true); }}
                           className="mt-2 text-xs font-bold text-orange-600 underline underline-offset-2 hover:text-orange-800 transition"
                         >
-                          Remplir le formulaire de devis ↁE
+                          Remplir le formulaire de devis ...
                         </button>
                       )}
                     </div>
@@ -624,7 +624,7 @@ function MaintenancePreviewPanel({
             {(ticket.status === "rejeté" || ticket.status === "anomalie") && (
               <div className="mt-4 flex items-center gap-2 text-xs font-bold text-red-600">
                 <AlertTriangle size={12} />
-                {ticket.status === "rejeté" ? "Rapport rejeté  Ecorrection requise" : "Anomalie détectée"}
+                {ticket.status === "rejeté" ? "Rapport rejeté - correction requise" : "Anomalie détectée"}
               </div>
             )}
           </div>
@@ -640,7 +640,7 @@ function MaintenancePreviewPanel({
                   </button>
                 </div>
               )},
-              { label: "Site", value: ticket.site?.nom ?? ticket.site?.name ?? " E },
+              { label: "Site", value: ticket.site?.nom ?? ticket.site?.name ?? "-" },
               { label: "Date planifiée", value: formatDate(ticket.scheduled_date) },
               ...(ticket.completed_date ? [{ label: "Date réalisée", value: formatDate(ticket.completed_date) }] : []),
               ...(ticket.curative_ticket_id ? [{ label: "Ticket curatif lié", value: `#${ticket.curative_ticket_id}` }] : []),
@@ -730,7 +730,7 @@ export default function ProviderEntretienPage() {
 
   const openNewReport = () => setIsNewReportOpen(true);
 
-  // Champs du formulaire "Nouveau rapport"  Econformes à la logique métier backend
+  // Champs du formulaire "Nouveau rapport" - conformes à la logique métier backend
   // Un rapport d'entretien préventif : result + dates + description + observations + photos
   // Le ticket_id et intervention_type sont gérés automatiquement côté backend (planning)
   const newReportFields: FieldConfig[] = [
@@ -740,7 +740,7 @@ export default function ProviderEntretienPage() {
       type: "select",
       required: true,
       options: [
-        { label: "RAS  ERien à signaler", value: "ras" },
+        { label: "RAS - Rien à signaler", value: "ras" },
         { label: "Anomalie détectée", value: "anomalie" },
         { label: "Résolu sur place", value: "resolu" },
       ],
@@ -788,7 +788,7 @@ export default function ProviderEntretienPage() {
     { label: "Total rapports", value: stats?.total_reports ?? 0, delta: "", trend: "up" as const },
     { label: "En attente", value: stats?.pending_reports ?? 0, delta: "", trend: "up" as const },
     { label: "Validés", value: stats?.validated_reports ?? 0, delta: "", trend: "up" as const },
-    { label: "Note moyenne", value: stats?.average_rating ?? " E, delta: "", trend: "up" as const },
+    { label: "Note moyenne", value: stats?.average_rating ?? "-", delta: "", trend: "up" as const },
   ];
 
   const actions = [
@@ -816,7 +816,7 @@ export default function ProviderEntretienPage() {
     {
       header: "Site", key: "site_id",
       render: (_: any, row: any) => (
-        <span className="text-xs text-slate-600 font-medium">{row.ticket?.site?.nom ?? row.site?.nom ?? " E}</span>
+        <span className="text-xs text-slate-600 font-medium">{row.ticket?.site?.nom ?? row.site?.nom ?? "-"}</span>
       ),
     },
     {
@@ -857,8 +857,7 @@ export default function ProviderEntretienPage() {
   ];
 
   return (
-    <div className="
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-6 space-y-8">
 
@@ -920,7 +919,6 @@ export default function ProviderEntretienPage() {
           </div>
 
         </main>
-      </div>
 
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
       

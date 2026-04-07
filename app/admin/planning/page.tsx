@@ -97,10 +97,10 @@ function PlanningFilterDropdown({
         <div className="flex flex-col gap-1.5">
           {[
             { val: "",            label: "Tous les plannings" },
-            { val: "PLANIFIÁE,    label: "Planifié"           },
+            { val: "PLANIFIE",    label: "Planifié"           },
             { val: "EN_COURS",    label: "En cours"           },
             { val: "EN_RETARD",   label: "En retard"          },
-            { val: "RÉALISÁE,     label: "Réalisé"            },
+            { val: "REALISE",     label: "Réalisé"            },
           ].map(o => (
             <Pill
               key={o.val}
@@ -137,9 +137,9 @@ function PlanningFilterDropdown({
 function buildStatsCards(stats: any, isLoading: boolean) {
   if (isLoading || !stats) {
     return [
-      { label: "Nombre total de plannings", value: " E, delta: "", trend: "up" as const },
-      { label: "Plannings en cours",        value: " E, delta: "", trend: "up" as const },
-      { label: "Plannings en retard",       value: " E, delta: "", trend: "up" as const },
+      { label: "Nombre total de plannings", value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en cours",        value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en retard",       value: "-", delta: "", trend: "up" as const },
     ];
   }
   return [
@@ -215,9 +215,9 @@ export default function PlanningPage() {
   useEffect(() => {
     import("../../../core/axios").then(({ default: api }) => {
 
-      // FIX 1  Eper_page=1000 pour récupérer TOUS les prestataires sans pagination
+      // FIX 1 - per_page=1000 pour récupérer TOUS les prestataires sans pagination
       api.get("/admin/providers", { params: { per_page: 1000 } }).then(({ data }) => {
-        // FIX 3  ELaravel renvoie data.data.items (paginé) ou data.data (tableau)
+        // FIX 3 - Laravel renvoie data.data.items (paginé) ou data.data (tableau)
         const raw   = data?.data ?? data ?? {};
         const items: any[] = Array.isArray(raw)
           ? raw
@@ -230,7 +230,7 @@ export default function PlanningPage() {
         );
       }).catch(() => setProviders([]));
 
-      // FIX 2  E/admin/site (sans "s") + per_page=1000 pour tous les sites
+      // FIX 2 - /admin/site (sans "s") + per_page=1000 pour tous les sites
       api.get("/admin/site", { params: { per_page: 1000 } }).then(({ data }) => {
         const raw   = data?.data ?? data ?? {};
         const items: any[] = Array.isArray(raw)
@@ -297,7 +297,7 @@ export default function PlanningPage() {
     });
 
     showToast(
-      ok ? "Planning déplacé avec succès ✁E : "Erreur lors du déplacement",
+      ok ? "Planning déplacé avec succès !" : "Erreur lors du déplacement",
       ok ? "success" : "error"
     );
   };
@@ -317,14 +317,14 @@ export default function PlanningPage() {
       date_fin:    formData.date_fin,
       provider_id: Number(formData.provider_id),
       site_id:     Number(formData.site_id),
-      status:      (formData.status as any) || "PLANIFIÁE,
+      status:      (formData.status as any) || "PLANIFIE",
       ...(formData.responsable_name  ? { responsable_name:  formData.responsable_name  } : {}),
       ...(formData.responsable_phone ? { responsable_phone: formData.responsable_phone } : {}),
       ...(formData.description       ? { description:       formData.description       } : {}),
     };
     const ok = await handleCreate(payload);
     showToast(
-      ok ? "Planning créé avec succès ✁E : (error || "Erreur lors de la création"),
+      ok ? "Planning créé avec succès !" : (error || "Erreur lors de la création"),
       ok ? "success" : "error"
     );
   };
@@ -344,7 +344,7 @@ export default function PlanningPage() {
     };
     const ok = await handleUpdate(selectedPlanning.id, payload);
     showToast(
-      ok ? "Planning mis à jour avec succès ✁E : (error || "Erreur de mise à jour"),
+      ok ? "Planning mis à jour avec succès !" : (error || "Erreur de mise à jour"),
       ok ? "success" : "error"
     );
   };
@@ -375,7 +375,7 @@ export default function PlanningPage() {
           { label: "Site",        value: getSiteName(selectedPlanning.site)         },
           { label: "Prestataire", value: getProviderName(selectedPlanning.provider) },
           { label: "Responsable", value: selectedPlanning.responsable_name          },
-          { label: "Téléphone",   value: selectedPlanning.responsable_phone ?? " E  },
+          { label: "Téléphone",   value: selectedPlanning.responsable_phone ?? "-"  },
           {
             label: "Date de début",
             value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
@@ -398,7 +398,7 @@ export default function PlanningPage() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="
+    <>
       <div className="flex-1 flex flex-col">
         <Navbar />
 
@@ -407,7 +407,7 @@ export default function PlanningPage() {
           {/* Erreur globale */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-3 rounded-xl text-sm font-medium">
-              ⚠�E�E{error}
+              ⚠️ {error}
             </div>
           )}
 
@@ -447,7 +447,7 @@ export default function PlanningPage() {
             {/* Droite : boutons */}
             <div className="flex items-center gap-3 shrink-0">
 
-              {/* Filtrer  Edropdown identique à SitesPage */}
+              {/* Filtrer - dropdown identique à SitesPage */}
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
@@ -534,6 +534,6 @@ export default function PlanningPage() {
 
       {/* Toast feedback */}
       <Toast toast={toast} />
-    </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * app/admin/transfert/page.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Page transferts inter-sites — version DYNAMIQUE.
+ * Page transferts inter-sites - version DYNAMIQUE.
  * Branchée sur transfertService + useTransferts.
  *
  * Fonctionnalités :
@@ -42,7 +42,7 @@ import {
 } from "../../../services/admin/transfertService";
 import { useTransferts } from "../../../hooks/admin/useTransferts";
 
-// ─── Statuts — styles sémantiques ─────────────────────────────────────────────
+// ─── Statuts - styles sémantiques ─────────────────────────────────────────────
 const STATUT_STYLES: Record<string, string> = {
   effectué: "bg-green-50 text-green-700 border-green-200",
   en_cours: "bg-blue-50  text-blue-700  border-blue-200",
@@ -94,7 +94,7 @@ function TransferCard({
 
         {/* Actions rapides */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Terminer — uniquement si en_cours */}
+          {/* Terminer - uniquement si en_cours */}
           {record.status === "en_cours" && (
             <button
               onClick={() => onUpdateStatus(record.id, "effectué")}
@@ -106,7 +106,7 @@ function TransferCard({
               <span className="hidden xl:inline">Terminer</span>
             </button>
           )}
-          {/* Annuler — uniquement si en_cours */}
+          {/* Annuler - uniquement si en_cours */}
           {record.status === "en_cours" && (
             <button
               onClick={() => onUpdateStatus(record.id, "annulé")}
@@ -398,7 +398,7 @@ export default function TransfertPage() {
           </div>
         )}
 
-        {/* KPIs — depuis /stats */}
+        {/* KPIs - depuis /stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {statsLoading ? <StatsSkeleton count={4} /> : (
             <>
@@ -543,7 +543,7 @@ export default function TransfertPage() {
 
       </main>
 
-      {/* Modal nouveau transfert — en dehors du <main> pour éviter tout z-index conflict */}
+      {/* Modal nouveau transfert - en dehors du <main> pour éviter tout z-index conflict */}
       <NewTransferModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

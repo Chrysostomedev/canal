@@ -123,7 +123,7 @@ export default function Navbar() {
     }
   }, []);
 
-  // Polling notifications — 15s si page active, 60s si en arrière-plan
+  // Polling notifications - 15s si page active, 60s si en arrière-plan
   const fetchUnread = useCallback(async () => {
     const currentRole = authService.getRole();
     if (!currentRole || !authService.isAuthenticated()) return;

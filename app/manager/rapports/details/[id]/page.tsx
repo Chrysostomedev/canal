@@ -16,7 +16,7 @@ import { InterventionReport, ValidateReportPayload } from "../../../../../types/
 
 // ─────────────── HELPERS ───────────────
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleDateString("fr-FR", { 
     day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit"
@@ -305,8 +305,8 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
   const isValidated = report.status === "validated";
   const pdfs = (report.attachments ?? []).filter(a => a.file_type === "document");
   const photos = (report.attachments ?? []).filter(a => a.file_type === "photo");
-  const providerName = report.provider?.company_name ?? report.provider?.name ?? "—";
-  const siteName = report.site?.nom ?? report.site?.name ?? "—";
+  const providerName = report.provider?.company_name ?? report.provider?.name ?? "-";
+  const siteName = report.site?.nom ?? report.site?.name ?? "-";
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">

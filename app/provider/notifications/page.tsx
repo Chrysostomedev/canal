@@ -21,7 +21,7 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
 }
 
-// ─── Config source  Eidentique à NotificationPanel ───────────────────────────
+// ─── Config source - identique à NotificationPanel ───────────────────────────
 
 const SOURCE_CONFIG: Record<string, {
   label: string; Icon: React.ElementType;
@@ -263,9 +263,7 @@ export default function NotificationsPage() {
   const read   = notifications.filter((n) =>  n.read);
 
   return (
-    <div className="
-
-      <div className="flex-1 flex flex-col ">
+    <div className="flex-1 flex flex-col ">
         <Navbar />
 
         <main className="flex-1 p-8 pt-24">

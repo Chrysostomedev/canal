@@ -19,14 +19,14 @@
 // // ═══════════════════════════════════════════════════════════════════════════
 
 // const formatMontant = (v?: number): string => {
-//   if (!v && v !== 0) return "—";
+//   if (!v && v !== 0) return "-";
 //   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
 //   if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
 //   return `${v.toLocaleString("fr-FR")} FCFA`;
 // };
 
 // const formatDate = (iso?: string | null): string => {
-//   if (!iso) return "—";
+//   if (!iso) return "-";
 //   return new Date(iso).toLocaleDateString("fr-FR", {
 //     day: "2-digit",
 //     month: "2-digit",
@@ -35,7 +35,7 @@
 // };
 
 // const formatDateLong = (iso?: string | null): string => {
-//   if (!iso) return "—";
+//   if (!iso) return "-";
 //   return new Date(iso).toLocaleDateString("fr-FR", {
 //     day: "2-digit",
 //     month: "long",
@@ -256,10 +256,10 @@
 //   const isPaid = invoice?.payment_status === "paid";
 //   const isOverdue = invoice?.payment_status === "overdue";
 
-//   const providerName = invoice?.provider?.name ?? invoice?.provider?.company_name ?? "—";
-//   const siteName = invoice?.site?.nom ?? invoice?.site?.name ?? "—";
+//   const providerName = invoice?.provider?.name ?? invoice?.provider?.company_name ?? "-";
+//   const siteName = invoice?.site?.nom ?? invoice?.site?.name ?? "-";
 //   const reportRef = invoice?.interventionReport?.reference ?? `Rapport #${invoice?.report_id}`;
-//   const quoteRef = invoice?.quote?.reference ?? "—";
+//   const quoteRef = invoice?.quote?.reference ?? "-";
 
 //   const pdfUrl = invoice?.pdf_path ? InvoiceService.getPdfUrl(invoice.pdf_path) : null;
 //   const pdfName = invoice?.pdf_path?.split("/").pop() ?? "facture.pdf";
@@ -330,7 +330,7 @@
 //               </div>
 //             </div>
 
-//             {/* Bloc droit — dates */}
+//             {/* Bloc droit - dates */}
 //             <div className="flex flex-col gap-4">
 //               <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 flex flex-col gap-4 min-w-[300px]">
 //                 <div className="flex flex-col gap-2 text-sm">
@@ -430,7 +430,7 @@
 //                     <div className="px-4 py-3 bg-red-50 border-t border-red-100">
 //                       <div className="flex items-center gap-2 text-red-700 font-bold text-sm">
 //                         <AlertTriangle size={16} />
-//                         Facture en retard — Échéance dépassée
+//                         Facture en retard - Échéance dépassée
 //                       </div>
 //                     </div>
 //                   )}
@@ -504,8 +504,8 @@
 //                   <div className="space-y-2.5">
 //                     {[
 //                       { label: "Nom", value: providerName },
-//                       { label: "Email", value: invoice.provider.email ?? "—" },
-//                       { label: "Téléphone", value: invoice.provider.phone ?? "—" },
+//                       { label: "Email", value: invoice.provider.email ?? "-" },
+//                       { label: "Téléphone", value: invoice.provider.phone ?? "-" },
 //                     ].map((f, i) => (
 //                       <div
 //                         key={i}

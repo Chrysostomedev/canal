@@ -4,13 +4,13 @@
  * Étape 1 du flux "mot de passe oublié".
  *
  * L'utilisateur saisit son email.
- * authService.forgotPassword(email) est appelé — il tente les endpoints
+ * authService.forgotPassword(email) est appelé - il tente les endpoints
  * dans l'ordre (super-admin → admin → provider) jusqu'à trouver le bon rôle.
  * Le back envoie un OTP par mail et stocke le préfixe en localStorage.
  *
  * Props :
- *   onEmailSent(email) — callback appelé après succès back, déclenchant l'étape 2
- *   backHref           — lien "Retour" (généralement "/login")
+ *   onEmailSent(email) - callback appelé après succès back, déclenchant l'étape 2
+ *   backHref           - lien "Retour" (généralement "/login")
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -41,7 +41,7 @@ export default function ForgetEmail({ onEmailSent, backHref = "/login" }: Forget
     setError("");
 
     try {
-      // POST /{prefix}/forgot-password — le préfixe est auto-détecté
+      // POST /{prefix}/forgot-password - le préfixe est auto-détecté
       // Le back envoie l'OTP par mail si l'email est trouvé
       await authService.forgotPassword(email);
 

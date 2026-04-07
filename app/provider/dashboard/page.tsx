@@ -1,10 +1,10 @@
 /**
  * app/provider/dashboard/page.tsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Dashboard Provider  Ebranché sur l'AuthService unifié.
+ * Dashboard Provider - branché sur l'AuthService unifié.
  *
  * CHANGEMENTS vs version originale :
- *   - Import : `providerAuthService` ↁE`authService` (service unifié)
+ *   - Import : `providerAuthService` ...`authService` (service unifié)
  *   - Guard  : `authService.isAuthenticated()` + `authService.hasRole(["PROVIDER"])`
  *   - Logout : `authService.logout()` (redirige automatiquement vers /login)
  *   - Aucune logique métier / UI modifiée
@@ -28,10 +28,10 @@ import {
   Intervention,
 } from "../../../services/provider/providerDashboardService";
 
-// ✁EImport unique  EauthService unifié remplace providerAuthService
+// Import unique - authService unifié remplace providerAuthService
 import { authService } from "../../../services/AuthService";
 
-// ─── Statuts  Einchangés ──────────────────────────────────────────────────────
+// ─── Statuts - inchangés ──────────────────────────────────────────────────────
 const STATUS_STYLES: Record<string, string> = {
   signalez: "border-slate-300 text-slate-700 bg-gray-100",
   validé: "border-blue-400 text-blue-600 bg-blue-50",
@@ -52,7 +52,7 @@ const STATUS_LABELS: Record<string, string> = {
   clos: "Clos",
 };
 
-// ─── Helper : convertit une Intervention Laravel ↁEformat EventListCard ───────
+// ─── Helper : convertit une Intervention Laravel ...format EventListCard ───────
 function toEventItem(i: Intervention) {
   const date = new Date(i.date_debut);
   const now = new Date();
@@ -127,7 +127,7 @@ export default function ProviderDashboard() {
       setData(result);
     } catch (err: any) {
       if (err.response?.status === 401) {
-        // Token expiré ↁElogout propre via authService (nettoie ls + redirige /login)
+        // Token expiré ...logout propre via authService (nettoie ls + redirige /login)
         authService.logout();
         return;
       }
@@ -141,10 +141,10 @@ export default function ProviderDashboard() {
   };
 
   useEffect(() => {
-    // ✁EGuard unifié :
+    // Guard unifié :
     //   1. Vérifie qu'il y a un token + un rôle valide (isAuthenticated)
     //   2. Vérifie que le rôle est bien PROVIDER (hasRole)
-    //   ↁESinon redirige vers /login (pas /provider/login  Epage unifiée)
+    //   ...Sinon redirige vers /login (pas /provider/login - page unifiée)
     if (!authService.isAuthenticated() || !authService.hasRole(["PROVIDER"])) {
       router.replace("/login");
       return;
@@ -184,7 +184,7 @@ export default function ProviderDashboard() {
     setIsDetailsOpen(true);
   };
 
-  // ── Colonnes DataTable  Einchangées ───────────────────────────────────────
+  // ── Colonnes DataTable - inchangées ───────────────────────────────────────
   const columns = [
     { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
     { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
@@ -219,9 +219,7 @@ export default function ProviderDashboard() {
 
   // ── Rendu ──────────────────────────────────────────────────────────────────
   return (
-    <div className="
-
-      <div className="flex-1 flex flex-col ">
+    <div className="flex-1 flex flex-col ">
 
         <Navbar />
 
@@ -302,7 +300,7 @@ export default function ProviderDashboard() {
         </main>
       </div>
 
-      {/* Panel détails ticket  Einchangé */}
+      {/* Panel détails ticket - inchangé */}
       <SideDetailsPanel
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}

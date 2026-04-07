@@ -19,14 +19,14 @@ import { QuoteService, Quote, QuoteHistory } from "../../../../../services/admin
 // ═══════════════════════════════════════════════════════════════════════════
 
 const formatMontant = (v?: number): string => {
-  if (!v && v !== 0) return "—";
+  if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
   if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
   return `${v.toLocaleString("fr-FR")} FCFA`;
 };
 
 const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
@@ -37,7 +37,7 @@ const formatDate = (iso?: string | null): string => {
 };
 
 const formatDateShort = (iso?: string | null): string => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
@@ -82,7 +82,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// TIMELINE HISTORIQUE — Actions sur le devis
+// TIMELINE HISTORIQUE - Actions sur le devis
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface TimelineItemProps {
@@ -166,7 +166,7 @@ function TimelineItem({ action, performedBy, date, reason }: TimelineItemProps) 
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LISTE DEVIS LIÉS AU TICKET — Historique complet
+// LISTE DEVIS LIÉS AU TICKET - Historique complet
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface RelatedQuotesListProps {
@@ -309,8 +309,8 @@ export default function DevisDetailsPage() {
   const taxAmount = quote?.tax_amount ?? totalHT * 0.18;
   const totalTTC = quote?.amount_ttc ?? totalHT + taxAmount;
 
-  const providerName = quote?.provider?.name ?? quote?.provider?.company_name ?? "—";
-  const siteName = quote?.site?.nom ?? quote?.site?.name ?? "—";
+  const providerName = quote?.provider?.name ?? quote?.provider?.company_name ?? "-";
+  const siteName = quote?.site?.nom ?? quote?.site?.name ?? "-";
   const ticketRef = quote?.ticket?.reference ?? quote?.ticket?.title ?? `Ticket #${quote?.ticket_id}`;
 
   // Pièces jointes PDF
@@ -375,7 +375,7 @@ export default function DevisDetailsPage() {
               </div>
             </div>
 
-            {/* Bloc droit — info dates */}
+            {/* Bloc droit - info dates */}
             <div className="flex flex-col gap-4">
               <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100 flex flex-col gap-4 min-w-[300px]">
                 <div className="flex flex-col gap-2 text-sm">
@@ -584,10 +584,10 @@ export default function DevisDetailsPage() {
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Ticket lié</h3>
                   <div className="space-y-2.5">
                     {[
-                      { label: "Référence", value: quote.ticket.reference ?? "—" },
-                      { label: "Sujet", value: quote.ticket.subject ?? quote.ticket.title ?? "—" },
-                      { label: "Type", value: quote.ticket.type ?? "—" },
-                      { label: "Statut", value: quote.ticket.status ?? "—" },
+                      { label: "Référence", value: quote.ticket.reference ?? "-" },
+                      { label: "Sujet", value: quote.ticket.subject ?? quote.ticket.title ?? "-" },
+                      { label: "Type", value: quote.ticket.type ?? "-" },
+                      { label: "Statut", value: quote.ticket.status ?? "-" },
                     ].map((f, i) => (
                       <div
                         key={i}
