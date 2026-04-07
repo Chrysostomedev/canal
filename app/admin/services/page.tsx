@@ -11,6 +11,8 @@ import SideDetailsPanel from "@/components/SideDetailsPanel";
 
 import { useServices } from "../../../hooks/admin/useServices";
 import { ServiceService, Service } from "../../../services/admin/service.service";
+import { exportToXlsx } from "../../../core/export";
+import axiosInstance from "../../../core/axios";
 
 export default function ServicesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,16 +87,20 @@ export default function ServicesPage() {
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = "";
     setImportLoading(true);
     try {
-      // await ServiceService.importServices(file); // décommenter quand endpoint dispo
-      showFlash( "error", "Fonctionnalité d'import en developpement.");
+      const fd = new FormData();
+      fd.append("file", file);
+      await axiosInstance.post("/admin/service/import", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      showFlash("success", `"${file.name}" importé avec succès.`);
       await fetchServices();
-    } catch {
-      showFlash("error", "Erreur lors de l'import.");
+    } catch (err: any) {
+      showFlash("error", err?.response?.data?.message ?? "Erreur lors de l'import.");
     } finally {
       setImportLoading(false);
-      e.target.value = "";
     }
   };
 
@@ -102,8 +108,21 @@ export default function ServicesPage() {
   const handleExport = async () => {
     setExportLoading(true);
     try {
-      // await ServiceService.exportServices(); // décommenter quand endpoint dispo
-      showFlash( "error", "Fonctionnalité d'export en developpement, disponible très bientot.");
+      const response = await axiosInstance.get("/admin/service/export", { responseType: "blob" });
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"] ?? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href  = url;
+      const cd   = (response.headers["content-disposition"] as string) ?? "";
+      const m    = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      link.download = m?.[1]?.replace(/['"]/g, "") ?? `services_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showFlash("success", "Export téléchargé avec succès.");
     } catch {
       showFlash("error", "Erreur lors de l'export.");
     } finally {

@@ -788,12 +788,12 @@ export default function SitesPage() {
 
             <div className="flex items-center gap-3 shrink-0">
 
-              {/* Template import */}
+              {/* Template import
               <button onClick={downloadSiteImportTemplate}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 transition"
                 title="Télécharger le modèle d'import">
                 <Download size={14} /> Modèle
-              </button>
+              </button> */}
 
               {/* Importer - ouvre la prévisualisation */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>

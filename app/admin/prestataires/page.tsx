@@ -18,6 +18,7 @@ import PageHeader from "@/components/PageHeader";
 import { useProviders } from "../../../hooks/admin/useProviders";
 import { ProviderService, Provider } from "../../../services/admin/provider.service";
 import { useServices } from "../../../hooks/admin/useServices";
+import { exportToXlsx } from "../../../core/export";
 
 // ══════════════════════════════════════════════
 // FILTER DROPDOWN
@@ -147,6 +148,7 @@ export default function PrestatairesPage() {
   const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
   const [filtersOpen,      setFiltersOpen]      = useState(false);
   const [flash,            setFlash]            = useState<{ type: "success"|"error"; message: string } | null>(null);
+  const [exportLoading,    setExportLoading]    = useState(false);
 
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -182,10 +184,44 @@ export default function PrestatairesPage() {
     }
   };
 
-  const handleExport = () =>
-    showFlash("error", "Fonctionnalité d'export en cours de développement.");
+  const handleExport = async () => {
+    if (exportLoading) return;
+    setExportLoading(true);
+    try {
+      const rows = providers.map(p => ({
+        id:           p.id,
+        nom:          p.company_name ?? "-",
+        service:      p.service?.name ?? "-",
+        ville:        p.city ?? "-",
+        responsable:  p.user ? `${p.user.first_name ?? ""} ${p.user.last_name ?? ""}`.trim() : "-",
+        email:        p.user?.email ?? "-",
+        telephone:    p.user?.phone ?? "-",
+        statut:       p.is_active ? "Actif" : "Inactif",
+        note:         p.rating ? `${p.rating}/5` : "-",
+        date_entree:  p.date_entree ? new Date(p.date_entree).toLocaleDateString("fr-FR") : "-",
+      }));
+      exportToXlsx(rows, [
+        { header: "ID",          key: "id",          width: 8  },
+        { header: "Nom",         key: "nom",         width: 28 },
+        { header: "Service",     key: "service",     width: 20 },
+        { header: "Ville",       key: "ville",       width: 16 },
+        { header: "Responsable", key: "responsable", width: 24 },
+        { header: "Email",       key: "email",       width: 28 },
+        { header: "Téléphone",   key: "telephone",   width: 16 },
+        { header: "Statut",      key: "statut",      width: 12 },
+        { header: "Note",        key: "note",        width: 10 },
+        { header: "Date entrée", key: "date_entree", width: 14 },
+      ], { filename: "prestataires", sheetName: "Prestataires", title: "Export Prestataires - CANAL+" });
+      showFlash("success", "Export téléchargé avec succès.");
+    } catch {
+      showFlash("error", "Erreur lors de l'exportation.");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const handleImport = () =>
-    showFlash("error", "Fonctionnalité d'import en cours de développement.");
+    showFlash("error", "L'import de prestataires n'est pas disponible via fichier Excel.");
 
   const handleToggleStatus = async (p: Provider) => {
     try {
@@ -221,7 +257,7 @@ export default function PrestatairesPage() {
     { name: "users.last_name",  label: "Nom du responsable", type: "text",     required: true },
     { name: "users.first_name", label: "Prénom",              type: "text",     required: true },
     { name: "users.email",      label: "Email du responsable",type: "email",    required: true },
-    { name: "users.phone",      label: "Téléphone",           type: "text",     required: true },
+    { name: "users.phone",      label: "Téléphone",           type: "tel",      required: true },
     
     // Description pleine largeur
     { name: "description",  label: "Description",         type: "rich-text", gridSpan: 2 },
@@ -341,9 +377,13 @@ export default function PrestatairesPage() {
 
               <button
                 onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+                disabled={exportLoading}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
               >
-                <Upload size={16} /> Exporter
+                {exportLoading
+                  ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                  : <Upload size={16} />}
+                Exporter
               </button>
 
               <div className="relative" ref={filterRef}>
@@ -405,7 +445,7 @@ export default function PrestatairesPage() {
                     category={p.service?.name ?? ""}
                     phone={p.user?.phone ?? ""}
                     email={p.user?.email ?? ""}
-                    rating={p.rating ?? 0}
+                    rating={typeof p.rating === "string" ? parseFloat(p.rating) : (p.rating ?? 0)}
                     status={p.is_active ? "Actif" : "Inactif"}
                     logo={p.logoUrl}
                     onProfilClick={() => handleOpenProfil(p)}

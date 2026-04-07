@@ -49,24 +49,15 @@ export interface Manager {
   last_name: string;
   email: string;
   phone?: string;
+  phone_number?: string;          // champ réel retourné par le back (table admins)
   is_active?: boolean;
   role_id?: number;
+  url?: string;                   // URL photo de profil (accesseur back)
+  profile_picture_path?: string;
 
   // Relations eager-loaded
-  role?: { id: number; name: string };       // toujours "MANAGER"
-  manager?: ManagerRelation;                  // relation managers table
-
-  /**
-   * ── Site géré — PRÉPARÉ pour future API ──────────────────────────────────
-   * Le backend ne retourne pas encore cette relation.
-   * Décommenter + adapter quand l'API gérera le site assigné au manager.
-   *
-   * managed_site?: {
-   *   id: number;
-   *   nom: string;
-   *   address?: string;
-   * };
-   */
+  role?: { id: number; name: string };
+  manager?: ManagerRelation;
 }
 
 /**
@@ -127,6 +118,14 @@ export interface UpdateManagerPayload {
 
 // ── ManagerService ────────────────────────────────────────────────────────────
 
+/** Normalise un objet Admin retourné par le back : phone_number → phone */
+function normalizeManager(m: any): Manager {
+  return {
+    ...m,
+    phone: m.phone ?? m.phone_number ?? m.manager?.phone ?? undefined,
+  };
+}
+
 export const ManagerService = {
 
   /**
@@ -151,22 +150,14 @@ export const ManagerService = {
      */
   }): Promise<Manager[]> {
     const response = await axios.get("/admin/managers", { params });
-
-    // Le backend retourne { data: Manager[], message: string }
-    // On extrait selon la structure BaseController::Response()
-    return response.data.data ?? [];
+    const data: any[] = response.data.data ?? [];
+    return data.map(normalizeManager);
   },
 
-  /**
-   * GET /admin/managers/{id}
-   * Retourne les détails d'un manager avec ses relations (manager + role).
-   */
   async getManager(id: number): Promise<ManagerDetail> {
     const response = await axios.get(`/admin/managers/${id}`);
-
     return {
-      manager: response.data.data,
-      // TODO: enrichir avec stats quand l'API le supportera
+      manager: normalizeManager(response.data.data),
     };
   },
 

@@ -16,6 +16,34 @@ type Props<T> = {
   onViewAll?: () => void;
 };
 
+/** Nettoie le HTML et rend une valeur de cellule cliquable si email/téléphone */
+function renderCellValue(value: any): React.ReactNode {
+  if (value == null || value === "") return "-";
+  const str = String(value);
+
+  // Strip HTML tags (rich text editor produit du HTML)
+  const stripped = str.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!stripped) return "-";
+
+  // Email
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stripped)) {
+    return (
+      <a href={`mailto:${stripped}`} className="text-slate-700 hover:underline hover:text-slate-900 transition-colors" onClick={e => e.stopPropagation()}>
+        {stripped}
+      </a>
+    );
+  }
+  // Téléphone
+  if (/^[+\d][\d\s\-().]{6,}$/.test(stripped.trim())) {
+    return (
+      <a href={`tel:${stripped.replace(/\s/g, "")}`} className="text-slate-700 hover:underline hover:text-slate-900 transition-colors" onClick={e => e.stopPropagation()}>
+        {stripped}
+      </a>
+    );
+  }
+  return stripped;
+}
+
 export default function DataTable<T extends { id: string | number }>({
   title,
   columns = [],
@@ -69,7 +97,7 @@ export default function DataTable<T extends { id: string | number }>({
                       {col.render
                         ? col.render(col.key !== "actions" ? item[col.key as keyof T] : undefined, item)
                         : col.key !== "actions"
-                        ? (item[col.key as keyof T] as React.ReactNode)
+                        ? renderCellValue(item[col.key as keyof T])
                         : null}
                     </td>
                   ))}

@@ -82,24 +82,19 @@ function TimelineStep({
   active?: boolean
   done?: boolean
 }) {
-
   return (
     <div className={`flex items-start gap-4 ${!active && !done ? "opacity-40" : ""}`}>
-
-      <div className="w-9 h-9 rounded-full border-2 flex items-center justify-center bg-white border-slate-200">
+      <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center ${
+        done ? "bg-slate-900 border-slate-900" : active ? "bg-green-50 border-green-400" : "bg-white border-slate-200"
+      }`}>
         {icon}
       </div>
-
       <div>
-        <p className="text-sm font-bold text-slate-800">{label}</p>
-
+        <p className="text-sm font-bold text-slate-900">{label}</p>
         {sublabel && (
-          <p className="text-xs text-slate-400 mt-0.5">
-            {sublabel}
-          </p>
+          <p className="text-xs text-slate-500 mt-0.5">{sublabel}</p>
         )}
       </div>
-
     </div>
   );
 }
@@ -404,20 +399,20 @@ export default function TransferDetailPage({
 
               <div className="bg-white rounded-3xl border border-slate-100 p-6">
 
-                <h2 className="text-sm font-black uppercase tracking-widest mb-4">
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
                   Trajet
                 </h2>
 
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-4 text-sm text-slate-700 font-medium">
 
-                  <span className="flex items-center gap-1">
-                    <MapPin size={14} />
+                  <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                    <MapPin size={14} className="text-slate-500" />
                     {siteFrom}
                   </span>
 
-                  <ArrowRightLeft size={14} />
+                  <ArrowRightLeft size={16} className="text-slate-400 shrink-0" />
 
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1.5 bg-slate-900 text-white px-3 py-2 rounded-xl">
                     <MapPin size={14} />
                     {siteTo}
                   </span>
@@ -432,30 +427,30 @@ export default function TransferDetailPage({
 
               <div className="bg-white rounded-3xl border border-slate-100 p-6">
 
-                <h2 className="text-sm font-black uppercase tracking-widest mb-4">
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
                   Informations
                 </h2>
 
-                <div className="grid grid-cols-2 gap-6 text-sm">
+                <div className="grid grid-cols-2 gap-6 text-sm text-slate-700">
 
                   <div className="flex items-center gap-2">
-                    <Hash size={14} />
-                    ID Actif : {transfer.company_asset_id}
+                    <Hash size={14} className="text-slate-400 shrink-0" />
+                    <span><span className="font-semibold text-slate-500">ID Actif :</span> {transfer.company_asset_id}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <User size={14} />
-                    Initié par : {actorName}
+                    <User size={14} className="text-slate-400 shrink-0" />
+                    <span><span className="font-semibold text-slate-500">Initié par :</span> {actorName}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Calendar size={14} />
-                    Date transfert : {formatTransferDate(transfer.transfer_date)}
+                    <Calendar size={14} className="text-slate-400 shrink-0" />
+                    <span><span className="font-semibold text-slate-500">Date transfert :</span> {formatTransferDate(transfer.transfer_date)}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Calendar size={14} />
-                    Créé le : {formatTransferDate(transfer.created_at)}
+                    <Calendar size={14} className="text-slate-400 shrink-0" />
+                    <span><span className="font-semibold text-slate-500">Créé le :</span> {formatTransferDate(transfer.created_at)}</span>
                   </div>
 
                 </div>
@@ -470,12 +465,12 @@ export default function TransferDetailPage({
 
                 <div className="bg-white rounded-3xl border border-slate-100 p-6">
 
-                  <h2 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <FileText size={14} />
+                  <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <FileText size={14} className="text-slate-500" />
                     Motif du transfert
                   </h2>
 
-                  <div className="bg-slate-50 rounded-xl p-4 text-sm italic">
+                  <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 italic border border-slate-100">
                     {transfer.reason}
                   </div>
 
@@ -496,21 +491,21 @@ export default function TransferDetailPage({
 
               <div className="bg-white rounded-3xl border border-slate-100 p-6">
 
-                <h2 className="text-sm font-black uppercase tracking-widest mb-4">
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
                   Historique
                 </h2>
 
                 <div className="space-y-4">
 
                   <TimelineStep
-                    icon={<Calendar size={14} />}
+                    icon={<Calendar size={14} className="text-slate-600" />}
                     label="Création du transfert"
                     sublabel={formatTransferDate(transfer.created_at)}
                     done
                   />
 
                   <TimelineStep
-                    icon={<ArrowRightLeft size={14} />}
+                    icon={<ArrowRightLeft size={14} className={isCompleted ? "text-green-600" : "text-slate-400"} />}
                     label="Transfert effectué"
                     active={isCompleted}
                   />

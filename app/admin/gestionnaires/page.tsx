@@ -25,6 +25,7 @@ import ManagerProfilPanel   from "@/components/managerProfilPanel";
 
 import { useManagers }                    from "../../../hooks/admin/useManagers";
 import { ManagerService, Manager }        from "../../../services/admin/manager.service";
+import { exportToXlsx }                   from "../../../core/export";
 
 export default function GestionnairesPage() {
 
@@ -33,7 +34,7 @@ export default function GestionnairesPage() {
     managers, stats, isLoading, meta,
     page, setPage,
     applySearch, applyFilters, filters,
-    fetchManagers,
+    fetchManagers, allManagers,
   } = useManagers();
 
   // ── UI State ───────────────────────────────────────────────────────────────
@@ -67,11 +68,30 @@ export default function GestionnairesPage() {
     setTimeout(() => setFlash(null), 3000);
   };
 
-   // ── Import / Export - endpoints pas encore en ligne ──
-   const handleExport = () =>
-    showFlash("error", "Fonctionnalité d'export en cours de développement.");
+   // ── Import / Export ──
+   const handleExport = () => {
+    const rows = allManagers.map((m: Manager) => ({
+      id:        m.id,
+      prenom:    m.first_name,
+      nom:       m.last_name,
+      email:     m.email,
+      telephone: m.phone ?? "-",
+      role:      m.role?.name ?? "MANAGER",
+      statut:    m.is_active !== false ? "Actif" : "Inactif",
+    }));
+    exportToXlsx(rows, [
+      { header: "ID",        key: "id",        width: 8  },
+      { header: "Prénom",    key: "prenom",    width: 18 },
+      { header: "Nom",       key: "nom",       width: 18 },
+      { header: "Email",     key: "email",     width: 28 },
+      { header: "Téléphone", key: "telephone", width: 18 },
+      { header: "Rôle",      key: "role",      width: 14 },
+      { header: "Statut",    key: "statut",    width: 12 },
+    ], { filename: "gestionnaires", sheetName: "Gestionnaires", title: "Export Gestionnaires - CANAL+" });
+    showFlash("success", "Export téléchargé avec succès.");
+  };
   const handleImport = () =>
-    showFlash("error", "Fonctionnalité d'import en cours de développement.");
+    showFlash("error", "L'import de gestionnaires n'est pas disponible via fichier Excel.");
 
   // ── KPIs ───────────────────────────────────────────────────────────────────
   const kpis = [
@@ -85,8 +105,13 @@ export default function GestionnairesPage() {
     { name: "first_name", label: "Prénom",        type: "text",  required: true },
     { name: "last_name",  label: "Nom",            type: "text",  required: true },
     { name: "email",      label: "Email",          type: "email", required: true },
-    { name: "phone",      label: "Téléphone",      type: "text"                  },
-    { name: "password",   label: "Mot de passe",   type: "password"              },
+    {
+      name: "phone",
+      label: "Téléphone (ex: +225 07 00 00 00 00)",
+      type: "tel",
+      placeholder: "225 07 00 00 00 00",
+    },
+    { name: "password",   label: "Mot de passe",   type: "password", required: true },
   ];
 
   // ── Création ───────────────────────────────────────────────────────────────
@@ -281,15 +306,10 @@ export default function GestionnairesPage() {
                     firstName={m.first_name}
                     lastName={m.last_name}
                     email={m.email}
-                    phone={m.phone}
+                    phone={m.phone ?? m.phone_number}
                     role={m.role?.name ?? "Manager"}
                     status={m.is_active !== false ? "Actif" : "Inactif"}
-                    // onProfilClick ...ouvre le side panel à droite
                     onProfilClick={() => setSelectedManager(m)}
-                    /*
-                     * ── site - COMMENTÁE préparé pour future API ─────────
-                     * site={m.managed_site?.nom}
-                     */
                   />
                 ))}
               </div>
@@ -325,6 +345,7 @@ export default function GestionnairesPage() {
         isOpen={!!selectedManager}
         onClose={() => setSelectedManager(null)}
         manager={selectedManager}
+        onStatusChanged={() => { fetchManagers(); setSelectedManager(null); }}
       />
     </div>
   );

@@ -18,6 +18,7 @@ import PageHeader from "@/components/PageHeader";
 
 import { useInvoices } from "../../../hooks/admin/useInvoices";
 import { Invoice, InvoiceService } from "../../../services/admin/invoice.service";
+import { exportToXlsx } from "../../../core/export";
 
 // ══════════════════════════════════════════════
 // HELPERS
@@ -405,6 +406,7 @@ export default function FacturesPage() {
   const [filters,         setFilters]         = useState<{ status?: string }>({});
   const [currentPage,     setCurrentPage]     = useState(1);
   const [flashMessage,    setFlashMessage]    = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [exportLoading,   setExportLoading]   = useState(false);
 
   const PER_PAGE = 10;
 
@@ -454,13 +456,47 @@ export default function FacturesPage() {
   const handleMarkPaid = async (id: number) => {
     try {
       await markAsPaid(id);
-      // Mise à jour optimiste du panneau latéral
       setSelectedInvoice(prev =>
         prev?.id === id ? { ...prev, payment_status: "paid" as const } : prev,
       );
       showFlash("success", "Facture marquée comme payée avec succès.");
     } catch {
       showFlash("error", "Erreur lors de la mise à jour du statut.");
+    }
+  };
+
+  const handleExport = async () => {
+    if (exportLoading) return;
+    setExportLoading(true);
+    try {
+      const dataToExport = filtered.length > 0 ? filtered : invoices;
+      const rows = dataToExport.map(inv => ({
+        reference:      inv.reference,
+        prestataire:    inv.provider?.company_name ?? "-",
+        site:           inv.site?.nom ?? "-",
+        date:           inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString("fr-FR") : "-",
+        montant_ht:     typeof inv.amount_ht  === "string" ? parseFloat(inv.amount_ht)  : (inv.amount_ht  ?? 0),
+        tva:            typeof inv.tax_amount === "string" ? parseFloat(inv.tax_amount) : (inv.tax_amount ?? 0),
+        montant_ttc:    typeof inv.amount_ttc === "string" ? parseFloat(inv.amount_ttc) : (inv.amount_ttc ?? 0),
+        statut:         { paid: "Payée", pending: "En attente", overdue: "En retard", cancelled: "Annulée" }[inv.payment_status] ?? inv.payment_status,
+        date_paiement:  inv.payment_date ? new Date(inv.payment_date).toLocaleDateString("fr-FR") : "-",
+      }));
+      exportToXlsx(rows, [
+        { header: "Référence",       key: "reference",     width: 18 },
+        { header: "Prestataire",     key: "prestataire",   width: 24 },
+        { header: "Site",            key: "site",          width: 20 },
+        { header: "Date",            key: "date",          width: 14 },
+        { header: "Montant HT",      key: "montant_ht",    width: 16 },
+        { header: "TVA",             key: "tva",           width: 14 },
+        { header: "Montant TTC",     key: "montant_ttc",   width: 16 },
+        { header: "Statut",          key: "statut",        width: 14 },
+        { header: "Date paiement",   key: "date_paiement", width: 16 },
+      ], { filename: "factures", sheetName: "Factures", title: "Export Factures - CANAL+" });
+      showFlash("success", "Export téléchargé avec succès.");
+    } catch {
+      showFlash("error", "Erreur lors de l'exportation.");
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -603,10 +639,14 @@ export default function FacturesPage() {
             </div>
 
             <button
-              onClick={() => showFlash("error", "Fonctionnalité d'export en cours de développement.")}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+              onClick={handleExport}
+              disabled={exportLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
             >
-              <Upload size={16} /> Exporter
+              {exportLoading
+                ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                : <Upload size={16} />}
+              Exporter
             </button>
           </div>
 

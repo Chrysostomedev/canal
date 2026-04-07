@@ -748,7 +748,7 @@ export default function ProviderEntretienPage() {
     },
     {
       name: "start_date",
-      label: "Date de début de l'intervention",
+      label: "Date de début",
       type: "date",
       required: true,
       icon: <CalendarDays size={18} />,

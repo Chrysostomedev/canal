@@ -248,10 +248,19 @@ export const ImageUpload = ({
 };
 
 // ─── RICH TEXT EDITOR ─────────────────────────────────────────────────────────
-export const RichTextEditor = ({ label, placeholder, name }: any) => {
+export const RichTextEditor = ({ label, placeholder, name, defaultValue }: any) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const hiddenRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialise le contenu si defaultValue fourni
+  React.useEffect(() => {
+    if (editorRef.current && defaultValue) {
+      editorRef.current.innerHTML = defaultValue;
+      if (hiddenRef.current) hiddenRef.current.value = defaultValue;
+    }
+  }, [defaultValue]);
 
   const applyStyle = (command: string, value: string | undefined = undefined) => {
     document.execCommand(command, false, value);
@@ -262,6 +271,20 @@ export const RichTextEditor = ({ label, placeholder, name }: any) => {
     const selection = window.getSelection();
     if (!selection?.rangeCount) return;
     applyStyle("fontSize", delta > 0 ? "5" : "2");
+  };
+
+  /** Nettoie le HTML vide (<div><br></div>, <br> seul, etc.) */
+  const cleanHtml = (html: string): string => {
+    return html
+      .replace(/<div><br\s*\/?><\/div>/gi, "")
+      .replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, "")
+      .trim();
+  };
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const raw = e.currentTarget.innerHTML;
+    const cleaned = cleanHtml(raw);
+    if (hiddenRef.current) hiddenRef.current.value = cleaned;
   };
 
   return (
@@ -301,13 +324,11 @@ export const RichTextEditor = ({ label, placeholder, name }: any) => {
         <div 
           ref={editorRef}
           contentEditable 
+          suppressContentEditableWarning
           className="w-full min-h-[180px] p-5 text-slate-700 outline-none bg-transparent prose prose-slate max-w-none leading-relaxed"
-          onInput={(e) => {
-            const hiddenInput = document.getElementById(`hidden-${name}`) as HTMLInputElement;
-            if (hiddenInput) hiddenInput.value = e.currentTarget.innerHTML;
-          }}
+          onInput={handleInput}
         />
-        <input type="hidden" name={name} id={`hidden-${name}`} />
+        <input type="hidden" name={name} id={`hidden-${name}`} ref={hiddenRef} />
       </div>
     </div>
   );

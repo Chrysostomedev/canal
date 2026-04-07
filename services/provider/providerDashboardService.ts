@@ -73,7 +73,29 @@ export const providerDashboardService = {
    */
   getDashboard: async (): Promise<ProviderDashboardData> => {
     const response = await axiosInstance.get("/provider/dashboard");
-    // Supporte les deux formats : { data: { data: ... } } ou { data: ... }
-    return response.data?.data ?? response.data;
+    const raw = response.data?.data ?? response.data;
+
+    // Normalise les prochaines interventions (peut être un tableau d'objets plannings bruts)
+    const rawInterventions: any[] = raw?.prochaines_interventions ?? [];
+    const interventions: Intervention[] = rawInterventions.map((item: any) => ({
+      id:          item.id,
+      title:       item.description ?? item.codification ?? `Planning #${item.id}`,
+      description: item.description ?? null,
+      date_debut:  item.date_debut,
+      date_fin:    item.date_fin,
+      site:        item.site?.nom ?? item.site_id ?? null,
+      location:    item.site?.localisation ?? null,
+      status:      item.status ?? null,
+    }));
+
+    // Normalise les tickets récents
+    const rawTickets: any[] = raw?.tickets_recents ?? [];
+
+    return {
+      provider_info:            raw?.provider_info ?? { name: "", code: "" },
+      stats:                    raw?.stats         ?? { tickets: { total: 0, en_cours: 0, clotures: 0 }, devis: { total: 0, en_attente: 0, montant_total: 0 }, factures: { total: 0, payees: 0, en_attente: 0, montant_total: 0 } },
+      prochaines_interventions: interventions,
+      tickets_recents:          rawTickets,
+    };
   },
 };

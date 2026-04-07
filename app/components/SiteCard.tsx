@@ -50,14 +50,14 @@ export default function SiteCard({ site }: SiteCardProps) {
               {site.manager?.phone || site.phone_responsable || "N/A"}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-slate-600">
+          {/* <div className="flex items-center gap-3 text-slate-600">
             <div className="p-1.5 bg-slate-30 rounded-lg">
               <Mail size={16} className="text-slate-900" />
             </div>
             <span className="text-sm font-medium">
               {site.manager?.email || site.email || "N/A"}
             </span>
-          </div>
+          </div> */}
         </div>
       </div>
 

@@ -82,15 +82,23 @@ export default function PrestCard({
       <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-50">
         <div className="flex items-center gap-3 text-slate-600 font-medium text-[14px]">
           <Briefcase size={16} className="text-slate-400" />
-          {category}
+          {category || "-"}
         </div>
         <div className="flex items-center gap-3 text-slate-600 font-medium text-[14px]">
           <Phone size={16} className="text-slate-400" />
-          {phone}
+          {phone ? (
+            <a href={`tel:${phone}`} className="hover:underline hover:text-slate-900 transition-colors">
+              {phone}
+            </a>
+          ) : "-"}
         </div>
         <div className="flex items-center gap-3 text-slate-600 font-medium text-[14px]">
           <Mail size={16} className="text-slate-400" />
-          <span className="truncate">{email}</span>
+          {email ? (
+            <a href={`mailto:${email}`} className="truncate hover:underline hover:text-slate-900 transition-colors">
+              {email}
+            </a>
+          ) : "-"}
         </div>
       </div>
 

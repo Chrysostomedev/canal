@@ -95,12 +95,24 @@ export default function GestCard({
 
         <div className="flex items-center gap-2.5">
           <Mail size={12} className="text-slate-300 flex-shrink-0" />
-          <span className="text-[12px] text-slate-500 truncate">{email || "-"}</span>
+          {email ? (
+            <a href={`mailto:${email}`} className="text-[12px] text-slate-500 truncate hover:text-slate-900 hover:underline transition-colors">
+              {email}
+            </a>
+          ) : (
+            <span className="text-[12px] text-slate-400">-</span>
+          )}
         </div>
 
         <div className="flex items-center gap-2.5">
           <Phone size={12} className="text-slate-300 flex-shrink-0" />
-          <span className="text-[12px] text-slate-500">{phone || "-"}</span>
+          {phone ? (
+            <a href={`tel:${phone}`} className="text-[12px] text-slate-500 hover:text-slate-900 hover:underline transition-colors">
+              {phone}
+            </a>
+          ) : (
+            <span className="text-[12px] text-slate-400">-</span>
+          )}
         </div>
 
         {site && (

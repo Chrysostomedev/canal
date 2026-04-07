@@ -209,19 +209,16 @@ export default function PlanningPage() {
 
   // ── Providers et Sites dynamiques ─────────────────────────────────────────
   const [providers, setProviders] = useState<{ label: string; value: number }[]>([]);
-  const [sites, setSites]         = useState<Site[]>([]); // Maintenant des objets Site complets
+  const [sites, setSites]         = useState<Site[]>([]);
+  const [assets, setAssets]       = useState<{ label: string; value: number }[]>([]);
   const [formInitialValues, setFormInitialValues] = useState<Record<string, any>>({});
 
   useEffect(() => {
     import("../../../core/axios").then(({ default: api }) => {
 
-      // FIX 1 - per_page=1000 pour récupérer TOUS les prestataires sans pagination
       api.get("/admin/providers", { params: { per_page: 1000 } }).then(({ data }) => {
-        // FIX 3 - Laravel renvoie data.data.items (paginé) ou data.data (tableau)
         const raw   = data?.data ?? data ?? {};
-        const items: any[] = Array.isArray(raw)
-          ? raw
-          : (raw.items ?? raw.data ?? []);
+        const items: any[] = Array.isArray(raw) ? raw : (raw.items ?? raw.data ?? []);
         setProviders(
           items.map((p: any) => ({
             label: (p.company_name ?? `${p.user?.first_name ?? ""} ${p.user?.last_name ?? ""}`.trim()) || `Prestataire #${p.id}`,
@@ -230,17 +227,30 @@ export default function PlanningPage() {
         );
       }).catch(() => setProviders([]));
 
-      // FIX 2 - /admin/site (sans "s") + per_page=1000 pour tous les sites
       api.get("/admin/site", { params: { per_page: 1000 } }).then(({ data }) => {
         const raw   = data?.data ?? data ?? {};
-        const items: any[] = Array.isArray(raw)
-          ? raw
-          : (raw.items ?? raw.data ?? []);
+        const items: any[] = Array.isArray(raw) ? raw : (raw.items ?? raw.data ?? []);
         setSites(items);
       }).catch(() => setSites([]));
 
     });
   }, []);
+
+  // Charge les assets quand le site change
+  const loadAssetsBySite = (siteId: number) => {
+    import("../../../core/axios").then(({ default: api }) => {
+      api.get("/admin/asset", { params: { site_id: siteId, per_page: 200 } }).then(({ data }) => {
+        const raw   = data?.data ?? data ?? {};
+        const items: any[] = Array.isArray(raw) ? raw : (raw.items ?? raw.data ?? []);
+        setAssets(
+          items.map((a: any) => ({
+            label: `${a.designation} (${a.codification})`,
+            value: a.id,
+          }))
+        );
+      }).catch(() => setAssets([]));
+    });
+  };
 
   const planningFields: FieldConfig[] = [
     {

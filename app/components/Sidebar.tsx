@@ -29,7 +29,7 @@ import {
   ChevronDown, PieChart, Ticket, Calendar, Shield,
   FileText, FileSignature, AlertTriangle,
   ChartNoAxesColumnIncreasing, MapPinHouse, Users2,
-  Layers, FolderSync, Bell, Wrench, User as UserIcon,
+  Layers, FolderSync, Bell, Wrench, User as UserIcon, UserCog,
   ChevronLeft, Menu
 } from "lucide-react";
 
@@ -74,7 +74,7 @@ interface MenuItem {
 
 // ─── Menus principaux par rôle ────────────────────────────────────────────────
 
-/** SUPER-ADMIN & ADMIN - même structure, le filtre "Gestion des rôles" se fait dans bottomItems */
+/** SUPER-ADMIN & ADMIN - même structure de base */
 const MENU_ADMIN: MenuItem[] = [
   {
     label: "Tableau de bord",
@@ -109,9 +109,56 @@ const MENU_ADMIN: MenuItem[] = [
   },
   {
     label: "Gestionnaires",
-    icon: <Grid size={20} />,
+    icon: <UserCog  size={20} />,
     href: "/admin/gestionnaires",
-    subItems: [{ label: "Vue globale", icon: <PieChart size={20} />, href: "#" }],
+   
+  },
+];
+
+/** SUPER-ADMIN uniquement - avec Administration globale + Audit */
+const MENU_SUPER_ADMIN: MenuItem[] = [
+  {
+    label: "Tableau de bord",
+    icon: <LayoutDashboard size={20} />,
+    href: "/admin/dashboard",
+  },
+  {
+    label: "Administration",
+    icon: <MapPinHouse size={20} />,
+    href: "/admin/administration",
+    subItems: [
+      { label: "Tickets", icon: <Ticket size={20} />, href: "/admin/tickets" },
+      {
+        label: "Patrimoines",
+        icon: <Building2 size={20} />,
+        href: "/admin/patrimoines",
+        subItems: [
+          { label: "Types", icon: <Building2 size={18} />, href: "/admin/patrimoines/type" },
+          { label: "Sous-types", icon: <Building2 size={18} />, href: "/admin/patrimoines/sous_type" },
+        ],
+      },
+      { label: "Sites", icon: <MapPinHouse size={20} />, href: "/admin/sites" },
+      { label: "Planning", icon: <Calendar size={20} />, href: "/admin/planning" },
+      { label: "Entretien", icon: <Calendar size={20} />, href: "/admin/entretien" },
+      { label: "Prestataires", icon: <Users size={20} />, href: "/admin/prestataires" },
+      { label: "Devis", icon: <FileSignature size={20} />, href: "/admin/devis" },
+      { label: "Factures", icon: <FileText size={20} />, href: "/admin/factures" },
+      { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/admin/rapports" },
+      { label: "Services", icon: <Layers size={20} />, href: "/admin/services" },
+      { label: "Transfert inter-sites", icon: <FolderSync size={20} />, href: "/admin/transfert" },
+      { label: "Audit Trail", icon: <Shield size={20} />, href: "/admin/audit" },
+    ],
+  },
+  {
+    label: "Gestionnaires",
+    icon: <UserCog  size={20} />,
+    href: "/admin/gestionnaires",
+    
+  },
+  {
+    label: "Gestion des rôles",
+    icon: <Shield size={20} />,
+    href: "/admin/roles",
   },
 ];
 
@@ -191,11 +238,11 @@ const BOTTOM_MANAGER: BottomItem[] = [
 // ─── Mapping rôle → menus ─────────────────────────────────────────────────────
 const getMenuByRole = (role: string): MenuItem[] => {
   switch (role) {
-    case "SUPER-ADMIN": return MENU_ADMIN;
-    case "ADMIN": return MENU_ADMIN;
-    case "PROVIDER": return MENU_PROVIDER;
-    case "MANAGER": return MENU_MANAGER;
-    default: return [];
+    case "SUPER-ADMIN": return MENU_SUPER_ADMIN;
+    case "ADMIN":       return MENU_ADMIN;
+    case "PROVIDER":    return MENU_PROVIDER;
+    case "MANAGER":     return MENU_MANAGER;
+    default:            return [];
   }
 };
 

@@ -258,19 +258,48 @@ function NewTransferModal({
   onSuccess: () => void;
 }) {
   const [submitting, setSubmitting] = useState(false);
+  const [fromSiteId, setFromSiteId] = useState<number | null>(null);
+  const [filteredAssets, setFilteredAssets] = useState<{ id: number; designation: string; codification: string }[]>([]);
+  const [loadingAssets, setLoadingAssets] = useState(false);
+
+  // Charge les patrimoines du site de départ sélectionné
+  useEffect(() => {
+    if (!fromSiteId) { setFilteredAssets([]); return; }
+    setLoadingAssets(true);
+    import("../../../services/admin/asset.service").then(({ AssetService }) =>
+      AssetService.getAssets({ site_id: fromSiteId, per_page: 200 })
+        .then(d => setFilteredAssets(d.items.map(a => ({ id: a.id, designation: a.designation, codification: a.codification }))))
+        .catch(() => setFilteredAssets([]))
+        .finally(() => setLoadingAssets(false))
+    );
+  }, [fromSiteId]);
+
   if (!isOpen) return null;
 
   const siteOptions = sites
     .filter(s => s.status === "active")
     .map(s => ({ label: s.nom, value: String(s.id) }));
 
+  const assetOptions = filteredAssets.map(a => ({
+    label: `${a.codification} — ${a.designation}`,
+    value: String(a.id),
+  }));
+
   const transferFields: FieldConfig[] = [
     {
-      name: "company_asset_id",
-      label: "ID de l'équipement",
-      type: "text",
+      name: "from_site_id",
+      label: "Site de départ",
+      type: "select",
       required: true,
-      placeholder: "Ex: 14",
+      options: siteOptions.length > 0 ? siteOptions : [{ label: "Chargement...", value: "" }],
+    },
+    {
+      name: "company_asset_id",
+      label: loadingAssets ? "Patrimoine (chargement...)" : fromSiteId ? "Patrimoine à transférer" : "Patrimoine (sélectionnez d'abord un site)",
+      type: "select",
+      required: true,
+      disabled: !fromSiteId || loadingAssets,
+      options: assetOptions.length > 0 ? assetOptions : [{ label: fromSiteId ? "Aucun patrimoine sur ce site" : "—", value: "" }],
     },
     {
       name: "to_site_id",
@@ -299,6 +328,7 @@ function NewTransferModal({
       });
       onSuccess();
       onClose();
+      setFromSiteId(null);
     } catch (err: unknown) {
       console.error("Erreur initiation transfert:", err);
     } finally {
@@ -309,12 +339,15 @@ function NewTransferModal({
   return (
     <ReusableForm
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={() => { onClose(); setFromSiteId(null); }}
       title="Nouveau transfert"
       subtitle="Déplacez un équipement vers un autre site"
       fields={transferFields}
       initialValues={{}}
       onSubmit={handleSubmit}
+      onFieldChange={(name, value) => {
+        if (name === "from_site_id") setFromSiteId(value ? Number(value) : null);
+      }}
       submitLabel={submitting ? "Initiation en cours..." : "Initier le transfert"}
     />
   );

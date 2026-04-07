@@ -7,7 +7,7 @@ import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor, Ima
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "password" | "date" | "select" | "email" | "number" | "rich-text" | "image-upload" | "pdf-upload" | "textarea";
+  type: "text" | "password" | "date" | "select" | "email" | "number" | "rich-text" | "image-upload" | "pdf-upload" | "textarea" | "tel";
   placeholder?: string;
   required?: boolean;
   gridSpan?: 1 | 2;
@@ -130,6 +130,28 @@ export default function ReusableForm({
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition-all min-h-[120px] resize-y text-sm font-medium"
                       onChange={(e) => onFieldChange?.(field.name, e.target.value)}
                     />
+
+                  ) : field.type === "tel" ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 bg-slate-50 rounded-2xl overflow-hidden">
+                        <span className="pl-4 text-slate-400 text-sm font-medium shrink-0 select-none">+</span>
+                        <Input
+                          name={field.name}
+                          type="tel"
+                          placeholder={field.placeholder ?? "225 07 00 00 00 00"}
+                          required={field.required}
+                          disabled={field.disabled}
+                          defaultValue={initialValues[field.name] ?? ""}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            onFieldChange?.(field.name, e.target.value)
+                          }
+                          className="flex-1 bg-transparent border-none rounded-none p-4 pl-0 text-slate-700 placeholder:text-slate-400 focus:ring-0 outline-none"
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-medium pl-1">
+                        Format : indicatif pays + numéro (ex: +225 07 00 00 00 00)
+                      </p>
+                    </div>
 
                   ) : (
                     <Input

@@ -27,31 +27,21 @@ import { useParams }           from "next/navigation";
 import Link                    from "next/link";
 import {
   ChevronLeft, Phone, Mail, ShieldCheck,
-  Pencil, UserCircle2,
-  /**
-   * ── Icônes pour tickets - importées mais commentées pour future API ──────
-   * Filter, Eye, TicketPlus, Upload,
-   */
+  Pencil, UserCircle2, Activity, Clock, Hash,
 } from "lucide-react";
 
 import Navbar          from "@/components/Navbar";
-import Sidebar         from "@/components/Sidebar";
 import ReusableForm    from "@/components/ReusableForm";
-import ActionGroup     from "@/components/ActionGroup";
 import { FieldConfig } from "@/components/ReusableForm";
-/**
- * ── Composants pour tickets - importés mais commentés pour future API ───────
- * import StatsCard      from "@/components/StatsCard";
- * import DataTable      from "@/components/DataTable";
- * import Paginate       from "@/components/Paginate";
- * import SideDetailsPanel from "@/components/SideDetailsPanel";
- */
+import DataTable, { ColumnConfig } from "@/components/DataTable";
+import Paginate        from "@/components/Paginate";
 
 import {
   ManagerService,
   Manager,
   ManagerDetail,
 } from "../../../../../services/admin/manager.service";
+import axiosInstance from "../../../../../core/axios";
 
 // ── Palette couleur avatar (identique à GestCard) ─────────────────────────────
 const AVATAR_PALETTES = [
@@ -71,25 +61,18 @@ export default function GestionnaireDetailsPage() {
   const [detail, setDetail]               = useState<ManagerDetail | null>(null);
   const [isLoadingManager, setIsLoading]  = useState(false);
 
+  // ── État logs d'activité ───────────────────────────────────────────────────
+  const [logs,        setLogs]        = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsPage,    setLogsPage]    = useState(1);
+  const [logsMeta,    setLogsMeta]    = useState({ last_page: 1, total: 0 });
+
   // ── État modals ────────────────────────────────────────────────────────────
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [flash, setFlash] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
-
-  /**
-   * ── État tickets - PRÉPARÉ pour future API ────────────────────────────────
-   * TODO: Décommenter quand GET /admin/managers/{id}/tickets sera disponible
-   *
-   * const [tickets, setTickets]       = useState<any[]>([]);
-   * const [ticketMeta, setTicketMeta] = useState({ current_page: 1, last_page: 1, total: 0 });
-   * const [ticketPage, setTicketPage] = useState(1);
-   * const [ticketFilter, setTicketFilter] = useState<string | undefined>(undefined);
-   * const [isLoadingTickets, setIsLoadingTickets] = useState(false);
-   * const [selectedTicket, setSelectedTicket]     = useState<any>(null);
-   * const [isDetailsOpen, setIsDetailsOpen]       = useState(false);
-   */
 
   // ── Flash message ──────────────────────────────────────────────────────────
   const showFlash = (type: "success" | "error", message: string) => {
@@ -110,38 +93,31 @@ export default function GestionnaireDetailsPage() {
     }
   };
 
-  /**
-   * ── Fetch tickets du manager - PRÉPARÉ pour future API ───────────────────
-   * TODO: Décommenter quand la route sera disponible
-   *
-   * const fetchTickets = async () => {
-   *   setIsLoadingTickets(true);
-   *   try {
-   *     const result = await ManagerService.getManagerTickets(managerId, {
-   *       page: ticketPage,
-   *       status: ticketFilter,
-   *     });
-   *     setTickets(result.items);
-   *     setTicketMeta(result.meta);
-   *   } catch (err) {
-   *     console.error("Erreur chargement tickets manager", err);
-   *   } finally {
-   *     setIsLoadingTickets(false);
-   *   }
-   * };
-   */
+  // ── Fetch logs d'activité du manager ──────────────────────────────────────
+  const fetchLogs = async () => {
+    setLogsLoading(true);
+    try {
+      const res = await axiosInstance.get("/admin/activity-log", {
+        params: { user_id: managerId, per_page: 10, page: logsPage },
+      });
+      const d = res.data?.data ?? res.data;
+      setLogs(d.data ?? []);
+      setLogsMeta({ last_page: d.last_page ?? 1, total: d.total ?? 0 });
+    } catch {
+      setLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
 
   // ── Chargement au montage ──────────────────────────────────────────────────
   useEffect(() => {
-    if (managerId) fetchDetail();
+    if (managerId) { fetchDetail(); fetchLogs(); }
   }, [managerId]);
 
-  /**
-   * ── Refetch tickets quand page ou filtre change - PRÉPARÉ ────────────────
-   * useEffect(() => {
-   *   if (managerId) fetchTickets();
-   * }, [ticketPage, ticketFilter, managerId]);
-   */
+  useEffect(() => {
+    if (managerId) fetchLogs();
+  }, [logsPage]);
 
   const manager = detail?.manager;
 
@@ -324,14 +300,22 @@ export default function GestionnaireDetailsPage() {
                   <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
                     <Mail size={16} className="text-slate-900" />
                   </div>
-                  {manager?.email ?? "-"}
+                  {manager?.email ? (
+                    <a href={`mailto:${manager.email}`} className="hover:underline hover:text-slate-900 transition-colors truncate">
+                      {manager.email}
+                    </a>
+                  ) : "-"}
                 </div>
 
                 <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
                   <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
                     <Phone size={16} className="text-slate-900" />
                   </div>
-                  {manager?.phone ?? "-"}
+                  {(manager?.phone ?? (manager as any)?.phone_number) ? (
+                    <a href={`tel:${manager?.phone ?? (manager as any)?.phone_number}`} className="hover:underline hover:text-slate-900 transition-colors">
+                      {manager?.phone ?? (manager as any)?.phone_number}
+                    </a>
+                  ) : "-"}
                 </div>
 
                 <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
@@ -381,20 +365,56 @@ export default function GestionnaireDetailsPage() {
            * </div>
            */}
 
-          {/* ── Placeholder "Tickets bientôt disponibles" ─────────────────── */}
-          <div className="bg-white rounded-[32px] border border-dashed border-slate-200 p-12 flex flex-col items-center gap-3 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-              <ShieldCheck size={22} className="text-slate-400" />
+          {/* ── Logs d'activité du gestionnaire ──────────────────────────── */}
+          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-50 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center">
+                <Activity size={16} className="text-white" />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-900 text-sm">Journal d'activité</h3>
+                <p className="text-xs text-slate-400">{logsMeta.total} action{logsMeta.total > 1 ? "s" : ""} enregistrée{logsMeta.total > 1 ? "s" : ""}</p>
+              </div>
             </div>
-            <p className="text-slate-500 font-medium text-sm">
-              Les tickets et statistiques associés à ce gestionnaire seront disponibles prochainement.
-            </p>
-            <p className="text-slate-400 text-xs">
-              En attente de l'implémentation de la route{" "}
-              <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
-                GET /admin/managers/{"{id}"}/tickets
-              </code>
-            </p>
+
+            {logsLoading ? (
+              <div className="py-12 text-center text-slate-400 text-sm">Chargement...</div>
+            ) : logs.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-sm italic">Aucune activité enregistrée pour ce gestionnaire.</div>
+            ) : (
+              <>
+                <div className="divide-y divide-slate-50">
+                  {logs.map((log, i) => (
+                    <div key={i} className="flex items-start gap-4 px-6 py-4 hover:bg-slate-50/50 transition">
+                      <div className={`mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest shrink-0 ${
+                        log.action === "created" ? "bg-emerald-50 text-emerald-700" :
+                        log.action === "updated" ? "bg-blue-50 text-blue-700" :
+                        log.action === "deleted" ? "bg-red-50 text-red-700" :
+                        "bg-slate-50 text-slate-700"
+                      }`}>
+                        {log.action}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{log.description || `${log.model_type?.split("\\").pop()} #${log.model_id}`}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <Hash size={10} /> {log.model_type?.split("\\").pop()}
+                          </span>
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <Clock size={10} /> {new Date(log.created_at).toLocaleDateString("fr-FR")} à {new Date(log.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {logsMeta.last_page > 1 && (
+                  <div className="px-6 py-4 border-t border-slate-50 flex justify-end">
+                    <Paginate currentPage={logsPage} totalPages={logsMeta.last_page} onPageChange={setLogsPage} />
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
         </main>

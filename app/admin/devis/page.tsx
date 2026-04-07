@@ -19,6 +19,7 @@ import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 
 import { useQuotes } from "../../../hooks/admin/useQuotes";
 import { Quote, QuoteService } from "../../../services/admin/quote.service";
+import { exportToXlsx } from "../../../core/export";
 
 // ══════════════════════════════════════════════
 // HELPERS
@@ -178,11 +179,14 @@ function QuoteSidePanel({
   const [rejectMode,    setRejectMode]    = useState(false);
   const [rejectReason,  setRejectReason]  = useState("");
   const [pdfPreview,    setPdfPreview]    = useState<{ url: string; name: string } | null>(null);
+  const [approveModal,  setApproveModal]  = useState(false);
+  const [approving,     setApproving]     = useState(false);
 
   useEffect(() => {
     setRejectMode(false);
     setRejectReason("");
     setPdfPreview(null);
+    setApproveModal(false);
   }, [quote?.id]);
 
   if (!quote) return null;
@@ -196,11 +200,24 @@ function QuoteSidePanel({
   const taxAmount = quote.tax_amount ?? totalHT * 0.18;
   const totalTTC  = quote.amount_ttc ?? totalHT + taxAmount;
 
-  const providerName = quote.provider?.name ?? "-";
+  const providerName = quote.provider?.company_name ?? quote.provider?.name ?? "-";
   const siteName     = quote.site?.nom ?? quote.site?.name ?? "-";
-  const ticketRef    = quote.ticket?.reference ?? quote.ticket?.title ?? `#${quote.ticket_id}`;
 
-  // Fichiers PDF liés au devis (quote.pdf_paths si dispo, sinon mock vide)
+  // Manager du site
+  const siteManager  = quote.site?.manager;
+  const managerName  = siteManager
+    ? `${siteManager.first_name ?? ""} ${siteManager.last_name ?? ""}`.trim() || "Manager"
+    : null;
+  const managerPhone = siteManager?.phone_number ?? siteManager?.phone ?? null;
+  const managerEmail = siteManager?.email ?? null;
+
+  const handleConfirmApprove = async () => {
+    setApproving(true);
+    try { await onApprove(quote.id); setApproveModal(false); }
+    finally { setApproving(false); }
+  };
+
+  // Fichiers PDF liés au devis
   const pdfFiles: Array<{ name: string; url: string; size?: string }> =
     (quote as any).pdf_paths?.map((p: string) => ({
       name: p.split("/").pop() ?? "document.pdf",
@@ -431,15 +448,90 @@ function QuoteSidePanel({
             </div>
           )}
         </div>
+
+        {/* Footer CTA Valider */}
+        {isPending && !rejectMode && (
+          <div className="px-6 py-4 border-t border-slate-100 shrink-0">
+            <button
+              onClick={() => setApproveModal(true)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
+            >
+              <CheckCircle2 size={16} /> Valider ce devis
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Preview PDF fullscreen */}
+      {/* PDF fullscreen */}
       {pdfPreview && (
-        <PdfPreviewModal
-          url={pdfPreview.url}
-          name={pdfPreview.name}
-          onClose={() => setPdfPreview(null)}
-        />
+        <PdfPreviewModal url={pdfPreview.url} name={pdfPreview.name} onClose={() => setPdfPreview(null)} />
+      )}
+
+      {/* Modale confirmation approbation */}
+      {approveModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setApproveModal(false)} />
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="flex items-center justify-between px-7 py-6 border-b border-slate-100">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Valider le devis</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{quote.reference}</p>
+              </div>
+              <button onClick={() => setApproveModal(false)} className="p-2 hover:bg-slate-100 rounded-xl transition">
+                <X size={18} className="text-slate-500" />
+              </button>
+            </div>
+            <div className="px-7 py-6 space-y-4">
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Prestataire</span>
+                  <span className="font-bold text-slate-900">{providerName}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Site</span>
+                  <span className="font-bold text-slate-900">{siteName}</span>
+                </div>
+                <div className="flex justify-between text-sm border-t border-slate-200 pt-2">
+                  <span className="font-black text-slate-900">Montant TTC</span>
+                  <span className="font-black text-slate-900">{formatMontant(totalTTC)}</span>
+                </div>
+              </div>
+              {managerName ? (
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">Manager du site notifié</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
+                      <span className="text-white text-xs font-black">
+                        {managerName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">{managerName}</p>
+                      {managerEmail && <a href={`mailto:${managerEmail}`} className="text-xs text-slate-500 hover:underline">{managerEmail}</a>}
+                      {managerPhone && <p className="text-xs text-slate-500">{managerPhone}</p>}
+                    </div>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">Une notification sera envoyée au manager lors de la validation.</p>
+                </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+                  <p className="text-xs text-amber-700 font-medium">Aucun manager assigné à ce site.</p>
+                </div>
+              )}
+            </div>
+            <div className="px-7 py-5 border-t border-slate-100 flex gap-3">
+              <button onClick={() => setApproveModal(false)}
+                className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition">
+                Annuler
+              </button>
+              <button onClick={handleConfirmApprove} disabled={approving}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition disabled:opacity-60">
+                {approving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={15} />}
+                Confirmer la validation
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
@@ -465,6 +557,7 @@ export default function DevisPage() {
   const [filters,       setFilters]       = useState<{ status?: string }>({});
   const [currentPage,   setCurrentPage]   = useState(1);
   const [flashMessage,  setFlashMessage]  = useState<{ type: "success"|"error"; message: string } | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const PER_PAGE = 10;
 
@@ -513,6 +606,39 @@ export default function DevisPage() {
       showFlash("success", "Devis rejeté.");
     } catch (err: any) {
       showFlash("error", err?.response?.data?.message ?? "Erreur lors du rejet.");
+    }
+  };
+
+  const handleExport = async () => {
+    if (exportLoading) return;
+    setExportLoading(true);
+    try {
+      const dataToExport = filtered.length > 0 ? filtered : quotes;
+      const rows = dataToExport.map(q => ({
+        reference:   q.reference,
+        ticket:      q.ticket?.reference ?? q.ticket?.title ?? `#${q.ticket_id}`,
+        prestataire: q.provider?.company_name ?? q.provider?.name ?? "-",
+        site:        q.site?.nom ?? q.site?.name ?? "-",
+        montant_ht:  q.amount_ht  ?? 0,
+        montant_ttc: q.amount_ttc ?? 0,
+        statut:      { pending: "En attente", approved: "Approuvé", rejected: "Rejeté", revision: "En révision" }[q.status] ?? q.status,
+        date:        q.created_at ? new Date(q.created_at).toLocaleDateString("fr-FR") : "-",
+      }));
+      exportToXlsx(rows, [
+        { header: "Référence",    key: "reference",   width: 18 },
+        { header: "Ticket",       key: "ticket",      width: 20 },
+        { header: "Prestataire",  key: "prestataire", width: 24 },
+        { header: "Site",         key: "site",        width: 20 },
+        { header: "Montant HT",   key: "montant_ht",  width: 16 },
+        { header: "Montant TTC",  key: "montant_ttc", width: 16 },
+        { header: "Statut",       key: "statut",      width: 14 },
+        { header: "Date",         key: "date",        width: 16 },
+      ], { filename: "devis", sheetName: "Devis", title: "Export Devis - CANAL+" });
+      showFlash("success", "Export téléchargé avec succès.");
+    } catch {
+      showFlash("error", "Erreur lors de l'exportation.");
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -623,10 +749,14 @@ export default function DevisPage() {
             </label> */}
             {/* Exporter */}
             <button
-              onClick={() => showFlash("error", "Fonctionnalité d'export en cours de développement.")}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+              onClick={handleExport}
+              disabled={exportLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
             >
-              <Upload size={16} /> Exporter
+              {exportLoading
+                ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                : <Upload size={16} />}
+              Exporter
             </button>
             
   {/* ── Ajouter ──────────────────────────────────────────── */}

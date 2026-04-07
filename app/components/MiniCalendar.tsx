@@ -72,7 +72,7 @@ export default function MiniCalendar({ activeMonth, onMonthChange, plannings }: 
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => { setIsMonthOpen(!isMonthOpen); setIsYearOpen(false); }}
-              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 px-3 py-1.5 rounded-xl transition-all font-bold text-[14px]"
+              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 px-3 py-1.5 rounded-xl transition-all font-bold text-[14px] text-black"
             >
               {months[month]}
               <ChevronDown size={14} className={`transition-transform ${isMonthOpen ? "rotate-180" : ""}`} />
@@ -99,7 +99,7 @@ export default function MiniCalendar({ activeMonth, onMonthChange, plannings }: 
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => { setIsYearOpen(!isYearOpen); setIsMonthOpen(false); }}
-              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 px-3 py-1.5 rounded-xl transition-all font-bold text-[14px]"
+              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 px-3 py-1.5 rounded-xl transition-all font-bold text-[14px] text-black"
             >
               {year}
               <ChevronDown size={14} className={`transition-transform ${isYearOpen ? "rotate-180" : ""}`} />

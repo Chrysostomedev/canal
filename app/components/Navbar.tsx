@@ -25,6 +25,12 @@ const getApiPrefix = (role: string): string => {
   return "/admin";
 };
 
+const getMeEndpoint = (role: string): string => {
+  if (role === "PROVIDER") return "/provider/profile";
+  if (role === "MANAGER")  return "/manager/me";
+  return "/admin/me";
+};
+
 // ── Bande notif in-app ────────────────────────────────────────────────────────
 interface InAppBannerProps {
   title: string;
@@ -108,19 +114,35 @@ export default function Navbar() {
     const storedPic = localStorage.getItem("profile_picture_url");
     if (storedPic) setProfilePicture(storedPic);
     else {
-      // Fetch depuis l'API pour avoir la photo à jour
       const prefix = getApiPrefix(currentRole);
       if (currentRole && authService.isAuthenticated()) {
-        api.get(`${prefix}/me`).then(res => {
+        api.get(getMeEndpoint(currentRole)).then(res => {
           const data = res.data?.data ?? res.data;
-          if (data?.profile_picture_path) {
-            const url = data.url || `${process.env.NEXT_PUBLIC_API_URL}/storage/${data.profile_picture_path}`;
-            setProfilePicture(url);
-            localStorage.setItem("profile_picture_url", url);
+          // Le back retourne `url` via l'accesseur getUrlAttribute() sur Admin/User
+          const picUrl = data?.url ?? null;
+          if (picUrl) {
+            setProfilePicture(picUrl);
+            localStorage.setItem("profile_picture_url", picUrl);
+          } else {
+            // Pas de photo — s'assurer que localStorage ne contient rien
+            localStorage.removeItem("profile_picture_url");
+            setProfilePicture(null);
           }
-        }).catch(() => {});
+        }).catch(() => {
+          localStorage.removeItem("profile_picture_url");
+          setProfilePicture(null);
+        });
       }
     }
+
+    // Écoute les changements de photo de profil depuis d'autres onglets/pages
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "profile_picture_url") {
+        setProfilePicture(e.newValue);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   // Polling notifications - 15s si page active, 60s si en arrière-plan
@@ -221,14 +243,18 @@ export default function Navbar() {
 
         {/* Infos utilisateur */}
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-theme-primary text-white font-black flex items-center justify-center text-sm tracking-wide shrink-0 overflow-hidden">
+          <Link
+            href={role === "MANAGER" ? "/manager/profile" : role === "PROVIDER" ? "/provider/profile" : "/admin/profile"}
+            className="w-10 h-10 rounded-full bg-theme-primary text-white font-black flex items-center justify-center text-sm tracking-wide shrink-0 overflow-hidden hover:opacity-90 transition-opacity cursor-pointer"
+            title="Voir mon profil"
+          >
             {profilePicture ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profilePicture} alt="Profil" className="object-cover w-full h-full" />
             ) : (
               getInitials()
             )}
-          </div>
+          </Link>
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2">
               <p className="text-gray-900 font-bold text-sm leading-tight">Bonjour, {fullName}</p>

@@ -16,6 +16,7 @@ import PageHeader from "@/components/PageHeader";
 
 import { useReports } from "../../../hooks/admin/useReports";
 import { InterventionReport, ReportService, ValidateReportPayload } from "../../../services/admin/report.service";
+import { exportToXlsx } from "../../../core/export";
 
 // ══════════════════════════════════════════════
 // HELPERS
@@ -503,6 +504,7 @@ export default function RapportsPage() {
   const [filters,        setFilters]        = useState<{ status?: string; type?: string }>({});
   const [currentPage,    setCurrentPage]    = useState(1);
   const [flashMessage,   setFlashMessage]   = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [exportLoading,  setExportLoading]  = useState(false);
 
   const PER_PAGE = 10;
 
@@ -537,7 +539,6 @@ export default function RapportsPage() {
   const handleValidate = async (report: InterventionReport, payload: ValidateReportPayload) => {
     try {
       await validateReport(report.id, payload);
-      // Met à jour le rapport affiché dans le side panel
       setSelectedReport(prev => prev?.id === report.id
         ? { ...prev, status: "validated", rating: payload.rating ?? prev.rating, manager_comment: payload.comment ?? prev.manager_comment, validated_at: new Date().toISOString() }
         : prev
@@ -545,6 +546,43 @@ export default function RapportsPage() {
       showFlash("success", "Rapport validé avec succès.");
     } catch {
       showFlash("error", "Erreur lors de la validation.");
+    }
+  };
+
+  const handleExport = async () => {
+    if (exportLoading) return;
+    setExportLoading(true);
+    try {
+      const dataToExport = filtered.length > 0 ? filtered : reports;
+      const rows = dataToExport.map(r => ({
+        id:           `#${r.id}`,
+        ticket:       r.ticket?.subject ?? `#${r.ticket_id}`,
+        prestataire:  r.provider?.company_name ?? r.provider?.name ?? "-",
+        site:         r.site?.nom ?? r.site?.name ?? "-",
+        type:         r.intervention_type === "curatif" ? "Curatif" : "Préventif",
+        statut:       { validated: "Validé", pending: "En attente", rejected: "Rejeté", submitted: "Soumis" }[r.status ?? "pending"] ?? (r.status ?? "-"),
+        note:         r.rating ? `${r.rating}/5` : "-",
+        date_debut:   r.start_date ? new Date(r.start_date).toLocaleDateString("fr-FR") : "-",
+        date_fin:     r.end_date   ? new Date(r.end_date).toLocaleDateString("fr-FR")   : "-",
+        date_creation: r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "-",
+      }));
+      exportToXlsx(rows, [
+        { header: "ID",           key: "id",            width: 8  },
+        { header: "Ticket",       key: "ticket",        width: 28 },
+        { header: "Prestataire",  key: "prestataire",   width: 24 },
+        { header: "Site",         key: "site",          width: 20 },
+        { header: "Type",         key: "type",          width: 12 },
+        { header: "Statut",       key: "statut",        width: 14 },
+        { header: "Note",         key: "note",          width: 10 },
+        { header: "Début",        key: "date_debut",    width: 14 },
+        { header: "Fin",          key: "date_fin",      width: 14 },
+        { header: "Créé le",      key: "date_creation", width: 14 },
+      ], { filename: "rapports_intervention", sheetName: "Rapports", title: "Export Rapports d'Intervention - CANAL+" });
+      showFlash("success", "Export téléchargé avec succès.");
+    } catch {
+      showFlash("error", "Erreur lors de l'exportation.");
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -627,10 +665,14 @@ export default function RapportsPage() {
               <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
             </div>
             <button
-              onClick={() => showFlash("error", "Fonctionnalité d'export en cours de développement.")}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+              onClick={handleExport}
+              disabled={exportLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
             >
-              <Upload size={16} /> Exporter
+              {exportLoading
+                ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                : <Upload size={16} />}
+              Exporter
             </button>
           </div>
 

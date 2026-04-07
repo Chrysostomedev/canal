@@ -156,12 +156,6 @@ function NotifDetailPanel({ notif, onClose, onDelete }: {
             >
               <ArrowLeft size={16} /> Retour
             </button>
-            <button
-              onClick={() => { onDelete(notif.id); onClose(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-100 text-red-400 hover:bg-red-50 text-xs font-bold transition"
-            >
-              <Trash2 size={13} /> Supprimer
-            </button>
           </div>
 
           {/* Corps */}

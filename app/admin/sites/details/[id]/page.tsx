@@ -631,10 +631,10 @@ export default function SiteDetailsPage() {
                       <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Phone size={16} className="text-slate-900" /></div>
                       {phone}
                     </div>
-                    <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
+                    {/* <div className="flex items-center gap-3 text-slate-600 font-semibold text-[15px]">
                       <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Mail size={16} className="text-slate-900" /></div>
                       {email}
-                    </div>
+                    </div> */}
                   </>
                 )}
               </div>

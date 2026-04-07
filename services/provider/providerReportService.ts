@@ -176,8 +176,10 @@ export const providerReportService = {
   getReports: async (): Promise<InterventionReport[]> => {
     const res = await axiosInstance.get(BASE);
     const d   = res.data?.data ?? res.data;
-    if (Array.isArray(d))       return d;
-    if (Array.isArray(d?.data)) return d.data;
+    // Gère les deux formats : tableau direct ou paginé { data: [...] }
+    if (Array.isArray(d))            return d;
+    if (Array.isArray(d?.data))      return d.data;
+    if (Array.isArray(d?.items))     return d.items;
     return [];
   },
 
@@ -187,7 +189,14 @@ export const providerReportService = {
    */
   getStats: async (): Promise<ReportStats> => {
     const res = await axiosInstance.get(`${BASE}/stats`);
-    return res.data?.data ?? res.data;
+    const d = res.data?.data ?? res.data;
+    return {
+      total_reports:     d?.total_reports     ?? d?.total     ?? 0,
+      validated_reports: d?.validated_reports ?? d?.validated ?? 0,
+      pending_reports:   d?.pending_reports   ?? d?.pending   ?? 0,
+      average_rating:    d?.average_rating    ?? d?.rating    ?? 0,
+      reports_by_type:   d?.reports_by_type   ?? [],
+    };
   },
 
   /**
