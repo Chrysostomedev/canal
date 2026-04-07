@@ -38,6 +38,7 @@ import Navbar          from "@/components/Navbar";
 import Sidebar         from "@/components/Sidebar";
 import ReusableForm    from "@/components/ReusableForm";
 import ActionGroup     from "@/components/ActionGroup";
+import { FieldConfig } from "@/components/ReusableForm";
 /**
  * ── Composants pour tickets - importés mais commentés pour future API ───────
  * import StatsCard      from "@/components/StatsCard";
@@ -190,11 +191,11 @@ export default function GestionnaireDetailsPage() {
 
   // ── Champs formulaire modification ────────────────────────────────────────
   // Correspond à la validation du update() Laravel (tous "sometimes")
-  const editFields = [
-    { name: "first_name", label: "Prénom",          type: "text",  defaultValue: manager?.first_name },
-    { name: "last_name",  label: "Nom de famille",  type: "text",  defaultValue: manager?.last_name  },
-    { name: "email",      label: "Email",            type: "email", defaultValue: manager?.email      },
-    { name: "phone",      label: "Téléphone",        type: "text",  defaultValue: manager?.phone      },
+  const editFields: FieldConfig[] = [
+    { name: "first_name", label: "Prénom",          type: "text"  },
+    { name: "last_name",  label: "Nom de famille",  type: "text"  },
+    { name: "email",      label: "Email",            type: "email" },
+    { name: "phone",      label: "Téléphone",        type: "text"  },
     /**
      * ── Champ site - COMMENTÉ, préparé pour future API ──────────────────────
      * TODO: Décommenter quand l'API supportera l'assignation de site
@@ -229,7 +230,7 @@ export default function GestionnaireDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">
 

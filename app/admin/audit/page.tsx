@@ -10,7 +10,7 @@ import axiosInstance from "../../../core/axios";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 
 export default function AuditTrailPage() {
@@ -72,7 +72,7 @@ export default function AuditTrailPage() {
     { label: "Modèles impactés", value: "8 types", delta: "", trend: "up" as const, icon: <FileText size={20} /> },
   ];
 
-  const columns = [
+  const columns: ColumnConfig<any>[] = [
     {
       header: "Utilisateur",
       key: "user_id",

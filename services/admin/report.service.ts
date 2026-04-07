@@ -75,7 +75,7 @@ export interface InterventionReport {
   end_date?: string;                              // Fin intervention (ISO)
   
   // Statut validation
-  status?: "pending" | "validated" | "rejected";
+  status?: "pending" | "validated" | "rejected" | "submitted";
   
   // Validation (gestionnaire de site)
   rating?: number | null;                         // Note de 1 à 5 étoiles

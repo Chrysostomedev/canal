@@ -89,7 +89,6 @@ export default function ProviderProfilePage() {
   if (loading) return (
     <div className="flex-1 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
-      </div>
     </div>
   );
 

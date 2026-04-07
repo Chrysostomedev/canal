@@ -274,7 +274,6 @@ export default function PatrimoinesPage() {
 
         </main>
       </div>
-    </div>
   );
 }
 

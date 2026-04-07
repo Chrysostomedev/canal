@@ -8,7 +8,9 @@ import axiosInstance from "../../core/axios";
 export interface InvoiceProvider {
   id: number;
   company_name?: string;
+  name?: string;        // Fallback or Display name
   email?: string;
+  phone?: string;
   service_id?: number;
   rating?: string;
   is_active?: boolean;
@@ -17,6 +19,7 @@ export interface InvoiceProvider {
 export interface InvoiceSite {
   id: number;
   nom?: string;
+  name?: string;        // Alias for nom
   responsable_name?: string;
   email?: string;
   localisation?: string;
@@ -26,9 +29,13 @@ export interface InvoiceSite {
 export interface InvoiceReport {
   id: number;
   ticket_id?: number;
+  reference?: string;   // Added
   intervention_date?: string;
+  start_date?: string;  // Added
+  end_date?: string;    // Added
   intervention_type?: "preventive" | "curative";
   findings?: string;
+  description?: string; // Added (findings alias)
   action_taken?: string;
   status?: string;
   rating?: number;
@@ -69,6 +76,7 @@ export interface Invoice {
   interventionReport?: InvoiceReport | null;  // Alias pour compatibilité
   provider?: InvoiceProvider | null;
   site?: InvoiceSite | null;
+  quote?: any | null;                         // Added quote relation
 }
 
 export interface InvoiceStats {
@@ -114,14 +122,21 @@ export interface MarkAsPaidPayload {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function normalizeInvoice(invoice: Invoice): Invoice {
-  return {
+  const norm = {
     ...invoice,
-    amount_ht: typeof invoice.amount_ht === "string" ? parseFloat(invoice.amount_ht) : invoice.amount_ht,
-    tax_amount: typeof invoice.tax_amount === "string" ? parseFloat(invoice.tax_amount) : invoice.tax_amount,
-    amount_ttc: typeof invoice.amount_ttc === "string" ? parseFloat(invoice.amount_ttc) : invoice.amount_ttc,
+    amount_ht: typeof invoice.amount_ht === "string" ? parseFloat(invoice.amount_ht) : (invoice.amount_ht || 0),
+    tax_amount: typeof invoice.tax_amount === "string" ? parseFloat(invoice.tax_amount) : (invoice.tax_amount || 0),
+    amount_ttc: typeof invoice.amount_ttc === "string" ? parseFloat(invoice.amount_ttc) : (invoice.amount_ttc || 0),
     // ✅ Normalisation nom relation : intervention_report → interventionReport
     interventionReport: invoice.intervention_report ?? invoice.interventionReport,
   };
+
+  // Double normalization for sub-fields if needed
+  if (norm.interventionReport) {
+    if (!norm.interventionReport.description) norm.interventionReport.description = norm.interventionReport.findings;
+  }
+  
+  return norm;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

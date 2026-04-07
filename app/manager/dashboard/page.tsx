@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DonutChartCard from "@/components/DonutChartCard";
 import BarChartCard from "@/components/BarChartCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye, AlertTriangle } from "lucide-react";
 
@@ -95,7 +95,7 @@ export default function Dashboard() {
     setIsDetailsOpen(true);
   };
 
-  const columns: any[] = [
+  const columns: ColumnConfig<any>[] = [
     { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
     { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject },
     { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom },

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
 import ActionGroup from "@/components/ActionGroup";
 import ReusableForm from "@/components/ReusableForm";
@@ -806,7 +806,7 @@ export default function ProviderEntretienPage() {
     }
   };
 
-  const columns: any[] = [
+  const columns: ColumnConfig<any>[] = [
     {
       header: "Référence", key: "id",
       render: (_: any, row: any) => (

@@ -11,10 +11,11 @@ import Navbar      from "@/components/Navbar";
 import Sidebar     from "@/components/Sidebar";
 import Paginate    from "@/components/Paginate";
 import StatsCard   from "@/components/StatsCard";
-import DataTable   from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 
 import { useSite } from "../../../hooks/manager/useSite";
 import { useAssets } from "../../../hooks/manager/useAssets";
+import { Asset } from "../../../types/manager.types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatMontant = (v?: number | null) => {
@@ -83,7 +84,7 @@ export default function SitePage() {
 
 
   // ── Colonnes table ──
-  const columns: any[] = [
+  const columns: ColumnConfig<Asset>[] = [
     {
       header: "ID", key: "id",
       render: (_: any, row: any) => (
@@ -126,7 +127,7 @@ export default function SitePage() {
       render: (_: any, row: any) => formatDate(row.acquisition_date),
     },
     {
-      header: "Valeur", key: "valeur",
+      header: "Valeur", key: "acquisition_value",
       render: (_: any, row: any) => formatMontant(row.acquisition_value),
     },
     {
@@ -226,7 +227,6 @@ export default function SitePage() {
               data={assets}
               title="Patrimoines du site"
               onViewAll={() => {}}
-              isLoading={assetsLoading}
             />
             {meta && (
               <div className="p-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
@@ -292,6 +292,5 @@ export default function SitePage() {
 
         </main>
       </div>
-    </div>
   );
 }

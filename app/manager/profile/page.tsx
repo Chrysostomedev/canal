@@ -135,7 +135,6 @@ export default function ManagerProfilePage() {
           <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
         </div>
       </div>
-    </div>
   );
 
   return (

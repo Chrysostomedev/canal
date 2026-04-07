@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
 import ActionGroup from "@/components/ActionGroup";
 import {
@@ -102,7 +102,7 @@ function StatusBadge({ status }: { status: string }) {
 // ─── WorkflowProgress ─────────────────────────────────────────────────────────
 
 function WorkflowProgress({ status }: { status: string }) {
-    const effectiveIdx = status === "rejeté" || status === "anomalie" || status === "rejected"
+    const effectiveIdx = status === "rejected" || status === "anomalie"
         ? WORKFLOW_STEPS.findIndex(s => s.key === "rapporté")
         : WORKFLOW_STEPS.findIndex(s => s.key === status || STATUS_LABELS[s.key] === status);
 
@@ -393,10 +393,10 @@ function MaintenancePreviewPanel({
                     <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Progression</p>
                         <WorkflowProgress status={ticket.status ?? "pending"} />
-                        {(ticket.status === "rejeté" || ticket.status === "rejected") && (
+                        {(status === "rejected") && (
                             <div className="mt-4 flex items-center gap-2 text-xs font-bold text-red-600">
                                 <AlertTriangle size={12} />
-                                {ticket.status === "rejected" || ticket.status === "rejeté" ? "Rapport rejeté par le gestionnaire" : "Anomalie détectée"}
+                                {status === "rejected" ? "Rapport rejeté par le gestionnaire" : "Anomalie détectée"}
                             </div>
                         )}
                     </div>
@@ -453,7 +453,7 @@ function MaintenancePreviewPanel({
                     )}
 
                     {/* Motif rejet */}
-                    {(ticket.status === "rejected" || ticket.status === "rejeté") && ticket.rejection_reason && (
+                    {(ticket.status === "rejected") && ticket.rejection_reason && (
                         <div className="bg-red-50 rounded-xl p-4 border border-red-100">
                             <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Motif de rejet</p>
                             <p className="text-sm text-red-700 leading-relaxed">{ticket.rejection_reason}</p>
@@ -572,9 +572,9 @@ export default function ManagerEntretienPage() {
         }
     };
 
-    const columns = [
+    const columns: ColumnConfig<InterventionReport>[] = [
         {
-            header: "Référence", key: "reference",
+            header: "Référence", key: "id",
             render: (_: any, row: InterventionReport) => (
                 <span className="font-black text-slate-900 text-sm">
                     {(row as any).reference || `#${row.id}`}
@@ -614,7 +614,7 @@ export default function ManagerEntretienPage() {
             header: "Note", key: "rating",
             render: (_: any, row: InterventionReport) => (
                 row.rating
-                    ? <StarRating value={row.rating} readonly />
+                    ? <StarRating value={Number(row.rating)} readonly />
                     : <span className="text-xs text-slate-300 font-medium">-</span>
             ),
         },
@@ -718,7 +718,7 @@ export default function ManagerEntretienPage() {
                             </div>
                         ) : (
                             <div className="px-6 py-4">
-                                <DataTable columns={columns} data={filtered} onViewAll={() => {}} />
+                                <DataTable title="Historique Maintenance" columns={columns} data={filtered} onViewAll={() => {}} />
                             </div>
                         )}
                     </div>

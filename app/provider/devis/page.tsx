@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
 import ActionGroup from "@/components/ActionGroup";
 import ReusableForm from "@/components/ReusableForm";
@@ -366,7 +366,7 @@ export default function ProviderDevisPage() {
   ];
 
   // ── Colonnes DataTable ────────────────────────────────────────────────────
-  const columns = [
+  const columns: ColumnConfig<Quote>[] = [
     {
       header: "Référence", key: "reference",
       render: (_: any, row: Quote) => (
@@ -496,14 +496,13 @@ export default function ProviderDevisPage() {
                     <div key={i} className="h-12 bg-gray-100 rounded-xl" />
                   ))}
                 </div>
-                : <DataTable columns={columns} data={quotes} onViewAll={() => { }} />
+                : <DataTable title="Liste des devis" columns={columns} data={quotes} onViewAll={() => { }} />
               }
             </div>
           </div>
 
         </main>
-      </div>
-
+      
       {/* Toasts */}
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
       {submitError && <Toast msg={submitError} type="error" />}

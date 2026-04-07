@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { Eye, Download, Upload, Briefcase } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import PageHeader from "@/components/PageHeader";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 
 import { useServices } from "../../../hooks/admin/useServices";
-import { ServiceService } from "../../../services/admin/service.service";
+import { ServiceService, Service } from "../../../services/admin/service.service";
 
 export default function ServicesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,10 +62,10 @@ export default function ServicesPage() {
   const handleCreateOrUpdate = async (formData: Record<string, any>) => {
     try {
       if (editingData && selectedService?.reference) {
-        await ServiceService.updateService(selectedService.reference, formData);
+        await ServiceService.updateService(selectedService.reference, formData as { name: string; description?: string });
         showFlash("success", "Service mis à jour avec succès.");
       } else {
-        await ServiceService.createService(formData);
+        await ServiceService.createService(formData as { name: string; description?: string });
         showFlash("success", "Service créé avec succès.");
       }
       await fetchServices();
@@ -112,7 +112,7 @@ export default function ServicesPage() {
   };
 
   // ── Colonnes ──
-  const columns = [
+  const columns: ColumnConfig<Service>[] = [
     { header: "Nom du service", key: "name" },
     {
       header: "Description", key: "description",
@@ -197,6 +197,7 @@ export default function ServicesPage() {
           {/* Table - pas de pagination (Services::all() retourne tout) */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <DataTable
+              title="Liste des services"
               columns={columns}
               data={isLoading ? [] : services}
               onViewAll={() => {}}

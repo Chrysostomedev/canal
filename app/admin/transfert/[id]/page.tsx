@@ -145,7 +145,7 @@ export default function TransferDetailPage({
 
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <div className="flex flex-col flex-1 pl-64">
+        <div className="flex flex-col flex-1">
 
           <Navbar />
 
@@ -179,7 +179,7 @@ export default function TransferDetailPage({
 
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <div className="flex flex-col flex-1 pl-64">
+        <div className="flex flex-col flex-1">
 
           <Navbar />
 
@@ -255,7 +255,7 @@ export default function TransferDetailPage({
   return (
 
     <div className="flex min-h-screen bg-gray-50">
-      <div className="flex flex-col flex-1 pl-64">
+      <div className="flex flex-col flex-1">
 
         <Navbar />
 

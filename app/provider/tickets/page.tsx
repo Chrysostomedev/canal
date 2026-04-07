@@ -32,18 +32,18 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  signalez: "border-slate-300  bg-slate-100  text-slate-700",
-  validé:   "border-blue-400   bg-blue-50    text-blue-700",
-  assigné:  "border-violet-400 bg-violet-50  text-violet-700",
-  en_cours: "border-orange-400 bg-orange-50  text-orange-600",
-  rapporté: "border-amber-400  bg-amber-50   text-amber-700",
-  évalué:   "border-green-500  bg-green-50   text-green-700",
-  clos:     "border-black      bg-black      text-white",
+  signalez: "border-slate-300 bg-slate-100 text-slate-700",
+  validé:   "border-blue-400 bg-blue-50 text-blue-700",
+  assigné:  "border-violet-400 bg-violet-50 text-violet-700",
+  en_cours: "border-orange-400 bg-orange-50 text-orange-600",
+  rapporté: "border-amber-400 bg-amber-50 text-amber-700",
+  évalué:   "border-emerald-500 bg-emerald-50 text-emerald-700",
+  clos:     "border-emerald-200 bg-emerald-50 text-emerald-600",
 };
 
 const STATUS_DOT: Record<string, string> = {
   signalez: "#94a3b8", validé: "#3b82f6", assigné: "#8b5cf6",
-  en_cours: "#f97316", rapporté: "#f59e0b", évalué: "#22c55e", clos: "#000",
+  en_cours: "#f97316", rapporté: "#f59e0b", évalué: "#10b981", clos: "#059669",
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -175,147 +175,148 @@ export default function ProviderTicketsPage() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col">
-        <Navbar />
+    <>
+      <div className="flex-1 flex flex-col">
+          <Navbar />
 
-        <main className="mt-20 p-6 space-y-8">
+          <main className="mt-20 p-6 space-y-8">
 
-          <div className="flex items-center justify-between">
-            <PageHeader
-              title="Mes Tickets"
-              subtitle="Consultez et mettez à jour le statut de vos interventions"
-            />
-            <button
-              onClick={refresh}
-              disabled={loading}
-              className="flex items-center gap-2 text-xs font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-400 transition disabled:opacity-40"
-            >
-              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-              Actualiser
-            </button>
-          </div>
-
-          {/* Erreur globale */}
-          {error && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
-              <AlertCircle size={16} className="shrink-0" />
-              <span>{error}</span>
-              <button onClick={refresh} className="ml-auto text-xs font-bold underline">Réessayer</button>
-            </div>
-          )}
-
-          {/* KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {statsLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
-                ))
-              : kpis1.map((k, i) => <StatsCard key={i} {...k} />)
-            }
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {statsLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
-                ))
-              : kpis2.map((k, i) => <StatsCard key={i} {...k} />)
-            }
-          </div>
-
-          {/* Filtres */}
-          <div className="flex flex-wrap gap-3 items-center">
-            <FilterSelect
-              label="Tous les statuts"
-              value={filters.status ?? ""}
-              onChange={(v) => setFilters({ status: v || undefined })}
-              options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
-            />
-            <FilterSelect
-              label="Tous les types"
-              value={filters.type ?? ""}
-              onChange={(v) => setFilters({ type: v || undefined })}
-              options={[{ value: "curatif", label: "Curatif" }, { value: "preventif", label: "Préventif" }]}
-            />
-            <FilterSelect
-              label="Toutes priorités"
-              value={filters.priority ?? ""}
-              onChange={(v) => setFilters({ priority: v || undefined })}
-              options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))}
-            />
-            {(filters.status || filters.type || filters.priority) && (
+            <div className="flex items-center justify-between">
+              <PageHeader
+                title="Mes Tickets"
+                subtitle="Consultez et mettez à jour le statut de vos interventions"
+              />
               <button
-                onClick={() => setFilters({ status: undefined, type: undefined, priority: undefined })}
-                className="text-xs font-semibold text-gray-500 hover:text-gray-900 flex items-center gap-1 transition"
+                onClick={refresh}
+                disabled={loading}
+                className="flex items-center gap-2 text-xs font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-400 transition disabled:opacity-40"
               >
-                <X size={12} /> Réinitialiser
+                <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+                Actualiser
               </button>
-            )}
-          </div>
-
-          {/* Table */}
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-800">Liste de mes tickets</h3>
-              {meta && (
-                <span className="text-xs text-gray-400 font-medium">
-                  {meta.total} ticket{meta.total > 1 ? "s" : ""}
-                </span>
-              )}
             </div>
 
-            <div className="px-6 py-4">
-              {loading ? (
-                <div className="space-y-3 animate-pulse">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-100 rounded-xl" />
-                  ))}
-                </div>
-              ) : (
-                <DataTable columns={columns} data={tickets} />
-              )}
-            </div>
-
-            {/* Pagination */}
-            {meta && meta.last_page > 1 && (
-              <div className="px-6 py-4 border-t border-slate-50 flex items-center justify-between">
-                <span className="text-xs text-gray-400">
-                  Page {meta.current_page} / {meta.last_page}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setFilters({ page: meta.current_page - 1 })}
-                    disabled={meta.current_page <= 1}
-                    className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
-                  <button
-                    onClick={() => setFilters({ page: meta.current_page + 1 })}
-                    disabled={meta.current_page >= meta.last_page}
-                    className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
+            {/* Erreur globale */}
+            {error && (
+              <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
+                <button onClick={refresh} className="ml-auto text-xs font-bold underline">Réessayer</button>
               </div>
             )}
-          </div>
 
-        </main>
-      </div>
+            {/* KPIs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {statsLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
+                  ))
+                : kpis1.map((k, i) => <StatsCard key={i} {...k} />)
+              }
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {statsLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
+                  ))
+                : kpis2.map((k, i) => <StatsCard key={i} {...k} />)
+              }
+            </div>
 
-      {/* Panel détail ticket */}
-      {selectedTicket && (
-        <TicketDetailPanel
-          ticket={selectedTicket}
-          onClose={closeTicket}
-          onUpdateStatus={updateStatus}
-          updateLoading={updateLoading}
-          updateError={updateError}
-          updateSuccess={updateSuccess}
-        />
-      )}
-    </div>
+            {/* Filtres */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <FilterSelect
+                label="Tous les statuts"
+                value={filters.status ?? ""}
+                onChange={(v) => setFilters({ status: v || undefined })}
+                options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+              />
+              <FilterSelect
+                label="Tous les types"
+                value={filters.type ?? ""}
+                onChange={(v) => setFilters({ type: v || undefined })}
+                options={[{ value: "curatif", label: "Curatif" }, { value: "preventif", label: "Préventif" }]}
+              />
+              <FilterSelect
+                label="Toutes priorités"
+                value={filters.priority ?? ""}
+                onChange={(v) => setFilters({ priority: v || undefined })}
+                options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))}
+              />
+              {(filters.status || filters.type || filters.priority) && (
+                <button
+                  onClick={() => setFilters({ status: undefined, type: undefined, priority: undefined })}
+                  className="text-xs font-semibold text-gray-500 hover:text-gray-900 flex items-center gap-1 transition"
+                >
+                  <X size={12} /> Réinitialiser
+                </button>
+              )}
+            </div>
+
+            {/* Table */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+                <h3 className="text-base font-bold text-slate-800">Liste de mes tickets</h3>
+                {meta && (
+                  <span className="text-xs text-gray-400 font-medium">
+                    {meta.total} ticket{meta.total > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+
+              <div className="px-6 py-4">
+                {loading ? (
+                  <div className="space-y-3 animate-pulse">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+                    ))}
+                  </div>
+                ) : (
+                  <DataTable title="Liste de mes tickets" columns={columns as any[]} data={tickets} />
+                )}
+              </div>
+
+              {/* Pagination */}
+              {meta && meta.last_page > 1 && (
+                <div className="px-6 py-4 border-t border-slate-50 flex items-center justify-between">
+                  <span className="text-xs text-gray-400">
+                    Page {meta.current_page} / {meta.last_page}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setFilters({ page: meta.current_page - 1 })}
+                      disabled={meta.current_page <= 1}
+                      className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <button
+                      onClick={() => setFilters({ page: meta.current_page + 1 })}
+                      disabled={meta.current_page >= meta.last_page}
+                      className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </main>
+        </div>
+
+        {/* Panel détail ticket */}
+        {selectedTicket && (
+          <TicketDetailPanel
+            ticket={selectedTicket}
+            onClose={closeTicket}
+            onUpdateStatus={updateStatus}
+            updateLoading={updateLoading}
+            updateError={updateError}
+            updateSuccess={updateSuccess}
+          />
+        )}
+    </>
   );
 }
 

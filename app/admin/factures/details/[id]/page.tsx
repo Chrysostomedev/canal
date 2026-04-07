@@ -49,10 +49,10 @@ const formatDateLong = (iso?: string | null): string => {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    paid: "border-black bg-black text-white",
-    pending: "border-slate-300 bg-slate-100 text-slate-700",
-    overdue: "border-red-500 bg-red-100 text-red-600",
-    cancelled: "border-slate-400 bg-slate-100 text-slate-500",
+    paid: "border-emerald-200 bg-emerald-50 text-emerald-600",
+    pending: "border-amber-200 bg-amber-50 text-amber-600",
+    overdue: "border-rose-200 bg-rose-50 text-rose-600",
+    cancelled: "border-slate-200 bg-slate-50 text-slate-500",
   };
   const labels: Record<string, string> = {
     paid: "Payée",
@@ -60,7 +60,7 @@ function StatusBadge({ status }: { status: string }) {
     overdue: "En retard",
     cancelled: "Annulée",
   };
-  const icons: Record<string, JSX.Element> = {
+  const icons: Record<string, React.ReactNode> = {
     paid: <CheckCircle2 size={14} />,
     pending: <Clock size={14} />,
     overdue: <AlertTriangle size={14} />,
@@ -88,7 +88,7 @@ interface FlowStepProps {
   reference?: string;
   date?: string;
   status?: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   isLast?: boolean;
 }
 
@@ -163,7 +163,7 @@ function RelatedInvoicesList({ invoices, currentInvoiceId }: RelatedInvoicesList
                 <span className={isCurrent ? "text-slate-300" : "text-slate-500"}>
                   {formatDate(inv.invoice_date)}
                 </span>
-                <span className="font-bold">{formatMontant(inv.amount_ttc)}</span>
+                <span className="font-bold">{formatMontant(Number(inv.amount_ttc))}</span>
               </div>
             </Link>
           );
@@ -286,7 +286,7 @@ export default function FactureDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">
           {/* Flash */}
@@ -357,7 +357,7 @@ export default function FactureDetailsPage() {
           {/* ── KPIs ──────────────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {kpis.map((k, i) => (
-              <StatsCard key={i} {...k} />
+              <StatsCard key={i} {...k} shouldTruncate={k.label === "Site" ? false : true} />
             ))}
           </div>
 
@@ -400,15 +400,15 @@ export default function FactureDetailsPage() {
                   <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">Montant HT</span>
-                      <span className="font-bold text-slate-900">{formatMontant(invoice?.amount_ht)}</span>
+                      <span className="font-bold text-slate-900">{formatMontant(Number(invoice?.amount_ht))}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">TVA (18%)</span>
-                      <span className="font-bold text-slate-900">{formatMontant(invoice?.tax_amount)}</span>
+                      <span className="font-bold text-slate-900">{formatMontant(Number(invoice?.tax_amount))}</span>
                     </div>
                     <div className="flex justify-between text-base border-t border-slate-200 pt-2">
                       <span className="font-black text-slate-900">Total TTC</span>
-                      <span className="font-black text-slate-900">{formatMontant(invoice?.amount_ttc)}</span>
+                      <span className="font-black text-slate-900">{formatMontant(Number(invoice?.amount_ttc))}</span>
                     </div>
                   </div>
                   {isPaid && (

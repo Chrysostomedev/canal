@@ -99,8 +99,8 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const STATUS_STYLES: Record<string, string> = {
-  validated: "border-black bg-black text-white",
-  pending:   "border-slate-300 bg-slate-100 text-slate-700",
+  validated: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  pending:   "border-amber-200 bg-amber-50 text-amber-600",
 };
 
 export const STATUS_DOT: Record<string, string> = {

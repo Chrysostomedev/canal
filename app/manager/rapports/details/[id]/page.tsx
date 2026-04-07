@@ -28,8 +28,8 @@ function StatusBadge({ status }: { status?: string }) {
   const isRejected = status === "rejected";
   
   let styles = "border-slate-300 bg-slate-100 text-slate-700";
-  if (isValidated) styles = "border-black bg-black text-white";
-  if (isRejected)  styles = "border-red-600 bg-red-600 text-white";
+  if (isValidated) styles = "border-emerald-200 bg-emerald-50 text-emerald-600";
+  if (isRejected)  styles = "border-rose-200 bg-rose-50 text-rose-600";
 
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black uppercase tracking-widest ${styles}`}>
@@ -312,7 +312,7 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans tracking-tight">
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
           
           {flash && (
             <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] px-8 py-4 rounded-[24px] shadow-2xl text-sm font-black border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${

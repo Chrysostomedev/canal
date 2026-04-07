@@ -361,8 +361,7 @@ export default function NotificationsPage() {
             </div>
           )}
         </main>
-      </div>
-
+      
       {/* ── Panel détail slide ────────────────────────────────────────── */}
       {activeNotif && (
         <div

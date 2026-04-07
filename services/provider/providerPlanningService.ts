@@ -60,10 +60,10 @@ export interface PlanningListResponse {
 // ─── Helpers UI ───────────────────────────────────────────────────────────────
 
 export const STATUS_COLORS: Record<string, string> = {
-  planifie:   "#3b82f6",
-  en_cours:   "#f97316",
-  en_retard:  "#ef4444",
-  realise:    "#22c55e",
+  planifie:   "#3b82f6", // Blue-500
+  en_cours:   "#f97316", // Orange-500
+  en_retard:  "#e11d48", // Rose-600
+  realise:    "#10b981", // Emerald-500
 };
 
 export const STATUS_LABELS: Record<string, string> = {

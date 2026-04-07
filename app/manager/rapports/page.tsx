@@ -10,7 +10,7 @@ import {
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
 
@@ -25,10 +25,10 @@ const formatDate = (iso?: string | null): string => {
 
 // ─────────────── STATUS & TYPE BADGES ───────────────
 const STATUS_STYLES: Record<string, string> = {
-  validated: "border-black bg-black text-white",
-  pending:   "border-slate-300 bg-slate-100 text-slate-700",
-  submitted: "border-blue-300 bg-blue-100 text-blue-700",
-  rejected:  "border-red-300 bg-red-100 text-red-700",
+  validated: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  pending:   "border-amber-200 bg-amber-50 text-amber-600",
+  submitted: "border-blue-200 bg-blue-50 text-blue-600",
+  rejected:  "border-rose-200 bg-rose-50 text-rose-600",
 };
 const STATUS_LABELS: Record<string, string> = {
   validated: "Validé",
@@ -142,7 +142,7 @@ export default function RapportsPage() {
     { label: "Note moyenne",     value: stats?.average_rating ? `${stats.average_rating}/5` : "-", delta: "", trend: "up" as const },
   ];
 
-  const columns = [
+  const columns: ColumnConfig<InterventionReport>[] = [
     { header: "ID",         key: "id",        render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">#{row.id}</span> },
     { header: "Ticket",     key: "ticket" as any,    render: (_: any, row: InterventionReport) => row.ticket?.subject ?? `#${row.ticket_id}` },
     { header: "Prestataire",key: "provider" as any,  render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? "-" },
@@ -228,6 +228,5 @@ export default function RapportsPage() {
           <ReportSidePanel report={isDetailsOpen ? selectedReport : null} onClose={() => setIsDetailsOpen(false)} />
         </main>
       </div>
-    </div>
   );
 }

@@ -121,16 +121,14 @@ export default function PrestatairesPage() {
                     key={p.id}
                     id={p.id}
                     name={p.company_name}
-                    location={p.city}
-                    category={p.service?.name}
-                    phone={p.user?.phone}
-                    email={p.user?.email}
-                    rating={p.rating}
+                    location={p.city || ""}
+                    category={p.service?.name || ""}
+                    phone={p.user?.phone || ""}
+                    email={p.user?.email || ""}
+                    rating={p.rating || 0}
                     status={p.is_active ? "Actif" : "Inactif"}
-                    avatarFallback={<ProviderAvatar name={p.company_name} />}
                     onProfilClick={() => setSelectedProvider(p)}
                     onTicketsClick={() => router.push(`/manager/prestataires/details/${p.id}`)}
-                    detailUrl={`/manager/prestataires/details/${p.id}`}
                   />
                 ))}
               </div>
@@ -144,8 +142,7 @@ export default function PrestatairesPage() {
             )}
           </div>
         </main>
-      </div>
-
+      
       {/* Profile modal */}
       <ProfileModal
         isOpen={!!selectedProvider}
@@ -153,13 +150,12 @@ export default function PrestatairesPage() {
         provider={
           selectedProvider ? {
             name:       selectedProvider.company_name,
-            location:   selectedProvider.city,
-            phone:      selectedProvider.user?.phone,
-            email:      selectedProvider.user?.email,
-            category:   selectedProvider.service?.name,
+            location:   selectedProvider.city || "",
+            phone:      selectedProvider.user?.phone || "",
+            email:      selectedProvider.user?.email || "",
+            category:   selectedProvider.service?.name || "",
             dateEntree: selectedProvider.date_entree || "-",
             status:     selectedProvider.is_active ? "Actif" : "Inactif",
-            avatar:     <ProviderAvatar name={selectedProvider.company_name} size="lg" />,
             stats: {
               totalBillets:   { value: 0, delta: "" },
               ticketsEnCours: { value: 0,  delta: "" },

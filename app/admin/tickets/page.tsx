@@ -62,7 +62,7 @@ const STATUS_STYLES: Record<string, string> = {
   EN_COURS: "border-orange-400 bg-orange-50 text-orange-600",
   RAPPORTÉ: "border-amber-400 bg-amber-50 text-amber-700",
   ÉVALUÉ: "border-green-500 bg-green-50 text-green-700",
-  CLOS: "border-black bg-black text-white",
+  CLOS: "border-emerald-300 bg-emerald-50 text-emerald-700",
 };
 
 const STATUS_DOT_COLORS: Record<string, string> = {

@@ -206,13 +206,11 @@ export default function FacturesPage() {
                <DataTable
                  columns={columns}
                  data={invoices}
-                 isLoading={isLoading}
                  title="Liste des factures"
                />
             </div>
           </div>
         </main>
       </div>
-    </div>
   );
 }

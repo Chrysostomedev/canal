@@ -9,6 +9,7 @@ interface StatsCardProps {
   trend?: "up" | "down";
   isCurrency?: boolean;
   href?: string; // redirection au clic
+  shouldTruncate?: boolean;
 }
 
 function formatMontant(value: number): string {
@@ -22,7 +23,7 @@ function formatCount(value: number): string {
   return value < 10 ? `0${value}` : `${value}`;
 }
 
-export default function StatsCard({ label, value, delta, trend = "up", isCurrency = false, href }: StatsCardProps) {
+export default function StatsCard({ label, value, delta, trend = "up", isCurrency = false, href, shouldTruncate = true }: StatsCardProps) {
   const isUp = trend === "up";
   const showFCFA = isCurrency || (typeof value === "string" && value.includes("FCFA"));
 
@@ -53,11 +54,11 @@ export default function StatsCard({ label, value, delta, trend = "up", isCurrenc
       <div className="flex items-center justify-between px-1 gap-2 min-w-0">
         {showFCFA ? (
           <div className="flex items-baseline gap-1.5 min-w-0 flex-1">
-            <h3 className="text-xl font-extrabold text-slate-900 tracking-tighter leading-none truncate">{displayValue}</h3>
+            <h3 className={`text-xl font-extrabold text-slate-900 tracking-tighter leading-none ${shouldTruncate ? "truncate" : ""}`}>{displayValue}</h3>
             <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase flex-shrink-0">FCFA</span>
           </div>
         ) : (
-          <h3 className="text-2xl font-extrabold text-slate-900 tracking-tighter truncate flex-1">{displayValue}</h3>
+          <h3 className={`text-2xl font-extrabold text-slate-900 tracking-tighter flex-1 ${shouldTruncate ? "truncate" : ""}`}>{displayValue}</h3>
         )}
         {deltaBlock}
       </div>

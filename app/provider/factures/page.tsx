@@ -532,8 +532,7 @@ export default function ProviderFacturesPage() {
           </div>
 
         </main>
-      </div>
-
+      
       {/* Toasts */}
       {submitSuccess && <Toast msg={submitSuccess} type="success" />}
       {submitError   && <Toast msg={submitError}   type="error"   />}

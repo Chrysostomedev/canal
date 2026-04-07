@@ -51,10 +51,10 @@ const formatDateShort = (iso?: string | null): string => {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    pending: "border-slate-300 bg-slate-100 text-slate-700",
-    approved: "border-green-600 bg-green-50 text-green-700",
-    rejected: "border-red-500 bg-red-100 text-red-600",
-    revision: "border-blue-400 bg-blue-50 text-blue-700",
+    pending: "border-amber-200 bg-amber-50 text-amber-600",
+    approved: "border-emerald-200 bg-emerald-50 text-emerald-600",
+    rejected: "border-rose-200 bg-rose-50 text-rose-600",
+    revision: "border-sky-200 bg-sky-50 text-sky-600",
   };
   const labels: Record<string, string> = {
     pending: "En attente",
@@ -62,7 +62,7 @@ function StatusBadge({ status }: { status: string }) {
     rejected: "Rejeté",
     revision: "En révision",
   };
-  const icons: Record<string, JSX.Element> = {
+  const icons: Record<string, React.ReactNode> = {
     pending: <Clock size={14} />,
     approved: <CheckCircle2 size={14} />,
     rejected: <XCircle size={14} />,
@@ -93,7 +93,7 @@ interface TimelineItemProps {
 }
 
 function TimelineItem({ action, performedBy, date, reason }: TimelineItemProps) {
-  const actionLabels: Record<string, { label: string; icon: JSX.Element; color: string }> = {
+  const actionLabels: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
     created: {
       label: "Devis créé",
       icon: <FileText size={16} className="text-blue-500" />,
@@ -332,7 +332,7 @@ export default function DevisDetailsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">
           {/* Flash message */}

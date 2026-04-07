@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar      from "@/components/Sidebar";
 import Navbar       from "@/components/Navbar";
 import StatsCard    from "@/components/StatsCard";
-import DataTable    from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import PageHeader   from "@/components/PageHeader";
 import ActionGroup  from "@/components/ActionGroup";
 import Paginate     from "@/components/Paginate";
@@ -449,11 +449,11 @@ export default function ProviderRapportsPage() {
     {label:"Nouveau rapport", icon:PlusCircle, onClick:openCreate, variant:"primary"   as const},
   ];
 
-  const columns: any[] = [
+  const columns: ColumnConfig<InterventionReport>[] = [
     {header:"ID",       key:"id",         render:(_:any,row:InterventionReport)=><span className="font-black text-slate-900 text-sm">#{row.id}</span>},
     {header:"Ticket",   key:"ticket",     render:(_:any,row:InterventionReport)=><span className="text-xs text-slate-600 font-medium">{row.ticket?.subject??`#${row.ticket_id}`}</span>},
     {header:"Site",     key:"site",       render:(_:any,row:InterventionReport)=><span className="text-xs text-slate-600">{getSiteName(row.site)}</span>},
-    {header:"Type",     key:"type",       render:(_:any,row:InterventionReport)=><TypeBadge type={row.intervention_type}/>},
+    {header:"Type",     key:"intervention_type", render:(_:any,row:InterventionReport)=><TypeBadge type={row.intervention_type}/>},
     {header:"Résultat", key:"result",     render:(_:any,row:InterventionReport)=><ResultBadge result={row.result}/>},
     {header:"Date",     key:"created_at", render:(_:any,row:InterventionReport)=><span className="text-xs text-slate-400">{formatDate(row.created_at)}</span>},
     {header:"Note",     key:"rating",     render:(_:any,row:InterventionReport)=><StarRow value={row.rating}/>},
@@ -570,8 +570,7 @@ export default function ProviderRapportsPage() {
             )}
           </div>
         </main>
-      </div>
-
+      
       {submitSuccess && <Toast msg={submitSuccess} type="success"/>}
       {submitError   && <Toast msg={submitError}   type="error"/>}
 

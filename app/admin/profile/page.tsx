@@ -121,7 +121,6 @@ export default function AdminProfilePage() {
           <Loader2 className="w-10 h-10 text-slate-900 animate-spin" />
           <p className="mt-4 text-slate-500 font-medium">Chargement du profil...</p>
         </div>
-      </div>
     );
   }
 

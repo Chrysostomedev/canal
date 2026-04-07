@@ -30,7 +30,7 @@ function StatusBadge({ status }: { status?: string }) {
   const isValidated = status === "validated";
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${
-      isValidated ? "border-black bg-black text-white" : "border-slate-300 bg-slate-100 text-slate-700"
+      isValidated ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-amber-200 bg-amber-50 text-amber-600"
     }`}>
       {isValidated ? <CheckCircle2 size={11} /> : <Clock size={11} />}
       {isValidated ? "Validé" : "En attente"}
@@ -271,7 +271,7 @@ export default function ReportDetailPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col pl-64">
+      <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="mt-20 p-8 space-y-8">
 

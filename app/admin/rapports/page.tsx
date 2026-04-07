@@ -31,8 +31,8 @@ const formatDate = (iso?: string | null): string => {
 // ══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
-  validated: "border-black bg-black text-white",
-  pending:   "border-slate-300 bg-slate-100 text-slate-700",
+  validated: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  pending:   "border-amber-200 bg-amber-50 text-amber-600",
 };
 const STATUS_LABELS: Record<string, string> = {
   validated: "Validé",
@@ -566,7 +566,7 @@ export default function RapportsPage() {
     { header: "Site",        key: "site",       render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? "-" },
     { header: "Type",        key: "intervention_type", render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
     { header: "Date",        key: "created_at", render: (_: any, row: InterventionReport) => formatDate(row.created_at) },
-    { header: "Note",        key: "rating",     render: (_: any, row: InterventionReport) => <StarRating value={row.rating} /> },
+    { header: "Note",        key: "rating",     render: (_: any, row: InterventionReport) => <StarRating value={row.rating ? Number(row.rating) : 0} /> },
     { header: "Statut",      key: "status",     render: (_: any, row: InterventionReport) => <StatusBadge status={row.status} /> },
     {
       header: "Actions",

@@ -287,9 +287,11 @@ export default function Sidebar() {
         >
           <Link
             href={item.href || "#"}
-            className={`flex-1 flex items-center gap-3 px-3 py-2.5 font-medium text-[15px] ${depth > 0 ? "pl-4" : ""}`}
+            className={`flex-1 flex items-center transition-all duration-200 ${collapsed ? "justify-center px-0" : "gap-3 px-3"} py-2.5 font-medium text-[15px] ${depth > 0 && !collapsed ? "pl-4" : ""}`}
           >
-            {item.icon}
+            <span className={`shrink-0 ${collapsed ? "flex items-center justify-center w-full" : ""}`}>
+              {item.icon}
+            </span>
             {!collapsed && <span>{item.label}</span>}
           </Link>
 
@@ -349,12 +351,14 @@ export default function Sidebar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all font-medium text-[15px] ${active
+                className={`flex items-center transition-all font-medium text-[15px] py-2 rounded-xl ${collapsed ? "justify-center px-0" : "gap-3 px-3"} ${active
                   ? "bg-theme-primary text-white shadow-md"
                   : "text-gray-600 hover:bg-gray-50"
                   }`}
               >
-                {item.icon}
+                <span className={`shrink-0 ${collapsed ? "flex items-center justify-center w-full" : ""}`}>
+                  {item.icon}
+                </span>
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             );

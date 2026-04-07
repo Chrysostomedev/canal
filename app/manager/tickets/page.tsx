@@ -9,7 +9,7 @@ import {
 
 import ReusableForm from "@/components/ReusableForm";
 import Navbar from "@/components/Navbar";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import StatsCard from "@/components/StatsCard";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
@@ -49,8 +49,8 @@ const STATUS_STYLES: Record<string, string> = {
   'EN_COURS': "border-orange-400 bg-orange-50 text-orange-600",
   'EN_TRAITEMENT': "border-orange-400 bg-orange-50 text-orange-600",
   'RAPPORTÉ': "border-amber-400 bg-amber-50 text-amber-700",
-  'ÉVALUÉ': "border-green-500 bg-green-50 text-green-700",
-  'CLOS': "border-black bg-black text-white",
+  'ÉVALUÉ': "border-emerald-500 bg-emerald-50 text-emerald-700",
+  'CLOS': "border-emerald-200 bg-emerald-50 text-emerald-600",
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -295,7 +295,7 @@ export default function TicketsPage() {
     { label: "Délai moyen (h)", value: stats?.delais_moyen_traitement_heures ?? 0, trend: "down" as const },
   ], [stats]);
 
-  const columns: any[] = [
+  const columns: ColumnConfig<Ticket>[] = [
     {
       header: "Code",
       key: "id",
@@ -342,7 +342,8 @@ export default function TicketsPage() {
   ];
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <>
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <main className="mt-20 p-8 space-y-10 overflow-y-auto h-[calc(100vh-80px)]">
           <PageHeader
@@ -467,9 +468,11 @@ export default function TicketsPage() {
               <button
                 disabled={isSubmitting}
                 onClick={async () => {
-                  await rateTicket(rateTicketId, { rating: rateValue || undefined, comment: rateComment || undefined } as any);
-                  setIsRateOpen(false);
-                  refresh();
+                  if (rateTicketId) {
+                    await rateTicket(rateTicketId, { rating: rateValue || undefined, comment: rateComment || undefined } as any);
+                    setIsRateOpen(false);
+                    refresh();
+                  }
                 }}
                 className="flex-1 py-3.5 rounded-2xl bg-slate-900 text-white text-sm font-black uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
@@ -491,6 +494,6 @@ export default function TicketsPage() {
         onSubmit={(values: Record<string, any>) => createTicket(values as any)}
         submitLabel="Envoyer le ticket"
       />
-    </div>
+    </>
   );
 }

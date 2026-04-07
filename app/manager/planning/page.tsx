@@ -101,7 +101,8 @@ export default function PlanningPage() {
     : null;
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <>
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
         <main className="mt-20 p-8 space-y-8 overflow-y-auto h-[calc(100vh-80px)]">
@@ -158,6 +159,6 @@ export default function PlanningPage() {
       </div>
 
       <Toast toast={toast} />
-    
+    </>
   );
 }

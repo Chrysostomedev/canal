@@ -36,7 +36,6 @@ export default function DevisPage() {
     stats,
     isLoading,
     error,
-    search,
     setFilters,
     exportQuotes
   } = useQuotes();
@@ -203,13 +202,11 @@ export default function DevisPage() {
                <DataTable
                  columns={columns}
                  data={quotes}
-                 isLoading={isLoading}
                  title="Liste des devis"
                />
             </div>
           </div>
         </main>
       </div>
-    </div>
   );
 }

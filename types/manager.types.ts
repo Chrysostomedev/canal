@@ -172,6 +172,19 @@ export interface Quote {
   history?: QuoteHistory[];
 }
 
+export interface CreateQuotePayload {
+  ticket_id: number;
+  provider_id: number;
+  site_id: number;
+  description: string;
+  items: QuoteItem[];
+}
+
+export interface UpdateQuotePayload extends Partial<CreateQuotePayload> {
+  status?: string;
+  rejection_reason?: string;
+}
+
 export interface QuoteHistory {
   id: number;
   action: string;
@@ -298,6 +311,7 @@ export interface Planning {
     };
   };
   created_at: string;
+  updated_at: string;
 }
 
 export interface PlanningStats {
@@ -383,6 +397,13 @@ export interface ReportFilters extends BaseFilters {
   date_debut?: string;
   date_fin?: string;
   intervention_type?: string;
+}
+
+export interface ValidateReportPayload {
+  result?: string;
+  rating?: number;
+  comment?: string;
+  manager_comment?: string;
 }
 
 // ════════════════════════════════════════════════════════════════

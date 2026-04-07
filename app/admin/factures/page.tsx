@@ -12,7 +12,7 @@ import {
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
 
@@ -45,10 +45,10 @@ const formatDate = (iso: string): string => {
 // ══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
-  paid:      "border-black bg-black text-white",
-  pending:   "border-slate-300 bg-slate-100 text-slate-700",
-  overdue:   "border-red-500 bg-red-100 text-red-600",
-  cancelled: "border-slate-400 bg-slate-100 text-slate-500",
+  paid:      "border-emerald-200 bg-emerald-50 text-emerald-600",
+  pending:   "border-amber-200 bg-amber-50 text-amber-600",
+  overdue:   "border-rose-200 bg-rose-50 text-rose-600",
+  cancelled: "border-slate-200 bg-slate-50 text-slate-500",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -480,7 +480,7 @@ export default function FacturesPage() {
 
   // ── Colonnes DataTable ──
 
-  const columns = [
+  const columns: ColumnConfig<Invoice>[] = [
     {
       header: "ID Facture",
       key: "reference",
@@ -626,6 +626,7 @@ export default function FacturesPage() {
           {/* ── Tableau ── */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <DataTable
+              title="Liste des factures"
               columns={columns}
               data={isLoading ? [] : paginated}
               onViewAll={() => {}}

@@ -43,10 +43,10 @@ const formatDate = (iso?: string): string => {
 // ══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
-  pending:  "border-slate-300 bg-slate-100 text-slate-700",
-  approved: "border-green-600 bg-green-50 text-green-700",
-  rejected: "border-red-500 bg-red-100 text-red-600",
-  revision: "border-blue-400 bg-blue-50 text-blue-700",
+  pending:  "border-amber-200 bg-amber-50 text-amber-600",
+  approved: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  rejected: "border-rose-200 bg-rose-50 text-rose-600",
+  revision: "border-sky-200 bg-sky-50 text-sky-600",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -560,7 +560,7 @@ export default function DevisPage() {
   const columns: ColumnConfig<Quote>[] = [
     { header: "Référence",   key: "reference",  render: (_: any, row: Quote) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
     { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `#${row.ticket_id}` },
-    { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.name ?? "-" },
+    { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.company_name ?? row.provider?.name ?? "-" },
     { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? "-" },
     { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
     { header: "Date",        key: "created_at", render: (_: any, row: Quote) => formatDate(row.created_at) },

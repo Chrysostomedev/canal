@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
-import DataTable from "@/components/DataTable";
+import DataTable, { ColumnConfig } from "@/components/DataTable";
 import EventListCard from "@/components/EventListCard";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye, RefreshCw, AlertCircle } from "lucide-react";
@@ -185,7 +185,7 @@ export default function ProviderDashboard() {
   };
 
   // ── Colonnes DataTable - inchangées ───────────────────────────────────────
-  const columns = [
+  const columns: ColumnConfig<any>[] = [
     { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
     { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
     { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom ?? "-" },
@@ -276,11 +276,6 @@ export default function ProviderDashboard() {
           {/* ── Table tickets récents ─────────────────────────────────────── */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4">
-              <h3 className="text-base font-bold text-slate-800">
-                Listes tickets récents
-              </h3>
-            </div>
-            <div className="px-6 py-4">
               {loading ? (
                 <div className="space-y-3 animate-pulse">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -289,6 +284,7 @@ export default function ProviderDashboard() {
                 </div>
               ) : (
                 <DataTable
+                  title="Listes tickets récents"
                   columns={columns}
                   data={tickets}
                   onViewAll={() => (window.location.href = "/provider/tickets")}
@@ -298,7 +294,7 @@ export default function ProviderDashboard() {
           </div>
 
         </main>
-      </div>
+      
 
       {/* Panel détails ticket - inchangé */}
       <SideDetailsPanel
