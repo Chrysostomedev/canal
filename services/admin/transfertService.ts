@@ -54,10 +54,10 @@ export interface TransferRecord {
   created_at: string;
   updated_at: string;
 
-  // Relations eager-loaded
+  // Relations eager-loaded — Laravel sérialise en snake_case dans le JSON
   asset?: TransferAsset;
-  fromSite?: TransferSite;
-  toSite?: TransferSite;
+  from_site?: TransferSite;   // fromSite() → from_site en JSON
+  to_site?: TransferSite;     // toSite()   → to_site   en JSON
   actor?: TransferActor;
 }
 
@@ -135,8 +135,27 @@ export const transfertService = {
     if (filters.page)              params.page              = filters.page;
 
     const response = await axiosInstance.get("/admin/asset-transfers", { params });
-    // Laravel retourne { success, data: { data, current_page, ... }, message }
-    return response.data?.data as PaginatedTransfers;
+    // Laravel paginator: { success, data: { data: [], current_page, last_page, per_page, total }, message }
+    const raw = response.data?.data;
+    // Shape 1: { data: [], current_page, ... } — Laravel paginator
+    if (raw && Array.isArray(raw.data)) {
+      return raw as PaginatedTransfers;
+    }
+    // Shape 2: { items: [], meta: {} } — custom wrapper
+    if (raw && Array.isArray(raw.items)) {
+      return {
+        data: raw.items,
+        current_page: raw.meta?.current_page ?? 1,
+        last_page: raw.meta?.last_page ?? 1,
+        per_page: raw.meta?.per_page ?? 15,
+        total: raw.meta?.total ?? raw.items.length,
+      };
+    }
+    // Shape 3: raw is array
+    if (Array.isArray(raw)) {
+      return { data: raw, current_page: 1, last_page: 1, per_page: raw.length, total: raw.length };
+    }
+    return { data: [], current_page: 1, last_page: 1, per_page: 15, total: 0 };
   },
 
   // ── KPIs ─────────────────────────────────────────────────────────────────
@@ -163,7 +182,7 @@ export const transfertService = {
   /**
    * POST /admin/asset/{assetId}/transfer
    * Crée un nouveau transfert en statut "en_cours".
-   * Le back valide : company_asset_id, to_site_id, reason (nullable).
+   * Le back valide : company_asset_id (requis), to_site_id (requis), reason (nullable).
    */
   initiate: async (assetId: number, payload: Omit<InitiateTransferPayload, "company_asset_id">): Promise<TransferRecord> => {
     const response = await axiosInstance.post(`/admin/asset/${assetId}/transfer`, {

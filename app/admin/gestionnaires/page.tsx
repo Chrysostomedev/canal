@@ -264,12 +264,12 @@ export default function GestionnairesPage() {
               </div>
 
               {/* Importer */}
-              <button
+              {/* <button
                 onClick={handleImport}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
               >
                 <Download size={16} /> Importer
-              </button>
+              </button> */}
 
               {/* Exporter */}
               <button

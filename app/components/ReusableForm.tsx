@@ -2,7 +2,7 @@
 
 import SideModal from "@/components/form/SideModal";
 import FormButton from "@/components/form/FormButton";
-import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor, ImageUpload, PdfUpload } from "@/components/form/FormInput";
+import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor, ImageUpload, PdfUpload, PhoneInput } from "@/components/form/FormInput";
 
 export interface FieldConfig {
   name: string;
@@ -132,26 +132,13 @@ export default function ReusableForm({
                     />
 
                   ) : field.type === "tel" ? (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 bg-slate-50 rounded-2xl overflow-hidden">
-                        <span className="pl-4 text-slate-400 text-sm font-medium shrink-0 select-none">+</span>
-                        <Input
-                          name={field.name}
-                          type="tel"
-                          placeholder={field.placeholder ?? "225 07 00 00 00 00"}
-                          required={field.required}
-                          disabled={field.disabled}
-                          defaultValue={initialValues[field.name] ?? ""}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            onFieldChange?.(field.name, e.target.value)
-                          }
-                          className="flex-1 bg-transparent border-none rounded-none p-4 pl-0 text-slate-700 placeholder:text-slate-400 focus:ring-0 outline-none"
-                        />
-                      </div>
-                      <p className="text-[10px] text-slate-400 font-medium pl-1">
-                        Format : indicatif pays + numéro (ex: +225 07 00 00 00 00)
-                      </p>
-                    </div>
+                    <PhoneInput
+                      name={field.name}
+                      required={field.required}
+                      disabled={field.disabled}
+                      defaultValue={initialValues[field.name] ?? ""}
+                      onChange={(val) => onFieldChange?.(field.name, val)}
+                    />
 
                   ) : (
                     <Input

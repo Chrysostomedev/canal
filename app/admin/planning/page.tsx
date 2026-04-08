@@ -421,6 +421,9 @@ export default function PlanningPage() {
             </div>
           )}
 
+{/* Toast feedback */}
+<Toast toast={toast} />
+
           <div className="flex justify-between items-start">
             <PageHeader
               title="Planning"
@@ -542,8 +545,6 @@ export default function PlanningPage() {
         submitLabel={isSubmitting ? "Mise à jour..." : "Mettre à jour"}
       />
 
-      {/* Toast feedback */}
-      <Toast toast={toast} />
     </>
   );
 }

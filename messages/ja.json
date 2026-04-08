@@ -148,5 +148,20 @@
     "es": "Español",
     "ja": "日本語",
     "ar": "العربية"
-  }
+  },
+  "dashboard": { "title": "ダッシュボード", "subtitle": "活動の概要", "totalTickets": "総チケット数", "treatedTickets": "処理済みチケット", "untreatedTickets": "未処理チケット", "activeSites": "アクティブサイト", "inactiveSites": "非アクティブサイト", "avgCostPerSite": "サイト平均コスト", "totalMaintenanceCost": "総メンテナンスコスト", "yearTrend": "年間トレンド", "mostVisitedSites": "最も訪問されたサイト", "sitesList": "サイト一覧", "seeAll": "すべて見る", "recentTickets": "最近のチケット", "loading": "読み込み中..." },
+  "administration": { "title": "管理", "subtitle": "このメニューでスペース全体を管理できます", "totalActiveSites": "アクティブサイト総数", "totalInactiveSites": "非アクティブサイト総数", "avgCostPerSite": "サイト平均コスト", "totalMaintenanceCost": "総メンテナンスコスト", "totalEquipments": "総設備数", "totalProviders": "総プロバイダー数", "totalInvoices": "総請求書数", "pendingTickets": "保留中チケット", "ongoingTickets": "進行中チケット", "closedTickets": "完了チケット", "evolutionChart": "設備の推移", "equipments": "設備" },
+  "tickets": { "title": "チケット", "subtitle": "すべてのメンテナンスチケットの管理と追跡", "addTicket": "チケット追加", "newTicket": "新しいチケット", "importTickets": "インポート", "exportTickets": "エクスポート", "filterTickets": "フィルター", "totalTickets": "総チケット数", "openTickets": "オープンチケット", "closedTickets": "完了チケット", "avgDelay": "平均遅延", "minDelay": "最小遅延", "maxDelay": "最大遅延", "status": { "all": "すべてのステータス", "SIGNALÉ": "報告済み", "VALIDÉ": "検証済み", "ASSIGNÉ": "割り当て済み", "EN_COURS": "進行中", "RAPPORTÉ": "報告済み", "ÉVALUÉ": "評価済み", "CLOS": "完了" }, "type": { "all": "すべてのタイプ", "curatif": "是正", "preventif": "予防" }, "priority": { "all": "すべて", "faible": "低", "moyenne": "中", "haute": "高", "critique": "重大" }, "columns": { "id": "チケットID", "subject": "件名", "site": "サイト", "service": "サービス", "type": "タイプ", "status": "ステータス", "actions": "アクション" } },
+  "sites": { "title": "サイト", "subtitle": "すべてのサイトの追跡と管理", "addSite": "サイト追加", "activeSites": "アクティブサイト", "inactiveSites": "非アクティブサイト", "avgDelay": "平均遅延/サイト", "totalSites": "総サイト数", "avgCost": "平均コスト/サイト", "ongoingTickets": "進行中チケット", "closedTickets": "完了チケット", "mostVisited": "最も訪問されたサイト" },
+  "patrimoines": { "title": "資産", "subtitle": "設備と資産の管理", "addAsset": "資産追加", "types": { "title": "資産タイプ", "subtitle": "設備タイプ管理", "addType": "タイプ追加" }, "subtypes": { "title": "資産サブタイプ", "subtitle": "設備サブタイプ管理", "addSubtype": "サブタイプ追加" } },
+  "planning": { "title": "計画", "subtitle": "介入の計画と追跡", "addPlanning": "計画追加", "today": "今日", "month": "月", "week": "週" },
+  "entretien": { "title": "メンテナンス", "subtitle": "介入レポート管理", "addReport": "新しいレポート" },
+  "prestataires": { "title": "プロバイダー", "subtitle": "すべてのサービスプロバイダーを管理", "addProvider": "プロバイダー追加", "totalProviders": "総プロバイダー数", "activeProviders": "アクティブプロバイダー", "inactiveProviders": "非アクティブプロバイダー", "avgInterventionTime": "平均介入時間" },
+  "devis": { "title": "見積もり", "subtitle": "見積もりと価格要求の管理", "addQuote": "新しい見積もり" },
+  "factures": { "title": "請求書", "subtitle": "請求書と支払いの管理", "addInvoice": "新しい請求書" },
+  "rapports": { "title": "レポート", "subtitle": "パフォーマンスレポートと分析" },
+  "services": { "title": "サービス", "subtitle": "プロバイダー向けサービス管理", "addService": "サービス追加" },
+  "transfert": { "title": "サイト間転送", "subtitle": "サイト間の設備移動の履歴と管理", "newTransfer": "新しい転送", "totalTransfers": "総転送数", "completed": "完了", "ongoing": "進行中", "involvedSites": "関連サイト" },
+  "gestionnaires": { "title": "マネージャー", "subtitle": "サイト責任者の管理", "addManager": "マネージャー追加" },
+  "roles": { "title": "ロール管理", "subtitle": "ロール別権限の定義" }
 }

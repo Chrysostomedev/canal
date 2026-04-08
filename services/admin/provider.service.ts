@@ -6,6 +6,7 @@ import axios from "../../core/axios";
 export interface Provider {
   id: number;
   company_name: string;
+  email?: string | null;        // directement sur le modèle Providers
   city?: string;
   neighborhood?: string;
   street?: string;
@@ -17,11 +18,12 @@ export interface Provider {
   logoUrl?: string;
   pictureUrl?: string;
   country_id?: number;
-  user_id?: number;
   // Relations eager-loaded
-  user?: { id: number; first_name?: string; last_name?: string; email?: string; phone?: string };
   service?: { id: number; name: string };
   country?: { id: number; name: string };
+  // NOTE: pas de relation user — le Provider est autonome (Authenticatable)
+  // user est conservé pour rétrocompat mais sera toujours undefined
+  user?: { id: number; first_name?: string; last_name?: string; email?: string; phone?: string };
 }
 
 export interface ProviderStats {
@@ -103,16 +105,34 @@ export const ProviderService = {
     return response.data.data;
   },
 
-  // GET /admin/providers/{id} — retourne { data: { provider, stats } } ou { data: provider, stats: {...} }
+  // GET /admin/providers/{id} — retourne { data: { provider, stats } }
   async getProvider(id: number): Promise<ProviderDetail> {
     const response = await axios.get(`/admin/providers/${id}`);
-    // Le controller show() retourne Response([provider, stats]) → data.data = { provider, stats }
     const d = response.data?.data;
+    const provider: Provider = d?.provider ?? d;
+    const stats = d?.stats ?? response.data?.stats ?? {
+      total_tickets: 0, in_progress_tickets: 0, closed_tickets: 0, rating: null,
+    };
+
+    // Si la note n'est pas calculée côté back, on la calcule depuis les tickets
+    let rating = provider?.rating ?? stats?.rating ?? null;
+    if (!rating || rating === 0) {
+      try {
+        const ticketsRes = await axios.get(`/admin/providers/${id}/tickets`, {
+          params: { per_page: 200 },
+        });
+        const items: any[] = ticketsRes.data?.data ?? ticketsRes.data?.items ?? [];
+        const rated = items.filter((t: any) => t.rating != null && t.rating > 0);
+        if (rated.length > 0) {
+          const avg = rated.reduce((sum: number, t: any) => sum + Number(t.rating), 0) / rated.length;
+          rating = Math.round(avg * 10) / 10;
+        }
+      } catch { /* non bloquant */ }
+    }
+
     return {
-      provider: d?.provider ?? d,
-      stats:    d?.stats    ?? response.data?.stats ?? {
-        total_tickets: 0, in_progress_tickets: 0, closed_tickets: 0, rating: null,
-      },
+      provider: { ...provider, rating: rating ?? undefined },
+      stats: { ...stats, rating },
     };
   },
 

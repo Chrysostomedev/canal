@@ -110,7 +110,7 @@ export interface AdminDashboard {
   delais_maximal_traitement_heures: number | null;
 
   // Graphiques
-  evolution_patrimoine:            { annee: number; mois: number; total: number }[];
+  evolution_patrimoine:            { label: string; value: number; mois?: number; annee?: number }[];
   sites_les_plus_frequentes:       { site_id: number; nom: string; total_tickets: number }[];
   actifs_les_plus_critiques:       any[];
   tickets_en_cours_par_patrimoine: TicketStats["tickets_en_cours_par_patrimoine"];
@@ -182,10 +182,10 @@ function mapGlobalDashboard(
 }
 
 function mapAdminDashboard(
-  raw:         AdminDashboardRaw,
+  raw: AdminDashboardRaw,
   ticketStats: TicketStats,
 ): AdminDashboard {
-  // Le back retourne directement les champs à la racine (pas dans kpis)
+
   const rawAny = raw as any;
 
   const sitesActifs = rawAny.nombre_total_sites_actifs ?? raw.kpis?.sites_actifs?.value ?? 0;
@@ -195,41 +195,47 @@ function mapAdminDashboard(
   const rep = ticketStats.repartition_par_statut ?? {};
 
   const enAttente =
-    getStatut(rep, "SIGNALÉ",  "signalez", "SIGNALE", "signalé") +
-    getStatut(rep, "VALIDÉ",   "validé",   "VALIDE");
+    getStatut(rep, "SIGNALÉ", "signalez", "SIGNALE", "signalé") +
+    getStatut(rep, "VALIDÉ", "validé", "VALIDE");
 
   const enCours =
-    getStatut(rep, "ASSIGNÉ",  "assigné",  "ASSIGNE") +
+    getStatut(rep, "ASSIGNÉ", "assigné", "ASSIGNE") +
     getStatut(rep, "EN_COURS", "en_cours");
 
   const clotures = getStatut(rep, "CLOS", "clos");
 
   const coutFinal = ticketStats.cout_global_tickets ?? coutTotal;
 
+  // ✅ CORRECTION ICI
+  const rawEvolution: any[] = rawAny.evolution_patrimoine ?? [];
+
+  const evolution_patrimoine = rawEvolution.map((d: any) => ({
+    label: d.label ?? d.mois_label ?? "",
+    value: Math.round(Number(d.total ?? d.value ?? 0)),
+    mois:  d.mois,
+    annee: d.annee,
+  }));
+
   return {
-    // Sites
     nombre_total_sites_actifs:   sitesActifs,
     nombre_total_sites_inactifs: rawAny.nombre_total_sites_inactifs ?? 0,
     cout_moyen_par_sites:        rawAny.cout_moyen_par_sites ?? (sitesActifs > 0 ? Math.round(coutFinal / sitesActifs) : 0),
     cout_total_maintenance:      coutFinal,
 
-    // Patrimoine — lus directement depuis la réponse brute
     nombre_total_equipements:  equipements,
     nombre_total_prestataires: rawAny.nombre_total_prestataires ?? 0,
     nombre_total_factures:     rawAny.nombre_total_factures ?? "N/A",
 
-    // Tickets
-    nombre_tickets_en_attente: rawAny.nombre_tickets_en_attente ?? (ticketStats.nombre_total_tickets ? enAttente : (raw as any).flux_tickets?.["signalé"] ?? 0),
+    nombre_tickets_en_attente: rawAny.nombre_tickets_en_attente ?? (ticketStats.nombre_total_tickets ? enAttente : rawAny.flux_tickets?.["signalé"] ?? 0),
     nombre_tickets_en_cours:   rawAny.nombre_tickets_en_cours ?? ticketStats.nombre_total_tickets_en_cours ?? enCours,
     nombre_tickets_clotures:   rawAny.nombre_tickets_clotures ?? ticketStats.nombre_total_tickets_clotures ?? clotures,
 
-    // Délais
     delais_moyen_traitement_heures:   ticketStats.delais_moyen_traitement_heures   ?? null,
     delais_minimal_traitement_heures: ticketStats.delais_minimal_traitement_heures ?? null,
     delais_maximal_traitement_heures: ticketStats.delais_maximal_traitement_heures ?? null,
 
-    // Graphiques
-    evolution_patrimoine:            rawAny.evolution_patrimoine      ?? [],
+    // ✅ maintenant c’est valide
+    evolution_patrimoine,
     sites_les_plus_frequentes:       rawAny.sites_les_plus_frequentes ?? [],
     actifs_les_plus_critiques:       rawAny.actifs_les_plus_critiques ?? [],
     tickets_en_cours_par_patrimoine: ticketStats.tickets_en_cours_par_patrimoine ?? [],

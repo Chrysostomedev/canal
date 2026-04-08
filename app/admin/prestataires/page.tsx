@@ -19,6 +19,7 @@ import { useProviders } from "../../../hooks/admin/useProviders";
 import { ProviderService, Provider } from "../../../services/admin/provider.service";
 import { useServices } from "../../../hooks/admin/useServices";
 import { exportToXlsx } from "../../../core/export";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 // ══════════════════════════════════════════════
 // FILTER DROPDOWN
@@ -143,6 +144,7 @@ export default function PrestatairesPage() {
   } = useProviders();
 
   const { services } = useServices();
+  const { t } = useLanguage();
 
   const [isModalOpen,      setIsModalOpen]      = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
@@ -201,9 +203,8 @@ export default function PrestatairesPage() {
         nom:          p.company_name ?? "-",
         service:      p.service?.name ?? "-",
         ville:        p.city ?? "-",
-        responsable:  p.user ? `${p.user.first_name ?? ""} ${p.user.last_name ?? ""}`.trim() : "-",
-        email:        p.user?.email ?? "-",
-        telephone:    p.user?.phone ?? "-",
+        email:        p.email ?? "-",
+        telephone:    "-",
         statut:       p.is_active ? "Actif" : "Inactif",
         note:         p.rating ? `${typeof p.rating === "string" ? parseFloat(p.rating) : p.rating}/5` : "-",
         date_entree:  p.date_entree ? new Date(p.date_entree).toLocaleDateString("fr-FR") : "-",
@@ -318,10 +319,10 @@ export default function PrestatairesPage() {
 
   // ── KPIs ──
   const kpis = [
-    { label: "Total prestataires",       value: stats?.total_providers           ?? 0,  delta: "+0%", trend: "up"   as const },
-    { label: "Prestataires actifs",      value: stats?.active_providers          ?? 0,  delta: "+0%", trend: "up"   as const },
-    { label: "Prestataires inactifs",    value: stats?.inactive_providers        ?? 0,  delta: "+0%", trend: "down" as const },
-    { label: "Délai moyen intervention", value: stats?.average_intervention_time ?? "",              delta: "+0%", trend: "up"   as const },
+    { label: t("prestataires.totalProviders"),       value: stats?.total_providers           ?? 0,  delta: "+0%", trend: "up"   as const },
+    { label: t("prestataires.activeProviders"),      value: stats?.active_providers          ?? 0,  delta: "+0%", trend: "up"   as const },
+    { label: t("prestataires.inactiveProviders"),    value: stats?.inactive_providers        ?? 0,  delta: "+0%", trend: "down" as const },
+    { label: t("prestataires.avgInterventionTime"),  value: stats?.average_intervention_time ?? "",              delta: "+0%", trend: "up"   as const },
   ];
 
   return (
@@ -329,10 +330,7 @@ export default function PrestatairesPage() {
       <Navbar />
 
         <main className="mt-20 p-6 space-y-8">
-          <PageHeader
-            title="Prestataires"
-            subtitle="Gérez tous vos prestataires de services"
-          />
+          <PageHeader title={t("prestataires.title")} subtitle={t("prestataires.subtitle")} />
 
           {/* Flash */}
           {flash && (
@@ -453,8 +451,8 @@ export default function PrestatairesPage() {
                     name={p.company_name ?? "Prestataire"}
                     location={p.city ?? ""}
                     category={p.service?.name ?? ""}
-                    phone={p.user?.phone ?? ""}
-                    email={p.user?.email ?? ""}
+                    phone={""}
+                    email={p.email ?? ""}
                     rating={typeof p.rating === "string" ? parseFloat(p.rating) : (p.rating ?? 0)}
                     status={p.is_active ? "Actif" : "Inactif"}
                     logo={p.logoUrl}
@@ -496,8 +494,8 @@ export default function PrestatairesPage() {
         provider={selectedProvider ? {
           name:       selectedProvider.company_name  ?? "Prestataire",
           location:   selectedProvider.city          ?? "",
-          phone:      selectedProvider.user?.phone   ?? "",
-          email:      selectedProvider.user?.email   ?? "",
+          phone:      "",
+          email:      selectedProvider.email         ?? "",
           category:   selectedProvider.service?.name ?? "",
           dateEntree: selectedProvider.date_entree   ?? "",
           status:     selectedProvider.is_active ? "Actif" : "Inactif",

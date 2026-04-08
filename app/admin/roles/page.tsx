@@ -202,10 +202,10 @@ function UserSidePanel({ user, onClose, onToggleStatus }: {
             }
           </button>
 
-          {/* Changer le rôle */}
+          {/* Changer le rôle
           <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-50 transition">
             <Shield size={15} /> Changer le rôle
-          </button>
+          </button> */}
         </div>
       </div>
     </>
@@ -604,15 +604,15 @@ export default function RolesPage() {
       header: "Rôle", key: "role",
       render: (_: any, row: any) => <RoleBadge role={row.role} />,
     },
-    {
-      header: "Site / Entreprise", key: "site",
-      render: (_: any, row: any) => (
-        <div className="flex items-center gap-1.5 text-slate-600 text-sm">
-          <Building2 size={13} className="text-slate-400" />
-          {row.site}
-        </div>
-      ),
-    },
+    // {
+    //   header: "Site / Entreprise", key: "site",
+    //   render: (_: any, row: any) => (
+    //     <div className="flex items-center gap-1.5 text-slate-600 text-sm">
+    //       <Building2 size={13} className="text-slate-400" />
+    //       {row.site}
+    //     </div>
+    //   ),
+    // },
     {
       header: "Téléphone", key: "phone",
       render: (_: any, row: any) => <span className="text-sm text-slate-600">{row.phone}</span>,

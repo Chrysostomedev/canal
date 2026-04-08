@@ -846,7 +846,19 @@ export default function PatrimoinesPage() {
     }
   };
 
-  const handleExport = () => exportToExcel(assets);
+  const handleExport = async () => {
+    try {
+      await AssetService.exportAssets({
+        ...(filters.status   ? { status:   filters.status   } : {}),
+        ...(filters.type_id  ? { type_id:  filters.type_id  } : {}),
+        ...(filters.site_id  ? { site_id:  filters.site_id  } : {}),
+      });
+      setFlash({ type: "success", msg: "Export téléchargé avec succès." });
+    } catch {
+      // Fallback vers export local si le backend échoue
+      exportToExcel(assets);
+    }
+  };
 
   const activeFiltersCount = [filters.status, filters.type_id, filters.sub_type_id, filters.site_id, filters.search]
     .filter(Boolean).length;
@@ -984,7 +996,7 @@ export default function PatrimoinesPage() {
             </div>
           )}
 
-          <PageHeader title="Patrimoine" subtitle="Inventaire centralisé de tous les équipements sur les 22 sites" />
+          <PageHeader title="Patrimoine" subtitle="Inventaire centralisé de tous les équipements " />
 
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">

@@ -21,8 +21,24 @@ type Props<T> = {
 function renderCellValue(value: any): React.ReactNode {
   if (value == null || value === "") return "-";
   const str = String(value);
-  const stripped = str.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+  // Détecte si c'est du HTML rich-text (contient des balises HTML)
+  if (/<[a-z][\s\S]*>/i.test(str)) {
+    const stripped = str.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    if (!stripped) return "-";
+    // Rend le HTML formaté (gras, italique, etc.) dans une div prose compacte
+    return (
+      <div
+        className="prose prose-sm max-w-none text-slate-700 line-clamp-2 text-xs leading-relaxed [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&_s]:line-through"
+        dangerouslySetInnerHTML={{ __html: str }}
+      />
+    );
+  }
+
+  const stripped = str.trim();
   if (!stripped) return "-";
+
+  // Email
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stripped)) {
     return (
       <a href={`mailto:${stripped}`} className="text-slate-700 hover:underline hover:text-slate-900 transition-colors" onClick={e => e.stopPropagation()}>
@@ -30,6 +46,7 @@ function renderCellValue(value: any): React.ReactNode {
       </a>
     );
   }
+  // Téléphone
   if (/^[+\d][\d\s\-().]{6,}$/.test(stripped.trim())) {
     return (
       <a href={`tel:${stripped.replace(/\s/g, "")}`} className="text-slate-700 hover:underline hover:text-slate-900 transition-colors" onClick={e => e.stopPropagation()}>

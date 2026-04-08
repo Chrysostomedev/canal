@@ -12,7 +12,25 @@ import { Eye, AlertTriangle } from "lucide-react";
 
 const MOIS_LABELS = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
 
-const DONUT_COLORS = ["#df1414","#07ad07","#606eee","#050f6b","#f97316"];
+const DONUT_COLORS = ["#df1414","#07ad07","#606eee","#050f6b","#f97316","#94a3b8","#22c55e"];
+
+const STATUS_DONUT_LABELS: Record<string, string> = {
+  SIGNALÉ:  "Signalé",
+  VALIDÉ:   "Validé",
+  ASSIGNÉ:  "Assigné",
+  EN_COURS: "En cours",
+  RAPPORTÉ: "Rapporté",
+  ÉVALUÉ:   "Évalué",
+  CLOS:     "Clôturé",
+  // variantes minuscules
+  signalez: "Signalé",
+  validé:   "Validé",
+  assigné:  "Assigné",
+  en_cours: "En cours",
+  rapporté: "Rapporté",
+  évalué:   "Évalué",
+  clos:     "Clôturé",
+};
 
 const BAR_COLORS = [
   "#01050e","#041022","#192535","#2d3748",
@@ -64,12 +82,17 @@ export default function Dashboard() {
     }));
   };
 
-  const buildDonutData = () =>
-    stats?.sites_les_plus_frequentes.map((site: any, i: number) => ({
-      label: site.nom,
-      value: site.total_tickets,
-      color: DONUT_COLORS[i % DONUT_COLORS.length],
-    })) || [];
+  // Répartition des tickets par statut — plus pertinent pour un manager mono-site
+  const buildDonutData = () => {
+    const statuts = stats?.tickets_stats_par_statut ?? {};
+    return Object.entries(statuts)
+      .filter(([, count]) => count > 0)
+      .map(([key, count], i) => ({
+        label: STATUS_DONUT_LABELS[key] ?? key,
+        value: count as number,
+        color: DONUT_COLORS[i % DONUT_COLORS.length],
+      }));
+  };
 
   const handleOpenDetails = (ticket: any) => {
     const status = (ticket.status || "").toUpperCase();
@@ -163,7 +186,7 @@ export default function Dashboard() {
             </div>
             <div className="lg:col-span-4">
               <DonutChartCard
-                title="Sites les plus fréquentés"
+                title="Répartition des tickets par statut"
                 data={buildDonutData()}
               />
             </div>

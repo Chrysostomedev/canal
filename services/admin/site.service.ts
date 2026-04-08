@@ -293,20 +293,21 @@ export const importSites = async (file: File) => {
 
 // ── Télécharger le template d'import sites
 export const downloadSiteImportTemplate = () => {
-  const headers = [
+ const headers = [
+    "numero_site",        // ← était absent
     "nom",
     "ref_contrat",
-    "localisation",
-    "responsable",
+    "status",             // ← était "statut"
+    "responsable_name",   // ← était "responsable"
+    "phone_responsable",  // ← était "telephone"
     "email",
-    "telephone",
-    "statut",
     "effectifs",
     "loyer",
     "superficie",
-    "date_debut_contrat",
-    "date_fin_contrat",
-    "manager_email",
+    "localisation",       // ← était "localisation" ✓ mais vérifier
+    "date_deb_contrat",   // ← était "date_debut_contrat"
+    "date_fin_contrat",   // ← était "date_fin_contrat" ✓
+    "manager_id",         // ← était "manager_email" (back attend un ID, pas un email)
   ];
   const csv  = headers.join(";") + "\n";
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });

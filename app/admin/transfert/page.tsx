@@ -41,6 +41,7 @@ import {
   getActorName,
 } from "../../../services/admin/transfertService";
 import { useTransferts } from "../../../hooks/admin/useTransferts";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 // ─── Statuts - styles sémantiques ─────────────────────────────────────────────
 const STATUT_STYLES: Record<string, string> = {
@@ -72,8 +73,8 @@ function TransferCard({
   const destActive = record.status !== "annulé";
   const assetDesig = record.asset?.designation ?? `Actif #${record.company_asset_id}`;
   const assetCode  = record.asset?.codification ?? "";
-  const siteFrom   = record.fromSite?.nom       ?? `Site #${record.from_site_id}`;
-  const siteTo     = record.toSite?.nom         ?? `Site #${record.to_site_id}`;
+  const siteFrom   = record.from_site?.nom ?? `Site #${record.from_site_id}`;
+  const siteTo     = record.to_site?.nom   ?? `Site #${record.to_site_id}`;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition p-5 space-y-4">
@@ -320,6 +321,7 @@ function NewTransferModal({
   const handleSubmit = async (formData: Record<string, string>) => {
     const assetId = Number(formData.company_asset_id);
     if (!assetId) return;
+
     setSubmitting(true);
     try {
       await transfertService.initiate(assetId, {
@@ -382,6 +384,7 @@ export default function TransfertPage() {
   const [sites,       setSites]       = useState<Site[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [modalOpen,   setModalOpen]   = useState(false);
+  const { t } = useLanguage();
 
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -412,10 +415,7 @@ export default function TransfertPage() {
 
       <main className="mt-20 p-8 space-y-8">
 
-        <PageHeader
-          title="Transferts inter-sites"
-          subtitle="Historique et gestion des relocalisations d'équipements entre sites"
-        />
+        <PageHeader title={t("transfert.title")} subtitle={t("transfert.subtitle")} />
 
         {/* Erreur globale */}
         {error && (
@@ -435,10 +435,10 @@ export default function TransfertPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {statsLoading ? <StatsSkeleton count={4} /> : (
             <>
-              <StatsCard label="Total transferts"  value={stats?.total_transfers      ?? 0} delta="+0%" trend="up" />
-              <StatsCard label="Effectués"         value={stats?.completed_transfers  ?? 0} delta="+0%" trend="up" />
-              <StatsCard label="En cours"          value={stats?.pending_transfers    ?? 0} delta="+0%" trend="up" />
-              <StatsCard label="Sites impliqués"   value={stats?.involved_sites_count ?? 0} delta="+0%" trend="up" />
+              <StatsCard label={t("transfert.totalTransfers")}  value={stats?.total_transfers      ?? 0} delta="+0%" trend="up" />
+              <StatsCard label={t("transfert.completed")}        value={stats?.completed_transfers  ?? 0} delta="+0%" trend="up" />
+              <StatsCard label={t("transfert.ongoing")}          value={stats?.pending_transfers    ?? 0} delta="+0%" trend="up" />
+              <StatsCard label={t("transfert.involvedSites")}    value={stats?.involved_sites_count ?? 0} delta="+0%" trend="up" />
             </>
           )}
         </div>

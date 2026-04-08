@@ -3,7 +3,7 @@ import React, { useRef, useState, useCallback } from "react";
 import { Eye, EyeOff, Calendar,
   Bold, Italic, Underline, List, Strikethrough, 
   Palette, Highlighter, AlignLeft, AlignCenter, AlignRight, 
-  CornerDownLeft, Plus, Minus, ImagePlus, X, Upload, FileText
+  CornerDownLeft, Plus, Minus, ImagePlus, X, Upload, FileText, ChevronDown
 } from "lucide-react";
 
 // Input Standard
@@ -247,6 +247,173 @@ export const ImageUpload = ({
   );
 };
 
+// ─── PHONE INPUT ──────────────────────────────────────────────────────────────
+
+const COUNTRIES = [
+  { code: "CI", flag: "🇨🇮", dial: "+225", name: "Côte d'Ivoire" },
+  { code: "SN", flag: "🇸🇳", dial: "+221", name: "Sénégal" },
+  { code: "ML", flag: "🇲🇱", dial: "+223", name: "Mali" },
+  { code: "BF", flag: "🇧🇫", dial: "+226", name: "Burkina Faso" },
+  { code: "GN", flag: "🇬🇳", dial: "+224", name: "Guinée" },
+  { code: "TG", flag: "🇹🇬", dial: "+228", name: "Togo" },
+  { code: "BJ", flag: "🇧🇯", dial: "+229", name: "Bénin" },
+  { code: "NE", flag: "🇳🇪", dial: "+227", name: "Niger" },
+  { code: "CM", flag: "🇨🇲", dial: "+237", name: "Cameroun" },
+  { code: "GA", flag: "🇬🇦", dial: "+241", name: "Gabon" },
+  { code: "CG", flag: "🇨🇬", dial: "+242", name: "Congo" },
+  { code: "CD", flag: "🇨🇩", dial: "+243", name: "RD Congo" },
+  { code: "MG", flag: "🇲🇬", dial: "+261", name: "Madagascar" },
+  { code: "MA", flag: "🇲🇦", dial: "+212", name: "Maroc" },
+  { code: "DZ", flag: "🇩🇿", dial: "+213", name: "Algérie" },
+  { code: "TN", flag: "🇹🇳", dial: "+216", name: "Tunisie" },
+  { code: "FR", flag: "🇫🇷", dial: "+33",  name: "France" },
+  { code: "BE", flag: "🇧🇪", dial: "+32",  name: "Belgique" },
+  { code: "CH", flag: "🇨🇭", dial: "+41",  name: "Suisse" },
+  { code: "US", flag: "🇺🇸", dial: "+1",   name: "États-Unis" },
+  { code: "GB", flag: "🇬🇧", dial: "+44",  name: "Royaume-Uni" },
+  { code: "DE", flag: "🇩🇪", dial: "+49",  name: "Allemagne" },
+  { code: "ES", flag: "🇪🇸", dial: "+34",  name: "Espagne" },
+  { code: "IT", flag: "🇮🇹", dial: "+39",  name: "Italie" },
+  { code: "PT", flag: "🇵🇹", dial: "+351", name: "Portugal" },
+  { code: "CN", flag: "🇨🇳", dial: "+86",  name: "Chine" },
+  { code: "JP", flag: "🇯🇵", dial: "+81",  name: "Japon" },
+  { code: "IN", flag: "🇮🇳", dial: "+91",  name: "Inde" },
+];
+
+export interface PhoneInputProps {
+  name: string;
+  required?: boolean;
+  disabled?: boolean;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+}
+
+export const PhoneInput = ({
+  name,
+  required,
+  disabled,
+  defaultValue = "",
+  onChange,
+}: PhoneInputProps) => {
+  // Parse defaultValue: if it starts with a known dial code, split it
+  const parseDefault = (val: string) => {
+    if (!val) return { country: COUNTRIES[0], number: "" };
+    const matched = COUNTRIES.find(c => val.startsWith(c.dial));
+    if (matched) return { country: matched, number: val.slice(matched.dial.length).trim() };
+    // If starts with + but unknown, keep as-is in number
+    return { country: COUNTRIES[0], number: val };
+  };
+
+  const parsed = parseDefault(defaultValue);
+  const [selected, setSelected] = useState(parsed.country);
+  const [number, setNumber]     = useState(parsed.number);
+  const [open, setOpen]         = useState(false);
+  const [search, setSearch]     = useState("");
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const fullValue = `${selected.dial}${number}`;
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^\d\s\-]/g, ""); // digits, spaces, dashes only
+    setNumber(val);
+    onChange?.(`${selected.dial}${val}`);
+  };
+
+  const handleSelect = (country: typeof COUNTRIES[0]) => {
+    setSelected(country);
+    setOpen(false);
+    setSearch("");
+    onChange?.(`${country.dial}${number}`);
+  };
+
+  const filtered = search
+    ? COUNTRIES.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.dial.includes(search) ||
+        c.code.toLowerCase().includes(search.toLowerCase())
+      )
+    : COUNTRIES;
+
+  return (
+    <div className="space-y-1">
+      {/* Hidden input carries the full value for form submission */}
+      <input type="hidden" name={name} value={fullValue} />
+
+      <div className="flex items-stretch bg-slate-50 rounded-2xl overflow-visible relative" ref={dropRef}>
+        {/* Country selector button */}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen(o => !o)}
+          className={`flex items-center gap-1.5 px-3 py-3.5 border-r border-slate-200 shrink-0 hover:bg-slate-100 transition rounded-l-2xl ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          <span className="text-xl leading-none">{selected.flag}</span>
+          <span className="text-xs font-bold text-slate-600 tabular-nums">{selected.dial}</span>
+          <ChevronDown size={12} className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+
+        {/* Number input */}
+        <input
+          type="tel"
+          value={number}
+          onChange={handleNumberChange}
+          disabled={disabled}
+          required={required}
+          placeholder="07 00 00 00 00"
+          className={`flex-1 bg-transparent p-4 pl-3 text-slate-700 placeholder:text-slate-400 outline-none focus:ring-0 text-sm font-medium ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+        />
+
+        {/* Dropdown */}
+        {open && (
+          <div className="absolute top-full left-0 mt-1 z-[200] w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+            {/* Search */}
+            <div className="p-2 border-b border-slate-100">
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Rechercher un pays..."
+                className="w-full px-3 py-2 text-sm bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-slate-900 transition"
+                autoFocus
+              />
+            </div>
+            {/* List */}
+            <div className="max-h-56 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <p className="text-center text-slate-400 text-xs py-4">Aucun résultat</p>
+              ) : filtered.map(c => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => handleSelect(c)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition text-left ${selected.code === c.code ? "bg-slate-100" : ""}`}
+                >
+                  <span className="text-xl leading-none shrink-0">{c.flag}</span>
+                  <span className="flex-1 text-sm font-medium text-slate-700 truncate">{c.name}</span>
+                  <span className="text-xs font-bold text-slate-400 tabular-nums shrink-0">{c.dial}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <p className="text-[10px] text-slate-400 font-medium pl-1">
+        Cliquez sur le drapeau pour changer l'indicatif pays
+      </p>
+    </div>
+  );
+};
+
 // ─── RICH TEXT EDITOR ─────────────────────────────────────────────────────────
 export const RichTextEditor = ({ label, placeholder, name, defaultValue }: any) => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -254,11 +421,11 @@ export const RichTextEditor = ({ label, placeholder, name, defaultValue }: any) 
   const colorInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialise le contenu si defaultValue fourni
+  // Initialise le contenu à chaque changement de defaultValue (y compris vide)
   React.useEffect(() => {
-    if (editorRef.current && defaultValue) {
-      editorRef.current.innerHTML = defaultValue;
-      if (hiddenRef.current) hiddenRef.current.value = defaultValue;
+    if (editorRef.current) {
+      editorRef.current.innerHTML = defaultValue ?? "";
+      if (hiddenRef.current) hiddenRef.current.value = defaultValue ?? "";
     }
   }, [defaultValue]);
 

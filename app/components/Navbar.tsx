@@ -8,6 +8,7 @@ import Link from "next/link";
 import NotificationPanel from "./NotificationPanel";
 import api from "../../core/axios";
 import { useSidebar } from "./Sidebar";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const getNotificationsRoute = (role: string): string => {
   switch (role) {
@@ -57,7 +58,7 @@ function InAppBanner({ title, body, onClose, href }: InAppBannerProps) {
           <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-snug">{body}</p>
           {href && (
             <a href={href} className="text-xs font-bold text-slate-900 underline underline-offset-2 mt-1 inline-block hover:text-black transition">
-              Voir →
+              {t("common.see")}
             </a>
           )}
         </div>
@@ -89,6 +90,7 @@ function RoleBadge({ role }: { role: string }) {
 export default function Navbar() {
   const router = useRouter();
   const { collapsed } = useSidebar();
+  const { t } = useLanguage();
   const leftOffset = collapsed ? "left-16" : "left-64";
   const widthCalc  = collapsed ? "w-[calc(100%-4rem)]" : "w-[calc(100%-16rem)]";
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -261,7 +263,7 @@ export default function Navbar() {
               <RoleBadge role={role} />
             </div>
             <p className="text-gray-500 text-xs font-medium">
-              Bienvenue sur votre espace de Facility Management
+              {t("nav.dashboard")}
             </p>
           </div>
         </div>
@@ -287,7 +289,7 @@ export default function Navbar() {
               )}
             </div>
             <span className="text-sm font-semibold tracking-tight text-slate-700">
-              Notifications
+              {t("notifications.title")}
             </span>
           </button>
 

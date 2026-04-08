@@ -11,8 +11,14 @@ import SideDetailsPanel from "@/components/SideDetailsPanel";
 
 import { useServices } from "../../../hooks/admin/useServices";
 import { ServiceService, Service } from "../../../services/admin/service.service";
-import { exportToXlsx } from "../../../core/export";
-import axiosInstance from "../../../core/axios";
+import UniversalImportPreview, { ColumnDef, ImportResult } from "@/components/UniversalImportPreview";
+import { useLanguage } from "../../../contexts/LanguageContext";
+
+// Colonnes attendues par ServiceImport.php : nom (ou name)*, description
+const IMPORT_COLUMNS: ColumnDef[] = [
+  { key: "nom",         label: "Nom",         required: true  },
+  { key: "description", label: "Description", required: false },
+];
 
 export default function ServicesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,8 +28,11 @@ export default function ServicesPage() {
   const [flashMessage, setFlashMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [importLoading, setImportLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [previewFile,   setPreviewFile]   = useState<File | null>(null);
+  const [previewOpen,   setPreviewOpen]   = useState(false);
 
   const { services, isLoading, fetchServices } = useServices();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!flashMessage) return;
@@ -83,45 +92,39 @@ export default function ServicesPage() {
     }
   };
 
-  // ── Import ──
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ── Import via preview ──────────────────────────────────────────────────────
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    setImportLoading(true);
+    setPreviewFile(file);
+    setPreviewOpen(true);
+  };
+
+  const handleConfirmImport = async (rows: Record<string, any>[]): Promise<ImportResult> => {
+    const XLSX = await import("xlsx");
+    const ws   = XLSX.utils.json_to_sheet(rows);
+    const wb   = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Services");
+    const buf  = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+    const file = new File([buf], "import_services.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      await axiosInstance.post("/admin/service/import", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      showFlash("success", `"${file.name}" importé avec succès.`);
+      await ServiceService.importServices(file);
       await fetchServices();
+      showFlash("success", `${rows.length} service${rows.length > 1 ? "s" : ""} importé${rows.length > 1 ? "s" : ""} avec succès.`);
+      return { imported: rows.length, skipped: 0, errors: [] };
     } catch (err: any) {
-      showFlash("error", err?.response?.data?.message ?? "Erreur lors de l'import.");
-    } finally {
-      setImportLoading(false);
+      const msg = err?.response?.data?.message ?? "Erreur lors de l'import.";
+      showFlash("error", msg);
+      return { imported: 0, skipped: 0, errors: [{ row: 0, message: msg }] };
     }
   };
 
-  // ── Export ──
+  // ── Export ──────────────────────────────────────────────────────────────────
   const handleExport = async () => {
     setExportLoading(true);
     try {
-      const response = await axiosInstance.get("/admin/service/export", { responseType: "blob" });
-      const blob = new Blob([response.data], {
-        type: response.headers["content-type"] ?? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url  = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href  = url;
-      const cd   = (response.headers["content-disposition"] as string) ?? "";
-      const m    = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-      link.download = m?.[1]?.replace(/['"]/g, "") ?? `services_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      await ServiceService.exportServices();
       showFlash("success", "Export téléchargé avec succès.");
     } catch {
       showFlash("error", "Erreur lors de l'export.");
@@ -177,20 +180,17 @@ export default function ServicesPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-        <Navbar />
-        <main className="mt-20 p-6 space-y-8">
-          <PageHeader
-            title="Services"
-            subtitle="Gestion des services disponibles pour les prestataires"
-          />
+      <Navbar />
+      <main className="mt-20 p-6 space-y-8">
+          <PageHeader title={t("services.title")} subtitle={t("services.subtitle")} />
 
-          {/* Barre d'actions - pas de filtre pour les services */}
           <div className="shrink-0 flex justify-end items-center gap-3">
 
+
             {/* Import */}
-            <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-50 pointer-events-none" : ""}`}>
+            <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition`}>
               <Download size={16} />
-              {importLoading ? "Import..." : "Importer"}
+              Importer
               <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
             </label>
 
@@ -200,8 +200,8 @@ export default function ServicesPage() {
               disabled={exportLoading}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-50"
             >
-              <Upload size={16} />
-              {exportLoading ? "Export..." : "Exporter"}
+              {exportLoading ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" /> : <Upload size={16} />}
+              Exporter
             </button>
 
             {/* Ajouter */}
@@ -256,7 +256,17 @@ export default function ServicesPage() {
             </div>
           )}
         </main>
-      </div>
-    
+
+      <UniversalImportPreview
+        isOpen={previewOpen}
+        onClose={() => { setPreviewOpen(false); setPreviewFile(null); }}
+        file={previewFile}
+        columns={IMPORT_COLUMNS}
+        dedupeKey="nom"
+        existingData={services.map(s => ({ nom: s.name }))}
+        onConfirm={handleConfirmImport}
+        title="Prévisualisation — Import Services"
+      />
+    </div>
   );
 }

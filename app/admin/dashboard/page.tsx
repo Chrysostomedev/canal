@@ -10,6 +10,7 @@ import DataTable, { ColumnConfig } from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye } from "lucide-react";
 import { useDashboard } from "../../../hooks/admin/useDashboard";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 // ─────────────────────────────────────────────
 // Constantes & mappings statiques
@@ -58,8 +59,8 @@ const STATUS_STYLES: Record<string, string> = {
 // ─────────────────────────────────────────────
 
 export default function Dashboard() {
-  // Hook custom qui fetch toutes les données du dashboard
   const { dashboard, isLoading } = useDashboard();
+  const { t } = useLanguage();
 
   // État du panneau latéral de détail ticket
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
@@ -230,70 +231,25 @@ export default function Dashboard() {
 
         <main className="flex-1 p-8 pt-24 space-y-8">
 
-          {/* Indicateur de chargement */}
           {isLoading && (
             <div className="text-center text-slate-400 text-sm italic py-8">
-              Chargement...
+              {t("common.loading")}
             </div>
           )}
 
           {/* ── KPIs Tickets (3 cartes) ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatsCard
-              label="Nombre total de tickets"
-              value={dashboard?.nombre_total_tickets ?? 0}
-              delta="+3%"
-              trend="up"
-              href="/admin/tickets"
-            />
-            <StatsCard
-              label="Tickets traités"
-              value={dashboard?.nombre_tickets_traites ?? 0}
-              delta="+20,10%"
-              trend="up"
-              href="/admin/tickets"
-            />
-            <StatsCard
-              label="Tickets non traités"
-              value={dashboard?.nombre_tickets_non_traites ?? 0}
-              delta="+10%"
-              trend="up"
-              href="/admin/tickets"
-            />
+            <StatsCard label={t("dashboard.totalTickets")} value={dashboard?.nombre_total_tickets ?? 0} delta="+3%" trend="up" href="/admin/tickets" />
+            <StatsCard label={t("dashboard.treatedTickets")} value={dashboard?.nombre_tickets_traites ?? 0} delta="+20,10%" trend="up" href="/admin/tickets" />
+            <StatsCard label={t("dashboard.untreatedTickets")} value={dashboard?.nombre_tickets_non_traites ?? 0} delta="+10%" trend="up" href="/admin/tickets" />
           </div>
 
           {/* ── KPIs Sites & Coûts (4 cartes) ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard
-              label="Sites actifs"
-              value={dashboard?.nombre_sites_actifs ?? 0}
-              delta="+3%"
-              trend="up"
-              href="/admin/sites"
-            />
-            <StatsCard
-              label="Sites inactifs"
-              value={dashboard?.nombre_sites_inactifs ?? 0}
-              delta="+3%"
-              trend="up"
-              href="/admin/sites"
-            />
-            <StatsCard
-              label="Coût moyen par site"
-              value={dashboard?.cout_moyen_par_site ?? 0}
-              isCurrency
-              delta="+20,10%"
-              trend="up"
-              href="/admin/sites"
-            />
-            <StatsCard
-              label="Coût total de maintenance"
-              value={dashboard?.cout_total_maintenance ?? 0}
-              isCurrency
-              delta="+1%"
-              trend="up"
-              href="/admin/factures"
-            />
+            <StatsCard label={t("dashboard.activeSites")} value={dashboard?.nombre_sites_actifs ?? 0} delta="+3%" trend="up" href="/admin/sites" />
+            <StatsCard label={t("dashboard.inactiveSites")} value={dashboard?.nombre_sites_inactifs ?? 0} delta="+3%" trend="up" href="/admin/sites" />
+            <StatsCard label={t("dashboard.avgCostPerSite")} value={dashboard?.cout_moyen_par_site ?? 0} isCurrency delta="+20,10%" trend="up" href="/admin/sites" />
+            <StatsCard label={t("dashboard.totalMaintenanceCost")} value={dashboard?.cout_total_maintenance ?? 0} isCurrency delta="+1%" trend="up" href="/admin/factures" />
           </div>
 
           {/* ── Graphiques (BarChart + Donut + ListCard) ── */}
@@ -302,33 +258,21 @@ export default function Dashboard() {
             {/* BarChart : tendance mensuelle filtrée par année */}
             <div className="lg:col-span-5 flex">
               <div className="w-full h-full">
-                <BarChartCard
-                  title="Tendance de l'année"
-                  data={buildBarData()}
-                  onYearChange={(year) => setSelectedYear(Number(year))}
-                />
+            <BarChartCard title={t("dashboard.yearTrend")} data={buildBarData()} onYearChange={(year) => setSelectedYear(Number(year))} />
               </div>
             </div>
 
             {/* DonutChart : répartition par site */}
             <div className="lg:col-span-4 flex">
               <div className="w-full h-full">
-                <DonutChartCard
-                  title="Sites les plus fréquentés (interventions)"
-                  data={buildDonutData()}
-                />
+                <DonutChartCard title={t("dashboard.mostVisitedSites")} data={buildDonutData()} />
               </div>
             </div>
 
             {/* ListCard : liste des sites avec lien vers détail */}
             <div className="lg:col-span-3 flex">
               <div className="w-full h-full">
-                <ListCard
-                  title="Listes des sites"
-                  items={buildListItems()}
-                  viewAllHref="/admin/sites"
-                  viewAllText="Voir tous"
-                />
+                <ListCard title={t("dashboard.sitesList")} items={buildListItems()} viewAllHref="/admin/sites" viewAllText={t("dashboard.seeAll")} />
               </div>
             </div>
           </section>
@@ -338,9 +282,7 @@ export default function Dashboard() {
 
             {/* En-tête du tableau */}
             <div className="px-6 py-4">
-              <h3 className="text-base font-bold text-slate-800">
-                Listes tickets récents
-              </h3>
+              <h3 className="text-base font-bold text-slate-800">{t("dashboard.recentTickets")}</h3>
             </div>
 
             {/* DataTable avec navigation "Voir tous" */}

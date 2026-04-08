@@ -8,74 +8,28 @@ import DetailsStats from "@/components/DetailsStats";
 import PageHeader from "@/components/PageHeader";
 
 import { useDashboard } from "../../../hooks/admin/useDashboard";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function AdministrationPage() {
-  // isAdminLoading distinct de isLoading (dashboard global) → pas de collision
-  const {
-    adminDashboard,
-    isAdminLoading,
-    adminError,
-    fetchAdminDashboard,
-  } = useDashboard();
+  const { adminDashboard, isAdminLoading, adminError, fetchAdminDashboard } = useDashboard();
+  const { t } = useLanguage();
 
   // fetchAdminDashboard est stable (useCallback[]) → pas de boucle infinie
   useEffect(() => {
     fetchAdminDashboard();
   }, [fetchAdminDashboard]);
 
-  // ── KPIs Sites ──
   const kpis = [
-    {
-      label: "Nombre total de sites actifs",
-      value: adminDashboard?.nombre_total_sites_actifs ?? 0,
-      delta: "+3%",
-      trend: "up" as const,
-    },
-    {
-      label: "Nombre total de sites inactifs",
-      value: adminDashboard?.nombre_total_sites_inactifs ?? 0,
-      delta: "+3%",
-      trend: "up" as const,
-    },
-    {
-      label: "Coût moyen par site",
-      value: adminDashboard?.cout_moyen_par_sites ?? 0,
-      delta: "+20,10%",
-      trend: "up" as const,
-      isCurrency: true,
-    },
-    {
-      label: "Coût total de maintenance",
-      value: adminDashboard?.cout_total_maintenance ?? 0,
-      delta: "+15,03%",
-      trend: "up" as const,
-      isCurrency: true,
-    },
+    { label: t("administration.totalActiveSites"),   value: adminDashboard?.nombre_total_sites_actifs   ?? 0, delta: "+3%",    trend: "up"   as const },
+    { label: t("administration.totalInactiveSites"), value: adminDashboard?.nombre_total_sites_inactifs ?? 0, delta: "+3%",    trend: "up"   as const },
+    { label: t("administration.avgCostPerSite"),     value: adminDashboard?.cout_moyen_par_sites        ?? 0, delta: "+20,10%",trend: "up"   as const, isCurrency: true },
+    { label: t("administration.totalMaintenanceCost"),value: adminDashboard?.cout_total_maintenance     ?? 0, delta: "+15,03%",trend: "up"   as const, isCurrency: true },
   ];
 
-  // ── KPIs Patrimoine ──
   const tpis = [
-    {
-      label: "Nombre total d'équipements du patrimoine",
-      value: adminDashboard?.nombre_total_equipements ?? 0,
-      delta: "+15,03%",
-      trend: "up" as const,
-      href: "/admin/patrimoines",
-    },
-    {
-      label: "Nombre total de prestataires",
-      value: adminDashboard?.nombre_total_prestataires ?? 0,
-      delta: "+20,10%",
-      trend: "up" as const,
-      href: "/admin/prestataires",
-    },
-    {
-      label: "Nombre total de factures",
-      value: adminDashboard?.nombre_total_factures ?? "N/A",
-      delta: "+10%",
-      trend: "up" as const,
-      href: "#",
-    },
+    { label: t("administration.totalEquipments"), value: adminDashboard?.nombre_total_equipements  ?? 0, delta: "+15,03%", trend: "up" as const, href: "/admin/patrimoines" },
+    { label: t("administration.totalProviders"),  value: adminDashboard?.nombre_total_prestataires ?? 0, delta: "+20,10%", trend: "up" as const, href: "/admin/prestataires" },
+    { label: t("administration.totalInvoices"),   value: adminDashboard?.nombre_total_factures     ?? "N/A", delta: "+10%", trend: "up" as const, href: "#" },
   ];
 
   return (
@@ -85,10 +39,7 @@ export default function AdministrationPage() {
       <Navbar />
 
       <main className="mt-20 p-6 space-y-10">
-        <PageHeader
-          title="Administration"
-          subtitle="Ce menu vous permettra de gérer tout l'ensemble de votre espace"
-        />
+        <PageHeader title={t("administration.title")} subtitle={t("administration.subtitle")} />
 
         {/* Loader isolé → n'interfère pas avec le dashboard global */}
         {isAdminLoading && (
@@ -127,28 +78,17 @@ export default function AdministrationPage() {
 
               {/* Colonne gauche : 3 DetailsCard tickets */}
               <div className="lg:col-span-3 flex flex-col gap-6">
-                <DetailsCard
-                  title="Tickets en attente"
-                  value={adminDashboard?.nombre_tickets_en_attente ?? 0}
-                  href="/admin/tickets"
-                />
-                <DetailsCard
-                  title="Tickets en cours"
-                  value={adminDashboard?.nombre_tickets_en_cours ?? 0}
-                  href="/admin/tickets"
-                />
-                <DetailsCard
-                  title="Tickets clôturés"
-                  value={adminDashboard?.nombre_tickets_clotures ?? 0}
-                  href="/admin/tickets"
-                />
+                <DetailsCard title={t("administration.pendingTickets")} value={adminDashboard?.nombre_tickets_en_attente ?? 0} href="/admin/tickets" />
+                <DetailsCard title={t("administration.ongoingTickets")} value={adminDashboard?.nombre_tickets_en_cours ?? 0} href="/admin/tickets" />
+                <DetailsCard title={t("administration.closedTickets")} value={adminDashboard?.nombre_tickets_clotures ?? 0} href="/admin/tickets" />
               </div>
 
               {/* Colonne droite : LineChart évolution équipements */}
               <div className="lg:col-span-9 h-full">
                 <LineChartCard
-                  title="Évolution des équipements du patrimoine"
+                  title={t("administration.evolutionChart")}
                   data={adminDashboard?.evolution_patrimoine ?? []}
+                  tooltipSuffix={t("administration.equipments")}
                 />
               </div>
 
