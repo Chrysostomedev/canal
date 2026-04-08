@@ -20,6 +20,7 @@ import PageHeader from "@/components/PageHeader";
 import { authService } from "../../services/AuthService";
 import { useActivityLogs, ActivityLog } from "../../hooks/common/useActivityLogs";
 import ActivityDetailsModal from "./ActivityDetailsModal";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -35,6 +36,8 @@ const AVATAR_COLORS = [
 const LANGS = [
   { code: "fr", flag: "FR", label: "Français" },
   { code: "en", flag: "EN", label: "English"  },
+  { code: "es", flag: "ES", label: "Español"  },
+  { code: "ja", flag: "JA", label: "日本語"   },
   { code: "ar", flag: "AR", label: "العربية"  },
 ];
 
@@ -96,6 +99,7 @@ function SettingsSidePanel({
 }: PanelProps) {
   if (!open) return null;
 
+  const { t } = useLanguage();
   const isAdmin = ADMIN_ROLES.includes(role.toUpperCase());
   const activeNotifCount = Object.values(notifs).filter(Boolean).length;
 
@@ -115,8 +119,8 @@ function SettingsSidePanel({
         {/* Header */}
         <div className="flex items-center justify-between px-7 pt-7 pb-5 shrink-0 border-b border-slate-100">
           <div>
-            <h2 className="text-xl font-black text-slate-900">Paramètres avancés</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Personnalisez votre expérience</p>
+            <h2 className="text-xl font-black text-slate-900">{t("settings.title") !== "settings.title" ? t("settings.title") : "Paramètres avancés"}</h2>
+            <p className="text-slate-400 text-xs mt-0.5">{t("settings.subtitle") !== "settings.subtitle" ? t("settings.subtitle") : "Personnalisez votre expérience"}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition">
             <X size={18} className="text-slate-500" />
@@ -137,7 +141,10 @@ function SettingsSidePanel({
                     active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  <Icon size={13} /> {tb.label}
+                  <Icon size={13} />
+                  {tb.key === "notifications" ? (t("settings.notifications") !== "settings.notifications" ? t("settings.notifications") : "Notifications") :
+                   tb.key === "language"      ? (t("settings.language")      !== "settings.language"      ? t("settings.language")      : "Langue") :
+                   tb.label}
                 </button>
               );
             })}
@@ -152,7 +159,7 @@ function SettingsSidePanel({
             <div>
               <div className="flex items-center justify-between mb-5">
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                  {activeNotifCount}/{NOTIFS.length} activées
+                  {activeNotifCount}/{NOTIFS.length} {t("common.active") !== "common.active" ? t("common.active").toLowerCase() + "s" : "activées"}
                 </p>
                 <button
                   onClick={() => {
@@ -251,14 +258,14 @@ function SettingsSidePanel({
           {advTab === "language" && (
             <div className="space-y-3">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-5">
-                Langue de l'interface
+                {t("settings.languageSubtitle") !== "settings.languageSubtitle" ? t("settings.languageSubtitle") : "Langue de l'interface"}
               </p>
               {LANGS.map(l => {
                 const active = lang === l.code;
                 return (
                   <button
                     key={l.code}
-                    onClick={() => { setLang(l.code); localStorage.setItem("lang", l.code); }}
+                    onClick={() => { setLang(l.code); }}
                     className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition ${
                       active ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-300"
                     }`}
@@ -273,7 +280,7 @@ function SettingsSidePanel({
                     </p>
                     {active && (
                       <span className="flex items-center gap-1 bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black">
-                        <Check size={10} /> Actif
+                        <Check size={10} /> {t("common.active") !== "common.active" ? t("common.active") : "Actif"}
                       </span>
                     )}
                   </button>
@@ -316,12 +323,16 @@ interface SettingsPageSharedProps {
 export default function SettingsPageShared({ unreadCount = 0 }: SettingsPageSharedProps) {
   const [panel, setPanel]     = useState<PanelType>(null);
   const [advTab, setAdvTab]   = useState("notifications");
-  const [lang, setLang]       = useState("fr");
   const [trackOn, setTrackOn] = useState(true);
   const [notifs, setNotifs]   = useState<Record<string, boolean>>(
     Object.fromEntries(NOTIFS.map(n => [n.key, n.defaultOn]))
   );
   const [role, setRole] = useState("");
+
+  // Langue via le contexte global (persistant dans localStorage)
+  const { locale, setLocale } = useLanguage();
+  const lang    = locale;
+  const setLang = (l: string) => setLocale(l as any);
 
   const { logs: activityLogs, loading: isLoadingLogs, error: logsError } = useActivityLogs();
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
@@ -329,8 +340,6 @@ export default function SettingsPageShared({ unreadCount = 0 }: SettingsPageShar
 
   useEffect(() => {
     setRole(authService.getRole());
-    const savedLang = localStorage.getItem("lang");
-    if (savedLang) setLang(savedLang);
   }, []);
 
   const isAdmin = ADMIN_ROLES.includes(role.toUpperCase());

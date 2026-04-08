@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import SearchInput from "./SearchInput";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export type ColumnConfig<T> = {
   header: string;
@@ -20,12 +21,8 @@ type Props<T> = {
 function renderCellValue(value: any): React.ReactNode {
   if (value == null || value === "") return "-";
   const str = String(value);
-
-  // Strip HTML tags (rich text editor produit du HTML)
   const stripped = str.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   if (!stripped) return "-";
-
-  // Email
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stripped)) {
     return (
       <a href={`mailto:${stripped}`} className="text-slate-700 hover:underline hover:text-slate-900 transition-colors" onClick={e => e.stopPropagation()}>
@@ -33,7 +30,6 @@ function renderCellValue(value: any): React.ReactNode {
       </a>
     );
   }
-  // Téléphone
   if (/^[+\d][\d\s\-().]{6,}$/.test(stripped.trim())) {
     return (
       <a href={`tel:${stripped.replace(/\s/g, "")}`} className="text-slate-700 hover:underline hover:text-slate-900 transition-colors" onClick={e => e.stopPropagation()}>
@@ -51,14 +47,12 @@ export default function DataTable<T extends { id: string | number }>({
   onViewAll,
 }: Props<T>) {
   const [search, setSearch] = useState("");
+  const { t } = useLanguage();
 
   const filteredData = useMemo(() => {
     if (!search.trim()) return data;
     return data.filter((item) =>
-      Object.values(item)
-        .join(" ")
-        .toLowerCase()
-        .includes(search.toLowerCase())
+      Object.values(item).join(" ").toLowerCase().includes(search.toLowerCase())
     );
   }, [data, search]);
 
@@ -67,7 +61,7 @@ export default function DataTable<T extends { id: string | number }>({
       <div className="flex items-center justify-between p-8 pb-4 gap-4">
         <h2 className="text-xl font-black text-slate-800 tracking-tight">{title}</h2>
         <div className="flex-1">
-          <SearchInput onSearch={setSearch} />
+          <SearchInput onSearch={setSearch} placeholder={t("table.search")} />
         </div>
       </div>
 
@@ -106,7 +100,7 @@ export default function DataTable<T extends { id: string | number }>({
             ) : (
               <tr>
                 <td colSpan={columns.length} className="py-10 text-center text-slate-400 text-sm italic">
-                  Aucune donnée disponible
+                  {t("table.noData")}
                 </td>
               </tr>
             )}

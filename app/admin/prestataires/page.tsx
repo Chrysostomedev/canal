@@ -188,7 +188,15 @@ export default function PrestatairesPage() {
     if (exportLoading) return;
     setExportLoading(true);
     try {
-      const rows = providers.map(p => ({
+      // Récupère TOUS les prestataires (pas seulement la page courante)
+      let allProviders = providers;
+      try {
+        const res = await ProviderService.getProviders({ per_page: 1000, page: 1 });
+        const items = Array.isArray(res) ? res : (res as any)?.items ?? providers;
+        if (items.length > 0) allProviders = items;
+      } catch { /* fallback sur la page courante */ }
+
+      const rows = allProviders.map(p => ({
         id:           p.id,
         nom:          p.company_name ?? "-",
         service:      p.service?.name ?? "-",
@@ -197,9 +205,10 @@ export default function PrestatairesPage() {
         email:        p.user?.email ?? "-",
         telephone:    p.user?.phone ?? "-",
         statut:       p.is_active ? "Actif" : "Inactif",
-        note:         p.rating ? `${p.rating}/5` : "-",
+        note:         p.rating ? `${typeof p.rating === "string" ? parseFloat(p.rating) : p.rating}/5` : "-",
         date_entree:  p.date_entree ? new Date(p.date_entree).toLocaleDateString("fr-FR") : "-",
       }));
+
       exportToXlsx(rows, [
         { header: "ID",          key: "id",          width: 8  },
         { header: "Nom",         key: "nom",         width: 28 },
@@ -212,7 +221,8 @@ export default function PrestatairesPage() {
         { header: "Note",        key: "note",        width: 10 },
         { header: "Date entrée", key: "date_entree", width: 14 },
       ], { filename: "prestataires", sheetName: "Prestataires", title: "Export Prestataires - CANAL+" });
-      showFlash("success", "Export téléchargé avec succès.");
+
+      showFlash("success", `${rows.length} prestataire${rows.length > 1 ? "s" : ""} exporté${rows.length > 1 ? "s" : ""} avec succès.`);
     } catch {
       showFlash("error", "Erreur lors de l'exportation.");
     } finally {

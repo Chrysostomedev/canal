@@ -449,13 +449,24 @@ export default function RolesPage() {
   const fetchStats = async () => {
     try {
       const res = await axiosInstance.get("/admin/roles/stats");
-      const d = res.data?.data ?? res.data;
+      // Le back retourne un tableau : [{ role_id, role_name, slug, user_count }, ...]
+      const d: any[] = res.data?.data ?? res.data ?? [];
+      const arr = Array.isArray(d) ? d : [];
+
+      const get = (name: string) =>
+        arr.find((r: any) =>
+          (r.role_name ?? r.slug ?? "").toUpperCase() === name.toUpperCase()
+        )?.user_count ?? 0;
+
+      const admins    = get("ADMIN") + get("SUPER-ADMIN");
+      const managers  = get("MANAGER");
+      const providers = get("PROVIDER");
+
       setStats({
-        total: d.total_users ?? 0,
-        admins: (d.roles?.find((r: any) => r.name === "ADMIN")?.users_count ?? 0) + 
-                (d.roles?.find((r: any) => r.name === "SUPER-ADMIN")?.users_count ?? 0),
-        managers: d.roles?.find((r: any) => r.name === "MANAGER")?.users_count ?? 0,
-        providers: d.roles?.find((r: any) => r.name === "PROVIDER")?.users_count ?? 0,
+        total:     admins + managers + providers,
+        admins,
+        managers,
+        providers,
       });
     } catch (e) {
       console.error("Stats error", e);
@@ -468,34 +479,43 @@ export default function RolesPage() {
       let endpoint = "/admin/admins";
       let params: any = { page: currentPage, per_page: PER_PAGE };
 
-      if (roleFilter === "manager" || roleFilter === "provider") {
-        endpoint = `/admin/roles/${roleFilter.toUpperCase()}/users`;
-      } else if (roleFilter === "admin" || roleFilter === "super-admin") {
-        params.role = roleFilter.toUpperCase();
-      } else {
-        // "all" -> On charge les admins par défaut ou on fait une recherche globale si possible
-        // Ici on va charger tous les admins par défaut
+      if (roleFilter === "manager") {
+        endpoint = "/admin/roles/MANAGER/users";
+      } else if (roleFilter === "provider") {
+        endpoint = "/admin/roles/PROVIDER/users";
+      } else if (roleFilter === "super-admin") {
+        endpoint = "/admin/roles/SUPER-ADMIN/users";
+      } else if (roleFilter === "admin") {
+        endpoint = "/admin/roles/ADMIN/users";
       }
+      // "all" → /admin/admins (retourne tous les admins/managers)
 
       const res = await axiosInstance.get(endpoint, { params });
       const d = res.data?.data ?? res.data;
-      
-      const items = Array.isArray(d.items) ? d.items : (Array.isArray(d) ? d : []);
-      
+
+      // Normalise : items paginés ou tableau brut
+      const items: any[] = Array.isArray(d?.items)
+        ? d.items
+        : Array.isArray(d?.data)
+        ? d.data
+        : Array.isArray(d)
+        ? d
+        : [];
+
       const mapped = items.map((u: any) => ({
-        id: u.id,
-        name: u.first_name + " " + u.last_name,
-        role: (u.roles?.[0]?.name || u.role_name || roleFilter).toLowerCase(),
-        site: u.manager?.site?.nom || u.provider?.company_name || "N/A",
-        phone: u.phone || u.phone_number || "",
-        email: u.email,
-        status: u.status === 1 || u.is_active || u.status === "active" ? "active" : "inactive",
-        joined: new Date(u.created_at).toLocaleDateString("fr-FR"),
+        id:     u.id,
+        name:   [u.first_name, u.last_name].filter(Boolean).join(" ") || u.name || u.company_name || `#${u.id}`,
+        role:   (u.roles?.[0]?.name ?? u.role_name ?? roleFilter).toLowerCase().replace("super-admin", "super-admin"),
+        site:   u.manager?.site?.nom ?? u.provider?.company_name ?? "N/A",
+        phone:  u.phone_number ?? u.phone ?? u.user?.phone ?? "",
+        email:  u.email ?? u.user?.email ?? "",
+        status: (u.is_active === true || u.is_active === 1 || u.status === "active") ? "active" : "inactive",
+        joined: u.created_at ? new Date(u.created_at).toLocaleDateString("fr-FR") : "-",
       }));
 
       setUsers(mapped);
-      setTotalPages(d.meta?.last_page || 1);
-      setTotalItems(d.meta?.total || mapped.length);
+      setTotalPages(d?.meta?.last_page ?? d?.last_page ?? 1);
+      setTotalItems(d?.meta?.total ?? d?.total ?? mapped.length);
     } catch (e) {
       console.error("Fetch users error", e);
       showFlash("error", "Impossible de charger les utilisateurs.");

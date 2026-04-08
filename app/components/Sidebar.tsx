@@ -146,19 +146,13 @@ const MENU_SUPER_ADMIN: MenuItem[] = [
       { label: "Rapports", icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/admin/rapports" },
       { label: "Services", icon: <Layers size={20} />, href: "/admin/services" },
       { label: "Transfert inter-sites", icon: <FolderSync size={20} />, href: "/admin/transfert" },
-      { label: "Audit Trail", icon: <Shield size={20} />, href: "/admin/audit" },
+      { label: " Traçabilté", icon: <Shield size={20} />, href: "/admin/audit" },
     ],
   },
   {
     label: "Gestionnaires",
-    icon: <UserCog  size={20} />,
+    icon: <UserCog size={20} />,
     href: "/admin/gestionnaires",
-    
-  },
-  {
-    label: "Gestion des rôles",
-    icon: <Shield size={20} />,
-    href: "/admin/roles",
   },
 ];
 
@@ -211,10 +205,11 @@ interface BottomItem {
   icon: ReactNode;
 }
 
-/** SUPER-ADMIN : paramètres + gestion des rôles */
+/** SUPER-ADMIN : profil + paramètres + gestion des rôles en bas */
 const BOTTOM_SUPER_ADMIN: BottomItem[] = [
-  { label: "Profil", href: "/admin/profile", icon: <UserIcon size={20} /> },
-  { label: "Paramètres", href: "/admin/parametres", icon: <Settings size={20} /> },
+  { label: "Profil",            href: "/admin/profile",    icon: <UserIcon size={20} /> },
+  { label: "Paramètres",        href: "/admin/parametres", icon: <Settings size={20} /> },
+  { label: "Gestion des rôles", href: "/admin/roles",      icon: <Shield   size={20} /> },
 ];
 
 /** ADMIN : paramètres uniquement (pas de gestion des rôles) */
@@ -283,7 +278,11 @@ export default function Sidebar() {
 
     const findActiveParents = (items: MenuItem[], parents: string[] = []): string[] => {
       for (const item of items) {
-        if (item.href && item.href === pathname) return parents;
+        // Vérifie si ce menu ou un de ses enfants est actif (avec startsWith pour les pages détails)
+        const itemActive = item.href && item.href !== "#" && item.href.split("/").length >= 3
+          ? pathname === item.href || pathname.startsWith(item.href + "/")
+          : pathname === item.href;
+        if (itemActive) return parents;
         if (item.subItems) {
           const result = findActiveParents(item.subItems, [...parents, item.label]);
           if (result.length) return result;
@@ -300,7 +299,15 @@ export default function Sidebar() {
       prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
     );
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => {
+    if (href === "/" || href === "#") return pathname === href;
+    // Exact match d'abord
+    if (pathname === href) return true;
+    // Préfixe : /admin/sites active aussi /admin/sites/details/32
+    // Mais évite que /admin active tout (trop large)
+    if (href.split("/").length >= 3) return pathname.startsWith(href + "/") || pathname.startsWith(href);
+    return false;
+  };
 
   const handleLogout = async () => {
     try {

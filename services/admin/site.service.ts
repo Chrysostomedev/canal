@@ -21,10 +21,11 @@ export interface Site {
   manager?: {
     id:            number;
     first_name?:   string;
-    name?:         string; // FIX: ajout fallback — certains backends renvoient "name"
+    last_name?:    string;
+    name?:         string;
     email:         string;
     phone_number?: string;
-    phone?:        string; // FIX: ajout fallback
+    phone?:        string;
   } | null;
   // FIX: champs à plat parfois renvoyés directement par l'API
   responsable_name?:  string | null;
@@ -37,6 +38,7 @@ export interface Site {
 export interface Manager {
   id:            number;
   first_name?:   string;
+  last_name?:    string;
   name?:         string;
   email:         string;
   phone_number?: string;
@@ -67,16 +69,23 @@ export interface SiteFilters {
 /** Retourne le nom du manager quelle que soit la structure du back */
 export const resolveManagerName = (item: Site | Manager | null): string => {
   if (!item) return "—";
-  // Champ à plat (Site uniquement)
-  if ("responsable_name" in item && item.responsable_name) return item.responsable_name;
-  // Objet manager imbriqué (Site)
+  // Objet manager imbriqué (Site) — priorité absolue
   if ("manager" in item && item.manager) {
-    return item.manager.first_name ?? item.manager.name ?? item.manager.email ?? "—";
+    const m = item.manager;
+    const full = [m.first_name, (m as any).last_name].filter(Boolean).join(" ").trim();
+    if (full) return full;
+    if (m.name)  return m.name;
+    if (m.email) return m.email;
   }
+  // Champ à plat responsable_name (Site)
+  if ("responsable_name" in item && item.responsable_name) return item.responsable_name;
   // Manager directement (liste managers)
-  if ("first_name" in item && item.first_name) return item.first_name;
-  if ("name" in item && (item as any).name)     return (item as any).name;
-  if ("email" in item && item.email)            return item.email;
+  if ("first_name" in item) {
+    const full = [item.first_name, (item as any).last_name].filter(Boolean).join(" ").trim();
+    if (full) return full;
+  }
+  if ("name" in item && (item as any).name) return (item as any).name;
+  if ("email" in item && item.email)        return item.email;
   return "—";
 };
 
@@ -167,12 +176,46 @@ export const getSites = async (
   return parsePaginatedResponse(response.data);
 };
 
-// ── Liste filtrée (objet complet)
+// ── Liste filtrée (objet complet) — enrichit les managers manquants
 export const getSitesFiltered = async (
   filters: SiteFilters,
 ): Promise<SitesResponse> => {
   const response = await axios.get("/admin/site", { params: filters });
-  return parsePaginatedResponse(response.data);
+  const result = parsePaginatedResponse(response.data);
+
+  // Enrichit les sites dont manager_id est défini mais manager est null
+  const missingManagerIds = result.items
+    .filter(s => s.manager_id && !s.manager)
+    .map(s => s.manager_id as number);
+
+  if (missingManagerIds.length > 0) {
+    try {
+      // Récupère tous les managers en une seule requête
+      const mRes = await axios.get("/admin/managers");
+      const managers: any[] = mRes.data?.data ?? [];
+      const managerMap = new Map(managers.map((m: any) => [m.id, m]));
+
+      result.items = result.items.map(site => {
+        if (site.manager_id && !site.manager) {
+          const m = managerMap.get(site.manager_id);
+          if (m) {
+            site.manager = {
+              id:           m.id,
+              first_name:   m.first_name,
+              last_name:    m.last_name,
+              name:         [m.first_name, m.last_name].filter(Boolean).join(" ") || undefined,
+              email:        m.email,
+              phone_number: m.phone_number,
+              phone:        m.phone_number ?? m.phone,
+            };
+          }
+        }
+        return site;
+      });
+    } catch { /* non bloquant */ }
+  }
+
+  return result;
 };
 
 // ── Créer un site
@@ -205,10 +248,28 @@ export const getManagers = async (): Promise<Manager[]> => {
   return parseManagersResponse(response.data);
 };
 
-// ── Détail d'un site
+// ── Détail d'un site — enrichit avec le manager si nécessaire
 export const getSiteById = async (id: number): Promise<Site> => {
   const response = await axios.get(`/admin/site/${id}`);
-  return response.data?.data ?? response.data;
+  const site: Site = response.data?.data ?? response.data;
+  // Si manager_id est défini mais manager est null (bug morphique back),
+  // on récupère le manager manuellement
+  if (site.manager_id && !site.manager) {
+    try {
+      const mRes = await axios.get(`/admin/managers/${site.manager_id}`);
+      const m = mRes.data?.data ?? mRes.data;
+      if (m) site.manager = {
+        id:            m.id,
+        first_name:    m.first_name,
+        last_name:     m.last_name,
+        name:          [m.first_name, m.last_name].filter(Boolean).join(" ") || undefined,
+        email:         m.email,
+        phone_number:  m.phone_number,
+        phone:         m.phone_number ?? m.phone,
+      };
+    } catch { /* non bloquant */ }
+  }
+  return site;
 };
 
 // ── Export Excel

@@ -66,7 +66,7 @@ export default function AuditPage() {
       <Navbar />
 
       <main className="mt-20 p-8 space-y-8">
-        <PageHeader title="Audit Trail" subtitle="Traçabilité complète des actions effectuées sur la plateforme" />
+        <PageHeader title=" Traçabilité" subtitle="Traçabilité complète des actions effectuées sur la plateforme" />
 
         {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

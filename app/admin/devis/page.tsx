@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Eye, Filter, Download, Upload, X, CheckCircle2,
   XCircle, Clock, Copy, FileText, ExternalLink,
@@ -20,6 +20,7 @@ import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import { useQuotes } from "../../../hooks/admin/useQuotes";
 import { Quote, QuoteService } from "../../../services/admin/quote.service";
 import { exportToXlsx } from "../../../core/export";
+import axiosInstance from "../../../core/axios";
 
 // ══════════════════════════════════════════════
 // HELPERS
@@ -559,6 +560,34 @@ export default function DevisPage() {
   const [flashMessage,  setFlashMessage]  = useState<{ type: "success"|"error"; message: string } | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
 
+  // ── Données pour le formulaire de création ─────────────────────────────────
+  const [tickets,   setTickets]   = useState<{ label: string; value: string; site_id?: number; provider_id?: number }[]>([]);
+  const [providers, setProviders] = useState<{ label: string; value: string }[]>([]);
+  const [formInitialValues, setFormInitialValues] = useState<Record<string, any>>({});
+
+  // Charge tickets et prestataires au montage
+  useEffect(() => {
+    axiosInstance.get("/admin/ticket", { params: { per_page: 200 } }).then(res => {
+      const d = res.data?.data ?? res.data;
+      const items: any[] = d?.items ?? d?.data ?? (Array.isArray(d) ? d : []);
+      setTickets(items.map((t: any) => ({
+        label:       `${t.code_ticket ?? `#${t.id}`} — ${t.subject ?? t.site?.nom ?? ""}`.trim(),
+        value:       String(t.id),
+        site_id:     t.site_id,
+        provider_id: t.provider_id,
+      })));
+    }).catch(() => {});
+
+    axiosInstance.get("/admin/providers", { params: { per_page: 200 } }).then(res => {
+      const d = res.data?.data ?? res.data;
+      const items: any[] = d?.items ?? (Array.isArray(d) ? d : []);
+      setProviders(items.map((p: any) => ({
+        label: (p.company_name ?? `${p.user?.first_name ?? ""} ${p.user?.last_name ?? ""}`.trim()) || `Prestataire #${p.id}`,
+        value: String(p.id),
+      })));
+    }).catch(() => {});
+  }, []);
+
   const PER_PAGE = 10;
 
   useEffect(() => { fetchQuotes(); fetchStats(); }, []);
@@ -651,31 +680,88 @@ export default function DevisPage() {
 
   // ── Champs formulaire création ─────────────────────────────────────────────
   const quoteFields: FieldConfig[] = [
-    { name: "ticket_id", label: "Ticket ID",     type: "number", required: true },
-    { name: "provider_id", label: "Prestataire ID", type: "number", required: true },
-    { name: "site_id",     label: "Site ID",        type: "number", required: true },
-    { name: "description", label: "Description",    type: "textarea", required: true },
-    { name: "amount_ht",   label: "Montant HT",     type: "number", required: true },
+    {
+      name: "ticket_id",
+      label: "Ticket (codification)",
+      type: "select",
+      required: true,
+      options: tickets,
+    },
+    {
+      name: "provider_id",
+      label: "Prestataire",
+      type: "select",
+      required: true,
+      options: providers,
+    },
+    {
+      name: "site_id",
+      label: "Site (auto-rempli depuis le ticket)",
+      type: "text",
+      required: false,
+      disabled: true,
+      placeholder: "Sélectionnez un ticket",
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      required: true,
+      placeholder: "Décrivez les prestations à réaliser...",
+    },
+    {
+      name: "amount_ht",
+      label: "Montant HT (FCFA)",
+      type: "number",
+      required: true,
+      placeholder: "Ex: 150000",
+    },
   ];
+
+  // Quand le ticket change → auto-remplir site et prestataire
+  const handleFormFieldChange = (name: string, value: any) => {
+    if (name === "ticket_id") {
+      const ticket = tickets.find(t => t.value === String(value));
+      if (ticket) {
+        setFormInitialValues(prev => ({
+          ...prev,
+          ticket_id:   value,
+          site_id:     ticket.site_id ? String(ticket.site_id) : "",
+          provider_id: ticket.provider_id ? String(ticket.provider_id) : prev.provider_id ?? "",
+        }));
+      }
+    }
+  };
 
   // ── Création ───────────────────────────────────────────────────────────────
   const handleCreate = async (formData: any) => {
     try {
+      // Récupère site_id depuis formInitialValues si non fourni directement
+      const siteId = formInitialValues.site_id
+        ? Number(formInitialValues.site_id)
+        : Number(formData.site_id);
+
+      if (!siteId) {
+        showFlash("error", "Impossible de déterminer le site. Vérifiez le ticket sélectionné.");
+        return;
+      }
+
       await QuoteService.createQuote({
         ticket_id:   Number(formData.ticket_id),
         provider_id: Number(formData.provider_id),
-        site_id:     Number(formData.site_id),
+        site_id:     siteId,
         description: formData.description,
         items: [
           {
             designation: "Prestation générale",
-            quantity: 1,
-            unit_price: Number(formData.amount_ht),
-          }
+            quantity:    1,
+            unit_price:  Number(formData.amount_ht),
+          },
         ],
       });
       showFlash("success", "Devis créé avec succès");
       setIsCreateModalOpen(false);
+      setFormInitialValues({});
       fetchQuotes();
     } catch (err: any) {
       showFlash("error", err?.response?.data?.message || "Erreur lors de la création");
@@ -788,12 +874,14 @@ export default function DevisPage() {
   {/* ── Modal création ─────────────────────────────────────────── */}
   <ReusableForm
             isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
+            onClose={() => { setIsCreateModalOpen(false); setFormInitialValues({}); }}
             title="Ajouter un devis"
-            subtitle="Les informations ci-dessous permettront de faire un nouveau devis."
+            subtitle="Sélectionnez le ticket — le site sera auto-rempli."
             fields={quoteFields}
             onSubmit={handleCreate}
-            submitLabel="Créer le gestionnaire"
+            onFieldChange={handleFormFieldChange}
+            initialValues={formInitialValues}
+            submitLabel="Créer le devis"
           />
 
           <QuoteSidePanel

@@ -4,6 +4,7 @@ import { Poppins } from "next/font/google"; // <-- importer Poppins
 import "./globals.css";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { SidebarProvider } from "./components/Sidebar";
+import { LanguageProvider } from "../contexts/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,9 +42,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}
       >
         <ThemeProvider>
-          <SidebarProvider>
-            {children}
-          </SidebarProvider>
+          <LanguageProvider>
+            <SidebarProvider>
+              {children}
+            </SidebarProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

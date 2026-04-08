@@ -699,8 +699,8 @@ export default function SitesPage() {
       disabled: managersLoading,
       options: managers.map((m) => ({
         label: resolveManagerName(m) || `Manager #${m.id}`,
-        value: String(m.id),
-      })),
+        value: String(m.id),  
+      })),required: true
     },
     // { name: "email",             label: "Email du site",          type: "email" },
     {
@@ -708,9 +708,10 @@ export default function SitesPage() {
       options: [{ label: "Actif", value: "active" }, { label: "Inactif", value: "inactive" }],
     },
     { name: "effectifs",        label: "Effectifs",                type: "number" },
-    { name: "loyer",            label: "Loyer mensuel (FCFA)",     type: "number" },
+    { name: "loyer",            label: "Loyer mensuel (FCFA)",     type: "number"},
+    { name: "phone_responsable",            label: "Numero",     type: "number"},
     { name: "superficie",       label: "Superficie (m²)",          type: "number" },
-    { name: "localisation",     label: "Localisation",             type: "text", gridSpan: 2 },
+    { name: "localisation",     label: "Localisation",             type: "text", gridSpan: 2 ,  required: true},
     { name: "date_deb_contrat", label: "Date de début de contrat", type: "date" },
     { name: "date_fin_contrat", label: "Date de fin de contrat",   type: "date" },
   ];
@@ -794,7 +795,7 @@ export default function SitesPage() {
                 title="Télécharger le modèle d'import">
                 <Download size={14} /> Modèle
               </button> */}
-
+  
               {/* Importer - ouvre la prévisualisation */}
               <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition ${importLoading ? "opacity-60 cursor-wait" : ""}`}>
                 {importLoading

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Calendar, MapPin, ChevronRight, Clock, Zap } from "lucide-react";
 import { Intervention } from "../../services/provider/providerDashboardService";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDateTime(isoDate: string): { day: string; time: string } {

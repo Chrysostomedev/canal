@@ -326,12 +326,7 @@ function NotifDetail({ notif, onBack, onDelete }: {
         <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-black transition text-sm font-bold">
           <ArrowLeft size={16} /> Retour
         </button>
-        <button
-          onClick={e => onDelete(notif.id, e)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-100 text-red-400 hover:bg-red-50 text-xs font-bold transition"
-        >
-          <Trash2 size={13} /> Supprimer
-        </button>
+       
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
