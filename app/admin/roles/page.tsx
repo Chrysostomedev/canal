@@ -448,8 +448,8 @@ export default function RolesPage() {
 
   const fetchStats = async () => {
     try {
+      // Stats admins/managers depuis /admin/roles/stats
       const res = await axiosInstance.get("/admin/roles/stats");
-      // Le back retourne un tableau : [{ role_id, role_name, slug, user_count }, ...]
       const d: any[] = res.data?.data ?? res.data ?? [];
       const arr = Array.isArray(d) ? d : [];
 
@@ -458,9 +458,16 @@ export default function RolesPage() {
           (r.role_name ?? r.slug ?? "").toUpperCase() === name.toUpperCase()
         )?.user_count ?? 0;
 
-      const admins    = get("ADMIN") + get("SUPER-ADMIN");
-      const managers  = get("MANAGER");
-      const providers = get("PROVIDER");
+      const superAdmins = get("SUPER-ADMIN");
+      const admins      = get("ADMIN") + superAdmins;
+      const managers    = get("MANAGER");
+
+      // Providers depuis /admin/providers/stats (table séparée)
+      let providers = 0;
+      try {
+        const pRes = await axiosInstance.get("/admin/providers/stats");
+        providers = pRes.data?.data?.total_providers ?? pRes.data?.total_providers ?? 0;
+      } catch { /* non bloquant */ }
 
       setStats({
         total:     admins + managers + providers,
@@ -476,46 +483,65 @@ export default function RolesPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      let endpoint = "/admin/admins";
-      let params: any = { page: currentPage, per_page: PER_PAGE };
+      let items: any[] = [];
+      let lastPage = 1;
+      let total = 0;
 
-      if (roleFilter === "manager") {
-        endpoint = "/admin/roles/MANAGER/users";
-      } else if (roleFilter === "provider") {
-        endpoint = "/admin/roles/PROVIDER/users";
-      } else if (roleFilter === "super-admin") {
-        endpoint = "/admin/roles/SUPER-ADMIN/users";
-      } else if (roleFilter === "admin") {
-        endpoint = "/admin/roles/ADMIN/users";
+      if (roleFilter === "provider") {
+        // Prestataires → /admin/providers
+        const res = await axiosInstance.get("/admin/providers", {
+          params: { page: currentPage, per_page: PER_PAGE },
+        });
+        const d = res.data?.data ?? res.data;
+        const raw: any[] = Array.isArray(d?.items) ? d.items
+          : Array.isArray(d?.data) ? d.data
+          : Array.isArray(d) ? d : [];
+        lastPage = d?.meta?.last_page ?? d?.last_page ?? 1;
+        total    = d?.meta?.total    ?? d?.total    ?? raw.length;
+        items = raw.map((u: any) => ({
+          id:     u.id,
+          name:   u.company_name ?? `Prestataire #${u.id}`,
+          role:   "provider",
+          phone:  u.phone ?? u.user?.phone ?? "",
+          email:  u.email ?? u.user?.email ?? "",
+          status: u.is_active ? "active" : "inactive",
+          joined: u.created_at ? new Date(u.created_at).toLocaleDateString("fr-FR") : "-",
+        }));
+
+      } else {
+        // Admins / Managers / Super-Admin → /admin/admins?role_slug=...
+        const roleSlugMap: Record<string, string> = {
+          "admin":       "ADMIN",
+          "super-admin": "SUPER-ADMIN",
+          "manager":     "MANAGER",
+        };
+        const params: any = { page: currentPage, per_page: PER_PAGE };
+        if (roleFilter !== "all") params.role_slug = roleSlugMap[roleFilter] ?? roleFilter.toUpperCase();
+
+        const res = await axiosInstance.get("/admin/admins", { params });
+        const d = res.data?.data ?? res.data;
+        const raw: any[] = Array.isArray(d?.items) ? d.items
+          : Array.isArray(d?.data) ? d.data
+          : Array.isArray(d) ? d : [];
+        lastPage = d?.meta?.last_page ?? d?.last_page ?? 1;
+        total    = d?.meta?.total    ?? d?.total    ?? raw.length;
+        items = raw.map((u: any) => {
+          const roleName = (u.roles?.[0]?.name ?? u.role_name ?? "").toLowerCase();
+          return {
+            id:     u.id,
+            name:   [u.first_name, u.last_name].filter(Boolean).join(" ") || u.name || `#${u.id}`,
+            role:   roleName || (roleFilter !== "all" ? roleFilter : "admin"),
+            phone:  u.phone_number ?? u.phone ?? "",
+            email:  u.email ?? "",
+            status: (u.is_active === true || u.is_active === 1 || u.status === "active" || u.status === "actif") ? "active" : "inactive",
+            joined: u.created_at ? new Date(u.created_at).toLocaleDateString("fr-FR") : "-",
+          };
+        });
       }
-      // "all" → /admin/admins (retourne tous les admins/managers)
 
-      const res = await axiosInstance.get(endpoint, { params });
-      const d = res.data?.data ?? res.data;
-
-      // Normalise : items paginés ou tableau brut
-      const items: any[] = Array.isArray(d?.items)
-        ? d.items
-        : Array.isArray(d?.data)
-        ? d.data
-        : Array.isArray(d)
-        ? d
-        : [];
-
-      const mapped = items.map((u: any) => ({
-        id:     u.id,
-        name:   [u.first_name, u.last_name].filter(Boolean).join(" ") || u.name || u.company_name || `#${u.id}`,
-        role:   (u.roles?.[0]?.name ?? u.role_name ?? roleFilter).toLowerCase().replace("super-admin", "super-admin"),
-        site:   u.manager?.site?.nom ?? u.provider?.company_name ?? "N/A",
-        phone:  u.phone_number ?? u.phone ?? u.user?.phone ?? "",
-        email:  u.email ?? u.user?.email ?? "",
-        status: (u.is_active === true || u.is_active === 1 || u.status === "active") ? "active" : "inactive",
-        joined: u.created_at ? new Date(u.created_at).toLocaleDateString("fr-FR") : "-",
-      }));
-
-      setUsers(mapped);
-      setTotalPages(d?.meta?.last_page ?? d?.last_page ?? 1);
-      setTotalItems(d?.meta?.total ?? d?.total ?? mapped.length);
+      setUsers(items);
+      setTotalPages(lastPage);
+      setTotalItems(total);
     } catch (e) {
       console.error("Fetch users error", e);
       showFlash("error", "Impossible de charger les utilisateurs.");

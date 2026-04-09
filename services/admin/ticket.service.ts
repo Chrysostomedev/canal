@@ -71,12 +71,12 @@ export const TicketService = {
   async createTicket(payload: {
     site_id: number;
     company_asset_id: number;
-    service_id: number;
-    provider_id: number;
+    service_id?: number;
+    provider_id?: number;
     type: "curatif" | "preventif";
     priority: "faible" | "moyenne" | "haute" | "critique";
     planned_at: string;
-    due_at: string;
+    due_at?: string;
     subject?: string;
     description?: string;
   }): Promise<Ticket> {

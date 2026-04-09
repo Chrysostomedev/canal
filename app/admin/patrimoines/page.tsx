@@ -85,7 +85,7 @@ const exportToExcel = (assets: CompanyAsset[]) => {
   const rows = assets.map(a => [
     a.id, a.codification, a.designation,
     a.type?.name    ?? "-",
-    a.subType?.name ?? "-",
+    (a as any).sub_type?.name ?? a.subType?.name ?? "-",
     a.site?.nom     ?? "-",
     ST_LABEL[a.status] ?? a.status,
     a.criticite === "critique" ? "Critique" : a.criticite === "non_critique" ? "Non critique" : "-",
@@ -918,18 +918,7 @@ export default function PatrimoinesPage() {
         <span className="text-sm text-slate-600">{row.type?.name ?? "-"}</span>
       ),
     },
-    {
-      header: "Photo/Image", key: "photo",
-      render: (_: any, row: CompanyAsset) => {
-        const imgs: string[] = (row as any).images ?? [];
-        if (!imgs.length) return <span className="text-slate-300 text-xs">-</span>;
-        return (
-          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 ring-2 ring-white">
-            <img src={imgs[0]} alt="" className="w-full h-full object-cover" />
-          </div>
-        );
-      },
-    },
+ 
     {
       header: "Sous-type", key: "sub_type_company_asset_id" as keyof CompanyAsset,
       render: (_: any, row: CompanyAsset) => (

@@ -18,10 +18,11 @@ export interface CompanyAsset {
   sub_type_company_asset_id: number;
   site_id: number;
 
-  // Relations eager-loaded — clés exactes du back Laravel
-  type:    { id: number; code: string; name: string } | null;
-  subType: { id: number; code: string; name: string } | null;
-  site:    { id: number; nom: string } | null;
+  // Relations eager-loaded — Laravel sérialise subType() en "sub_type" (snake_case)
+  type:     { id: number; code: string; name: string } | null;
+  sub_type: { id: number; code: string; name: string } | null; // snake_case JSON
+  subType?: { id: number; code: string; name: string } | null; // alias rétrocompat
+  site:     { id: number; nom: string } | null;
 
   designation:  string;
   codification: string;

@@ -139,7 +139,7 @@ export default function PatrimoineDetailsPage() {
   const amort = computeAmort(asset);
 
   const typeName    = asset?.type?.name    ?? "-";
-  const subTypeName = asset?.subType?.name ?? "-";
+  const subTypeName = (asset as any)?.sub_type?.name ?? asset?.subType?.name ?? "-";
   const siteName    = asset?.site?.nom     ?? "-";
   const siteId      = (asset?.site as any)?.id ?? null;
 

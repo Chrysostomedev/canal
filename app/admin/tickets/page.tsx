@@ -232,7 +232,6 @@ interface ParsedPreview  {
 type ValidatorFn = (value: any, row: Record<string, any>) => { status: "warning" | "error"; message: string } | null;
 interface ColumnRule { required?: boolean; validators?: ValidatorFn[]; }
 
-// Colonnes attendues par TicketsImport (back) — clés normalisées (lowercase + underscore)
 const TICKET_KNOWN_COLS = new Set([
   "sujet", "site", "type", "priorite", "statut",
   "equipement", "service", "prestataire",
@@ -626,7 +625,7 @@ function TicketSidePanel({
 
   const statusColor = STATUS_DOT_COLORS[ticket.status] ?? "#94a3b8";
   const statusLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
-  
+
   const [copied, setCopied] = useState(false);
 
   const handleCopyId = (id: string) => {
@@ -648,17 +647,17 @@ function TicketSidePanel({
   const serviceName = ticket.service?.name ?? "";
 
   const infoRows: Array<{ Icon: any; label: string; value?: string | null; custom?: React.ReactNode }> = [
-    { 
-      Icon: Tag, 
-      label: "Référence", 
+    {
+      Icon: Tag,
+      label: "Référence",
       custom: (
         <div className="flex items-center gap-2 group/id">
           <span className="text-sm font-black text-slate-900">#{ticket.id}</span>
-          <button 
+          <button
             onClick={() => handleCopyId(ticket.id.toString())}
             className={`p-1.5 rounded-lg border transition-all ${
-              copied 
-                ? "bg-green-50 border-green-200 text-green-600" 
+              copied
+                ? "bg-green-50 border-green-200 text-green-600"
                 : "bg-slate-50 border-slate-100 text-slate-400 opacity-0 group-hover/id:opacity-100 hover:text-slate-600 hover:border-slate-300"
             }`}
             title="Copier l'identifiant"
@@ -666,7 +665,7 @@ function TicketSidePanel({
             {copied ? <Check size={12} /> : <Copy size={12} />}
           </button>
         </div>
-      )
+      ),
     },
     { Icon: MapPin,        label: "Site",            value: siteName },
     { Icon: Wrench,        label: "Patrimoine",      value: assetLabel },
@@ -675,9 +674,9 @@ function TicketSidePanel({
     { Icon: AlertTriangle, label: "Priorité",        custom: <PriorityBadge priority={ticket.priority} /> },
     { Icon: CalendarDays,  label: "Date planifiée",  value: formatDate(ticket.planned_at) },
     { Icon: CalendarCheck, label: "Date limite",     value: formatDate(ticket.due_at) },
-    ...(ticket.resolved_at ? [{ Icon: CheckCircle2, label: "Résolu le",   value: formatDate(ticket.resolved_at) }] : []),
-    ...(ticket.closed_at   ? [{ Icon: Clock,        label: "Clôturé le",  value: formatDate(ticket.closed_at)   }] : []),
-    ...(ticket.created_at  ? [{ Icon: Clock,        label: "Créé le",     value: formatDate(ticket.created_at)  }] : []),
+    ...(ticket.resolved_at ? [{ Icon: CheckCircle2, label: "Résolu le",  value: formatDate(ticket.resolved_at) }] : []),
+    ...(ticket.closed_at   ? [{ Icon: Clock,        label: "Clôturé le", value: formatDate(ticket.closed_at)   }] : []),
+    ...(ticket.created_at  ? [{ Icon: Clock,        label: "Créé le",    value: formatDate(ticket.created_at)  }] : []),
   ];
 
   return (
@@ -828,8 +827,18 @@ export default function TicketsPage() {
   const [workflowActionLoading, setWorkflowActionLoading] = useState(false);
   const [previewFile,    setPreviewFile]    = useState<File | null>(null);
   const [previewOpen,    setPreviewOpen]    = useState(false);
-  // Filtre patrimoine par site sélectionné dans le formulaire
   const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null);
+  const [ticketFormType,    setTicketFormType]    = useState<string>("");
+  const [ticketFormPlanned, setTicketFormPlanned] = useState<string>("");
+
+  const computedDueAt = (() => {
+    if (!ticketFormPlanned) return "";
+    const planned = new Date(ticketFormPlanned);
+    if (isNaN(planned.getTime())) return "";
+    const hours = ticketFormType === "curatif" ? 72 : 7 * 24;
+    const due = new Date(planned.getTime() + hours * 60 * 60 * 1000);
+    return due.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  })();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -878,29 +887,39 @@ export default function TicketsPage() {
           subject:          formData.subject || undefined,
           description:      formData.description || undefined,
         };
-        // service_id et provider_id optionnels
-        if (formData.service_id)  payload.service_id  = Number(formData.service_id);
+
+        if (formData.service_id) payload.service_id = Number(formData.service_id);
         if (formData.provider_id) payload.provider_id = Number(formData.provider_id);
 
-        // Règle 72h : pour les tickets curatifs, due_at = planned_at + 72h
-        // On envoie un datetime complet pour satisfaire la validation back (after_or_equal)
-        if (payload.type === "curatif") {
-          const planned = new Date(payload.planned_at);
-          // Si la date est valide, on ajoute 72h
-          if (!isNaN(planned.getTime())) {
-            const due = new Date(planned.getTime() + 72 * 60 * 60 * 1000);
-            payload.due_at = due.toISOString().slice(0, 19).replace("T", " ");
-          }
-        } else if (formData.due_at) {
-          payload.due_at = formData.due_at;
-        }
-
-        // planned_at en datetime complet
         if (payload.planned_at && !payload.planned_at.includes("T") && !payload.planned_at.includes(" ")) {
           payload.planned_at = payload.planned_at + " 00:00:00";
         }
 
-        await TicketService.createTicket(payload);
+        if (!formData.due_at || formData.due_at === "") {
+          const planned = new Date(payload.planned_at);
+          if (!isNaN(planned.getTime())) {
+            const hoursToAdd = payload.type === "curatif" ? 72 : 7 * 24;
+            const due = new Date(planned.getTime() + hoursToAdd * 60 * 60 * 1000);
+            payload.due_at = due.toISOString().slice(0, 19).replace("T", " ");
+          }
+        } else {
+          payload.due_at = formData.due_at.includes(" ") || formData.due_at.includes("T")
+            ? formData.due_at
+            : formData.due_at + " 00:00:00";
+        }
+
+        let created: any = null;
+        try {
+          created = await TicketService.createTicket(payload);
+        } catch (createErr: any) {
+          const status = createErr?.response?.status;
+          const msg: string = createErr?.response?.data?.message ?? "";
+          const isNotifyBug = status === 500 && (
+            msg.includes("notify") || msg.includes("Notifiable") || msg.includes("undefined method")
+          );
+          if (!isNotifyBug) throw createErr;
+        }
+
         showFlash("success", "Ticket créé avec succès.");
       }
       await fetchTickets();
@@ -1043,7 +1062,26 @@ export default function TicketsPage() {
     }
   };
 
-  const columns: any[] = [
+  // ── Logique SLA ─────────────────────────────────────────────────────────────
+  const now = Date.now();
+  const GRACE_MS = 3 * 60 * 60 * 1000;
+
+  const getTicketSlaState = (ticket: Ticket): "ok" | "grace" | "expired" => {
+    if (ticket.type !== "curatif") return "ok";
+    const dueAt = (ticket as any).due_at;
+    if (!dueAt) return "ok";
+    const dueMs = new Date(dueAt).getTime();
+    if (isNaN(dueMs)) return "ok";
+    const overdue = now - dueMs;
+    if (overdue <= 0)       return "ok";
+    if (overdue < GRACE_MS) return "grace";
+    return "expired";
+  };
+
+  const visibleTickets = tickets.filter(t => getTicketSlaState(t) !== "expired");
+
+  // ── Colonnes du tableau ──────────────────────────────────────────────────────
+  const columns = [
     /* {
       header: "Photos",
       key: "images",
@@ -1051,15 +1089,28 @@ export default function TicketsPage() {
     }, */
     {
       header: "Codification", key: "codification",
-      render: (_: any, row: Ticket) =>
-        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg whitespace-nowrap">
-          {(row as any).asset?.codification ?? `#${row.id}`}
-        </span>,
+      render: (_: any, row: Ticket) => {
+        const sla = getTicketSlaState(row);
+        return (
+          <span className={`font-mono text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap inline-flex items-center gap-1 ${
+            sla === "grace" ? "bg-slate-100 text-slate-400 opacity-50" : "bg-slate-100 text-slate-700"
+          }`}>
+            {(row as any).asset?.codification ?? `#${row.id}`}
+            {sla === "grace" && <span className="text-[9px] text-orange-500 font-black">SLA!</span>}
+          </span>
+        );
+      },
     },
     {
       header: "Sujet", key: "subject",
-      render: (_: any, row: Ticket) =>
-        <span className="font-medium text-slate-900 text-sm max-w-[200px] truncate block">{row.subject ?? ""}</span>,
+      render: (_: any, row: Ticket) => {
+        const sla = getTicketSlaState(row);
+        return (
+          <span className={`font-medium text-sm max-w-[200px] truncate block ${sla === "grace" ? "text-slate-400 line-through" : "text-slate-900"}`}>
+            {row.subject ?? ""}
+          </span>
+        );
+      },
     },
     {
       header: "Site", key: "site",
@@ -1139,6 +1190,17 @@ export default function TicketsPage() {
     },
     { name: "subject",    label: "Sujet",          type: "text" },
     { name: "planned_at", label: "Date planifiée", type: "date", required: true, icon: CalendarDays },
+    {
+      name: "due_at_display",
+      label: ticketFormType === "curatif"
+        ? "Date limite (72h — SLA curatif)"
+        : ticketFormType === "preventif"
+        ? "Date limite (7 jours — préventif)"
+        : "Date limite (calculée auto)",
+      type: "text",
+      disabled: true,
+      placeholder: ticketFormPlanned ? computedDueAt : "Sélectionnez d'abord la date planifiée",
+    },
     {
       name: "description", label: "Description", type: "rich-text", gridSpan: 2,
     },
@@ -1335,7 +1397,7 @@ export default function TicketsPage() {
                 Aucun ticket{activeCount > 0 ? " correspondant aux filtres" : ""}.
               </div>
             ) : (
-              <DataTable title="Liste des tickets" columns={columns} data={tickets} onViewAll={() => {}} />
+              <DataTable title="Liste des tickets" columns={columns} data={visibleTickets} onViewAll={() => {}} />
             )}
             <div className="p-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
               <p className="text-xs text-slate-400">
@@ -1355,8 +1417,9 @@ export default function TicketsPage() {
       />
 
       <ReusableForm
+        key={`ticket-form-${computedDueAt}`}
         isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setEditingTicket(null); setSelectedSiteId(null); }}
+        onClose={() => { setIsModalOpen(false); setEditingTicket(null); setSelectedSiteId(null); setTicketFormType(""); setTicketFormPlanned(""); }}
         title={editingTicket ? "Modifier le ticket" : "Nouveau ticket"}
         subtitle={
           editingTicket
@@ -1368,12 +1431,14 @@ export default function TicketsPage() {
           status:      editingTicket.status,
           priority:    editingTicket.priority,
           description: editingTicket.description ?? "",
-        } : {}}
+        } : {
+          due_at_display: computedDueAt || "",
+        }}
         onSubmit={handleSubmit}
         onFieldChange={(name, value) => {
-          if (name === "site_id") {
-            setSelectedSiteId(value ? Number(value) : null);
-          }
+          if (name === "site_id")    setSelectedSiteId(value ? Number(value) : null);
+          if (name === "type")       setTicketFormType(value ?? "");
+          if (name === "planned_at") setTicketFormPlanned(value ?? "");
         }}
         submitLabel={editingTicket ? "Mettre à jour" : "Créer le ticket"}
       />

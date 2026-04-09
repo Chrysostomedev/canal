@@ -474,14 +474,22 @@ export default function SiteDetailsPage() {
   // Utilisation de as keyof CompanyAsset pour satisfaire TypeScript sur les clés imbriquées ou calculées
   const columns: ColumnConfig<CompanyAsset>[] = [
     {
-      header: "ID", key: "id" as any,
+      header: "Codification", key: "codification",
       render: (_: any, row: CompanyAsset) => (
-        <div className="flex items-center">
-          <span className="font-black text-slate-900 text-sm">#{row.id}</span>
-          <CopyButton text={String(row.id)} />
-        </div>
+        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">
+          {row.codification}
+        </span>
       ),
     },
+    // {
+    //   header: "ID", key: "id" as any,
+    //   render: (_: any, row: CompanyAsset) => (
+    //     <div className="flex items-center">
+    //       <span className="font-black text-slate-900 text-sm">#{row.id}</span>
+    //       <CopyButton text={String(row.id)} />
+    //     </div>
+    //   ),
+    // },
     {
       header: "Type", key: "type",
       render: (_: any, row: CompanyAsset) => (
@@ -492,14 +500,6 @@ export default function SiteDetailsPage() {
       header: "Sous-type", key: "subType",
       render: (_: any, row: CompanyAsset) => (
         <span className="text-sm text-slate-700">{row.subType?.name ?? "-"}</span>
-      ),
-    },
-    {
-      header: "Codification", key: "codification",
-      render: (_: any, row: CompanyAsset) => (
-        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">
-          {row.codification}
-        </span>
       ),
     },
     {
