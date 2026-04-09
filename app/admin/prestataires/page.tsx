@@ -443,7 +443,7 @@ export default function PrestatairesPage() {
                 <p className="text-slate-400 text-sm">Chargement des prestataires...</p>
               </div>
             ) : providers.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {providers.map(p => (
                   <PrestCard
                     key={p.id}

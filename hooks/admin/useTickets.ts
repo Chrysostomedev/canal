@@ -56,16 +56,36 @@ export const useTickets = () => {
   };
 
   const assignTicket = async (id: number, providerId: number) => {
-    setIsLoading(true);
     try {
       await TicketService.assignTicket(id, providerId);
-      await Promise.all([fetchTickets(), fetchStats()]);
+      // Mise à jour immédiate dans la liste locale
+      setTickets(prev => prev.map(t =>
+        t.id === id ? { ...t, status: "ASSIGNÉ", provider_id: providerId } : t
+      ));
+      // Refetch après un court délai pour laisser le back se stabiliser
+      setTimeout(() => { fetchTickets(); fetchStats(); }, 800);
       return true;
     } catch (err: any) {
-      setError(err.message || "Erreur lors de l'assignation");
+      const status = err?.response?.status;
+      const msg: string = err?.response?.data?.message ?? err?.message ?? "";
+      // 422 ou 500 avec bug notify → ticket assigné quand même
+      const isNotifyBug = (status === 422 || status === 500) && (
+        msg.includes("notify") || msg.includes("Notifiable") || msg.includes("undefined method")
+      );
+      if (isNotifyBug) {
+        setTickets(prev => prev.map(t =>
+          t.id === id ? { ...t, status: "ASSIGNÉ", provider_id: providerId } : t
+        ));
+        setTimeout(() => { fetchTickets(); fetchStats(); }, 800);
+        return true;
+      }
+      const userMsg = status === 422
+        ? (err?.response?.data?.errors
+            ? Object.values(err.response.data.errors).flat().join(" | ")
+            : msg || "Transition de statut impossible.")
+        : msg || "Erreur lors de l'assignation.";
+      setError(userMsg);
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -17,7 +17,8 @@ import { FieldConfig } from "@/components/ReusableForm";
 
 import { useTickets } from "@hooks/manager/useTickets";
 import { useTicketActions } from "@hooks/manager/useTicketActions";
-import { AssetService, ServiceService } from "@services/manager";
+import { AssetService } from "../../../services/manager/asset.service";
+import { ServiceService } from "../../../services/manager/service.service";
 import { Ticket, Asset } from "../../../types/manager.types";
 import { Service } from "@services/manager/service.service";
 
@@ -193,6 +194,8 @@ export default function TicketsPage() {
 
   const [assets, setAssets] = useState<Asset[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  // Tracker le site_id de l'actif sélectionné pour l'injecter dans le payload
+  const [selectedAssetSiteId, setSelectedAssetSiteId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchReferences = async () => {
@@ -247,7 +250,7 @@ export default function TicketsPage() {
       name: "company_asset_id",
       label: "Actif concerné",
       type: "select",
-      options: assets.map(a => ({ label: `${a.designation} (${a.code || "N/A"})`, value: a.id })),
+      options: assets.map(a => ({ label: `${a.designation} (${(a as any).codification || a.code || "N/A"})`, value: String(a.id) })),
       required: true,
       icon: <CheckCircle2 size={18} />
     },
@@ -255,8 +258,7 @@ export default function TicketsPage() {
       name: "service_id",
       label: "Service métier",
       type: "select",
-      options: services.map(s => ({ label: s.name, value: s.id })),
-      required: true,
+      options: services.map(s => ({ label: s.name, value: String(s.id) })),
       icon: <Tag size={18} />
     },
     {
@@ -486,12 +488,24 @@ export default function TicketsPage() {
 
       <ReusableForm
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); setSelectedAssetSiteId(null); }}
         title="Signaler un Problème"
         subtitle="Détaillez le dysfonctionnement pour une intervention rapide"
         fields={ticketFields}
         initialValues={{ type: 'curatif', priority: 'moyenne' }}
-        onSubmit={(values: Record<string, any>) => createTicket(values as any)}
+        onFieldChange={(name, value) => {
+          if (name === "company_asset_id" && value) {
+            const asset = assets.find(a => String(a.id) === String(value));
+            setSelectedAssetSiteId((asset as any)?.site_id ?? null);
+          }
+        }}
+        onSubmit={(values: Record<string, any>) => {
+          // Injecte site_id depuis l'actif sélectionné
+          const siteId = selectedAssetSiteId
+            ?? assets.find(a => String(a.id) === String(values.company_asset_id))?.site_id
+            ?? null;
+          createTicket({ ...values, site_id: siteId } as any);
+        }}
         submitLabel="Envoyer le ticket"
       />
     </>

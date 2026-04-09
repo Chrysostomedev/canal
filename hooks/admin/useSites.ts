@@ -10,7 +10,7 @@
     Manager, // FIX: import du type Manager
   } from "../../services/admin/site.service";
 
-  const PER_PAGE = 9;
+  const PER_PAGE = 10;
 
   export const useSites = () => {
     const [sites,          setSites]          = useState<Site[]>([]);

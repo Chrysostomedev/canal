@@ -127,12 +127,23 @@ export const QuoteService = {
 
   /**
    * Export Excel des devis.
+   * Route /manager/quote/export n'existe pas — on génère côté client.
    */
   async exportQuotes(filters: QuoteFilters = {}): Promise<Blob> {
-    const response = await api.get("/manager/quote/export", {
-      params: filters,
-      responseType: "blob",
-    });
-    return response.data;
+    const { data } = await api.get<ApiResponse<PaginatedResponse<Quote>>>(
+      "/manager/quote",
+      { params: { ...filters, per_page: 1000, page: 1 } }
+    );
+    const items: Quote[] = data?.data?.items ?? [];
+    const headers = ["Référence", "Prestataire", "Site", "Montant TTC", "Statut"];
+    const rows = items.map(q => [
+      q.reference,
+      q.provider?.company_name ?? q.provider?.name ?? "-",
+      q.site?.nom ?? q.site?.name ?? "-",
+      q.amount_ttc ?? q.total_amount_ttc ?? 0,
+      q.status ?? "-",
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(";")).join("\n");
+    return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   },
 };

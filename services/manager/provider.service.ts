@@ -116,32 +116,18 @@ function computeProviderStats(tickets: ProviderTicket[]): ProviderStats {
 
 export const ProviderService = {
   /**
-   * Liste tous les prestataires disponibles.
-   * Stratégie : On récupère les tickets du site pour en extraire les prestataires.
-   * Cela garantit que le manager ne voit que les prestataires de son périmètre.
+   * Liste les prestataires du site du manager.
+   * Extrait depuis les tickets du site (seule approche disponible sans route /manager/providers).
    */
   async getProviders(
     filters: ProviderFilters = {}
   ): Promise<{ providers: Provider[]; rawTickets: ProviderTicket[]; meta?: any }> {
-    // On récupère une large portion de tickets pour déduire les prestataires
-    const { data } = await api.get<
-      ApiResponse<PaginatedResponse<ProviderTicket>>
-    >("/manager/ticket", {
-      params: {
-        page: filters.page ?? 1,
-        per_page: filters.per_page ?? 500,
-        search: filters.search,
-      },
+    const { data } = await api.get("/manager/ticket", {
+      params: { page: 1, per_page: 500 },
     });
-
-    const tickets = data.data?.items ?? [];
+    const tickets: ProviderTicket[] = data?.data?.items ?? [];
     const providers = extractUniqueProviders(tickets);
-
-    return {
-      providers,
-      rawTickets: tickets,
-      meta: data.data?.meta
-    };
+    return { providers, rawTickets: tickets, meta: data?.data?.meta };
   },
 
   /**

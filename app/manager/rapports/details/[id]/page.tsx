@@ -91,7 +91,7 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
           </div>
           <div>
             <p className="text-white font-black text-sm uppercase tracking-widest">{name}</p>
-            <p className="text-white/40 text-[10px] uppercase font-bold">Document PDF Officiel</p>
+            <p className="text-white/40 text-[10px] uppercase font-bold">Document PDF </p>
           </div>
         </div>
         <div className="flex items-center gap-3">

@@ -801,7 +801,7 @@ export default function TicketsPage() {
   const {
     tickets, stats, isLoading, meta, page,
     filters, fetchTickets, setPage, applyFilters,
-    assignTicket, closeTicket, validateReport,
+    assignTicket, closeTicket, validateReport, error,
   } = useTickets();
 
   const { providers } = useProviders();
@@ -958,7 +958,12 @@ export default function TicketsPage() {
     if (ok) {
       showFlash("success", "Prestataire assigné avec succès.");
       setIsAssignModalOpen(false);
-      setIsDetailsOpen(false);
+      // Met à jour selectedTicket immédiatement → bouton "Assigner" disparaît du SidePanel
+      const updated = { ...selectedTicket, status: "ASSIGNÉ" as const, provider_id: Number(formData.provider_id) };
+      setSelectedTicket(updated);
+      // Garde le SidePanel ouvert pour voir le nouveau statut
+    } else {
+      showFlash("error", error || "Erreur lors de l'assignation du prestataire.");
     }
     setWorkflowActionLoading(false);
   };

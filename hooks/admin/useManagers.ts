@@ -17,7 +17,7 @@ import { useState, useEffect, useMemo } from "react";
 import { ManagerService, Manager, ManagerStats } from "../../services/admin/manager.service";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-const PER_PAGE = 12; // Nombre de managers par page (pagination front)
+const PER_PAGE = 10; // Nombre de managers par page (pagination front)
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 export const useManagers = () => {

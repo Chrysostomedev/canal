@@ -192,8 +192,8 @@ export default function SitePage() {
               </div>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-xl border min-w-[280px] space-y-2">
-              <h3 className="font-bold text-lg">Informations du site</h3>
+            <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 min-w-[280px] space-y-2">
+              <h3 className="font-bold text-lg text-slate-800">Informations du site</h3>
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <Building2 size={16} />
                 <span>ID : {site.id}</span>

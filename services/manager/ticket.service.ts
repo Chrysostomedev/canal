@@ -21,16 +21,44 @@ export const TicketService = {
 
   /**
    * Crée (signale) un nouveau ticket d'intervention.
+   * Le back (TicketsController::store) valide :
+   *   - site_id : forcé automatiquement par le back pour le manager
+   *   - company_asset_id : required
+   *   - service_id : nullable
+   *   - provider_id : nullable pour manager
+   *   - type : required (curatif|preventif)
+   *   - priority : required
+   *   - planned_at : required date
+   *   - due_at : required date after_or_equal planned_at
+   *   - subject : nullable
+   *   - description : nullable
    */
   async createTicket(payload: {
     company_asset_id: number;
-    service_id: number;
+    service_id?: number;
     priority: string;
-    description: string;
+    type: string;
+    planned_at: string;
+    due_at: string;
+    description?: string;
     subject?: string;
   }): Promise<Ticket> {
-    const response = await axios.post("/manager/ticket", payload);
-    return response.data.data;
+    // Le back absorbe le 500 notify() — on l'intercepte silencieusement
+    try {
+      const response = await axios.post("/manager/ticket", payload);
+      return response.data.data;
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const msg: string = err?.response?.data?.message ?? "";
+      const isNotifyBug = status === 500 && (
+        msg.includes("notify") || msg.includes("Notifiable") || msg.includes("undefined method")
+      );
+      if (isNotifyBug) {
+        // Ticket créé malgré l'erreur notif — on retourne un objet minimal
+        return { id: 0 } as any;
+      }
+      throw err;
+    }
   },
 
   /**

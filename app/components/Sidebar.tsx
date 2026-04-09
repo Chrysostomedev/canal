@@ -161,23 +161,23 @@ export default function Sidebar() {
 
   const buildBottomAdmin = (): BottomItem[] => [
     { label: t("nav.profile"),    href: "/admin/profile",    icon: <UserIcon size={20} /> },
-    { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
+    // { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
   ];
 
   const buildBottomSuperAdmin = (): BottomItem[] => [
     { label: t("nav.profile"),    href: "/admin/profile",    icon: <UserIcon size={20} /> },
-    { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
+    // { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
     { label: t("nav.roles"),      href: "/admin/roles",      icon: <Shield size={20} /> },
   ];
 
   const buildBottomProvider = (): BottomItem[] => [
     { label: t("nav.profile"),    href: "/provider/profile",   icon: <UserIcon size={20} /> },
-    { label: t("nav.parametres"), href: "/provider/parametre", icon: <Settings size={20} /> },
+    // { label: t("nav.parametres"), href: "/provider/parametre", icon: <Settings size={20} /> },
   ];
 
   const buildBottomManager = (): BottomItem[] => [
     { label: t("nav.profile"),    href: "/manager/profile",    icon: <UserIcon size={20} /> },
-    { label: t("nav.parametres"), href: "/manager/parametres", icon: <Settings size={20} /> },
+    // { label: t("nav.parametres"), href: "/manager/parametres", icon: <Settings size={20} /> },
   ];
 
   // ── Mémoïsation des menus ────────────────────────────────────────────────────

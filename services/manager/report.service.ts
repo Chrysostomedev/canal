@@ -64,13 +64,26 @@ export const ReportService = {
 
   /**
    * Export Excel des rapports.
+   * Route /manager/intervention-report/export n'existe pas — on génère côté client.
    */
   async exportReports(filters: ReportFilters = {}): Promise<Blob> {
-    const response = await api.get("/manager/intervention-report/export", {
-      params: filters,
-      responseType: "blob",
-    });
-    return response.data;
+    const { data } = await api.get<ApiResponse<PaginatedResponse<InterventionReport>>>(
+      "/manager/intervention-report",
+      { params: { ...filters, per_page: 1000, page: 1 } }
+    );
+    const items: InterventionReport[] = data?.data?.items ?? [];
+    const headers = ["Référence", "Prestataire", "Site", "Date", "Type", "Statut", "Note"];
+    const rows = items.map(r => [
+      r.reference ?? "-",
+      r.provider?.company_name ?? r.provider?.name ?? "-",
+      r.site?.nom ?? r.site?.name ?? "-",
+      r.start_date ?? r.created_at ?? "-",
+      r.intervention_type ?? "-",
+      r.status ?? "-",
+      r.rating ?? "-",
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(";")).join("\n");
+    return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   },
 
   /**

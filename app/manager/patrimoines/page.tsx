@@ -170,9 +170,9 @@ export default function PatrimoinesPage() {
                   onChange={(e) => updateFilters({ status: e.target.value || undefined })}
                 >
                   <option value="">Tous les statuts</option>
-                  <option value="active">Actif</option>
-                  <option value="in_maintenance">En maintenance</option>
-                  <option value="out_of_service">Hors service</option>
+                  <option value="actif">Actif</option>
+                  <option value="inactif">Inactif</option>
+                  <option value="hors_usage">Hors usage</option>
                 </select>
               </div>
             </div>

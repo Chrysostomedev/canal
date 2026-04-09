@@ -115,7 +115,7 @@ export default function PrestatairesPage() {
                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Récupération des données</p>
                </div>
             ) : filteredProviders.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {filteredProviders.map(p => (
                   <PrestCard
                     key={p.id}
@@ -127,6 +127,7 @@ export default function PrestatairesPage() {
                     email={p.user?.email || ""}
                     rating={p.rating || 0}
                     status={p.is_active ? "Actif" : "Inactif"}
+                    detailBasePath="/manager/prestataires/details"
                     onProfilClick={() => setSelectedProvider(p)}
                     onTicketsClick={() => router.push(`/manager/prestataires/details/${p.id}`)}
                   />

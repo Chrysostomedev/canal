@@ -106,11 +106,12 @@ export default function Dashboard() {
       reference: `#${ticket.id}`,
       description: "Ticket récent visualisé depuis le tableau de bord.",
       fields: [
-        { label: "Type", value: ticket.type },
+        { label: "Codification", value: ticket.reference || ticket.asset?.codification || `#${ticket.id}` },
+        { label: "Type", value: ticket.type === "curatif" ? "Curatif" : "Préventif" },
         { label: "Sujet", value: ticket.subject },
         { label: "Site concerné", value: ticket.site?.nom },
-        { label: "Service", value: ticket.service?.name },
-        { label: "Date planifiée", value: ticket.planned_at },
+        { label: "Date planifiée", value: ticket.planned_at ? new Date(ticket.planned_at).toLocaleString("fr-FR") : "-" },
+        { label: "Date limite", value: ticket.due_at ? new Date(ticket.due_at).toLocaleString("fr-FR") : "-" },
         { label: "Statut", value: STATUS_LABELS[(ticket.status || "").toLowerCase() as keyof typeof STATUS_LABELS] || ticket.status, isStatus: true, statusColor }
       ]
     });
@@ -119,28 +120,56 @@ export default function Dashboard() {
   };
 
   const columns: ColumnConfig<any>[] = [
-    { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
-    { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject },
-    { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom },
-    { header: "Service", key: "service", render: (_: any, row: any) => row.service?.name },
-    { header: "Type", key: "type", render: (_: any, row: any) => row.type },
     {
-      header: "Statut",
-      key: "status",
+      header: "Codification", key: "reference",
       render: (_: any, row: any) => (
-        <span className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${STATUS_STYLES[(row.status || "").toLowerCase()] || STATUS_STYLES.signalez}`}>
+        <span className="font-mono text-[10px] font-black text-slate-900 bg-slate-100 px-2 py-1 rounded-lg">
+          {row.reference || row.asset?.codification || `#${row.id}`}
+        </span>
+      )
+    },
+    {
+      header: "Sujet", key: "subject",
+      render: (_: any, row: any) => (
+        <div className="max-w-[180px]">
+          <p className="text-sm font-bold text-slate-900 truncate">{row.subject}</p>
+          <p className="text-[10px] text-slate-400 font-medium truncate uppercase tracking-widest">{row.asset?.designation}</p>
+        </div>
+      )
+    },
+    {
+      header: "Type", key: "type",
+      render: (_: any, row: any) => (
+        <span className={`text-[10px] font-black uppercase tracking-widest ${row.type === 'curatif' ? 'text-orange-600' : 'text-blue-600'}`}>
+          {row.type}
+        </span>
+      )
+    },
+    {
+      header: "Date planifiée", key: "planned_at",
+      render: (_: any, row: any) => {
+        if (!row.planned_at) return <span className="text-slate-400 text-xs">-</span>;
+        const d = new Date(row.planned_at);
+        return (
+          <div className="text-xs text-slate-600">
+            <div className="font-bold">{d.toLocaleDateString("fr-FR")}</div>
+            <div className="text-slate-400">{d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Statut", key: "status",
+      render: (_: any, row: any) => (
+        <span className={`inline-flex items-center px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-tight ${STATUS_STYLES[(row.status || "").toLowerCase()] || STATUS_STYLES.signalez}`}>
           {STATUS_LABELS[(row.status || "").toLowerCase() as keyof typeof STATUS_LABELS] || row.status}
         </span>
       )
     },
     {
-      header: "Actions",
-      key: "actions",
+      header: "Actions", key: "actions",
       render: (_: any, row: any) => (
-        <button
-          onClick={() => handleOpenDetails(row)}
-          className="font-bold text-slate-800 hover:text-blue-600 transition"
-        >
+        <button onClick={() => handleOpenDetails(row)} className="font-bold text-slate-800 hover:text-blue-600 transition">
           <Eye size={18} />
         </button>
       )

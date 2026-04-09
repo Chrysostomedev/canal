@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import ActionGroup from "@/components/ActionGroup";
 import StatsCard from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
 import PageHeader from "@/components/PageHeader";
@@ -67,14 +66,20 @@ export default function PlanningPage() {
 
   /* ------------------------------ ACTION GROUP ----------------------------- */
 
-  const siteActions = [
-    {
-      label: "Actualiser",
-      icon: Filter,
-      onClick: refresh,
-      variant: "secondary" as const,
-    },
+  const [activeStatus, setActiveStatus] = useState<string>("");
+
+  const STATUS_FILTERS = [
+    { key: "",          label: "Tous"      },
+    { key: "planifie",  label: "Planifié"  },
+    { key: "en_cours",  label: "En cours"  },
+    { key: "realise",   label: "Réalisé"   },
+    { key: "en_retard", label: "En retard" },
   ];
+
+  const handleStatusFilter = (key: string) => {
+    setActiveStatus(key);
+    setFilters({ status: key || undefined });
+  };
 
   /* ------------------------------ PANEL FORMAT ----------------------------- */
 
@@ -138,8 +143,21 @@ export default function PlanningPage() {
             />
           </div>
 
-          <div className="flex justify-end">
-            <ActionGroup actions={siteActions} />
+          <div className="flex items-center gap-2 flex-wrap">
+            {STATUS_FILTERS.map(f => (
+              <button
+                key={f.key}
+                onClick={() => handleStatusFilter(f.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition border ${
+                  activeStatus === f.key
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <Filter size={14} />
+                {f.label}
+              </button>
+            ))}
           </div>
 
           <MainCard
