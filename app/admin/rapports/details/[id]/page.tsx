@@ -112,12 +112,16 @@ function ValidateModal({
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
+    if (!comment.trim()) {
+      alert("Le commentaire est obligatoire.");
+      return;
+    }
     setLoading(true);
     try {
       await onConfirm({ 
         result,
-        rating: rating || null, 
-        comment: comment || null 
+        rating:  rating || null, 
+        comment: comment.trim(),
       });
       onClose();
     } finally {

@@ -140,10 +140,19 @@ export const providerTicketService = {
   /**
    * PUT /provider/ticket/:id
    * PROVIDER peut uniquement mettre à jour le statut : en_cours | rapporté
-   * Le controller bloque toute modif sur un ticket non assigné au provider
    */
   updateTicketStatus: async (id: number, status: ProviderUpdatableStatus): Promise<Ticket> => {
     const response = await axiosInstance.put(`${BASE}/${id}`, { status });
+    return response.data?.data ?? response.data;
+  },
+
+  /**
+   * POST /provider/ticket/:id/start
+   * Démarre l'intervention : ASSIGNÉ → EN_COURS ou EN_TRAITEMENT
+   * Requis avant de pouvoir soumettre un rapport
+   */
+  startIntervention: async (id: number): Promise<Ticket> => {
+    const response = await axiosInstance.post(`${BASE}/${id}/start`);
     return response.data?.data ?? response.data;
   },
 };

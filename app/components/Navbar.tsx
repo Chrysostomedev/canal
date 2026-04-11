@@ -259,7 +259,7 @@ export default function Navbar() {
           </Link>
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2">
-              <p className="text-gray-900 font-bold text-sm leading-tight">Bonjour, {fullName}</p>
+              <p className="text-gray-900 font-bold text-sm leading-tight">Bienvenue, {fullName} </p>
               <RoleBadge role={role} />
             </div>
             <p className="text-gray-500 text-xs font-medium">

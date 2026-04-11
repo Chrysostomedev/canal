@@ -51,10 +51,17 @@ export const AssetService = {
   // GET /manager/asset/stats
   // ─────────────────────────────────────────────────────────────
   async getStats(): Promise<AssetStats> {
-    const { data } = await api.get<ApiResponse<AssetStats>>(
-      "/manager/asset/stats"
-    );
-    return data.data;
+    const { data } = await api.get("/manager/asset/stats");
+    const d = data?.data ?? data;
+    // Normalise les champs back → front
+    return {
+      total:          d?.total_actifs          ?? d?.total          ?? 0,
+      active:         d?.actifs_actifs         ?? d?.active         ?? 0,
+      in_maintenance: d?.actifs_inactifs       ?? d?.in_maintenance ?? 0,
+      out_of_service: d?.actifs_hors_usage     ?? d?.out_of_service ?? 0,
+      disposed:       0,
+      total_value:    d?.valeur_totale_patrimoine ?? d?.total_value ?? null,
+    };
   },
 
   // ─────────────────────────────────────────────────────────────

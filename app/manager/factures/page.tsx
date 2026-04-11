@@ -92,11 +92,7 @@ export default function FacturesPage() {
          </div>
       )
     },
-    {
-      header: "Site",
-      key: "site",
-      render: (_, row) => <span className="text-slate-600 font-medium">{row.site?.nom || row.site?.name || "-"}</span>
-    },
+   
     {
       header: "Date",
       key: "invoice_date",

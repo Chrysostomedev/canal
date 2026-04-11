@@ -104,17 +104,9 @@ export default function ProviderTicketsPage() {
     {
       header: "Référence",
       key: "id",
-      render: (_: any, row: Ticket) => <span className="font-black text-slate-900 text-sm">#{row.id}</span>,
+      render: (_: any, row: Ticket) => <span className="font-black text-slate-900 text-sm">{row.id}</span>,
     },
-    {
-      header: "Sujet",
-      key: "subject",
-      render: (_: any, row: Ticket) => (
-        <span className="font-medium text-slate-900 text-sm max-w-[200px] truncate block">
-          {row.subject ?? "-"}
-        </span>
-      ),
-    },
+  
     {
       header: "Site",
       key: "site",
@@ -167,12 +159,7 @@ export default function ProviderTicketsPage() {
 { label: "Tickets en cours", value: stats?.en_cours ?? 0, delta: "", trend: "up" as const },
 { label: "Tickets clôturés", value: stats?.clotures ?? 0, delta: "", trend: "up" as const },
   ];
-  const kpis2 = [
-    { label: "Tickets ce mois",      value: stats?.nombre_tickets_par_mois         ?? 0, delta: "", trend: "up" as const },
-    { label: "Délai moyen",          value: formatHeures(stats?.delais_moyen_traitement_heures),    delta: "", trend: "up" as const },
-    { label: "Délai minimal",        value: formatHeures(stats?.delais_minimal_traitement_heures),  delta: "", trend: "up" as const },
-    { label: "Délai maximal",        value: formatHeures(stats?.delais_maximal_traitement_heures),  delta: "", trend: "up" as const },
-  ];
+ 
 
   return (
     <>
@@ -214,15 +201,7 @@ export default function ProviderTicketsPage() {
                 : kpis1.map((k, i) => <StatsCard key={i} {...k} />)
               }
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {statsLoading
-                ? Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
-                  ))
-                : kpis2.map((k, i) => <StatsCard key={i} {...k} />)
-              }
-            </div>
-
+        
             {/* Filtres */}
             <div className="flex flex-wrap gap-3 items-center">
               <FilterSelect

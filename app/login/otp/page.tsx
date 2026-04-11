@@ -154,31 +154,33 @@ export default function OtpPage() {
       console.error("Erreur OTP:", err);
       const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
       const status   = axiosErr?.response?.status;
-      const message  = axiosErr?.response?.data?.message;
+      const message  = axiosErr?.response?.data?.message ?? "";
 
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
 
       if (status === 429) {
         setError("Trop de tentatives. Compte temporairement bloqué. Réessayez dans 5 minutes.");
-        // Reset champs sur blocage
         setOtp(Array(OTP_LENGTH).fill(""));
         setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
+      } else if (status === 401 && (message.toLowerCase().includes("expiré") || message.toLowerCase().includes("expired"))) {
+        // OTP expiré — cas fréquent pour les prestataires (bug fillable backend)
+        setError("Le code OTP a expiré ou n'a pas pu être enregistré. Veuillez vous reconnecter pour recevoir un nouveau code.");
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setAttempts(0);
+        setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
       } else if (newAttempts >= MAX_ATTEMPTS) {
-        // 3 tentatives épuisées → reset les champs
         setError(`Code incorrect. ${MAX_ATTEMPTS} tentatives épuisées. Vérifiez votre email et réessayez.`);
         setOtp(Array(OTP_LENGTH).fill(""));
         setAttempts(0);
         setTimeout(() => { inputsRef.current[0]?.focus(); setActive(0); }, 100);
       } else {
-        // Tentative échouée mais pas encore au max → garder les champs, juste afficher l'erreur
         const remaining = MAX_ATTEMPTS - newAttempts;
         setError(
           message
             ? `${message} (${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""})`
             : `Code incorrect. ${remaining} tentative${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}.`
         );
-        // Ne pas reset les champs - laisser l'utilisateur corriger
       }
 
     } finally {

@@ -117,6 +117,9 @@ export const InvoiceService = {
     return all.filter(i => (i as any).report_id === reportId);
   },
 
+  /**
+   * Export CSV des factures — calculé depuis les tickets (seule source accessible).
+   */
   async exportInvoices(filters: InvoiceFilters = {}): Promise<Blob> {
     const items = await fetchReportsWithInvoice(filters);
     const headers = ["Référence", "Prestataire", "Site", "Date", "Montant TTC", "Statut"];

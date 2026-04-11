@@ -115,12 +115,13 @@ export const TicketService = {
     } catch (err: any) {
       const status = err?.response?.status;
       const msg: string = err?.response?.data?.message ?? "";
-      // Le back assigne le ticket puis plante sur notify() → capturé en 422 ou 500
+      // Le back assigne le ticket puis plante sur notify() ou relation manager → 422/500
       // Le ticket est bien assigné en base — on absorbe
-      const isNotifyBug = (status === 500 || status === 422) && (
-        msg.includes("notify") || msg.includes("Notifiable") || msg.includes("undefined method")
+      const isBackendBug = (status === 422 || status === 500) && (
+        msg.includes("notify") || msg.includes("Notifiable") || msg.includes("undefined method") ||
+        msg.includes("undefined relationship") || msg.includes("manager")
       );
-      if (isNotifyBug) return { id, status: "ASSIGNÉ", provider_id } as any;
+      if (isBackendBug) return { id, status: "ASSIGNÉ", provider_id } as any;
       throw err;
     }
   },

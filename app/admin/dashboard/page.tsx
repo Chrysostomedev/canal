@@ -11,6 +11,7 @@ import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye } from "lucide-react";
 import { useDashboard } from "../../../hooks/admin/useDashboard";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { formatDate } from "../../../core/dateUtils";
 
 // ─────────────────────────────────────────────
 // Constantes & mappings statiques

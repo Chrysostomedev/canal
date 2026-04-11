@@ -448,31 +448,43 @@ export default function RolesPage() {
 
   const fetchStats = async () => {
     try {
-      // Stats admins/managers depuis /admin/roles/stats
-      const res = await axiosInstance.get("/admin/roles/stats");
-      const d: any[] = res.data?.data ?? res.data ?? [];
-      const arr = Array.isArray(d) ? d : [];
+      // Récupère les vraies stats depuis les endpoints dédiés
+      const [adminsRes, providersRes] = await Promise.allSettled([
+        axiosInstance.get("/admin/admins", { params: { per_page: 1, page: 1 } }),
+        axiosInstance.get("/admin/providers/stats"),
+      ]);
 
-      const get = (name: string) =>
-        arr.find((r: any) =>
-          (r.role_name ?? r.slug ?? "").toUpperCase() === name.toUpperCase()
-        )?.user_count ?? 0;
+      // Admins depuis /admin/admins (inclut tous les rôles admin/manager/super-admin)
+      let superAdmins = 0, adminsCount = 0, managersCount = 0;
+      if (adminsRes.status === "fulfilled") {
+        const d = adminsRes.value.data?.data;
+        // Essaie d'abord /admin/roles/stats pour la répartition
+        try {
+          const rolesRes = await axiosInstance.get("/admin/roles/stats");
+          const arr: any[] = rolesRes.data?.data ?? [];
+          const get = (name: string) => arr.find((r: any) =>
+            (r.role_name ?? r.slug ?? "").toUpperCase() === name.toUpperCase()
+          )?.user_count ?? 0;
+          superAdmins  = get("SUPER-ADMIN");
+          adminsCount  = get("ADMIN") + superAdmins;
+          managersCount = get("MANAGER");
+        } catch {
+          // Fallback : total depuis meta
+          const total = d?.meta?.total ?? 0;
+          adminsCount = total;
+        }
+      }
 
-      const superAdmins = get("SUPER-ADMIN");
-      const admins      = get("ADMIN") + superAdmins;
-      const managers    = get("MANAGER");
-
-      // Providers depuis /admin/providers/stats (table séparée)
+      // Providers depuis /admin/providers/stats
       let providers = 0;
-      try {
-        const pRes = await axiosInstance.get("/admin/providers/stats");
-        providers = pRes.data?.data?.total_providers ?? pRes.data?.total_providers ?? 0;
-      } catch { /* non bloquant */ }
+      if (providersRes.status === "fulfilled") {
+        providers = providersRes.value.data?.data?.total_providers ?? 0;
+      }
 
       setStats({
-        total:     admins + managers + providers,
-        admins,
-        managers,
+        total:    adminsCount + managersCount + providers,
+        admins:   adminsCount,
+        managers: managersCount,
         providers,
       });
     } catch (e) {

@@ -171,7 +171,7 @@ export default function GestionnaireDetailsPage() {
     { name: "first_name", label: "Prénom",          type: "text"  },
     { name: "last_name",  label: "Nom de famille",  type: "text"  },
     { name: "email",      label: "Email",            type: "email" },
-    { name: "phone",      label: "Téléphone",        type: "text"  },
+    { name: "phone",      label: "Téléphone",        type: "tel"   },
     /**
      * ── Champ site - COMMENTÉ, préparé pour future API ──────────────────────
      * TODO: Décommenter quand l'API supportera l'assignation de site

@@ -83,26 +83,18 @@ export default function PatrimoinesPage() {
   // ── Colonnes table ──
   const columns: any[] = [
     {
-      header: "ID", key: "id",
+      header: "Codification", key: "code",
       render: (_: any, row: any) => (
-        <div className="flex items-center">
-          <span className="font-black text-sm">#{row.id}</span>
-          <CopyButton text={String(row.id)} />
-        </div>
+        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+          {row.codification ?? row.code ?? row.serial_number ?? "-"}
+        </span>
       ),
     },
     {
       header: "Type", key: "typeAsset",
-      render: (_: any, row: any) => row.typeAsset?.name ?? "-",
+      render: (_: any, row: any) => row.type?.name ?? row.typeAsset?.name ?? "-",
     },
-    {
-      header: "Codification", key: "code",
-      render: (_: any, row: any) => (
-        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-          {row.code ?? row.serial_number ?? "-"}
-        </span>
-      ),
-    },
+    
     {
       header: "Désignation", key: "designation",
       render: (_: any, row: any) => (
@@ -111,24 +103,19 @@ export default function PatrimoinesPage() {
         </div>
       ),
     },
-    {
-      header: "Site", key: "site",
-      render: (_: any, row: any) => (
-        <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? "-"}</span>
-      ),
-    },
+   
     {
       header: "Statut", key: "status",
       render: (_: any, row: any) => (
         <span className={`px-3 py-1 rounded border text-[10px] font-black uppercase ${STATUS_STYLE[row.status] ?? ""}`}>
           {STATUS_LABEL[row.status] ?? row.status}
         </span>
-      ),
+      ),  
     },
-    {
-      header: "Valeur", key: "valeur",
-      render: (_: any, row: any) => formatMontant(row.acquisition_value),
-    },
+    // {
+    //   header: "Valeur", key: "valeur",
+    //   render: (_: any, row: any) => formatMontant(row.acquisition_value),
+    // },
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
@@ -177,7 +164,19 @@ export default function PatrimoinesPage() {
               </div>
             </div>
 
-            <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-black hover:border-slate-900 transition shadow-sm">
+            <button
+              onClick={async () => {
+                try {
+                  const { default: api } = await import("../../../core/axios");
+                  const res = await api.get("/manager/asset/export", { params: filters, responseType: "blob" });
+                  const url = URL.createObjectURL(new Blob([res.data]));
+                  const a = document.createElement("a"); a.href = url;
+                  a.download = `patrimoines_${new Date().toISOString().slice(0,10)}.xlsx`;
+                  a.click(); URL.revokeObjectURL(url);
+                } catch { alert("Erreur lors de l'export."); }
+              }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-black hover:border-slate-900 transition shadow-sm"
+            >
               <Download size={16} /> Exporter (.xlsx)
             </button>
           </div>
@@ -238,12 +237,12 @@ export default function PatrimoinesPage() {
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Spécifications</h4>
                       <div className="grid grid-cols-2 gap-y-4">
                         {[
-                          { label: "Type", value: selectedAsset.typeAsset?.name },
-                          { label: "Sous-type", value: selectedAsset.subTypeAsset?.name },
+                          { label: "Type", value: selectedAsset.type?.name ?? selectedAsset.typeAsset?.name },
+                          { label: "Sous-type", value: selectedAsset.sub_type?.name ?? selectedAsset.subTypeAsset?.name },
                           { label: "Site", value: selectedAsset.site?.nom },
                           { label: "N° Série", value: selectedAsset.serial_number },
-                          { label: "Date acquisition", value: formatDate(selectedAsset.acquisition_date) },
-                          { label: "Valeur d'acquisition", value: formatMontant(selectedAsset.acquisition_value) },
+                          { label: "Date acquisition", value: formatDate(selectedAsset.date_entree ?? selectedAsset.acquisition_date) },
+                          { label: "Valeur d'acquisition", value: formatMontant(selectedAsset.valeur_entree ?? selectedAsset.acquisition_value) },
                         ].map(({ label, value }) => (
                           <div key={label}>
                             <p className="text-[10px] text-slate-400 font-bold uppercase">{label}</p>

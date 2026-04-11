@@ -313,9 +313,9 @@ export const ReportService = {
    */
   async validateReport(id: number, payload: ValidateReportPayload): Promise<InterventionReport> {
     const res = await axiosInstance.post(`/admin/intervention-report/${id}/validate`, {
-      result: payload.result,
-      rating: payload.rating ?? null,
-      comment: payload.comment ?? null,
+      result:  payload.result,
+      rating:  payload.rating ?? null,
+      comment: payload.comment || "Validé",  // back exige required|string — jamais null
     });
     return res.data.data;
   },

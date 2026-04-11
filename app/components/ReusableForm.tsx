@@ -60,7 +60,7 @@ export default function ReusableForm({
             {fields.map((field) => (
               <div
                 key={field.name}
-                className={field.gridSpan === 2 ? "col-span-2" : "col-span-2 md:col-span-1"}
+                className={field.gridSpan === 2 ? "col-span-2" : "col-span-1"}
               >
                 <FormField label={field.label} required={field.required}>
 

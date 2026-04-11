@@ -288,6 +288,9 @@ export interface PhoneInputProps {
   onChange?: (value: string) => void;
 }
 
+// Seul la Côte d'Ivoire est active pour l'instant
+const ACTIVE_COUNTRIES = new Set(["CI"]);
+
 export const PhoneInput = ({
   name,
   required,
@@ -295,12 +298,10 @@ export const PhoneInput = ({
   defaultValue = "",
   onChange,
 }: PhoneInputProps) => {
-  // Parse defaultValue: if it starts with a known dial code, split it
   const parseDefault = (val: string) => {
     if (!val) return { country: COUNTRIES[0], number: "" };
     const matched = COUNTRIES.find(c => val.startsWith(c.dial));
     if (matched) return { country: matched, number: val.slice(matched.dial.length).trim() };
-    // If starts with + but unknown, keep as-is in number
     return { country: COUNTRIES[0], number: val };
   };
 
@@ -311,7 +312,6 @@ export const PhoneInput = ({
   const [search, setSearch]     = useState("");
   const dropRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropRef.current && !dropRef.current.contains(e.target as Node)) setOpen(false);
@@ -323,12 +323,13 @@ export const PhoneInput = ({
   const fullValue = `${selected.dial}${number}`;
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/[^\d\s\-]/g, ""); // digits, spaces, dashes only
+    const val = e.target.value.replace(/[^\d\s\-]/g, "");
     setNumber(val);
     onChange?.(`${selected.dial}${val}`);
   };
 
   const handleSelect = (country: typeof COUNTRIES[0]) => {
+    if (!ACTIVE_COUNTRIES.has(country.code)) return; // bloque les pays inactifs
     setSelected(country);
     setOpen(false);
     setSearch("");
@@ -345,11 +346,10 @@ export const PhoneInput = ({
 
   return (
     <div className="space-y-1">
-      {/* Hidden input carries the full value for form submission */}
       <input type="hidden" name={name} value={fullValue} />
 
       <div className="flex items-stretch bg-slate-50 rounded-2xl overflow-visible relative" ref={dropRef}>
-        {/* Country selector button */}
+        {/* Country selector */}
         <button
           type="button"
           disabled={disabled}
@@ -375,7 +375,6 @@ export const PhoneInput = ({
         {/* Dropdown */}
         {open && (
           <div className="absolute top-full left-0 mt-1 z-[200] w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
-            {/* Search */}
             <div className="p-2 border-b border-slate-100">
               <input
                 type="text"
@@ -386,29 +385,40 @@ export const PhoneInput = ({
                 autoFocus
               />
             </div>
-            {/* List */}
             <div className="max-h-56 overflow-y-auto">
               {filtered.length === 0 ? (
                 <p className="text-center text-slate-400 text-xs py-4">Aucun résultat</p>
-              ) : filtered.map(c => (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => handleSelect(c)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition text-left ${selected.code === c.code ? "bg-slate-100" : ""}`}
-                >
-                  <span className="text-xl leading-none shrink-0">{c.flag}</span>
-                  <span className="flex-1 text-sm font-medium text-slate-700 truncate">{c.name}</span>
-                  <span className="text-xs font-bold text-slate-400 tabular-nums shrink-0">{c.dial}</span>
-                </button>
-              ))}
+              ) : filtered.map(c => {
+                const isActive = ACTIVE_COUNTRIES.has(c.code);
+                return (
+                  <button
+                    key={c.code}
+                    type="button"
+                    onClick={() => handleSelect(c)}
+                    disabled={!isActive}
+                    title={!isActive ? "Pays non actif pour l'instant" : undefined}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${
+                      selected.code === c.code ? "bg-slate-100" : ""
+                    } ${isActive ? "hover:bg-slate-50 cursor-pointer" : "opacity-40 cursor-not-allowed bg-slate-50/50"}`}
+                  >
+                    <span className="text-xl leading-none shrink-0">{c.flag}</span>
+                    <span className={`flex-1 text-sm font-medium truncate ${isActive ? "text-slate-700" : "text-slate-400"}`}>
+                      {c.name}
+                      {!isActive && <span className="ml-2 text-[10px] text-slate-400 italic">Non actif</span>}
+                    </span>
+                    <span className={`text-xs font-bold tabular-nums shrink-0 ${isActive ? "text-slate-400" : "text-slate-300"}`}>
+                      {c.dial}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
 
       <p className="text-[10px] text-slate-400 font-medium pl-1">
-        Cliquez sur le drapeau pour changer l'indicatif pays
+        Cliquez sur le drapeau pour changer l'indicatif · Seule la Côte d'Ivoire est disponible
       </p>
     </div>
   );

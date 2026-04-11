@@ -120,9 +120,17 @@ function ValidateModal({
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
+    if (!comment.trim()) {
+      alert("Le commentaire est obligatoire.");
+      return;
+    }
     setLoading(true);
     try {
-      await onConfirm({ rating: rating || null, comment: comment || null, result: report.intervention_type === "preventif" ? "RAS" : "ANOMALIE" });
+      await onConfirm({
+        rating:  rating || null,
+        comment: comment.trim(),
+        result:  report.intervention_type === "preventif" ? "RAS" : "ANOMALIE",
+      });
       onClose();
     } finally {
       setLoading(false);
@@ -180,14 +188,14 @@ function ValidateModal({
           {/* Commentaire */}
           <div>
             <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block mb-2">
-              Commentaire (optionnel)
+              Commentaire <span className="text-red-500">*</span>
             </label>
             <textarea
               value={comment}
               onChange={e => setComment(e.target.value)}
               rows={4}
-              placeholder="Ajouter un commentaire de validation..."
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder-slate-300 resize-none focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              placeholder="Commentaire de validation obligatoire..."
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-700 placeholder-slate-300 resize-none focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition ${!comment.trim() ? "border-red-200" : "border-slate-200"}`}
             />
           </div>
         </div>

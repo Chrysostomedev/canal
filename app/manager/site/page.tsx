@@ -86,30 +86,22 @@ export default function SitePage() {
   // ── Colonnes table ──
   const columns: ColumnConfig<Asset>[] = [
     {
-      header: "ID", key: "id",
+      header: "Codification", key: "code",
       render: (_: any, row: any) => (
-        <div className="flex items-center">
-          <span className="font-black text-sm">#{row.id}</span>
-          <CopyButton text={String(row.id)} />
-        </div>
+        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+          {row.codification ?? row.code ?? row.serial_number ?? "-"}
+        </span>
       ),
     },
     {
       header: "Type", key: "typeAsset",
-      render: (_: any, row: any) => row.typeAsset?.name ?? "-",
+      render: (_: any, row: any) => row.type?.name ?? row.typeAsset?.name ?? "-",
     },
     {
       header: "Sous-type", key: "subTypeAsset",
-      render: (_: any, row: any) => row.subTypeAsset?.name ?? "-",
+      render: (_: any, row: any) => row.sub_type?.name ?? row.subTypeAsset?.name ?? "-",
     },
-    {
-      header: "Codification", key: "code",
-      render: (_: any, row: any) => (
-        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
-          {row.code ?? row.serial_number ?? "-"}
-        </span>
-      ),
-    },
+  
     {
       header: "Désignation", key: "designation",
       render: (_: any, row: any) => row.designation,
@@ -138,7 +130,7 @@ export default function SitePage() {
             onClick={() => setSelectedAsset(row)}
             className="flex items-center gap-2 font-bold text-slate-800 hover:text-blue-600 transition"
           >
-            <Eye size={18} /> Aperçu
+            <Eye size={18} /> 
           </button>
           <Link
             href={`/manager/patrimoines/${row.id}`}
@@ -215,8 +207,20 @@ export default function SitePage() {
 
           {/* ── ACTIONS ── */}
           <div className="flex justify-end gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition">
-              <Download size={16} /> Exporter 
+            <button
+              onClick={async () => {
+                try {
+                  const { default: api } = await import("../../../core/axios");
+                  const res = await api.get("/manager/asset/export", { responseType: "blob" });
+                  const url = URL.createObjectURL(new Blob([res.data]));
+                  const a = document.createElement("a"); a.href = url;
+                  a.download = `patrimoines_${new Date().toISOString().slice(0,10)}.xlsx`;
+                  a.click(); URL.revokeObjectURL(url);
+                } catch { alert("Erreur lors de l'export."); }
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+            >
+              <Download size={16} /> Exporter
             </button>
           </div>
 
@@ -265,11 +269,11 @@ export default function SitePage() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 text-sm text-slate-700">
                   {[
                     { label: "ID",            value: `#${selectedAsset.id}` },
-                    { label: "Codification",  value: selectedAsset.code ?? selectedAsset.serial_number ?? "-" },
-                    { label: "Type",          value: selectedAsset.typeAsset?.name ?? "-" },
-                    { label: "Sous-type",     value: selectedAsset.subTypeAsset?.name ?? "-" },
-                    { label: "Date d'entrée", value: formatDate(selectedAsset.acquisition_date) },
-                    { label: "Valeur",        value: formatMontant(selectedAsset.acquisition_value) },
+                    { label: "Codification",  value: selectedAsset.codification ?? selectedAsset.code ?? selectedAsset.serial_number ?? "-" },
+                    { label: "Type",          value: selectedAsset.type?.name ?? selectedAsset.typeAsset?.name ?? "-" },
+                    { label: "Sous-type",     value: selectedAsset.sub_type?.name ?? selectedAsset.subTypeAsset?.name ?? "-" },
+                    { label: "Date d'entrée", value: formatDate(selectedAsset.date_entree ?? selectedAsset.acquisition_date) },
+                    { label: "Valeur",        value: formatMontant(selectedAsset.valeur_entree ?? selectedAsset.acquisition_value) },
                     { label: "Site",          value: selectedAsset.site?.nom ?? "-" },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between border-b border-slate-50 pb-2">

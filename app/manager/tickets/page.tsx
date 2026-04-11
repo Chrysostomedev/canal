@@ -224,7 +224,7 @@ export default function TicketsPage() {
     },
     {
       name: "type",
-      label: "Type d'intervention",
+      label: "Type",
       type: "select",
       options: [
         { label: "Curatif", value: "curatif" },
@@ -248,19 +248,19 @@ export default function TicketsPage() {
     },
     {
       name: "company_asset_id",
-      label: "Actif concerné",
+      label: "Patrimoine concerné",
       type: "select",
       options: assets.map(a => ({ label: `${a.designation} (${(a as any).codification || a.code || "N/A"})`, value: String(a.id) })),
       required: true,
       icon: <CheckCircle2 size={18} />
     },
-    {
-      name: "service_id",
-      label: "Service métier",
-      type: "select",
-      options: services.map(s => ({ label: s.name, value: String(s.id) })),
-      icon: <Tag size={18} />
-    },
+    // {
+    //   name: "service_id",
+    //   label: "Service métier",
+    //   type: "select",
+    //   options: services.map(s => ({ label: s.name, value: String(s.id) })),
+    //   icon: <Tag size={18} />
+    // },
     {
       name: "planned_at",
       label: "Début souhaité",
@@ -268,26 +268,31 @@ export default function TicketsPage() {
       required: true,
       icon: <CalendarDays size={18} />
     },
-    {
-      name: "due_at",
-      label: "Échéance",
-      type: "date",
-      required: true,
-      icon: <Clock size={18} />
-    },
-    {
-      name: "description",
-      label: "Détails supplémentaires",
-      type: "textarea",
-      placeholder: "Décrivez précisément le problème constaté...",
-      required: true
-    },
-    {
-      name: "image",
-      label: "Photo justificative",
-      type: "image-upload",
-      required: false
-    }
+   {
+    // ici ca doit etre automatiquement preremmpli et affiché système 3 j pour curatif et 7jours préventif
+  name: "due_at",
+  label: "Échéance",
+  type: "date",
+  required: true,
+  icon: <Clock size={18} />,
+  // pas de gridSpan → col-span-1 (moitié gauche) ✓
+},
+{
+  name: "description",
+  label: "Détails supplémentaires",
+  type: "textarea",
+  placeholder: "Décrivez précisément le problème constaté...",
+  required: true,
+  gridSpan: 2,   // ← pleine largeur ✓
+},
+{
+  name: "image",
+  label: "Photo justificative",
+  type: "image-upload",
+  required: false,
+  // pas de gridSpan → col-span-1 (moitié droite) ✓
+},
+
   ];
 
   const kpis = useMemo(() => [

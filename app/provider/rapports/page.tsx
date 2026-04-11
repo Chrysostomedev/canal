@@ -366,8 +366,8 @@ const baseFields: FieldConfig[] = [
   },
   {name:"start_date",   label:"Date de début *", type:"date",     required:true},
   {name:"end_date",     label:"Date de fin",     type:"date"},
-  {name:"description",  label:"Travaux effectués / Actions menées *",   type:"textarea", required:true},
-  {name:"findings",     label:"Observations / Constatations / Anomalies",     type:"textarea"},
+  {name:"findings",     label:"Observations / Constatations *",   type:"textarea", required:true, gridSpan:2 as 2},
+  {name:"action_taken", label:"Actions menées / Travaux effectués *", type:"textarea", required:true, gridSpan:2 as 2},
   {name:"attachments",  label:"Photos & Documents justificatifs (PDF, images)",
    type:"pdf-upload", maxPDFs:10, gridSpan:2} as any,
 ];
@@ -413,9 +413,9 @@ export default function ProviderRapportsPage() {
       intervention_type: formData.intervention_type,
       result:            formData.result,
       start_date:        formData.start_date,
-      end_date:          formData.end_date   || undefined,
-      description:       formData.description|| undefined,
-      findings:          formData.findings   || undefined,
+      end_date:          formData.end_date    || undefined,
+      findings:          formData.findings    || undefined,
+      action_taken:      formData.action_taken || undefined,
       attachments:       formData.attachments ?? [],
     });
   };
@@ -427,8 +427,8 @@ export default function ProviderRapportsPage() {
       result:            formData.result            || undefined,
       start_date:        formData.start_date        || undefined,
       end_date:          formData.end_date          || undefined,
-      description:       formData.description       || undefined,
       findings:          formData.findings          || undefined,
+      action_taken:      formData.action_taken      || undefined,
       attachments:       formData.attachments?.length ? formData.attachments : undefined,
     });
   };

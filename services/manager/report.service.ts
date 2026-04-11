@@ -17,23 +17,35 @@ import type {
 export const ReportService = {
   /**
    * Liste paginée des rapports d'intervention du site du manager.
+   * Utilise /manager/intervention-report — filtré automatiquement par site_id du manager.
    */
   async getReports(
     filters: ReportFilters = {}
   ): Promise<PaginatedResponse<InterventionReport>> {
-    const { data } = await api.get<
-      ApiResponse<PaginatedResponse<InterventionReport>>
-    >("/manager/intervention-report", { params: filters });
-    return data.data;
+    try {
+      const { data } = await api.get("/manager/intervention-report", { params: filters });
+      const d = data?.data;
+      const items: InterventionReport[] = Array.isArray(d?.items) ? d.items
+        : Array.isArray(d?.data) ? d.data
+        : Array.isArray(d) ? d : [];
+      return {
+        items,
+        meta: d?.meta ?? { current_page: 1, last_page: 1, per_page: 15, total: items.length },
+      };
+    } catch (err: any) {
+      // Ne pas propager les 401/403 — retourner liste vide
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        return { items: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } };
+      }
+      throw err;
+    }
   },
 
   /**
-   * Détail d'un rapport avec pièces jointes, validateur, ticket.
+   * Détail d'un rapport.
    */
   async getReport(id: number): Promise<InterventionReport> {
-    const { data } = await api.get<ApiResponse<InterventionReport>>(
-      `/manager/intervention-report/${id}`
-    );
+    const { data } = await api.get(`/manager/intervention-report/${id}`);
     return data.data;
   },
 
@@ -41,10 +53,19 @@ export const ReportService = {
    * Statistiques des rapports du site.
    */
   async getStats(): Promise<ReportStats> {
-    const { data } = await api.get<ApiResponse<ReportStats>>(
-      "/manager/intervention-report/stats"
-    );
-    return data.data;
+    try {
+      const { data } = await api.get("/manager/intervention-report/stats");
+      const d = data?.data;
+      return {
+        total:          d?.total          ?? d?.total_reports    ?? 0,
+        validated:      d?.validated      ?? d?.validated_reports ?? 0,
+        pending:        d?.pending        ?? d?.pending_reports   ?? 0,
+        rejected:       d?.rejected       ?? 0,
+        average_rating: d?.average_rating ?? 0,
+      };
+    } catch {
+      return { total: 0, validated: 0, pending: 0, rejected: 0, average_rating: 0 };
+    }
   },
 
   /**
@@ -63,27 +84,15 @@ export const ReportService = {
   },
 
   /**
-   * Export Excel des rapports.
-   * Route /manager/intervention-report/export n'existe pas — on génère côté client.
+   * Export Excel des rapports — utilise le vrai endpoint backend.
+   * Route : GET /manager/intervention-report/export
    */
   async exportReports(filters: ReportFilters = {}): Promise<Blob> {
-    const { data } = await api.get<ApiResponse<PaginatedResponse<InterventionReport>>>(
-      "/manager/intervention-report",
-      { params: { ...filters, per_page: 1000, page: 1 } }
-    );
-    const items: InterventionReport[] = data?.data?.items ?? [];
-    const headers = ["Référence", "Prestataire", "Site", "Date", "Type", "Statut", "Note"];
-    const rows = items.map(r => [
-      r.reference ?? "-",
-      r.provider?.company_name ?? r.provider?.name ?? "-",
-      r.site?.nom ?? r.site?.name ?? "-",
-      r.start_date ?? r.created_at ?? "-",
-      r.intervention_type ?? "-",
-      r.status ?? "-",
-      r.rating ?? "-",
-    ]);
-    const csv = [headers, ...rows].map(r => r.join(";")).join("\n");
-    return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const response = await api.get("/manager/intervention-report/export", {
+      params: filters,
+      responseType: "blob",
+    });
+    return response.data;
   },
 
   /**

@@ -17,16 +17,28 @@ import type {
 
 export const QuoteService = {
   /**
-   * Liste paginée des devis du site du manager.
+   * Liste des devis du site du manager.
+   * Le back retourne $query->get() (tableau non paginé) — on normalise.
    */
   async getQuotes(
     filters: QuoteFilters = {}
   ): Promise<PaginatedResponse<Quote>> {
-    const { data } = await api.get<ApiResponse<PaginatedResponse<Quote>>>(
-      "/manager/quote",
-      { params: filters }
-    );
-    return data.data;
+    const { data } = await api.get("/manager/quote", { params: filters });
+    const d = data?.data;
+    // Normalise : tableau direct ou { items, meta }
+    const items: Quote[] = Array.isArray(d) ? d
+      : Array.isArray(d?.items) ? d.items
+      : Array.isArray(d?.data)  ? d.data
+      : [];
+    return {
+      items,
+      meta: d?.meta ?? {
+        current_page: 1,
+        last_page:    1,
+        per_page:     items.length,
+        total:        items.length,
+      },
+    };
   },
 
   /**
@@ -126,24 +138,14 @@ export const QuoteService = {
   },
 
   /**
-   * Export Excel des devis.
-   * Route /manager/quote/export n'existe pas — on génère côté client.
+   * Export Excel des devis — utilise le vrai endpoint backend.
+   * Route : GET /manager/quote/export (via commons.php)
    */
   async exportQuotes(filters: QuoteFilters = {}): Promise<Blob> {
-    const { data } = await api.get<ApiResponse<PaginatedResponse<Quote>>>(
-      "/manager/quote",
-      { params: { ...filters, per_page: 1000, page: 1 } }
-    );
-    const items: Quote[] = data?.data?.items ?? [];
-    const headers = ["Référence", "Prestataire", "Site", "Montant TTC", "Statut"];
-    const rows = items.map(q => [
-      q.reference,
-      q.provider?.company_name ?? q.provider?.name ?? "-",
-      q.site?.nom ?? q.site?.name ?? "-",
-      q.amount_ttc ?? q.total_amount_ttc ?? 0,
-      q.status ?? "-",
-    ]);
-    const csv = [headers, ...rows].map(r => r.join(";")).join("\n");
-    return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const response = await api.get("/manager/quote/export", {
+      params: filters,
+      responseType: "blob",
+    });
+    return response.data;
   },
 };

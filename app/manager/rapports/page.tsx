@@ -146,7 +146,6 @@ export default function RapportsPage() {
     { header: "ID",         key: "id",        render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">#{row.id}</span> },
     { header: "Ticket",     key: "ticket" as any,    render: (_: any, row: InterventionReport) => row.ticket?.subject ?? `#${row.ticket_id}` },
     { header: "Prestataire",key: "provider" as any,  render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? "-" },
-    { header: "Site",       key: "site" as any,      render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? "-" },
     { header: "Type",       key: "intervention_type" as any,      render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
     { header: "Date",       key: "created_at",render: (_: any, row: InterventionReport) => formatDate(row.created_at) },
     { header: "Statut",     key: "status",    render: (_: any, row: InterventionReport) => <StatusBadge status={row.status} /> },

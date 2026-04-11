@@ -34,6 +34,21 @@ const AUTH_ENDPOINTS = [
   "/admin/reset-password",
   "/provider/verify-otp",
   "/provider/login",
+  "/provider/forgot-password",
+  "/provider/reset-password",
+  "/manager/verify-otp",
+  "/manager/login",
+  "/manager/forgot-password",
+  "/manager/reset-password",
+  "/supplier/verify-otp",
+  "/supplier/login",
+  "/supplier/forgot-password",
+  "/supplier/reset-password",
+  "/super-admin/verify-otp",
+  "/super-admin/login",
+  // Endpoints qui peuvent légitimement retourner 401 sans session expirée
+  "/manager/notifications",
+  "/manager/intervention-report",
 ];
 
 api.interceptors.response.use(

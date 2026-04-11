@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import * as XLSX from "xlsx";
@@ -1183,8 +1183,11 @@ export default function TicketsPage() {
       })),
     },
     {
-      name: "type", label: "Type de maintenance", type: "select", required: true,
-      options: [{ label: "Curatif", value: "curatif" }, { label: "Préventif", value: "preventif" }],
+      name: "type", label: "Type", type: "select", required: true,
+ options: [
+        { label: "Curatif", value: "curatif" },
+        { label: "Préventif", value: "preventif" },
+      ],      
     },
     {
       name: "priority", label: "Priorité", type: "select", required: true,
@@ -1195,17 +1198,7 @@ export default function TicketsPage() {
     },
     { name: "subject",    label: "Sujet",          type: "text" },
     { name: "planned_at", label: "Date planifiée", type: "date", required: true, icon: CalendarDays },
-    {
-      name: "due_at_display",
-      label: ticketFormType === "curatif"
-        ? "Date limite (72h — SLA curatif)"
-        : ticketFormType === "preventif"
-        ? "Date limite (7 jours — préventif)"
-        : "Date limite (calculée auto)",
-      type: "text",
-      disabled: true,
-      placeholder: ticketFormPlanned ? computedDueAt : "Sélectionnez d'abord la date planifiée",
-    },
+
     {
       name: "description", label: "Description", type: "rich-text", gridSpan: 2,
     },
@@ -1422,12 +1415,14 @@ export default function TicketsPage() {
       />
 
       <ReusableForm
-        key={`ticket-form-${computedDueAt}`}
+        key={`ticket-form-${ticketFormType}-${ticketFormPlanned}`}
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingTicket(null); setSelectedSiteId(null); setTicketFormType(""); setTicketFormPlanned(""); }}
         title={editingTicket ? "Modifier le ticket" : "Nouveau ticket"}
         subtitle={
-          editingTicket
+          !editingTicket && computedDueAt
+            ? `Date limite calculée automatiquement : ${computedDueAt} (${ticketFormType === "curatif" ? "SLA 72h" : "7 jours préventif"})`
+            : editingTicket
             ? "Modifiez le statut ou les informations du ticket"
             : "Remplissez les informations pour créer un ticket"
         }

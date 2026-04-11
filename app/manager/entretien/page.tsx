@@ -473,10 +473,10 @@ export default function ManagerEntretienPage() {
       header: "Prestataire", key: "provider",
       render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600 font-medium">{row.provider?.name ?? "-"}</span>,
     },
-    {
-      header: "Site", key: "site",
-      render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? "-"}</span>,
-    },
+    // {
+    //   header: "Site", key: "site",
+    //   render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600 font-medium">{row.site?.nom ?? "-"}</span>,
+    // },
     {
       header: "Date", key: "start_date",
       render: (_: any, row: InterventionReport) => (

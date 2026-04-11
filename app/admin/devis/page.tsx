@@ -354,7 +354,7 @@ function QuoteSidePanel({
           {quote.description && (
             <div>
               <p className="text-xs text-slate-400 font-medium mb-2">Description</p>
-              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <p className="text-sm text-blackk leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
                 {quote.description}
               </p>
             </div>
@@ -450,15 +450,35 @@ function QuoteSidePanel({
           )}
         </div>
 
-        {/* Footer CTA Valider */}
+        {/* Footer CTA Valider + Rejeter + Révision */}
         {isPending && !rejectMode && (
-          <div className="px-6 py-4 border-t border-slate-100 shrink-0">
+          <div className="px-6 py-4 border-t border-slate-100 shrink-0 space-y-2">
             <button
               onClick={() => setApproveModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"
             >
-              <CheckCircle2 size={16} /> Valider ce devis
+              <CheckCircle2 size={15} /> Valider ce devis
             </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRejectMode(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-red-200 bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition"
+              >
+                <XCircle size={14} /> Rejeter
+              </button>
+              <button
+                onClick={() => {
+                  const reason = prompt("Motif de révision (optionnel) :");
+                  if (reason !== null) {
+                    // requestRevision via onApprove workaround — handled in page
+                    (window as any).__quoteRevision?.(quote.id, reason);
+                  }
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-600 text-sm font-bold hover:bg-sky-100 transition"
+              >
+                <Clock size={14} /> Révision
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -549,7 +569,7 @@ export default function DevisPage() {
 
   const {
     quotes, stats, isLoading, statsLoading,
-    fetchQuotes, fetchStats, approveQuote, rejectQuote,
+    fetchQuotes, fetchStats, approveQuote, rejectQuote, requestRevision,
   } = useQuotes();
 
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
@@ -637,6 +657,24 @@ export default function DevisPage() {
       showFlash("error", err?.response?.data?.message ?? "Erreur lors du rejet.");
     }
   };
+
+  const handleRevision = async (id: number, reason: string) => {
+    try {
+      await requestRevision(id, reason);
+      setSelectedQuote(prev =>
+        prev?.id === id ? { ...prev, status: "revision" as const } : prev
+      );
+      showFlash("success", "Révision demandée.");
+    } catch (err: any) {
+      showFlash("error", err?.response?.data?.message ?? "Erreur lors de la demande de révision.");
+    }
+  };
+
+  // Expose handleRevision pour le SidePanel via window (workaround prop drilling)
+  useEffect(() => {
+    (window as any).__quoteRevision = handleRevision;
+    return () => { delete (window as any).__quoteRevision; };
+  }, [handleRevision]);
 
   const handleExport = async () => {
     if (exportLoading) return;

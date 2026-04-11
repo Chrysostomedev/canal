@@ -81,11 +81,13 @@ export interface CreateReportPayload {
   ticket_id: number;
   intervention_type: "curatif" | "preventif";
   result: "ras" | "anomalie" | "resolu";
+  findings: string;        // requis par le back
+  action_taken: string;    // requis par le back
   description?: string;
-  findings?: string;
   start_date: string;
   end_date?: string;
-  // attachments[] → file_type auto-détecté (PDF→document, image→photo)
+  anomaly_detected?: boolean;
+  anomaly_description?: string;
   attachments?: File[];
 }
 
@@ -219,14 +221,28 @@ export const providerReportService = {
    * - Après création : notif gestionnaire + admins
    */
   createReport: async (payload: CreateReportPayload): Promise<InterventionReport> => {
+    // Workflow : ASSIGNÉ → EN_COURS/EN_TRAITEMENT → RAPPORTÉ
+    // Si le ticket est encore ASSIGNÉ, on doit d'abord démarrer l'intervention
+    try {
+      const ticketRes = await axiosInstance.get(`/provider/ticket/${payload.ticket_id}`);
+      const ticket = ticketRes.data?.data ?? ticketRes.data;
+      const status = (ticket?.status ?? "").toUpperCase();
+      if (status === "ASSIGNÉ" || status === "ASSIGNE") {
+        await axiosInstance.post(`/provider/ticket/${payload.ticket_id}/start`);
+      }
+    } catch { /* non bloquant — on tente quand même la création */ }
+
     const form = new FormData();
     form.append("ticket_id",         String(payload.ticket_id));
     form.append("intervention_type", payload.intervention_type);
     form.append("result",            payload.result);
     form.append("start_date",        payload.start_date);
-    if (payload.end_date)    form.append("end_date",     payload.end_date);
-    if (payload.description) form.append("description", payload.description);
-    if (payload.findings)    form.append("findings",    payload.findings);
+    form.append("findings",          payload.findings ?? "");
+    form.append("action_taken",      payload.action_taken ?? "");
+    form.append("anomaly_detected",  String(payload.anomaly_detected ?? false));
+    if (payload.end_date)             form.append("end_date",             payload.end_date);
+    if (payload.description)          form.append("description",          payload.description);
+    if (payload.anomaly_description)  form.append("anomaly_description",  payload.anomaly_description);
 
     if (payload.attachments?.length) {
       payload.attachments.forEach(f => form.append("attachments[]", f));

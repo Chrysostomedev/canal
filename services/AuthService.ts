@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AuthService.ts
  * ──────────────────────────────────────────────────────────────────────────────
  * Service d'authentification unifié — gère tous les rôles :
@@ -26,10 +26,11 @@
 import axiosInstance from "../core/axios";
 
 // ─── Clés localStorage ────────────────────────────────────────────────────────
-const AUTH_TOKEN_KEY = "auth_token";
-const USER_ROLE_KEY = "user_role";
-const PENDING_EMAIL_KEY = "pending_otp_email"; // Email en attente de vérification OTP
-const PENDING_FLOW_KEY = "pending_otp_flow";  // "login" | "reset" — distingue les deux flux OTP
+const AUTH_TOKEN_KEY    = "auth_token";
+const USER_ROLE_KEY     = "user_role";
+const PENDING_EMAIL_KEY = "pending_otp_email";
+const PENDING_FLOW_KEY  = "pending_otp_flow";
+const PENDING_PREFIX_KEY = "pending_otp_prefix"; // "admin" | "provider" | "manager" | "supplier"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type UserRole = "SUPER-ADMIN" | "ADMIN" | "MANAGER" | "PROVIDER" | "SUPPLIER" | "USER";
@@ -80,12 +81,18 @@ export const getDashboardRoute = (role: string): string => {
   }
 };
 
-// ─── Endpoints unifiés ────────────────────────────────────────────────────────
-const LOGIN_ENDPOINT = "/admin/login";
-const VERIFY_OTP_ENDPOINT = "/admin/verify-otp";
-const LOGOUT_ENDPOINT = "/admin/logout";
+// ─── Endpoints par préfixe ────────────────────────────────────────────────────
+const PREFIXES = ["admin", "provider", "manager", "supplier"] as const;
+type Prefix = typeof PREFIXES[number];
+
+const endpoint = (prefix: string, action: string) => `/${prefix}/${action}`;
+
+// Rétrocompat
+const LOGIN_ENDPOINT          = "/admin/login";
+const VERIFY_OTP_ENDPOINT     = "/admin/verify-otp";
+const LOGOUT_ENDPOINT         = "/admin/logout";
 const FORGOT_PASSWORD_ENDPOINT = "/admin/forgot-password";
-const RESET_PASSWORD_ENDPOINT = "/admin/reset-password";
+const RESET_PASSWORD_ENDPOINT  = "/admin/reset-password";
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 export const authService = {
@@ -99,17 +106,35 @@ export const authService = {
    * et retourne { otp_required: true, email }.
    */
   login: async (credentials: { email: string; password: string; country: string }): Promise<LoginStepResponse> => {
-    const response = await axiosInstance.post(LOGIN_ENDPOINT, credentials);
-    const data = response.data?.data as LoginStepResponse;
+    // Essaie les endpoints dans l'ordre : admin → provider → manager → supplier
+    const prefixesToTry: Prefix[] = ["manager", "admin", "provider", "supplier"];
+    let lastError: any = null;
 
-    if (data?.otp_required && data?.email) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(PENDING_EMAIL_KEY, data.email);
-        localStorage.setItem(PENDING_FLOW_KEY, "login");
+    for (const prefix of prefixesToTry) {
+      try {
+        const response = await axiosInstance.post(endpoint(prefix, "login"), credentials);
+        const data = response.data?.data as LoginStepResponse & { guard?: string; role?: string };
+
+        if (data?.otp_required && data?.email) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem(PENDING_EMAIL_KEY, data.email);
+            localStorage.setItem(PENDING_FLOW_KEY, "login");
+            // Utilise le guard retourné par le back, sinon le préfixe qui a réussi
+            const guardToStore = (data as any).guard ?? prefix;
+            localStorage.setItem(PENDING_PREFIX_KEY, guardToStore);
+          }
+        }
+        return data;
+      } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 401 || status === 403 || status === 404 || status === 422) {
+          lastError = err;
+          continue;
+        }
+        throw err;
       }
     }
-
-    return data;
+    throw lastError;
   },
 
   /** Alias pour compatibilité avec le code existant sur login/page.tsx */
@@ -121,14 +146,36 @@ export const authService = {
   // │  ÉTAPE 2 — Vérification OTP (connexion)                                 │
   // └─────────────────────────────────────────────────────────────────────────┘
   verifyOtp: async (email: string, code: string): Promise<AuthResponse> => {
-    const response = await axiosInstance.post(VERIFY_OTP_ENDPOINT, { email, code });
-    const data = response.data?.data as AuthResponse;
+    // Utilise le préfixe stocké lors du login
+    const storedPrefix = (typeof window !== "undefined"
+      ? localStorage.getItem(PENDING_PREFIX_KEY)
+      : null) ?? "admin";
 
-    if (data?.token && data?.user) {
-      authService._persistSession(data);
+    // Essaie d'abord le préfixe stocké, puis les autres en fallback
+    const prefixesToTry = [storedPrefix, ...["admin", "provider", "manager", "supplier"].filter(p => p !== storedPrefix)];
+
+    let lastError: any = null;
+    for (const prefix of prefixesToTry) {
+      try {
+        const response = await axiosInstance.post(endpoint(prefix, "verify-otp"), { email, code });
+        const data = response.data?.data as AuthResponse;
+        if (data?.token && data?.user) {
+          authService._persistSession(data);
+        }
+        return data;
+      } catch (err: any) {
+        const status = err?.response?.status;
+        const msg: string = err?.response?.data?.message ?? "";
+        // 401 avec "invalide/expiré" → vrai échec OTP, pas la peine d'essayer les autres
+        if (status === 401) {
+          throw err;
+        }
+        // 404/403 → mauvais endpoint, essaie le suivant
+        lastError = err;
+        continue;
+      }
     }
-
-    return data;
+    throw lastError;
   },
 
   // ┌─────────────────────────────────────────────────────────────────────────┐
@@ -194,6 +241,7 @@ export const authService = {
         USER_ROLE_KEY,
         PENDING_EMAIL_KEY,
         PENDING_FLOW_KEY,
+        PENDING_PREFIX_KEY,
         "first_name",
         "last_name",
         "user_email",
@@ -223,7 +271,7 @@ export const authService = {
     const { user, token } = data;
 
     localStorage.setItem(AUTH_TOKEN_KEY, token);
-    localStorage.setItem(USER_ROLE_KEY, user.role ?? "");
+    localStorage.setItem(USER_ROLE_KEY, (user.role ?? "").toUpperCase());
     localStorage.setItem("user_email", user.email ?? "");
     localStorage.setItem("user_id", String(user.id ?? ""));
 
@@ -247,6 +295,7 @@ export const authService = {
     if (typeof window !== "undefined") {
       localStorage.removeItem(PENDING_EMAIL_KEY);
       localStorage.removeItem(PENDING_FLOW_KEY);
+      localStorage.removeItem(PENDING_PREFIX_KEY);
     }
   },
 
@@ -269,14 +318,15 @@ export const authService = {
   isAuthenticated: (): boolean => {
     if (typeof window === "undefined") return false;
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
-    const validRoles: UserRole[] = ["SUPER-ADMIN", "ADMIN", "MANAGER", "PROVIDER", "SUPPLIER", "USER"];
+    const role = (localStorage.getItem(USER_ROLE_KEY) ?? "").toUpperCase() as UserRole;
+    const validRoles: string[] = ["SUPER-ADMIN", "ADMIN", "MANAGER", "PROVIDER", "SUPPLIER", "USER"];
     return !!token && !!role && validRoles.includes(role);
   },
 
   hasRole: (allowedRoles: UserRole[]): boolean => {
-    const role = authService.getRole() as UserRole;
-    if (role === "USER" && (allowedRoles.includes("PROVIDER") || allowedRoles.includes("SUPPLIER"))) return true;
-    return allowedRoles.includes(role);
+    const role = (authService.getRole() ?? "").toUpperCase() as UserRole;
+    const normalizedAllowed = allowedRoles.map(r => r.toUpperCase());
+    if (role === "USER" && (normalizedAllowed.includes("PROVIDER") || normalizedAllowed.includes("SUPPLIER"))) return true;
+    return normalizedAllowed.includes(role);
   },
 };
