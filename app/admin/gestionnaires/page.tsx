@@ -117,18 +117,27 @@ export default function GestionnairesPage() {
   // ── Création ───────────────────────────────────────────────────────────────
   const handleCreate = async (formData: any) => {
     try {
+      // Nettoyer le téléphone : supprimer espaces/tirets pour respecter regex /^\+\d+$/
+      const rawPhone = formData.phone as string | undefined;
+      const cleanPhone = rawPhone
+        ? rawPhone.replace(/[\s\-().]/g, "").trim() || undefined
+        : undefined;
+
       await ManagerService.createManager({
         first_name: formData.first_name,
         last_name:  formData.last_name,
         email:      formData.email,
-        phone:      formData.phone    || undefined,
+        phone:      cleanPhone,
         password:   formData.password || undefined,
       });
       showFlash("success", "Gestionnaire créé avec succès");
       setIsCreateModalOpen(false);
       fetchManagers();
     } catch (err: any) {
-      showFlash("error", err?.response?.data?.message || "Erreur lors de la création");
+      const msg = err?.response?.data?.message
+        ?? err?.response?.data?.errors
+        ?? "Erreur lors de la création";
+      showFlash("error", typeof msg === "string" ? msg : JSON.stringify(msg));
     }
   };
 

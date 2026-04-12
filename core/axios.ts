@@ -49,6 +49,8 @@ const AUTH_ENDPOINTS = [
   // Endpoints qui peuvent légitimement retourner 401 sans session expirée
   "/manager/notifications",
   "/manager/intervention-report",
+  "/manager/me",
+  "/manager/profile",
 ];
 
 api.interceptors.response.use(

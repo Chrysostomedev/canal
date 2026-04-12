@@ -143,15 +143,26 @@ export const ManagerService = {
     per_page?: number;
     search?: string;
     is_active?: boolean;
-    /**
-     * ── Filtre site — COMMENTÉ car pas encore géré côté Backend ─────────────
-     * TODO: Décommenter quand l'API supportera le filtre par site
-     * site_id?: number;
-     */
-  }): Promise<Manager[]> {
+  }): Promise<{ data: Manager[]; meta: { current_page: number; last_page: number; total: number; per_page: number } }> {
     const response = await axios.get("/admin/managers", { params });
-    const data: any[] = response.data.data ?? [];
-    return data.map(normalizeManager);
+    // Le back retourne une pagination Laravel : { data: { data: [...], current_page, last_page, total, per_page } }
+    const raw = response.data.data;
+    const items: any[] = raw?.data ?? (Array.isArray(raw) ? raw : []);
+    return {
+      data: items.map(normalizeManager),
+      meta: {
+        current_page: raw?.current_page ?? 1,
+        last_page:    raw?.last_page    ?? 1,
+        total:        raw?.total        ?? items.length,
+        per_page:     raw?.per_page     ?? 15,
+      },
+    };
+  },
+
+  /** GET /admin/managers/stats — KPIs depuis le backend */
+  async getStats(): Promise<ManagerStats> {
+    const response = await axios.get("/admin/managers/stats");
+    return response.data.data;
   },
 
   async getManager(id: number): Promise<ManagerDetail> {
