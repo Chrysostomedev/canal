@@ -62,8 +62,8 @@ function SiteFilterDropdown({
         <button
             onClick={onClick}
             className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${(current ?? "") === val
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                 }`}
         >
             {label}
@@ -612,8 +612,8 @@ function SitePreviewModal({
                             disabled={confirming || parsing || !!parseErr || !parsed || parsed.rows.length === 0 || hasErrors}
                             title={hasErrors ? "Corrigez les erreurs avant d'importer" : undefined}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-sm ${hasErrors
-                                    ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                                    : "bg-slate-900 text-white hover:bg-black"
+                                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                                : "bg-slate-900 text-white hover:bg-black"
                                 }`}
                         >
                             {confirming ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
@@ -861,7 +861,7 @@ export default function SitesPage() {
         { name: "phone_responsable", label: "Tél. responsable", type: "tel", placeholder: "+225 07 00 00 00" },
         { name: "effectifs", label: "Effectifs", type: "number" },
         { name: "loyer", label: "Loyer mensuel (FCFA)", type: "number" },
-        { name: "superficie", label: "Superficie (m²)", type: "text" },
+        { name: "superficie", label: "Superficie (m²)", type: "number" },
         { name: "ville", label: "Ville", type: "text" },
         { name: "localisation", label: "Localisation", type: "text", gridSpan: 2 },
         { name: "ref_contrat", label: "Référence contrat", type: "text" },
@@ -906,8 +906,8 @@ export default function SitesPage() {
                     {/* Flash */}
                     {flash && (
                         <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${flash.type === "success"
-                                ? "text-green-700 bg-green-50 border-green-200"
-                                : "text-red-600 bg-red-100 border-red-300"
+                            ? "text-green-700 bg-green-50 border-green-200"
+                            : "text-red-600 bg-red-100 border-red-300"
                             }`}>
                             {flash.msg}
                         </div>
@@ -978,8 +978,8 @@ export default function SitesPage() {
                                 <button
                                     onClick={() => setFiltersOpen(!filtersOpen)}
                                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${filtersOpen || activeCount > 0
-                                            ? "bg-slate-900 text-white border-slate-900"
-                                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                                        ? "bg-slate-900 text-white border-slate-900"
+                                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                                         }`}
                                 >
                                     <Filter size={16} /> Filtrer
