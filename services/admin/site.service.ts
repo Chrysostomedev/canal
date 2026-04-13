@@ -115,31 +115,44 @@ export const resolveManagerEmail = (site: Site | null): string => {
  * Gère les shapes : { items, meta }, { data: { items, meta } }, tableau brut.
  */
 const parsePaginatedResponse = (responseData: any): SitesResponse => {
-  // Shape : { items: [], meta: {} }
-  if (responseData?.items && responseData?.meta) {
-    return { items: responseData.items, meta: responseData.meta };
-  }
-  // Shape : { data: { items: [], meta: {} } }
-  if (responseData?.data?.items && responseData?.data?.meta) {
-    return { items: responseData.data.items, meta: responseData.data.meta };
-  }
-  // Shape : tableau brut
-  if (Array.isArray(responseData)) {
+  // Shape Laravel standard : { success, message, data: { items: [], meta: {} } }
+  if (responseData?.data?.items !== undefined && responseData?.data?.meta) {
     return {
-      items: responseData,
-      meta: { current_page: 1, last_page: 1, per_page: responseData.length, total: responseData.length },
+      items: Array.isArray(responseData.data.items) ? responseData.data.items : [],
+      meta:  responseData.data.meta,
     };
   }
-  // Shape : { data: [] } (tableau dans data)
+  // Shape directe : { items: [], meta: {} }
+  if (responseData?.items !== undefined && responseData?.meta) {
+    return {
+      items: Array.isArray(responseData.items) ? responseData.items : [],
+      meta:  responseData.meta,
+    };
+  }
+  // Shape Laravel paginator brut dans data : { data: { data: [], current_page, last_page, total } }
+  if (responseData?.data?.data !== undefined && responseData?.data?.current_page !== undefined) {
+    const p = responseData.data;
+    return {
+      items: Array.isArray(p.data) ? p.data : [],
+      meta:  { current_page: p.current_page, last_page: p.last_page, per_page: p.per_page, total: p.total },
+    };
+  }
+  // Shape tableau brut dans data
   if (Array.isArray(responseData?.data)) {
     return {
       items: responseData.data,
-      meta: { current_page: 1, last_page: 1, per_page: responseData.data.length, total: responseData.data.length },
+      meta:  { current_page: 1, last_page: 1, per_page: responseData.data.length, total: responseData.data.length },
     };
   }
-  // Fallback sécurisé
-  console.warn("[site.service] parsePaginatedResponse: shape inconnue", responseData);
-  return { items: [], meta: { current_page: 1, last_page: 1, per_page: 9, total: 0 } };
+  // Shape tableau brut
+  if (Array.isArray(responseData)) {
+    return {
+      items: responseData,
+      meta:  { current_page: 1, last_page: 1, per_page: responseData.length, total: responseData.length },
+    };
+  }
+  console.warn("[site.service] parsePaginatedResponse: shape inconnue", JSON.stringify(responseData)?.slice(0, 300));
+  return { items: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } };
 };
 
 /**
@@ -181,6 +194,11 @@ export const getSitesFiltered = async (
   filters: SiteFilters,
 ): Promise<SitesResponse> => {
   const response = await axios.get("/admin/site", { params: filters });
+  // Debug temporaire — à supprimer après diagnostic
+  if (typeof window !== "undefined") {
+    console.log("[SITES DEBUG] status:", response.status);
+    console.log("[SITES DEBUG] data:", JSON.stringify(response.data)?.slice(0, 800));
+  }
   const result = parsePaginatedResponse(response.data);
 
   // Enrichit les sites dont manager_id est défini mais manager est null
@@ -190,9 +208,9 @@ export const getSitesFiltered = async (
 
   if (missingManagerIds.length > 0) {
     try {
-      // Récupère tous les managers en une seule requête
-      const mRes = await axios.get("/admin/managers");
-      const managers: any[] = mRes.data?.data ?? [];
+      const mRes = await axios.get("/admin/managers", { params: { per_page: 1000 } });
+      const raw = mRes.data?.data;
+      const managers: any[] = Array.isArray(raw?.data) ? raw.data : (Array.isArray(raw) ? raw : []);
       const managerMap = new Map(managers.map((m: any) => [m.id, m]));
 
       result.items = result.items.map(site => {
@@ -242,10 +260,14 @@ export const getSiteStats = async () => {
   return response.data?.data ?? response.data;
 };
 
-// ── Managers (rôle manager) — filtre par role_slug comme attendu par AdminsController
+// ── Managers pour les selects
 export const getManagers = async (): Promise<Manager[]> => {
-  const response = await axios.get("/admin/admins", { params: { role_slug: "MANAGER" } });
-  return parseManagersResponse(response.data);
+  const response = await axios.get("/admin/managers", { params: { per_page: 1000 } });
+  const raw = response.data?.data;
+  // Réponse paginée : { data: [...], current_page, ... }
+  if (Array.isArray(raw?.data)) return raw.data;
+  if (Array.isArray(raw))       return raw;
+  return [];
 };
 
 // ── Détail d'un site — enrichit avec le manager si nécessaire

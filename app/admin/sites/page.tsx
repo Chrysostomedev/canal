@@ -1040,7 +1040,7 @@
 
         {/* Formulaire création site */}
         <ReusableForm
-            key={JSON.stringify(siteFormValues)}
+            key={siteFormValues.id ? `site-${siteFormValues.id}-${siteFormValues.manager_id || ""}` : `site-new-${siteFormValues.manager_id || ""}`}
             isOpen={isModalOpen}
             onClose={() => { setIsModalOpen(false); setSiteFormValues({}); }}
             title="Ajouter un site"

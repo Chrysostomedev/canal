@@ -273,6 +273,14 @@ export default function Sidebar() {
         >
           <Link
             href={item.href || "#"}
+            onClick={(e) => {
+              if (hasSubItems) {
+                toggleSubMenu(item.label);
+                if (!item.href || item.href === "#") {
+                  e.preventDefault();
+                }
+              }
+            }}
             className={`flex-1 flex items-center transition-all duration-200 ${
               collapsed ? "justify-center px-0" : "gap-3 px-3"
             } py-2.5 font-medium text-[15px] ${depth > 0 && !collapsed ? "pl-4" : ""}`}
