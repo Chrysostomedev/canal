@@ -118,7 +118,7 @@ export default function Sidebar() {
         { label: t("nav.sites"),        icon: <MapPinHouse size={20} />,                   href: "/admin/sites" },
         { label: t("nav.planning"),     icon: <Calendar size={20} />,                      href: "/admin/planning" },
         { label: t("nav.entretien"),    icon: <Calendar size={20} />,                      href: "/admin/entretien" },
-        { label: t("nav.prestataires"), icon: <Users size={20} />,                         href: "/admin/prestataires" },
+        // { label: t("nav.prestataires"), icon: <Users size={20} />,                         href: "/admin/prestataires" },
         { label: t("nav.devis"),        icon: <FileSignature size={20} />,                 href: "/admin/devis" },
         { label: t("nav.factures"),     icon: <FileText size={20} />,                      href: "/admin/factures" },
         { label: t("nav.rapports"),     icon: <ChartNoAxesColumnIncreasing size={20} />,   href: "/admin/rapports" },
@@ -169,7 +169,7 @@ export default function Sidebar() {
   const buildBottomSuperAdmin = (): BottomItem[] => [
     { label: t("nav.profile"),    href: "/admin/profile",    icon: <UserIcon size={20} /> },
     // { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
-    { label: t("nav.roles"),      href: "/adm in/roles",      icon: <Shield size={20} /> },
+    { label: t("nav.roles"),      href: "/admin/roles",      icon: <Shield size={20} /> },
   ];
 
   const buildBottomProvider = (): BottomItem[] => [
