@@ -127,11 +127,13 @@ export default function Sidebar() {
       ],
     },
     { label: t("nav.gestionnaires"), icon: <UserCog size={20} />, href: "/admin/gestionnaires" },
+    { label: t("nav.prestataires"),  icon: <Users size={20} />,   href: "/admin/prestataires" },
   ];
 
   const buildMenuSuperAdmin = (): MenuItem[] => [
     ...buildMenuAdmin().slice(0, 2),
     { label: t("nav.gestionnaires"), icon: <UserCog size={20} />, href: "/admin/gestionnaires" },
+    { label: t("nav.prestataires"),  icon: <Users size={20} />,   href: "/admin/prestataires" },
   ];
 
   const buildMenuProvider = (): MenuItem[] => [
@@ -167,7 +169,7 @@ export default function Sidebar() {
   const buildBottomSuperAdmin = (): BottomItem[] => [
     { label: t("nav.profile"),    href: "/admin/profile",    icon: <UserIcon size={20} /> },
     // { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
-    { label: t("nav.roles"),      href: "/admin/roles",      icon: <Shield size={20} /> },
+    { label: t("nav.roles"),      href: "/adm in/roles",      icon: <Shield size={20} /> },
   ];
 
   const buildBottomProvider = (): BottomItem[] => [

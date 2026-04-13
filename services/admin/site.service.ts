@@ -194,11 +194,6 @@ export const getSitesFiltered = async (
   filters: SiteFilters,
 ): Promise<SitesResponse> => {
   const response = await axios.get("/admin/site", { params: filters });
-  // Debug temporaire — à supprimer après diagnostic
-  if (typeof window !== "undefined") {
-    console.log("[SITES DEBUG] status:", response.status);
-    console.log("[SITES DEBUG] data:", JSON.stringify(response.data)?.slice(0, 800));
-  }
   const result = parsePaginatedResponse(response.data);
 
   // Enrichit les sites dont manager_id est défini mais manager est null
