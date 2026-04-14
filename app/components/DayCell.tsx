@@ -20,17 +20,17 @@ interface DayCellProps {
   currentMonth?: boolean;
   events: CalendarEvent[];
   date?: Date;
+  canAddEvent?: boolean;
   onClick: (event: CalendarEvent) => void;
+  onAddClick?: (date: Date) => void;
   onDrop?: (planningId: number) => void;
 }
 
-export function DayCell({ day, currentMonth = true, events, onClick, onDrop, date }: DayCellProps) {
-  const isToday = (() => {
-    const d = new Date();
-    // On ne peut pas vérifier l'année/mois ici sans les props, 
-    // donc on laisse CalendarGrid gérer la surbrillance si besoin
-    return false;
-  })();
+import { Plus } from "lucide-react";
+
+export function DayCell({ day, currentMonth = true, events, onClick, onAddClick, onDrop, date, canAddEvent = false }: DayCellProps) {
+  const isToday = Boolean(date && currentMonth && date.toDateString() === new Date().toDateString());
+  const hasEvents = events.length > 0;
 
   return (
     <div
@@ -48,13 +48,26 @@ export function DayCell({ day, currentMonth = true, events, onClick, onDrop, dat
         }
       }}
       className={`
-        min-h-[110px] border-b border-r border-slate-100 p-2 flex flex-col gap-1
-        ${!currentMonth ? "bg-slate-50/50" : "bg-white"}
+        relative min-h-[110px] border-b border-r p-2 flex flex-col gap-1 group/cell overflow-hidden
+        ${!currentMonth ? "bg-slate-50/50 border-slate-100" : "bg-white border-slate-100"}
         ${currentMonth ? "hover:bg-slate-50/30 transition-colors" : ""}
+        ${isToday && hasEvents ? "ring-2 ring-blue-500 ring-inset bg-blue-50/20 animate-pulse" : ""}
+        ${isToday && !hasEvents ? "ring-1 ring-blue-300 ring-inset bg-blue-50/10" : ""}
       `}
     >
+      {/* Bouton d'ajout en arrière plan (visible au survol) */}
+      {currentMonth && canAddEvent && onAddClick && date && (
+        <button
+          onClick={() => onAddClick(date)}
+          className="absolute inset-0 m-auto w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex flex-col items-center justify-center opacity-0 group-hover/cell:opacity-100 hover:bg-slate-200 hover:text-slate-600 transition-all z-0 scale-90 hover:scale-100"
+          title="Ajouter un planning"
+        >
+          <Plus size={24} />
+        </button>
+      )}
+
       {/* Numéro du jour */}
-      <div className="flex items-center justify-end mb-1">
+      <div className="flex items-center justify-end mb-1 relative z-10">
         <span
           className={`
             text-[13px] w-7 h-7 flex items-center justify-center rounded-full font-semibold
@@ -66,7 +79,7 @@ export function DayCell({ day, currentMonth = true, events, onClick, onDrop, dat
       </div>
 
       {/* Events */}
-      <div className="flex flex-col gap-1 overflow-hidden">
+      <div className="flex flex-col gap-1 overflow-hidden relative z-10">
         {events.slice(0, 2).map((event, i) => (
           <button
             key={i}

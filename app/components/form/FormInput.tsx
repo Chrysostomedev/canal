@@ -1,8 +1,9 @@
 "use client";
 import React, { useRef, useState, useCallback } from "react";
-import { Eye, EyeOff, Calendar,
-  Bold, Italic, Underline, List, Strikethrough, 
-  Palette, Highlighter, AlignLeft, AlignCenter, AlignRight, 
+import {
+  Eye, EyeOff, Calendar,
+  Bold, Italic, Underline, List, Strikethrough,
+  Palette, Highlighter, AlignLeft, AlignCenter, AlignRight,
   CornerDownLeft, Plus, Minus, ImagePlus, X, Upload, FileText, ChevronDown
 } from "lucide-react";
 
@@ -18,8 +19,8 @@ export const FormField = ({ label, required, children }: any) => (
 
 // Input Texte
 export const Input = (props: any) => (
-  <input 
-    {...props} 
+  <input
+    {...props}
     className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all outline-none"
   />
 );
@@ -27,15 +28,15 @@ export const Input = (props: any) => (
 // Select (Style "Dropdown")
 export const Select = ({ children, disabled, ...props }: any) => (
   <div className="relative">
-    <select 
-      {...props} 
+    <select
+      {...props}
       disabled={disabled}
       className={`w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-slate-900 transition-all ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-100' : ''}`}
     >
       {children}
     </select>
     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-       <svg width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1L6 6L11 1" stroke="#64748B" strokeWidth="2" strokeLinecap="round"/></svg>
+      <svg width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1L6 6L11 1" stroke="#64748B" strokeWidth="2" strokeLinecap="round" /></svg>
     </div>
   </div>
 );
@@ -45,14 +46,14 @@ export const PasswordInput = ({ disabled, ...props }: any) => {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
-      <input 
-        {...props} 
+      <input
+        {...props}
         disabled={disabled}
         type={show ? "text" : "password"}
         className={`w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-100' : ''}`}
       />
       {!disabled && (
-        <button 
+        <button
           type="button"
           onClick={() => setShow(!show)}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
@@ -67,8 +68,8 @@ export const PasswordInput = ({ disabled, ...props }: any) => {
 // Champ Date
 export const DateInput = ({ disabled, ...props }: any) => (
   <div className="relative">
-    <input 
-      {...props} 
+    <input
+      {...props}
       disabled={disabled}
       type="date"
       className={`w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all appearance-none ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-100' : ''}`}
@@ -266,18 +267,18 @@ const COUNTRIES = [
   { code: "MA", flag: "🇲🇦", dial: "+212", name: "Maroc" },
   { code: "DZ", flag: "🇩🇿", dial: "+213", name: "Algérie" },
   { code: "TN", flag: "🇹🇳", dial: "+216", name: "Tunisie" },
-  { code: "FR", flag: "🇫🇷", dial: "+33",  name: "France" },
-  { code: "BE", flag: "🇧🇪", dial: "+32",  name: "Belgique" },
-  { code: "CH", flag: "🇨🇭", dial: "+41",  name: "Suisse" },
-  { code: "US", flag: "🇺🇸", dial: "+1",   name: "États-Unis" },
-  { code: "GB", flag: "🇬🇧", dial: "+44",  name: "Royaume-Uni" },
-  { code: "DE", flag: "🇩🇪", dial: "+49",  name: "Allemagne" },
-  { code: "ES", flag: "🇪🇸", dial: "+34",  name: "Espagne" },
-  { code: "IT", flag: "🇮🇹", dial: "+39",  name: "Italie" },
+  { code: "FR", flag: "🇫🇷", dial: "+33", name: "France" },
+  { code: "BE", flag: "🇧🇪", dial: "+32", name: "Belgique" },
+  { code: "CH", flag: "🇨🇭", dial: "+41", name: "Suisse" },
+  { code: "US", flag: "🇺🇸", dial: "+1", name: "États-Unis" },
+  { code: "GB", flag: "🇬🇧", dial: "+44", name: "Royaume-Uni" },
+  { code: "DE", flag: "🇩🇪", dial: "+49", name: "Allemagne" },
+  { code: "ES", flag: "🇪🇸", dial: "+34", name: "Espagne" },
+  { code: "IT", flag: "🇮🇹", dial: "+39", name: "Italie" },
   { code: "PT", flag: "🇵🇹", dial: "+351", name: "Portugal" },
-  { code: "CN", flag: "🇨🇳", dial: "+86",  name: "Chine" },
-  { code: "JP", flag: "🇯🇵", dial: "+81",  name: "Japon" },
-  { code: "IN", flag: "🇮🇳", dial: "+91",  name: "Inde" },
+  { code: "CN", flag: "🇨🇳", dial: "+86", name: "Chine" },
+  { code: "JP", flag: "🇯🇵", dial: "+81", name: "Japon" },
+  { code: "IN", flag: "🇮🇳", dial: "+91", name: "Inde" },
 ];
 
 export interface PhoneInputProps {
@@ -307,9 +308,9 @@ export const PhoneInput = ({
 
   const parsed = parseDefault(defaultValue);
   const [selected, setSelected] = useState(parsed.country);
-  const [number, setNumber]     = useState(parsed.number);
-  const [open, setOpen]         = useState(false);
-  const [search, setSearch]     = useState("");
+  const [number, setNumber] = useState(parsed.number);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const dropRef = useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -338,10 +339,10 @@ export const PhoneInput = ({
 
   const filtered = search
     ? COUNTRIES.filter(c =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.dial.includes(search) ||
-        c.code.toLowerCase().includes(search.toLowerCase())
-      )
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.dial.includes(search) ||
+      c.code.toLowerCase().includes(search.toLowerCase())
+    )
     : COUNTRIES;
 
   return (
@@ -397,9 +398,8 @@ export const PhoneInput = ({
                     onClick={() => handleSelect(c)}
                     disabled={!isActive}
                     title={!isActive ? "Pays non actif pour l'instant" : undefined}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${
-                      selected.code === c.code ? "bg-slate-100" : ""
-                    } ${isActive ? "hover:bg-slate-50 cursor-pointer" : "opacity-40 cursor-not-allowed bg-slate-50/50"}`}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selected.code === c.code ? "bg-slate-100" : ""
+                      } ${isActive ? "hover:bg-slate-50 cursor-pointer" : "opacity-40 cursor-not-allowed bg-slate-50/50"}`}
                   >
                     <span className="text-xl leading-none shrink-0">{c.flag}</span>
                     <span className={`flex-1 text-sm font-medium truncate ${isActive ? "text-slate-700" : "text-slate-400"}`}>
@@ -472,9 +472,9 @@ export const RichTextEditor = ({ label, placeholder, name, defaultValue }: any) 
           <ToolbarButton icon={Italic} onClick={() => applyStyle("italic")} />
           <ToolbarButton icon={Underline} onClick={() => applyStyle("underline")} />
           <ToolbarButton icon={Strikethrough} onClick={() => applyStyle("strikeThrough")} />
-          
+
           <div className="w-[1px] h-4 bg-slate-300 mx-1" />
-          
+
           <ToolbarButton icon={Plus} onClick={() => changeFontSize(1)} title="Agrandir" />
           <ToolbarButton icon={Minus} onClick={() => changeFontSize(-1)} title="Réduire" />
 
@@ -498,9 +498,9 @@ export const RichTextEditor = ({ label, placeholder, name, defaultValue }: any) 
           <ToolbarButton icon={CornerDownLeft} onClick={() => applyStyle("insertHorizontalRule")} title="Ligne de séparation" />
         </div>
 
-        <div 
+        <div
           ref={editorRef}
-          contentEditable 
+          contentEditable
           suppressContentEditableWarning
           className="w-full min-h-[180px] p-5 text-slate-700 outline-none bg-transparent prose prose-slate max-w-none leading-relaxed"
           onInput={handleInput}
@@ -589,7 +589,7 @@ export const PdfUpload = ({
           </div>
           <div className="text-center">
             <p className={`text-sm font-semibold transition-colors duration-200 ${dragging ? "text-white" : "text-slate-700"}`}>
-              {dragging ? "Déposez ici" : "Cliquez pour uploader la facture PDF"}
+              {dragging ? "Déposez ici" : "Cliquez pour uploader le PDF"}
             </p>
             <p className={`text-xs mt-0.5 transition-colors duration-200 ${dragging ? "text-white/70" : "text-slate-400"}`}>
               Format PDF uniquement · Max 10Mo
@@ -611,7 +611,7 @@ export const PdfUpload = ({
       {pdfs.length > 0 && (
         <div className="space-y-2">
           {pdfs.map((p) => (
-            <div 
+            <div
               key={p.id}
               className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1"
             >
@@ -638,7 +638,7 @@ export const PdfUpload = ({
 };
 
 const ToolbarButton = ({ icon: Icon, onClick, title }: any) => (
-  <button 
+  <button
     type="button"
     title={title}
     onMouseDown={(e) => e.preventDefault()}

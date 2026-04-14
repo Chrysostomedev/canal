@@ -15,7 +15,7 @@ export const useTickets = () => {
     priority?: string;
     type?: string;
     site_id?: number;
-  }>({});
+  }>({ type: "curatif" });
 
   const fetchTickets = async () => {
     setIsLoading(true);

@@ -33,11 +33,11 @@ const formatDate = (iso?: string | null): string => {
 
 const STATUS_STYLES: Record<string, string> = {
   validated: "border-emerald-200 bg-emerald-50 text-emerald-600",
-  pending:   "border-amber-200 bg-amber-50 text-amber-600",
+  pending: "border-amber-200 bg-amber-50 text-amber-600",
 };
 const STATUS_LABELS: Record<string, string> = {
   validated: "Validé",
-  pending:   "En attente",
+  pending: "En attente",
 };
 
 function StatusBadge({ status }: { status?: string }) {
@@ -53,9 +53,8 @@ function StatusBadge({ status }: { status?: string }) {
 function TypeBadge({ type }: { type?: string }) {
   const isCuratif = type === "curatif";
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${
-      isCuratif ? "bg-orange-50 text-orange-600 border border-orange-200" : "bg-blue-50 text-blue-600 border border-blue-200"
-    }`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${isCuratif ? "bg-orange-50 text-orange-600 border border-orange-200" : "bg-blue-50 text-blue-600 border border-blue-200"
+      }`}>
       {isCuratif ? "Curatif" : "Préventif"}
     </span>
   );
@@ -114,7 +113,7 @@ function ValidateModal({
   onClose: () => void;
   onConfirm: (payload: ValidateReportPayload) => Promise<void>;
 }) {
-  const [rating,  setRating]  = useState<number>(0);
+  const [rating, setRating] = useState<number>(0);
   const [hovered, setHovered] = useState<number>(0);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -127,9 +126,9 @@ function ValidateModal({
     setLoading(true);
     try {
       await onConfirm({
-        rating:  rating || null,
+        rating: rating || null,
         comment: comment.trim(),
-        result:  report.intervention_type === "preventif" ? "RAS" : "ANOMALIE",
+        result: report.intervention_type === "preventif" ? "RAS" : "ANOMALIE",
       });
       onClose();
     } finally {
@@ -239,11 +238,11 @@ function ReportSidePanel({
 
   if (!report) return null;
 
-  const isValidated  = report.status === "validated";
-  const pdfs         = (report.attachments ?? []).filter(a => a.file_type === "document");
-  const photos       = (report.attachments ?? []).filter(a => a.file_type === "photo");
+  const isValidated = report.status === "validated";
+  const pdfs = (report.attachments ?? []).filter(a => a.file_type === "document");
+  const photos = (report.attachments ?? []).filter(a => a.file_type === "photo");
   const providerName = report.provider?.company_name ?? report.provider?.name ?? "-";
-  const siteName     = report.site?.nom ?? report.site?.name ?? "-";
+  const siteName = report.site?.nom ?? report.site?.name ?? "-";
   const ticketSubject = report.ticket?.subject ?? `Ticket #${report.ticket_id}`;
 
   return (
@@ -274,12 +273,12 @@ function ReportSidePanel({
           {/* Champs */}
           <div className="space-y-0">
             {[
-              { label: "Prestataire",  value: providerName },
-              { label: "Site",         value: siteName },
-              { label: "Type",         render: () => <TypeBadge type={report.intervention_type} /> },
-              { label: "Début",        value: formatDate(report.start_date) },
-              { label: "Fin",          value: formatDate(report.end_date) },
-              { label: "Créé le",      value: formatDate(report.created_at) },
+              { label: "Prestataire", value: providerName },
+              { label: "Site", value: siteName },
+              { label: "Type", render: () => <TypeBadge type={report.intervention_type} /> },
+              { label: "Début", value: formatDate(report.start_date) },
+              { label: "Fin", value: formatDate(report.end_date) },
+              { label: "Créé le", value: formatDate(report.created_at) },
             ].map((f, i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                 <p className="text-xs text-slate-400 font-medium">{f.label}</p>
@@ -328,7 +327,7 @@ function ReportSidePanel({
               </p>
               <div className="space-y-2">
                 {pdfs.map(att => {
-                  const url  = ReportService.getAttachmentUrl(att.file_path);
+                  const url = ReportService.getAttachmentUrl(att.file_path);
                   const name = att.file_path.split("/").pop() ?? "document.pdf";
                   return (
                     <div key={att.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white">
@@ -433,14 +432,14 @@ function FilterDropdown({
   if (!isOpen) return null;
 
   const statusOpts = [
-    { val: "",          label: "Tous"       },
-    { val: "pending",   label: "En attente" },
-    { val: "validated", label: "Validé"     },
+    { val: "", label: "Tous" },
+    { val: "pending", label: "En attente" },
+    { val: "validated", label: "Validé" },
   ];
   const typeOpts = [
-    { val: "",          label: "Tous"        },
-    { val: "curatif",   label: "Curatif"     },
-    { val: "preventif", label: "Préventif"   },
+    { val: "", label: "Tous" },
+    { val: "curatif", label: "Curatif" },
+    { val: "preventif", label: "Préventif" },
   ];
 
   return (
@@ -459,9 +458,8 @@ function FilterDropdown({
             {statusOpts.map(({ val, label }) => (
               <button key={val}
                 onClick={() => setLocal({ ...local, status: val || undefined })}
-                className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
-                  (local.status ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}>
+                className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${(local.status ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}>
                 {label}
               </button>
             ))}
@@ -474,9 +472,8 @@ function FilterDropdown({
             {typeOpts.map(({ val, label }) => (
               <button key={val}
                 onClick={() => setLocal({ ...local, type: val || undefined })}
-                className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
-                  (local.type ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}>
+                className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${(local.type ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}>
                 {label}
               </button>
             ))}
@@ -502,17 +499,17 @@ function FilterDropdown({
 // ══════════════════════════════════════════════
 
 export default function RapportsPage() {
- 
+
   const filterRef = useRef<HTMLDivElement>(null);
   const { reports, stats, isLoading, statsLoading, fetchReports, fetchStats, validateReport } = useReports();
 
   const [selectedReport, setSelectedReport] = useState<InterventionReport | null>(null);
-  const [isDetailsOpen,  setIsDetailsOpen]  = useState(false);
-  const [filtersOpen,    setFiltersOpen]    = useState(false);
-  const [filters,        setFilters]        = useState<{ status?: string; type?: string }>({});
-  const [currentPage,    setCurrentPage]    = useState(1);
-  const [flashMessage,   setFlashMessage]   = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [exportLoading,  setExportLoading]  = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<{ status?: string; type?: string }>({ type: "curatif" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [flashMessage, setFlashMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const PER_PAGE = 10;
 
@@ -537,11 +534,11 @@ export default function RapportsPage() {
 
   const filtered = reports.filter(r => {
     if (filters.status && r.status !== filters.status) return false;
-    if (filters.type   && r.intervention_type !== filters.type) return false;
+    if (filters.type && r.intervention_type !== filters.type) return false;
     return true;
   });
-  const totalPages  = Math.ceil(filtered.length / PER_PAGE);
-  const paginated   = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
   const activeCount = Object.values(filters).filter(Boolean).length;
 
   const handleValidate = async (report: InterventionReport, payload: ValidateReportPayload) => {
@@ -563,28 +560,28 @@ export default function RapportsPage() {
     try {
       const dataToExport = filtered.length > 0 ? filtered : reports;
       const rows = dataToExport.map(r => ({
-        id:           `#${r.id}`,
-        ticket:       r.ticket?.subject ?? `#${r.ticket_id}`,
-        prestataire:  r.provider?.company_name ?? r.provider?.name ?? "-",
-        site:         r.site?.nom ?? r.site?.name ?? "-",
-        type:         r.intervention_type === "curatif" ? "Curatif" : "Préventif",
-        statut:       { validated: "Validé", pending: "En attente", rejected: "Rejeté", submitted: "Soumis" }[r.status ?? "pending"] ?? (r.status ?? "-"),
-        note:         r.rating ? `${r.rating}/5` : "-",
-        date_debut:   r.start_date ? new Date(r.start_date).toLocaleDateString("fr-FR") : "-",
-        date_fin:     r.end_date   ? new Date(r.end_date).toLocaleDateString("fr-FR")   : "-",
+        id: `#${r.id}`,
+        ticket: r.ticket?.subject ?? `#${r.ticket_id}`,
+        prestataire: r.provider?.company_name ?? r.provider?.name ?? "-",
+        site: r.site?.nom ?? r.site?.name ?? "-",
+        type: r.intervention_type === "curatif" ? "Curatif" : "Préventif",
+        statut: { validated: "Validé", pending: "En attente", rejected: "Rejeté", submitted: "Soumis" }[r.status ?? "pending"] ?? (r.status ?? "-"),
+        note: r.rating ? `${r.rating}/5` : "-",
+        date_debut: r.start_date ? new Date(r.start_date).toLocaleDateString("fr-FR") : "-",
+        date_fin: r.end_date ? new Date(r.end_date).toLocaleDateString("fr-FR") : "-",
         date_creation: r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "-",
       }));
       exportToXlsx(rows, [
-        { header: "ID",           key: "id",            width: 8  },
-        { header: "Ticket",       key: "ticket",        width: 28 },
-        { header: "Prestataire",  key: "prestataire",   width: 24 },
-        { header: "Site",         key: "site",          width: 20 },
-        { header: "Type",         key: "type",          width: 12 },
-        { header: "Statut",       key: "statut",        width: 14 },
-        { header: "Note",         key: "note",          width: 10 },
-        { header: "Début",        key: "date_debut",    width: 14 },
-        { header: "Fin",          key: "date_fin",      width: 14 },
-        { header: "Créé le",      key: "date_creation", width: 14 },
+        { header: "ID", key: "id", width: 8 },
+        { header: "Ticket", key: "ticket", width: 28 },
+        { header: "Prestataire", key: "prestataire", width: 24 },
+        { header: "Site", key: "site", width: 20 },
+        { header: "Type", key: "type", width: 12 },
+        { header: "Statut", key: "statut", width: 14 },
+        { header: "Note", key: "note", width: 10 },
+        { header: "Début", key: "date_debut", width: 14 },
+        { header: "Fin", key: "date_fin", width: 14 },
+        { header: "Créé le", key: "date_creation", width: 14 },
       ], { filename: "rapports_intervention", sheetName: "Rapports", title: "Export Rapports d'Intervention - CANAL+" });
       showFlash("success", "Export téléchargé avec succès.");
     } catch {
@@ -595,9 +592,9 @@ export default function RapportsPage() {
   };
 
   const kpis = [
-    { label: "Total rapports",    value: statsLoading ? 0 : (stats?.total_reports    ?? 0), delta: "+3%",  trend: "up" as const },
-    { label: "Rapports validés",  value: statsLoading ? 0 : (stats?.validated_reports ?? 0), delta: "+8%",  trend: "up" as const },
-    { label: "En attente",        value: statsLoading ? 0 : (stats?.pending_reports   ?? 0), delta: "+0%",  trend: "up" as const },
+    { label: "Total rapports", value: statsLoading ? 0 : (stats?.total_reports ?? 0), delta: "+3%", trend: "up" as const },
+    { label: "Rapports validés", value: statsLoading ? 0 : (stats?.validated_reports ?? 0), delta: "+8%", trend: "up" as const },
+    { label: "En attente", value: statsLoading ? 0 : (stats?.pending_reports ?? 0), delta: "+0%", trend: "up" as const },
     {
       label: "Note moyenne",
       value: statsLoading ? "-" : (stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : "-"),
@@ -606,20 +603,19 @@ export default function RapportsPage() {
   ];
 
   const columns: ColumnConfig<InterventionReport>[] = [
-    { header: "ID",          key: "id",         render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">#{row.id}</span> },
-    { header: "Ticket",      key: "ticket",     render: (_: any, row: InterventionReport) => row.ticket?.subject ?? `#${row.ticket_id}` },
-    { header: "Prestataire", key: "provider",   render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? "-" },
-    { header: "Site",        key: "site",       render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? "-" },
-    { header: "Type",        key: "intervention_type", render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
-    { header: "Date",        key: "created_at", render: (_: any, row: InterventionReport) => formatDate(row.created_at) },
-    { header: "Note",        key: "rating",     render: (_: any, row: InterventionReport) => <StarRating value={row.rating ? Number(row.rating) : 0} /> },
-    { header: "Statut",      key: "status",     render: (_: any, row: InterventionReport) => <StatusBadge status={row.status} /> },
+    { header: "Ticket", key: "ticket", render: (_: any, row: InterventionReport) => row.ticket?.subject ?? `#${row.ticket_id}` },
+    { header: "Prestataire", key: "provider", render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? "-" },
+    { header: "Site", key: "site", render: (_: any, row: InterventionReport) => row.site?.nom ?? row.site?.name ?? "-" },
+    { header: "Type", key: "intervention_type", render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
+    { header: "Date", key: "created_at", render: (_: any, row: InterventionReport) => formatDate(row.created_at) },
+    { header: "Note", key: "rating", render: (_: any, row: InterventionReport) => <StarRating value={row.rating ? Number(row.rating) : 0} /> },
+    { header: "Statut", key: "status", render: (_: any, row: InterventionReport) => <StatusBadge status={row.status} /> },
     {
       header: "Actions",
       key: "actions",
       render: (_: any, row: InterventionReport) => (
         <div className="flex items-center gap-3">
-          
+
           {/* Aperçu side panel */}
           <button
             onClick={() => {
@@ -630,18 +626,18 @@ export default function RapportsPage() {
           >
             <Eye size={18} />
           </button>
-    
+
           {/* Redirection vers page détails */}
           <Link
             href={`/admin/rapports/details/${row.id}`}
             className="group p-2 rounded-xl bg-white hover:bg-black transition flex items-center justify-center"
           >
-           <ArrowUpRight
-  size={16}
-  className="group-hover:rotate-45 transition-transform"
-/>
+            <ArrowUpRight
+              size={16}
+              className="group-hover:rotate-45 transition-transform"
+            />
           </Link>
-    
+
         </div>
       ),
     }
@@ -649,86 +645,84 @@ export default function RapportsPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-        <Navbar />
-        <main className="mt-20 p-6 space-y-8">
-          <PageHeader title="Rapports d'intervention" subtitle="Visualisez et validez les rapports soumis par vos prestataires" />
+      <Navbar />
+      <main className="mt-20 p-6 space-y-8">
+        <PageHeader title="Rapports d'intervention" subtitle="Visualisez et validez les rapports soumis par vos prestataires" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
+        </div>
 
-          <div className="shrink-0 flex justify-end items-center gap-3">
-            <div className="relative" ref={filterRef}>
-              <button
-                onClick={() => setFiltersOpen(!filtersOpen)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
-                  filtersOpen || activeCount > 0 ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <Filter size={16} /> Filtrer par
-                {activeCount > 0 && (
-                  <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">{activeCount}</span>
-                )}
-              </button>
-              <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
-            </div>
+        <div className="shrink-0 flex justify-end items-center gap-3">
+          <div className="relative" ref={filterRef}>
             <button
-              onClick={handleExport}
-              disabled={exportLoading}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${filtersOpen || activeCount > 0 ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
             >
-              {exportLoading
-                ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
-                : <Upload size={16} />}
-              Exporter
+              <Filter size={16} /> Filtrer par
+              {activeCount > 0 && (
+                <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">{activeCount}</span>
+              )}
             </button>
+            <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
           </div>
+          <button
+            onClick={handleExport}
+            disabled={exportLoading}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
+          >
+            {exportLoading
+              ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+              : <Upload size={16} />}
+            Exporter
+          </button>
+        </div>
 
-          {/* Chips filtres actifs */}
-          {activeCount > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Filtré par :</span>
-              {filters.status && (
-                <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {STATUS_LABELS[filters.status] ?? filters.status}
-                  <button onClick={() => applyFilters({ ...filters, status: undefined })} className="hover:opacity-70"><X size={12} /></button>
-                </span>
-              )}
-              {filters.type && (
-                <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {filters.type === "curatif" ? "Curatif" : "Préventif"}
-                  <button onClick={() => applyFilters({ ...filters, type: undefined })} className="hover:opacity-70"><X size={12} /></button>
-                </span>
-              )}
-            </div>
-          )}
-
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <DataTable title="Rapports d'intervention" columns={columns} data={isLoading ? [] : paginated} onViewAll={() => {}} />
-            <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
-              <Paginate currentPage={currentPage} totalPages={totalPages || 1} onPageChange={setCurrentPage} />
-            </div>
+        {/* Chips filtres actifs */}
+        {activeCount > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Filtré par :</span>
+            {filters.status && (
+              <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+                {STATUS_LABELS[filters.status] ?? filters.status}
+                <button onClick={() => applyFilters({ ...filters, status: undefined })} className="hover:opacity-70"><X size={12} /></button>
+              </span>
+            )}
+            {filters.type && (
+              <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+                {filters.type === "curatif" ? "Curatif" : "Préventif"}
+                <button onClick={() => applyFilters({ ...filters, type: undefined })} className="hover:opacity-70"><X size={12} /></button>
+              </span>
+            )}
           </div>
+        )}
 
-          <ReportSidePanel
-            report={isDetailsOpen ? selectedReport : null}
-            onClose={() => { setIsDetailsOpen(false); setSelectedReport(null); }}
-            onValidate={async (reportWithPayload) => {
-              handleValidate(
-                reportWithPayload,
-                { rating: reportWithPayload.rating, comment: reportWithPayload.manager_comment, result: reportWithPayload.intervention_type === "preventif" ? "RAS" : "ANOMALIE" }
-              );
-            }}
-          />
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <DataTable title="Rapports d'intervention" columns={columns} data={isLoading ? [] : paginated} onViewAll={() => { }} />
+          <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
+            <Paginate currentPage={currentPage} totalPages={totalPages || 1} onPageChange={setCurrentPage} />
+          </div>
+        </div>
 
-          {flashMessage && (
-            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
-              flashMessage.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"
+        <ReportSidePanel
+          report={isDetailsOpen ? selectedReport : null}
+          onClose={() => { setIsDetailsOpen(false); setSelectedReport(null); }}
+          onValidate={async (reportWithPayload) => {
+            handleValidate(
+              reportWithPayload,
+              { rating: reportWithPayload.rating, comment: reportWithPayload.manager_comment, result: reportWithPayload.intervention_type === "preventif" ? "RAS" : "ANOMALIE" }
+            );
+          }}
+        />
+
+        {flashMessage && (
+          <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${flashMessage.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"
             }`}>
-              {flashMessage.message}
-            </div>
-          )}
-        </main>
-      </div>
+            {flashMessage.message}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

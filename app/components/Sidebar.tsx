@@ -59,7 +59,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 export function useSidebar() {
   const context = useContext(SidebarContext);
   if (context === undefined) {
-    return { collapsed: false, setCollapsed: () => {}, toggleSidebar: () => {} };
+    return { collapsed: false, setCollapsed: () => { }, toggleSidebar: () => { } };
   }
   return context;
 }
@@ -105,80 +105,80 @@ export default function Sidebar() {
       icon: <MapPinHouse size={20} />,
       href: "/admin/administration",
       subItems: [
-        { label: t("nav.tickets"),       icon: <Ticket size={20} />,                        href: "/admin/tickets" },
+        { label: t("nav.tickets"), icon: <Ticket size={20} />, href: "/admin/tickets" },
         {
           label: t("nav.patrimoines"),
           icon: <Building2 size={20} />,
           href: "/admin/patrimoines",
           subItems: [
-            { label: t("nav.types"),    icon: <Building2 size={18} />, href: "/admin/patrimoines/type" },
+            { label: t("nav.types"), icon: <Building2 size={18} />, href: "/admin/patrimoines/type" },
             { label: t("nav.subtypes"), icon: <Building2 size={18} />, href: "/admin/patrimoines/sous_type" },
           ],
         },
-        { label: t("nav.sites"),        icon: <MapPinHouse size={20} />,                   href: "/admin/sites" },
-        { label: t("nav.planning"),     icon: <Calendar size={20} />,                      href: "/admin/planning" },
-        { label: t("nav.entretien"),    icon: <Calendar size={20} />,                      href: "/admin/entretien" },
+        { label: t("nav.sites"), icon: <MapPinHouse size={20} />, href: "/admin/sites" },
+        { label: t("nav.planning"), icon: <Calendar size={20} />, href: "/admin/planning" },
+        { label: t("nav.entretien"), icon: <Calendar size={20} />, href: "/admin/entretien" },
         // { label: t("nav.prestataires"), icon: <Users size={20} />,                         href: "/admin/prestataires" },
-        { label: t("nav.devis"),        icon: <FileSignature size={20} />,                 href: "/admin/devis" },
-        { label: t("nav.factures"),     icon: <FileText size={20} />,                      href: "/admin/factures" },
-        { label: t("nav.rapports"),     icon: <ChartNoAxesColumnIncreasing size={20} />,   href: "/admin/rapports" },
-        { label: t("nav.services"),     icon: <Layers size={20} />,                        href: "/admin/services" },
-        { label: t("nav.transfert"),    icon: <FolderSync size={20} />,                    href: "/admin/transfert" },
+        { label: t("nav.devis"), icon: <FileSignature size={20} />, href: "/admin/devis" },
+        { label: t("nav.factures"), icon: <FileText size={20} />, href: "/admin/factures" },
+        { label: t("nav.rapports"), icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/admin/rapports" },
+        { label: t("nav.services"), icon: <Layers size={20} />, href: "/admin/services" },
+        { label: t("nav.transfert"), icon: <FolderSync size={20} />, href: "/admin/transfert" },
       ],
     },
     { label: t("nav.gestionnaires"), icon: <UserCog size={20} />, href: "/admin/gestionnaires" },
-    { label: t("nav.prestataires"),  icon: <Users size={20} />,   href: "/admin/prestataires" },
+    { label: t("nav.prestataires"), icon: <Users size={20} />, href: "/admin/prestataires" },
   ];
 
   const buildMenuSuperAdmin = (): MenuItem[] => [
     ...buildMenuAdmin().slice(0, 2),
     { label: t("nav.gestionnaires"), icon: <UserCog size={20} />, href: "/admin/gestionnaires" },
-    { label: t("nav.prestataires"),  icon: <Users size={20} />,   href: "/admin/prestataires" },
+    { label: t("nav.prestataires"), icon: <Users size={20} />, href: "/admin/prestataires" },
   ];
 
   const buildMenuProvider = (): MenuItem[] => [
-    { label: t("nav.dashboard"),     icon: <LayoutDashboard size={20} />,             href: "/provider/dashboard" },
-    { label: t("nav.tickets"),       icon: <Ticket size={20} />,                      href: "/provider/tickets" },
-    { label: t("nav.planning"),      icon: <Calendar size={20} />,                    href: "/provider/planning" },
-    { label: t("nav.entretien"),     icon: <Calendar size={20} />,                    href: "/provider/entretien" },
-    { label: t("nav.devis"),         icon: <FileSignature size={20} />,               href: "/provider/devis" },
-    { label: t("nav.factures"),      icon: <FileText size={20} />,                    href: "/provider/factures" },
-    { label: t("nav.rapports"),      icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/provider/rapports" },
-    { label: t("nav.notifications"), icon: <Bell size={20} />,                        href: "/provider/notifications" },
+    { label: t("nav.dashboard"), icon: <LayoutDashboard size={20} />, href: "/provider/dashboard" },
+    { label: t("nav.tickets"), icon: <Ticket size={20} />, href: "/provider/tickets" },
+    { label: t("nav.planning"), icon: <Calendar size={20} />, href: "/provider/planning" },
+    { label: t("nav.devis"), icon: <FileSignature size={20} />, href: "/provider/devis" },
+    { label: t("nav.factures"), icon: <FileText size={20} />, href: "/provider/factures" },
+    { label: t("nav.entretien"), icon: <Calendar size={20} />, href: "/provider/entretien" },
+    { label: t("nav.rapports"), icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/provider/rapports" },
+    { label: t("nav.notifications"), icon: <Bell size={20} />, href: "/provider/notifications" },
   ];
 
   const buildMenuManager = (): MenuItem[] => [
-    { label: t("nav.dashboard"),     icon: <LayoutDashboard size={20} />,             href: "/manager/dashboard" },
-    { label: t("nav.sites"),         icon: <MapPinHouse size={20} />,                 href: "/manager/site" },
-    { label: t("nav.patrimoines"),   icon: <Building2 size={20} />,                   href: "/manager/patrimoines" },
-    { label: t("nav.tickets"),       icon: <Ticket size={20} />,                      href: "/manager/tickets" },
-    { label: t("nav.entretien"),     icon: <Calendar size={20} />,                    href: "/manager/entretien" },
-    { label: t("nav.planning"),      icon: <Calendar size={20} />,                    href: "/manager/planning" },
-    { label: t("nav.prestataires"),  icon: <Users size={20} />,                       href: "/manager/prestataires" },
-    { label: t("nav.devis"),         icon: <FileSignature size={20} />,               href: "/manager/devis" },
-    { label: t("nav.factures"),      icon: <FileText size={20} />,                    href: "/manager/factures" },
-    { label: t("nav.rapports"),      icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/manager/rapports" },
-    { label: t("nav.notifications"), icon: <Bell size={20} />,                        href: "/manager/notifications" },
+    { label: t("nav.dashboard"), icon: <LayoutDashboard size={20} />, href: "/manager/dashboard" },
+    { label: t("nav.sites"), icon: <MapPinHouse size={20} />, href: "/manager/site" },
+    { label: t("nav.patrimoines"), icon: <Building2 size={20} />, href: "/manager/patrimoines" },
+    { label: t("nav.tickets"), icon: <Ticket size={20} />, href: "/manager/tickets" },
+    { label: t("nav.entretien"), icon: <Calendar size={20} />, href: "/manager/entretien" },
+    { label: t("nav.planning"), icon: <Calendar size={20} />, href: "/manager/planning" },
+    { label: t("nav.prestataires"), icon: <Users size={20} />, href: "/manager/prestataires" },
+    { label: t("nav.devis"), icon: <FileSignature size={20} />, href: "/manager/devis" },
+    { label: t("nav.factures"), icon: <FileText size={20} />, href: "/manager/factures" },
+    { label: t("nav.rapports"), icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/manager/rapports" },
+    { label: t("nav.notifications"), icon: <Bell size={20} />, href: "/manager/notifications" },
   ];
 
   const buildBottomAdmin = (): BottomItem[] => [
-    { label: t("nav.profile"),    href: "/admin/profile",    icon: <UserIcon size={20} /> },
+    { label: t("nav.profile"), href: "/admin/profile", icon: <UserIcon size={20} /> },
     // { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
   ];
 
   const buildBottomSuperAdmin = (): BottomItem[] => [
-    { label: t("nav.profile"),    href: "/admin/profile",    icon: <UserIcon size={20} /> },
+    { label: t("nav.profile"), href: "/admin/profile", icon: <UserIcon size={20} /> },
     // { label: t("nav.parametres"), href: "/admin/parametres", icon: <Settings size={20} /> },
-    { label: t("nav.roles"),      href: "/admin/roles",      icon: <Shield size={20} /> },
+    { label: t("nav.roles"), href: "/admin/roles", icon: <Shield size={20} /> },
   ];
 
   const buildBottomProvider = (): BottomItem[] => [
-    { label: t("nav.profile"),    href: "/provider/profile",   icon: <UserIcon size={20} /> },
+    { label: t("nav.profile"), href: "/provider/profile", icon: <UserIcon size={20} /> },
     // { label: t("nav.parametres"), href: "/provider/parametre", icon: <Settings size={20} /> },
   ];
 
   const buildBottomManager = (): BottomItem[] => [
-    { label: t("nav.profile"),    href: "/manager/profile",    icon: <UserIcon size={20} /> },
+    { label: t("nav.profile"), href: "/manager/profile", icon: <UserIcon size={20} /> },
     // { label: t("nav.parametres"), href: "/manager/parametres", icon: <Settings size={20} /> },
   ];
 
@@ -187,10 +187,10 @@ export default function Sidebar() {
   const menuItems = useMemo((): MenuItem[] => {
     switch (role) {
       case "SUPER-ADMIN": return buildMenuSuperAdmin();
-      case "ADMIN":       return buildMenuAdmin();
-      case "PROVIDER":    return buildMenuProvider();
-      case "MANAGER":     return buildMenuManager();
-      default:            return [];
+      case "ADMIN": return buildMenuAdmin();
+      case "PROVIDER": return buildMenuProvider();
+      case "MANAGER": return buildMenuManager();
+      default: return [];
     }
   }, [role, t]);
 
@@ -198,10 +198,10 @@ export default function Sidebar() {
   const bottomItems = useMemo((): BottomItem[] => {
     switch (role) {
       case "SUPER-ADMIN": return buildBottomSuperAdmin();
-      case "ADMIN":       return buildBottomAdmin();
-      case "PROVIDER":    return buildBottomProvider();
-      case "MANAGER":     return buildBottomManager();
-      default:            return [];
+      case "ADMIN": return buildBottomAdmin();
+      case "PROVIDER": return buildBottomProvider();
+      case "MANAGER": return buildBottomManager();
+      default: return [];
     }
   }, [role, t]);
 
@@ -265,13 +265,12 @@ export default function Sidebar() {
     return (
       <div className="w-full">
         <div
-          className={`flex items-center w-full rounded-xl transition-all duration-200 ${
-            active && !hasSubItems
-              ? "bg-theme-primary text-white shadow-md"
-              : active && hasSubItems
+          className={`flex items-center w-full rounded-xl transition-all duration-200 ${active && !hasSubItems
+            ? "bg-theme-primary text-white shadow-md"
+            : active && hasSubItems
               ? "text-theme-primary bg-theme-light"
               : "text-gray-600 hover:bg-gray-50"
-          }`}
+            }`}
         >
           <Link
             href={item.href || "#"}
@@ -283,9 +282,8 @@ export default function Sidebar() {
                 }
               }
             }}
-            className={`flex-1 flex items-center transition-all duration-200 ${
-              collapsed ? "justify-center px-0" : "gap-3 px-3"
-            } py-2.5 font-medium text-[15px] ${depth > 0 && !collapsed ? "pl-4" : ""}`}
+            className={`flex-1 flex items-center transition-all duration-200 ${collapsed ? "justify-center px-0" : "gap-3 px-3"
+              } py-2.5 font-medium text-[15px] ${depth > 0 && !collapsed ? "pl-4" : ""}`}
           >
             <span className={`shrink-0 ${collapsed ? "flex items-center justify-center w-full" : ""}`}>
               {item.icon}
@@ -319,15 +317,13 @@ export default function Sidebar() {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white shadow-lg border-r border-gray-200 flex flex-col z-40 transition-all duration-300 ${
-          collapsed ? "w-16" : "w-64"
-        }`}
+        className={`fixed top-0 left-0 h-screen bg-white shadow-lg border-r border-gray-200 flex flex-col z-40 transition-all duration-300 ${collapsed ? "w-16" : "w-64"
+          }`}
       >
         {/* Logo & Toggle */}
         <div
-          className={`px-4 py-6 border-b border-gray-100 flex items-center ${
-            collapsed ? "justify-center" : "justify-between"
-          }`}
+          className={`px-4 py-6 border-b border-gray-100 flex items-center ${collapsed ? "justify-center" : "justify-between"
+            }`}
         >
           {!collapsed && (
             <div className="flex-1 flex justify-center">
@@ -357,13 +353,11 @@ export default function Sidebar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex items-center transition-all font-medium text-[15px] py-2 rounded-xl ${
-                  collapsed ? "justify-center px-0" : "gap-3 px-3"
-                } ${
-                  active
+                className={`flex items-center transition-all font-medium text-[15px] py-2 rounded-xl ${collapsed ? "justify-center px-0" : "gap-3 px-3"
+                  } ${active
                     ? "bg-theme-primary text-white shadow-md"
                     : "text-gray-600 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <span className={`shrink-0 ${collapsed ? "flex items-center justify-center w-full" : ""}`}>
                   {item.icon}
@@ -376,9 +370,8 @@ export default function Sidebar() {
           {/* Déconnexion */}
           <button
             onClick={() => setShowLogoutModal(true)}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-all font-medium text-[15px] ${
-              collapsed ? "justify-center" : ""
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-all font-medium text-[15px] ${collapsed ? "justify-center" : ""
+              }`}
           >
             <LogOut size={20} />
             {!collapsed && <span>{t("nav.logout")}</span>}

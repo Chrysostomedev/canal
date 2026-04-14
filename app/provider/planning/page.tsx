@@ -6,7 +6,9 @@ import ActionGroup from "@/components/ActionGroup";
 import StatsCard from "@/components/StatsCard";
 import PageHeader from "@/components/PageHeader";
 import MainCard from "@/components/MainCard";
-import { Filter, CheckCircle2, XCircle } from "lucide-react";
+import { Filter, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
+import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
+import { useToast } from "../../../contexts/ToastContext";
 
 import { useProviderPlanning } from "../../../hooks/provider/useProviderPlanning";
 import {
@@ -17,29 +19,7 @@ import {
   getSiteName,
   getProviderName,
 } from "../../../services/provider/providerPlanningService";
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-type ToastType = { message: string; type: "success" | "error" } | null;
-
-function Toast({ toast }: { toast: ToastType }) {
-  if (!toast) return null;
-  return (
-    <div className={`
-      fixed bottom-6 right-6 z-[99999] flex items-center gap-3
-      px-5 py-4 rounded-2xl shadow-2xl border text-sm font-semibold
-      animate-in slide-in-from-bottom-4 duration-300
-      ${toast.type === "success"
-        ? "bg-white border-green-100 text-green-700"
-        : "bg-white border-red-100 text-red-700"}
-    `}>
-      {toast.type === "success"
-        ? <CheckCircle2 size={20} className="text-green-500 shrink-0" />
-        : <XCircle      size={20} className="text-red-500 shrink-0" />}
-      {toast.message}
-    </div>
-  );
-}
+import { providerReportService } from "../../../services/provider/providerReportService";
 
 // ─── Stats cards builder - même pattern que la page admin ─────────────────────
 
@@ -47,8 +27,8 @@ function buildStatsCards(stats: any, isLoading: boolean) {
   if (isLoading || !stats) {
     return [
       { label: "Nombre total de plannings", value: "-", delta: "", trend: "up" as const },
-      { label: "Plannings en cours",        value: "-", delta: "", trend: "up" as const },
-      { label: "Plannings en retard",       value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en cours", value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en retard", value: "-", delta: "", trend: "up" as const },
     ];
   }
   return [
@@ -76,6 +56,7 @@ function buildStatsCards(stats: any, isLoading: boolean) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProviderPlanningPage() {
+  const { toast } = useToast();
   const {
     plannings, stats, selectedPlanning,
     isLoading, isLoadingStats, error,
@@ -84,12 +65,12 @@ export default function ProviderPlanningPage() {
     setFilters,
   } = useProviderPlanning();
 
-  const [toast,        setToast]        = useState<ToastType>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isReportFormOpen, setIsReportFormOpen] = useState(false);
+  const [isReportSubmitting, setIsReportSubmitting] = useState(false);
 
   const showToast = (message: string, type: "success" | "error") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+    type === "success" ? toast.success(message) : toast.error(message);
   };
 
   // ── Filtre statut cyclique ─────────────────────────────────────────────────
@@ -101,7 +82,7 @@ export default function ProviderPlanningPage() {
       icon: Filter,
       onClick: () => {
         const order = ["all", "planifie", "en_cours", "en_retard", "realise"];
-        const next  = order[(order.indexOf(statusFilter) + 1) % order.length];
+        const next = order[(order.indexOf(statusFilter) + 1) % order.length];
         setStatusFilter(next);
         setFilters({ status: next === "all" ? undefined : next });
       },
@@ -109,33 +90,85 @@ export default function ProviderPlanningPage() {
     },
   ];
 
+  // ── Champs pour le rapport d'entretien préventif ───────────────────────────
+  const newReportFields: FieldConfig[] = [
+    {
+      name: "result",
+      label: "Résultat de la visite",
+      type: "select",
+      required: false,
+      options: [
+        { label: "Sélectionner…", value: "" },
+        { label: "RAS - Rien à signaler", value: "RAS" },
+        { label: "Anomalie détectée", value: "anomalie" },
+      ],
+      icon: <CheckCircle2 size={18} />,
+    },
+    {
+      name: "start_date",
+      label: "Date de début",
+      type: "date",
+      required: false,
+      icon: <CalendarDays size={18} />,
+    },
+    {
+      name: "end_date",
+      label: "Date de fin",
+      type: "date",
+      required: false,
+      icon: <CalendarDays size={18} />,
+    },
+    {
+      name: "findings",
+      label: "Observations / Constatations ",
+      type: "rich-text",
+      required: true,
+      gridSpan: 2,
+    },
+    {
+      name: "action_taken",
+      label: "Actions menées / Travaux effectués",
+      type: "rich-text",
+      required: false,
+      gridSpan: 2,
+    },
+    {
+      name: "attachments",
+      label: "Photos justificatives",
+      type: "image-upload",
+      required: false,
+      maxImages: 5,
+      gridSpan: 2,
+    },
+  ];
+
   // ── Format pour SideDetailsPanel - même structure que la page admin ─────────
   const formattedSelectedEvent = selectedPlanning
     ? {
-        title:       selectedPlanning.codification,
-        reference:   `#${String(selectedPlanning.id).padStart(7, "0")}`,
-        description: selectedPlanning.description ?? "Aucune description disponible.",
-        fields: [
-          { label: "Site",         value: getSiteName(selectedPlanning.site) },
-          { label: "Prestataire",  value: getProviderName(selectedPlanning.provider) },
-          { label: "Responsable",  value: selectedPlanning.responsable_name },
-          { label: "Téléphone",    value: selectedPlanning.responsable_phone ?? "-" },
-          {
-            label: "Date de début",
-            value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
-          },
-          {
-            label: "Date de fin",
-            value: `${formatDate(selectedPlanning.date_fin)} à ${formatTime(selectedPlanning.date_fin)}`,
-          },
-          {
-            label:       "Statut",
-            value:       STATUS_LABELS[selectedPlanning.status] ?? selectedPlanning.status,
-            isStatus:    true,
-            statusColor: STATUS_COLORS[selectedPlanning.status],
-          },
-        ],
-      }
+      title: selectedPlanning.codification,
+      reference: `#${String(selectedPlanning.id).padStart(7, "0")}`,
+      description: selectedPlanning.description ?? "Aucune description disponible.",
+      fields: [
+        { label: "Site", value: getSiteName(selectedPlanning.site) },
+        { label: "Prestataire", value: getProviderName(selectedPlanning.provider) },
+        { label: "Responsable", value: selectedPlanning.responsable_name },
+        { label: "Téléphone", value: selectedPlanning.responsable_phone ?? "-" },
+        {
+          label: "Date de début",
+          value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
+        },
+        {
+          label: "Date de fin",
+          value: `${formatDate(selectedPlanning.date_fin)} à ${formatTime(selectedPlanning.date_fin)}`,
+        },
+        {
+          label: "Statut",
+          value: STATUS_LABELS[selectedPlanning.status] ?? selectedPlanning.status,
+          isStatus: true,
+          statusColor: STATUS_COLORS[selectedPlanning.status],
+        },
+      ],
+    }
     : null;
 
   const cpis = buildStatsCards(stats, isLoadingStats);
@@ -185,14 +218,51 @@ export default function ProviderPlanningPage() {
             isPanelOpen={isPanelOpen}
             onEventClick={openPanel}
             onPanelClose={closePanel}
-            onEditClick={() => {}}    // provider : lecture seule
+            onEditClick={() => { }}    // provider : pas de modification du planning en lui-même
             onDeleteClick={undefined} // provider : pas de suppression
+            onCustomAction={() => {
+              // Ouvre le modal / formulaire
+              setIsReportFormOpen(true);
+            }}
+            customActionLabel="Faire un rapport pour ce planning"
           />
 
         </main>
       </div>
 
-      <Toast toast={toast} />
+      <ReusableForm
+        isOpen={isReportFormOpen}
+        onClose={() => setIsReportFormOpen(false)}
+        title="Nouveau Rapport préventif"
+        subtitle={`Soumettez votre rapport pour ce planning ${selectedPlanning?.codification ?? ""}`}
+        fields={newReportFields}
+        submitLabel="Soumettre le rapport"
+        isSubmitting={isReportSubmitting}
+        onSubmit={async (values) => {
+          if (!selectedPlanning) return;
+          setIsReportSubmitting(true);
+          try {
+            await providerReportService.createReport({
+              planning_id: selectedPlanning.id,
+              intervention_type: "preventif",
+              result: values.result as "RAS" | "anomalie" | undefined,
+              findings: values.findings ?? "",
+              action_taken: values.action_taken,
+              start_date: values.start_date,
+              end_date: values.end_date,
+              anomaly_detected: values.result === "anomalie",
+              attachments: values.attachments as File[] | undefined,
+            });
+            setIsReportFormOpen(false);
+            showToast("Rapport soumis avec succès.", "success");
+          } catch (err: any) {
+            const msg = err?.response?.data?.message ?? "Erreur lors de la soumission du rapport.";
+            showToast(msg, "error");
+          } finally {
+            setIsReportSubmitting(false);
+          }
+        }}
+      />
     </>
   );
 }

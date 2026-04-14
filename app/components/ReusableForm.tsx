@@ -16,6 +16,7 @@ export interface FieldConfig {
   maxImages?: number;
   maxPDFs?: number;
   disabled?: boolean;
+  defaultValue?: string; // ✅ AJOUTÉ
 }
 
 interface ReusableFormProps {
@@ -29,6 +30,7 @@ interface ReusableFormProps {
   cancelLabel?: string;
   initialValues?: Record<string, any>;
   onFieldChange?: (name: string, value: any) => void;
+  isSubmitting?: boolean;
 }
 
 export default function ReusableForm({
@@ -42,7 +44,12 @@ export default function ReusableForm({
   cancelLabel = "Annuler",
   initialValues = {},
   onFieldChange,
+  isSubmitting = false,
 }: ReusableFormProps) {
+
+  // ── Helper : initialValues en priorité, sinon field.defaultValue, sinon "" ──
+  const getDefault = (field: FieldConfig): string =>
+    initialValues[field.name] ?? field.defaultValue ?? "";
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -82,7 +89,7 @@ export default function ReusableForm({
                       required={field.required}
                       disabled={field.disabled}
                       icon={field.icon}
-                      defaultValue={String(initialValues[field.name] ?? "")}
+                      defaultValue={String(getDefault(field))} // ✅ CORRIGÉ
                       onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                         onFieldChange?.(field.name, e.target.value)
                       }
@@ -100,7 +107,7 @@ export default function ReusableForm({
                       label={field.label}
                       name={field.name}
                       placeholder={field.placeholder}
-                      defaultValue={initialValues[field.name] ?? ""}
+                      defaultValue={getDefault(field)} // ✅ CORRIGÉ
                     />
 
                   ) : field.type === "password" ? (
@@ -108,7 +115,7 @@ export default function ReusableForm({
                       name={field.name}
                       placeholder={field.placeholder}
                       required={field.required}
-                      defaultValue={initialValues[field.name] ?? ""}
+                      defaultValue={getDefault(field)} // ✅ CORRIGÉ
                     />
 
                   ) : field.type === "date" ? (
@@ -117,7 +124,7 @@ export default function ReusableForm({
                       required={field.required}
                       disabled={field.disabled}
                       icon={field.icon}
-                      defaultValue={initialValues[field.name] ?? ""}
+                      defaultValue={getDefault(field)} // ✅ CORRIGÉ
                     />
 
                   ) : field.type === "textarea" ? (
@@ -126,7 +133,7 @@ export default function ReusableForm({
                       placeholder={field.placeholder}
                       required={field.required}
                       disabled={field.disabled}
-                      defaultValue={initialValues[field.name] ?? ""}
+                      defaultValue={getDefault(field)} // ✅ CORRIGÉ
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition-all min-h-[120px] resize-y text-sm font-medium"
                       onChange={(e) => onFieldChange?.(field.name, e.target.value)}
                     />
@@ -136,7 +143,7 @@ export default function ReusableForm({
                       name={field.name}
                       required={field.required}
                       disabled={field.disabled}
-                      defaultValue={initialValues[field.name] ?? ""}
+                      defaultValue={getDefault(field)} // ✅ CORRIGÉ
                       onChange={(val) => onFieldChange?.(field.name, val)}
                     />
 
@@ -147,7 +154,7 @@ export default function ReusableForm({
                       placeholder={field.placeholder}
                       required={field.required}
                       disabled={field.disabled}
-                      defaultValue={initialValues[field.name] ?? ""}
+                      defaultValue={getDefault(field)} // ✅ CORRIGÉ
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         onFieldChange?.(field.name, e.target.value)
                       }
@@ -161,10 +168,10 @@ export default function ReusableForm({
         </div>
 
         <div className="sticky bottom-0 bg-white pt-6 pb-2 border-t border-slate-100 flex gap-4 mt-auto">
-          <FormButton type="button" variant="secondary" onClick={onClose} className="flex-1">
+          <FormButton type="button" variant="secondary" onClick={onClose} className="flex-1" disabled={isSubmitting}>
             {cancelLabel}
           </FormButton>
-          <FormButton type="submit" variant="primary" className="flex-1">
+          <FormButton type="submit" variant="primary" className="flex-1" isLoading={isSubmitting}>
             {submitLabel}
           </FormButton>
         </div>

@@ -22,25 +22,11 @@ import {
   formatCurrency, formatDate, getPdfUrl,
 } from "../../../services/provider/providerQuoteService";
 import type { FieldConfig } from "@/components/ReusableForm";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "../../../contexts/ToastContext";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
-
-function Toast({ msg, type }: { msg: string; type: "success" | "error" }) {
-  return (
-    <div className={`fixed bottom-6 right-6 z-[99999] flex items-center gap-3 px-5 py-4
-      rounded-2xl shadow-2xl border text-sm font-semibold
-      animate-in slide-in-from-bottom-4 duration-300
-      ${type === "success"
-        ? "bg-white border-green-100 text-green-700"
-        : "bg-white border-red-100 text-red-700"}`}>
-      {type === "success"
-        ? <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-        : <XCircle size={18} className="text-red-500 shrink-0" />}
-      {msg}
-    </div>
-  );
-}
+// Remplacé par `Toast` global de `@/components/Toast`
 
 // ─── StatusBadge ──────────────────────────────────────────────────────────────
 
@@ -266,6 +252,7 @@ function QuotePreviewPanel({ quote, onClose }: { quote: Quote; onClose: () => vo
 
 export default function ProviderDevisPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const {
     quotes, stats, selectedQuote,
@@ -278,18 +265,38 @@ export default function ProviderDevisPage() {
     createQuote, exportXlsx,
   } = useProviderQuotes();
 
+  useEffect(() => { if (submitSuccess) toast.success(submitSuccess); }, [submitSuccess]);
+  useEffect(() => { if (submitError) toast.error(submitError); }, [submitError]);
+
+  // ── Chargement des tickets pour le select ─────────────────────────────────
+  const [ticketOptions, setTicketOptions] = useState<{ label: string; value: number }[]>([]);
+  useEffect(() => {
+    import("../../../services/provider/providerTicketService").then(({ providerTicketService }) => {
+      providerTicketService.getTickets({ per_page: 200 }).then(({ items }) => {
+        setTicketOptions(
+          items.map(t => ({
+            label: t.subject
+              ? `${t.subject} — ${t.site?.nom ?? ""}`
+              : `Ticket #${t.id}${t.site?.nom ? ` — ${t.site.nom}` : ""}`,
+            value: t.id,
+          }))
+        );
+      }).catch(() => { });
+    });
+  }, []);
+
   // ── Champs formulaire - même pattern que DevisPage admin ─────────────────
   const quoteFields: FieldConfig[] = [
     {
       name: "ticket_id",
-      label: "ID du Ticket *",
-      type: "text",
+      label: "Ticket concerné",
+      type: "select",
       required: true,
-    },
-    {
-      name: "description",
-      label: "Description",
-      type: "textarea",
+      gridSpan: 2,
+      options: [
+        { label: "Sélectionner un ticket…", value: "" },
+        ...ticketOptions,
+      ],
     },
     {
       name: "unit_price",
@@ -300,6 +307,13 @@ export default function ProviderDevisPage() {
       name: "quantity",
       label: "Quantité",
       type: "number",
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "rich-text",
+      required: false,
+      gridSpan: 2
     },
 
     {
@@ -428,84 +442,80 @@ export default function ProviderDevisPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-        <Navbar />
-        <main className="mt-20 p-6 space-y-8">
+      <Navbar />
+      <main className="mt-20 p-6 space-y-8">
 
-          <PageHeader
-            title="Mes Devis"
-            subtitle="Ce menu vous permet de consulter et gérer vos devis d'intervention"
-          />
+        <PageHeader
+          title="Mes Devis"
+          subtitle="Ce menu vous permet de consulter et gérer vos devis d'intervention"
+        />
 
-          {/* Erreur globale */}
-          {error && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
-              <AlertCircle size={15} className="shrink-0" /> {error}
-            </div>
-          )}
+        {/* Erreur globale */}
+        {error && (
+          <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
+            <AlertCircle size={15} className="shrink-0" /> {error}
+          </div>
+        )}
 
-          {/* KPIs */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {statsLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
-              ))
-              : kpis.map((k, i) => <StatsCard key={i} {...k} />)
+        {/* KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {statsLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
+            ))
+            : kpis.map((k, i) => <StatsCard key={i} {...k} />)
+          }
+        </div>
+
+        {/* Toolbar : filtre SELECT + ActionGroup */}
+        <div className="shrink-0 flex justify-between items-center gap-4">
+
+          {/* Filtre par statut - select standard */}
+          <div className="flex items-center gap-2">
+            <Filter size={15} className="text-slate-400 shrink-0" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900 transition cursor-pointer"
+            >
+              <option value="">Tous les statuts</option>
+              {ALL_STATUSES.map((s) => (
+                <option key={s} value={s}>{STATUS_LABELS[s] ?? s}</option>
+              ))}
+            </select>
+            {statusFilter && (
+              <button
+                onClick={() => setStatusFilter("")}
+                className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400 hover:text-slate-700"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <ActionGroup actions={actions} />
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-800">Liste des devis</h3>
+            <span className="text-xs text-slate-400">{quotes.length} devis</span>
+          </div>
+
+          <div className="px-6 py-4">
+            {loading
+              ? <div className="space-y-3 animate-pulse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+                ))}
+              </div>
+              : <DataTable title="Liste des devis" columns={columns} data={quotes} onViewAll={() => { }} />
             }
           </div>
+        </div>
 
-          {/* Toolbar : filtre SELECT + ActionGroup */}
-          <div className="shrink-0 flex justify-between items-center gap-4">
-
-            {/* Filtre par statut - select standard */}
-            <div className="flex items-center gap-2">
-              <Filter size={15} className="text-slate-400 shrink-0" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900 transition cursor-pointer"
-              >
-                <option value="">Tous les statuts</option>
-                {ALL_STATUSES.map((s) => (
-                  <option key={s} value={s}>{STATUS_LABELS[s] ?? s}</option>
-                ))}
-              </select>
-              {statusFilter && (
-                <button
-                  onClick={() => setStatusFilter("")}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400 hover:text-slate-700"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            <ActionGroup actions={actions} />
-          </div>
-
-          {/* Table */}
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-800">Liste des devis</h3>
-              <span className="text-xs text-slate-400">{quotes.length} devis</span>
-            </div>
-
-            <div className="px-6 py-4">
-              {loading
-                ? <div className="space-y-3 animate-pulse">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-100 rounded-xl" />
-                  ))}
-                </div>
-                : <DataTable title="Liste des devis" columns={columns} data={quotes} onViewAll={() => { }} />
-              }
-            </div>
-          </div>
-
-        </main>
-      
-      {/* Toasts */}
-      {submitSuccess && <Toast msg={submitSuccess} type="success" />}
-      {submitError && <Toast msg={submitError} type="error" />}
+      </main>
 
       {/* Panel aperçu - slide droite */}
       {isPanelOpen && selectedQuote && (
@@ -520,6 +530,7 @@ export default function ProviderDevisPage() {
         subtitle="Les informations ci-dessous permettront de créer un nouveau devis."
         fields={quoteFields}
         onSubmit={handleCreate}
+        isSubmitting={submitting}
         submitLabel={submitting ? "Soumission en cours..." : "Soumettre le devis"}
       />
 

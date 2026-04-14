@@ -24,6 +24,8 @@ interface CalendarGridProps {
   activeMonth: Date;
   onEventClick: (planning: Planning) => void;
   onEventDrop?: (planningId: number, newDate: Date) => void;
+  canAddEvent?: boolean;
+  onEventAdd?: (date: Date) => void;
 }
 
 export default function CalendarGrid({
@@ -32,14 +34,16 @@ export default function CalendarGrid({
   activeMonth,
   onEventClick,
   onEventDrop,
+  canAddEvent,
+  onEventAdd,
 }: CalendarGridProps) {
-  const year  = activeMonth.getFullYear();
+  const year = activeMonth.getFullYear();
   const month = activeMonth.getMonth();
 
-  const daysInMonth     = new Date(year, month + 1, 0).getDate();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   // Lundi = 0
-  const startingDay     = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+  const startingDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
   // Jours du mois précédent (cellules vides à gauche)
   const daysInPrevMonth = new Date(year, month, 0).getDate();
@@ -73,11 +77,11 @@ export default function CalendarGrid({
 
     // Transformation vers le format CalendarEvent attendu par DayCell
     const events: CalendarEvent[] = filtered.map((p) => ({
-      id:       p.id,
-      label:    p.codification,
-      time:     p.date_debut.split("T")[1]?.slice(0, 5) ?? "-",
-      color:    STATUS_COLORS[p.status] ?? "#000000",
-      status:   p.status,
+      id: p.id,
+      label: p.codification,
+      time: p.date_debut.split("T")[1]?.slice(0, 5) ?? "-",
+      color: STATUS_COLORS[p.status] ?? "#000000",
+      status: p.status,
       planning: p,
     }));
 
@@ -116,6 +120,8 @@ export default function CalendarGrid({
             currentMonth={cell.currentMonth}
             date={new Date(year, month, cell.day)}
             events={cell.events}
+            canAddEvent={canAddEvent}
+            onAddClick={onEventAdd}
             onClick={(event) => {
               if (event?.planning) onEventClick(event.planning);
             }}

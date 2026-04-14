@@ -59,7 +59,7 @@ export function useProviderTickets(): UseProviderTicketsReturn {
   const [updateError,    setUpdateError]    = useState("");
   const [updateSuccess,  setUpdateSuccess]  = useState("");
 
-  const [filters, setFiltersState] = useState<TicketFilters>({ page: 1, per_page: 15 });
+  const [filters, setFiltersState] = useState<TicketFilters>({ page: 1, per_page: 15, type: "curatif" });
 
   // ── Fetch tickets ──────────────────────────────────────────────────────────
   const fetchTickets = useCallback(async () => {

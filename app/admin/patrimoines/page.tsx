@@ -10,19 +10,19 @@ import {
   FileSpreadsheet, ChevronLeft, Loader2, ShieldCheck,
 } from "lucide-react";
 
-import Navbar       from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 
-import PageHeader   from "@/components/PageHeader";
-import StatsCard    from "@/components/StatsCard";
+import PageHeader from "@/components/PageHeader";
+import StatsCard from "@/components/StatsCard";
 import DataTable, { ColumnConfig } from "@/components/DataTable";
 import ReusableForm from "@/components/ReusableForm";
-import Paginate     from "@/components/Paginate";
+import Paginate from "@/components/Paginate";
 import { FieldConfig } from "@/components/ReusableForm";
 
-import { useAssets }        from "../../../hooks/admin/useAssets";
-import { useTypes }         from "../../../hooks/admin/useTypes";
+import { useAssets } from "../../../hooks/admin/useAssets";
+import { useTypes } from "../../../hooks/admin/useTypes";
 import { useSubTypeAssets } from "../../../hooks/admin/useSubTypeAssets";
-import { useSites }         from "../../../hooks/admin/useSites";
+import { useSites } from "../../../hooks/admin/useSites";
 import { AssetService, CompanyAsset } from "../../../services/admin/asset.service";
 
 
@@ -33,7 +33,7 @@ import { AssetService, CompanyAsset } from "../../../services/admin/asset.servic
 const fmtMontant = (v?: number | null) => {
   if (v == null) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v} FCFA`;
 };
 
@@ -59,8 +59,8 @@ const fmtDateForInput = (iso?: string | null) => {
 // ─────────────────────────────────────────────────────────────
 
 const ST_STYLE: Record<string, string> = {
-  actif:      "bg-green-50  border-green-400  text-green-700",
-  inactif:    "bg-red-50    border-red-400    text-red-600",
+  actif: "bg-green-50  border-green-400  text-green-700",
+  inactif: "bg-red-50    border-red-400    text-red-600",
   hors_usage: "bg-slate-100 border-slate-400  text-slate-600",
 };
 const ST_LABEL: Record<string, string> = {
@@ -84,9 +84,9 @@ const exportToExcel = (assets: CompanyAsset[]) => {
   ];
   const rows = assets.map(a => [
     a.id, a.codification, a.designation,
-    a.type?.name    ?? "-",
+    a.type?.name ?? "-",
     (a as any).sub_type?.name ?? a.subType?.name ?? "-",
-    a.site?.nom     ?? "-",
+    a.site?.nom ?? "-",
     ST_LABEL[a.status] ?? a.status,
     a.criticite === "critique" ? "Critique" : a.criticite === "non_critique" ? "Non critique" : "-",
     a.valeur_entree ?? "-",
@@ -187,18 +187,18 @@ function FilterDropdown({
         <div className="space-y-1.5">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
           <div className="flex flex-col gap-1">
-            {[{v:"",l:"Tous"},{v:"actif",l:"Actif"},{v:"inactif",l:"Inactif"},{v:"hors_usage",l:"Hors usage"}]
-              .map(o => <Pill key={o.v} active={(local.status ?? "") === o.v} label={o.l} onClick={() => setLocal({...local, status: o.v || undefined})} />)}
+            {[{ v: "", l: "Tous" }, { v: "actif", l: "Actif" }, { v: "inactif", l: "Inactif" }, { v: "hors_usage", l: "Hors usage" }]
+              .map(o => <Pill key={o.v} active={(local.status ?? "") === o.v} label={o.l} onClick={() => setLocal({ ...local, status: o.v || undefined })} />)}
           </div>
         </div>
         {types.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Famille / Type</p>
             <div className="flex flex-col gap-1">
-              <Pill active={!local.type_id} label="Tous" onClick={() => setLocal({...local, type_id: undefined, sub_type_id: undefined})} />
+              <Pill active={!local.type_id} label="Tous" onClick={() => setLocal({ ...local, type_id: undefined, sub_type_id: undefined })} />
               {types.map((t: any) => (
                 <Pill key={t.id} active={local.type_id === t.id} label={t.name}
-                  onClick={() => setLocal({...local, type_id: t.id, sub_type_id: undefined})} />
+                  onClick={() => setLocal({ ...local, type_id: t.id, sub_type_id: undefined })} />
               ))}
             </div>
           </div>
@@ -209,10 +209,10 @@ function FilterDropdown({
               Sous-type {local.type_id ? <span className="text-slate-300 font-normal normal-case text-[9px] ml-1">(filtrés)</span> : ""}
             </p>
             <div className="flex flex-col gap-1">
-              <Pill active={!local.sub_type_id} label="Tous" onClick={() => setLocal({...local, sub_type_id: undefined})} />
+              <Pill active={!local.sub_type_id} label="Tous" onClick={() => setLocal({ ...local, sub_type_id: undefined })} />
               {filteredSubs.map((st: any) => (
                 <Pill key={st.id} active={local.sub_type_id === st.id} label={st.name}
-                  onClick={() => setLocal({...local, sub_type_id: st.id})} />
+                  onClick={() => setLocal({ ...local, sub_type_id: st.id })} />
               ))}
             </div>
           </div>
@@ -221,10 +221,10 @@ function FilterDropdown({
           <div className="space-y-1.5">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Site</p>
             <div className="flex flex-col gap-1">
-              <Pill active={!local.site_id} label="Tous les sites" onClick={() => setLocal({...local, site_id: undefined})} />
+              <Pill active={!local.site_id} label="Tous les sites" onClick={() => setLocal({ ...local, site_id: undefined })} />
               {sites.map((s: any) => (
                 <Pill key={s.id} active={local.site_id === s.id} label={s.nom}
-                  onClick={() => setLocal({...local, site_id: s.id})} />
+                  onClick={() => setLocal({ ...local, site_id: s.id })} />
               ))}
             </div>
           </div>
@@ -279,12 +279,12 @@ function AssetSidePanel({ asset, onClose, onEdit }: {
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <div className="divide-y divide-slate-50">
             {[
-              { l: "Type",           v: asset.type?.name    ?? "-" },
-              { l: "Sous-type",      v: (asset as any).sub_type?.name ?? asset.subType?.name ?? "-" },
-              { l: "Site",           v: asset.site?.nom     ?? "-" },
-              { l: "Valeur entrée",  v: fmtMontant(asset.valeur_entree) },
-              { l: "Date entrée",    v: fmtDate(asset.date_entree) },
-              { l: "Criticité",      v: asset.criticite === "critique" ? "Critique" : asset.criticite === "non_critique" ? "Non critique" : "-" },
+              { l: "Type", v: asset.type?.name ?? "-" },
+              { l: "Sous-type", v: (asset as any).sub_type?.name ?? asset.subType?.name ?? "-" },
+              { l: "Site", v: asset.site?.nom ?? "-" },
+              { l: "Valeur entrée", v: fmtMontant(asset.valeur_entree) },
+              { l: "Date entrée", v: fmtDate(asset.date_entree) },
+              { l: "Criticité", v: asset.criticite === "critique" ? "Critique" : asset.criticite === "non_critique" ? "Non critique" : "-" },
             ].map((r, i) => (
               <div key={i} className="flex items-center justify-between py-3">
                 <p className="text-xs text-slate-400 font-medium">{r.l}</p>
@@ -315,8 +315,8 @@ function AssetSidePanel({ asset, onClose, onEdit }: {
 type ValidationStatus = "ok" | "warning" | "error";
 
 interface CellValidation { status: ValidationStatus; message?: string; }
-interface RowValidation  { rowIndex: number; cells: Record<string, CellValidation>; status: ValidationStatus; }
-interface ParsedPreview  {
+interface RowValidation { rowIndex: number; cells: Record<string, CellValidation>; status: ValidationStatus; }
+interface ParsedPreview {
   headers: string[];
   rows: Record<string, any>[];
   validations: RowValidation[];
@@ -349,7 +349,7 @@ const PATRIMOINE_RULES: Record<string, ColumnRule> = {
     validators: [(v) => {
       if (!v) return null;
       if (isNaN(Number(v))) return { status: "error", message: "Doit être un nombre" };
-      if (Number(v) < 0)    return { status: "warning", message: "Valeur négative" };
+      if (Number(v) < 0) return { status: "warning", message: "Valeur négative" };
       return null;
     }],
   },
@@ -375,19 +375,19 @@ const PATRIMOINE_REQUIRED_COLS = ["designation", "status", "date_entree", "valeu
 const PRIORITY_PATRIMOINE = ["designation", "status", "criticite", "valeur_entree", "date_entree", "type_company_asset_id", "sub_type_company_asset_id", "site_id"];
 
 const CELL_STYLE: Record<ValidationStatus, string> = {
-  ok:      "bg-emerald-50 text-emerald-800 border-emerald-200",
+  ok: "bg-emerald-50 text-emerald-800 border-emerald-200",
   warning: "bg-amber-50   text-amber-800   border-amber-200",
-  error:   "bg-red-50     text-red-700     border-red-200",
+  error: "bg-red-50     text-red-700     border-red-200",
 };
 const ROW_BG: Record<ValidationStatus, string> = {
-  ok:      "hover:bg-emerald-50/30",
+  ok: "hover:bg-emerald-50/30",
   warning: "bg-amber-50/20  hover:bg-amber-50/40",
-  error:   "bg-red-50/20    hover:bg-red-50/40",
+  error: "bg-red-50/20    hover:bg-red-50/40",
 };
 const BADGE: Record<ValidationStatus, { bg: string; text: string; icon: React.ReactNode }> = {
-  ok:      { bg: "bg-emerald-100 text-emerald-700", text: "OK",        icon: <CheckCircle2 size={12} /> },
-  warning: { bg: "bg-amber-100  text-amber-700",    text: "Attention", icon: <AlertTriangle size={12} /> },
-  error:   { bg: "bg-red-100    text-red-600",       text: "Erreur",   icon: <AlertCircle size={12} /> },
+  ok: { bg: "bg-emerald-100 text-emerald-700", text: "OK", icon: <CheckCircle2 size={12} /> },
+  warning: { bg: "bg-amber-100  text-amber-700", text: "Attention", icon: <AlertTriangle size={12} /> },
+  error: { bg: "bg-red-100    text-red-600", text: "Erreur", icon: <AlertCircle size={12} /> },
 };
 
 function fmtCell(v: any): string {
@@ -402,9 +402,9 @@ function parsePatrimoine(file: File): Promise<ParsedPreview> {
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
-        const wb   = XLSX.read(data, { type: "array", cellDates: true });
-        const ws   = wb.Sheets[wb.SheetNames[0]];
-        const raw  = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
+        const wb = XLSX.read(data, { type: "array", cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const raw = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
         if (!raw.length) {
           resolve({ headers: [], rows: [], validations: [], summary: { total: 0, valid: 0, warnings: 0, errors: 0 } });
           return;
@@ -419,14 +419,14 @@ function parsePatrimoine(file: File): Promise<ParsedPreview> {
 
         // ── VÉRIFICATION STRUCTURELLE ──────────────────────────────
         const missingRequired = PATRIMOINE_REQUIRED_COLS.filter(c => !fileKeys.includes(c));
-        const unknownCols     = fileKeys.filter(c => !PATRIMOINE_KNOWN_COLS.has(c));
+        const unknownCols = fileKeys.filter(c => !PATRIMOINE_KNOWN_COLS.has(c));
         const knownColsInFile = fileKeys.filter(c => PATRIMOINE_KNOWN_COLS.has(c));
 
         // Headers : colonnes manquantes requises visibles en premier
-        const priority       = PRIORITY_PATRIMOINE.filter(c => fileKeys.includes(c));
-        const rest           = fileKeys.filter(c => !priority.includes(c));
+        const priority = PRIORITY_PATRIMOINE.filter(c => fileKeys.includes(c));
+        const rest = fileKeys.filter(c => !priority.includes(c));
         const missingHeaders = missingRequired.filter(c => !fileKeys.includes(c));
-        const headers        = [...missingHeaders, ...priority, ...rest];
+        const headers = [...missingHeaders, ...priority, ...rest];
 
         const validations: RowValidation[] = rows.map((row, ri) => {
           const cells: Record<string, CellValidation> = {};
@@ -436,7 +436,7 @@ function parsePatrimoine(file: File): Promise<ParsedPreview> {
             // ── Colonne requise ABSENTE du fichier (colonne fantôme)
             if (missingRequired.includes(col) && !fileKeys.includes(col)) {
               cells[col] = { status: "error", message: `Colonne "${col}" absente du fichier - obligatoire` };
-              rowStatus  = "error";
+              rowStatus = "error";
               return;
             }
 
@@ -448,12 +448,12 @@ function parsePatrimoine(file: File): Promise<ParsedPreview> {
             }
 
             const rule = PATRIMOINE_RULES[col];
-            const val  = row[col];
+            const val = row[col];
 
             // ── Champ requis vide
             if (rule?.required && (val === "" || val == null)) {
               cells[col] = { status: "error", message: "Champ obligatoire manquant" };
-              rowStatus  = "error";
+              rowStatus = "error";
               return;
             }
 
@@ -477,10 +477,10 @@ function parsePatrimoine(file: File): Promise<ParsedPreview> {
         });
 
         const summary = {
-          total:    rows.length,
-          valid:    validations.filter(v => v.status === "ok").length,
+          total: rows.length,
+          valid: validations.filter(v => v.status === "ok").length,
           warnings: validations.filter(v => v.status === "warning").length,
-          errors:   validations.filter(v => v.status === "error").length,
+          errors: validations.filter(v => v.status === "error").length,
         };
 
         resolve({ headers, rows, validations, summary });
@@ -501,12 +501,12 @@ function PatrimoinePreviewModal({
   onConfirmImport: (file: File) => Promise<void>;
   file: File | null;
 }) {
-  const [parsed,     setParsed]     = useState<ParsedPreview | null>(null);
-  const [parsing,    setParsing]    = useState(false);
-  const [parseErr,   setParseErr]   = useState<string | null>(null);
-  const [page,       setPage]       = useState(1);
+  const [parsed, setParsed] = useState<ParsedPreview | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [parseErr, setParseErr] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   const [confirming, setConfirming] = useState(false);
-  const [filter,     setFilter]     = useState<"all" | ValidationStatus>("all");
+  const [filter, setFilter] = useState<"all" | ValidationStatus>("all");
 
   useEffect(() => {
     if (!isOpen || !file) return;
@@ -522,22 +522,22 @@ function PatrimoinePreviewModal({
 
   if (!isOpen) return null;
 
-  const allRows   = parsed?.rows       ?? [];
+  const allRows = parsed?.rows ?? [];
   const allValids = parsed?.validations ?? [];
   const filteredIdx = filter === "all"
     ? allValids.map((_, i) => i)
     : allValids.filter(v => v.status === filter).map(v => v.rowIndex);
   const totalPages = Math.max(1, Math.ceil(filteredIdx.length / PREVIEW_PAGE));
-  const pageIdxs   = filteredIdx.slice((page - 1) * PREVIEW_PAGE, page * PREVIEW_PAGE);
-  const hasErrors  = (parsed?.summary.errors ?? 0) > 0;
-  const hasWarnings= (parsed?.summary.warnings ?? 0) > 0;
+  const pageIdxs = filteredIdx.slice((page - 1) * PREVIEW_PAGE, page * PREVIEW_PAGE);
+  const hasErrors = (parsed?.summary.errors ?? 0) > 0;
+  const hasWarnings = (parsed?.summary.warnings ?? 0) > 0;
 
   // Analyse structurelle du fichier vs schéma Patrimoines
-  const fileKeys            = parsed && parsed.rows.length > 0 ? Object.keys(parsed.rows[0]) : [];
-  const missingRequired     = PATRIMOINE_REQUIRED_COLS.filter(c => !fileKeys.includes(c));
-  const unknownCols         = fileKeys.filter(c => !PATRIMOINE_KNOWN_COLS.has(c));
-  const knownInFile         = fileKeys.filter(c => PATRIMOINE_KNOWN_COLS.has(c));
-  const totallyIncompat     = parsed ? (knownInFile.length === 0 || missingRequired.length === PATRIMOINE_REQUIRED_COLS.length) : false;
+  const fileKeys = parsed && parsed.rows.length > 0 ? Object.keys(parsed.rows[0]) : [];
+  const missingRequired = PATRIMOINE_REQUIRED_COLS.filter(c => !fileKeys.includes(c));
+  const unknownCols = fileKeys.filter(c => !PATRIMOINE_KNOWN_COLS.has(c));
+  const knownInFile = fileKeys.filter(c => PATRIMOINE_KNOWN_COLS.has(c));
+  const totallyIncompat = parsed ? (knownInFile.length === 0 || missingRequired.length === PATRIMOINE_REQUIRED_COLS.length) : false;
 
   return (
     <>
@@ -595,10 +595,10 @@ function PatrimoinePreviewModal({
                       {parsed.summary.total} ligne{parsed.summary.total > 1 ? "s" : ""}
                     </span>
                     {[
-                      { key: "all",     label: "Toutes",          count: parsed.summary.total,    color: "bg-slate-100 text-slate-700 hover:bg-slate-200" },
-                      { key: "ok",      label: "Valides",         count: parsed.summary.valid,    color: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" },
-                      { key: "warning", label: "Avertissements",  count: parsed.summary.warnings, color: "bg-amber-50 text-amber-700 hover:bg-amber-100" },
-                      { key: "error",   label: "Erreurs",         count: parsed.summary.errors,   color: "bg-red-50 text-red-600 hover:bg-red-100" },
+                      { key: "all", label: "Toutes", count: parsed.summary.total, color: "bg-slate-100 text-slate-700 hover:bg-slate-200" },
+                      { key: "ok", label: "Valides", count: parsed.summary.valid, color: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" },
+                      { key: "warning", label: "Avertissements", count: parsed.summary.warnings, color: "bg-amber-50 text-amber-700 hover:bg-amber-100" },
+                      { key: "error", label: "Erreurs", count: parsed.summary.errors, color: "bg-red-50 text-red-600 hover:bg-red-100" },
                     ].map(f => (f.count > 0 || f.key === "all") ? (
                       <button key={f.key}
                         onClick={() => { setFilter(f.key as any); setPage(1); }}
@@ -682,14 +682,14 @@ function PatrimoinePreviewModal({
                             </span>
                           </td>
                           {parsed.headers.map(col => {
-                            const cell  = vld.cells[col];
-                            const val   = row[col];
-                            const cSt   = cell?.status ?? "ok";
+                            const cell = vld.cells[col];
+                            const val = row[col];
+                            const cSt = cell?.status ?? "ok";
                             return (
                               <td key={col} className="px-2 py-2">
                                 <div className="relative group">
                                   <div className={`inline-flex items-center px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold max-w-[180px] truncate ${CELL_STYLE[cSt]}`} title={fmtCell(val)}>
-                                    {cSt === "error"   && <AlertCircle   size={10} className="text-red-500   mr-1.5 shrink-0" />}
+                                    {cSt === "error" && <AlertCircle size={10} className="text-red-500   mr-1.5 shrink-0" />}
                                     {cSt === "warning" && <AlertTriangle size={10} className="text-amber-500 mr-1.5 shrink-0" />}
                                     {cSt === "ok" && val !== "" && val != null && <CheckCircle2 size={10} className="text-emerald-500 mr-1.5 shrink-0" />}
                                     <span className="truncate">{fmtCell(val)}</span>
@@ -762,18 +762,18 @@ function PatrimoinePreviewModal({
 
 export default function PatrimoinesPage() {
   const { assets, isLoading, fetchAssets, meta, page, setPage, applyFilters } = useAssets();
-  const { types }    = useTypes();
+  const { types } = useTypes();
   const { subTypes } = useSubTypeAssets();
-  const { sites }    = useSites();
+  const { sites } = useSites();
 
-  const [stats,         setStats]        = useState<any>(null);
-  const [isModalOpen,   setIsModalOpen]  = useState(false);
-  const [editingData,   setEditingData]  = useState<CompanyAsset | null>(null);
-  const [panelAsset,    setPanelAsset]   = useState<CompanyAsset | null>(null);
-  const [filters,       setFilters]      = useState<AssetFilters>({});
-  const [filtersOpen,   setFiltersOpen]  = useState(false);
-  const [importLoading, setImportLoading]= useState(false);
-  const [flash,         setFlash]        = useState<{ type: "success"|"error"; msg: string } | null>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingData, setEditingData] = useState<CompanyAsset | null>(null);
+  const [panelAsset, setPanelAsset] = useState<CompanyAsset | null>(null);
+  const [filters, setFilters] = useState<AssetFilters>({});
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [flash, setFlash] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   // ── Preview import states ──
   const [previewFile, setPreviewFile] = useState<File | null>(null);
@@ -849,9 +849,9 @@ export default function PatrimoinesPage() {
   const handleExport = async () => {
     try {
       await AssetService.exportAssets({
-        ...(filters.status   ? { status:   filters.status   } : {}),
-        ...(filters.type_id  ? { type_id:  filters.type_id  } : {}),
-        ...(filters.site_id  ? { site_id:  filters.site_id  } : {}),
+        ...(filters.status ? { status: filters.status } : {}),
+        ...(filters.type_id ? { type_id: filters.type_id } : {}),
+        ...(filters.site_id ? { site_id: filters.site_id } : {}),
       });
       setFlash({ type: "success", msg: "Export téléchargé avec succès." });
     } catch {
@@ -876,12 +876,12 @@ export default function PatrimoinesPage() {
       name: "site_id", label: "Site", type: "select", required: true,
       options: sites.map((s: any) => ({ label: s.nom, value: String(s.id) })),
     },
-    { name: "designation", label: "Désignation", type: "text", required: true },
+    { name: "designation", label: "Désignation", type: "text", required: true, placeholder: "Que designe ce patrimoine....." },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: [
-        { label: "Actif",      value: "actif" },
-        { label: "Inactif",    value: "inactif" },
+        { label: "Actif", value: "actif" },
+        { label: "Inactif", value: "inactif" },
         { label: "Hors usage", value: "hors_usage" },
       ],
     },
@@ -889,18 +889,19 @@ export default function PatrimoinesPage() {
       name: "criticite", label: "Criticité", type: "select",
       options: [
         { label: "Non critique", value: "non_critique" },
-        { label: "Critique",     value: "critique" },
+        { label: "Critique", value: "critique" },
       ],
     },
-    { name: "date_entree",   label: "Date d'entrée",   type: "date",   required: true, icon: CalendarClock },
-    { name: "valeur_entree", label: "Valeur d'entrée", type: "number", required: true },
-    { name: "dimension",     label: "Dimension",       type: "text", required: false, placeholder: "22 m "},
-    { name: "description",   label: "Description",     type: "rich-text", gridSpan: 2 },
-    { name: "images",        label: "Photos",          type: "image-upload", gridSpan: 2, maxImages: 3 },
+    { name: "date_entree", label: "Date d'entrée", type: "date", required: true, icon: CalendarClock },
+    { name: "valeur_entree", label: "Valeur d'entrée", type: "number", required: true, placeholder: "200000" },
+    { name: "dimension", label: "Dimension", type: "text", required: false, placeholder: "22 m " },
+    { name: "description", label: "Description", type: "rich-text", gridSpan: 2, placeholder: "Donnez plus de details sur ce equipement" },
+    { name: "images", label: "Photos", type: "image-upload", gridSpan: 2, maxImages: 3 },
   ];
 
+
   const columns: ColumnConfig<CompanyAsset>[] = [
-    { 
+    {
       header: "Codification", key: "codification",
       render: (_: any, row: CompanyAsset) => (
         <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg whitespace-nowrap">{row.codification}</span>
@@ -918,7 +919,7 @@ export default function PatrimoinesPage() {
         <span className="text-sm text-slate-600">{row.type?.name ?? "-"}</span>
       ),
     },
- 
+
     {
       header: "Sous-type", key: "sub_type_company_asset_id" as keyof CompanyAsset,
       render: (_: any, row: CompanyAsset) => (
@@ -978,9 +979,8 @@ export default function PatrimoinesPage() {
 
           {/* Flash */}
           {flash && (
-            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
-              flash.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"
-            }`}>
+            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${flash.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"
+              }`}>
               {flash.msg}
             </div>
           )}
@@ -989,14 +989,14 @@ export default function PatrimoinesPage() {
 
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
-            <StatsCard label="Total actifs"               value={stats?.total_actifs             ?? 0} delta="+10%" trend="up" />
-            <StatsCard label="Total patrimoines inactifs" value={stats?.actifs_inactifs           ?? 0} delta="+15%" trend="up" />
-            <StatsCard label="Actifs critiques"           value={stats?.total_actifs_critiques    ?? 0} delta="-2%"  trend="down" />
+            <StatsCard label="Total actifs" value={stats?.total_actifs ?? 0} delta="+10%" trend="up" />
+            <StatsCard label="Total patrimoines inactifs" value={stats?.actifs_inactifs ?? 0} delta="+15%" trend="up" />
+            <StatsCard label="Actifs critiques" value={stats?.total_actifs_critiques ?? 0} delta="-2%" trend="down" />
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            <StatsCard label="Nombre total de tickets"    value={stats?.nombre_total_tickets      ?? 0} delta="+0%" trend="up" />
+            <StatsCard label="Nombre total de tickets" value={stats?.nombre_total_tickets ?? 0} delta="+0%" trend="up" />
             <StatsCard label="nombre Actifs non critiques" value={stats?.total_actifs_non_critiques ?? 0} delta="+0%" trend="down" />
-            <StatsCard label="Coût actif critique"        value={fmtMontant(stats?.cout_actifs_critiques ?? 0)} delta="+3%" trend="up" />
+            <StatsCard label="Coût actif critique" value={fmtMontant(stats?.cout_actifs_critiques ?? 0)} delta="+3%" trend="up" />
             <StatsCard label="délai moyen d'intervention" value={fmtDate(stats?.delai_intervention_critique_heures ?? "0h")} delta="+0%" trend="up" />
           </div>
 
@@ -1032,9 +1032,8 @@ export default function PatrimoinesPage() {
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
-                    filtersOpen || activeFiltersCount > 0 ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${filtersOpen || activeFiltersCount > 0 ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   <Filter size={14} /> Filtrer
                   {activeFiltersCount > 0 && (
@@ -1076,7 +1075,7 @@ export default function PatrimoinesPage() {
                 columns={columns}
                 data={assets}
                 title={`${meta?.total ?? assets.length} patrimoine${(meta?.total ?? assets.length) > 1 ? "s" : ""}`}
-                onViewAll={() => {}}
+                onViewAll={() => { }}
               />
             )}
             <div className="px-6 py-4 border-t border-slate-50 flex items-center justify-between">
@@ -1105,17 +1104,17 @@ export default function PatrimoinesPage() {
         subtitle="La codification est générée automatiquement"
         fields={assetFields}
         initialValues={editingData ? {
-          type_company_asset_id:     String(editingData.type_company_asset_id     ?? ""),
+          type_company_asset_id: String(editingData.type_company_asset_id ?? ""),
           sub_type_company_asset_id: String(editingData.sub_type_company_asset_id ?? ""),
           // Récupération de l'ID du site (soit via l'objet 'site', soit via 'site_id' direct)
-          site_id:     String(editingData.site_id ?? (editingData.site as any)?.id ?? ""),
+          site_id: String(editingData.site_id ?? (editingData.site as any)?.id ?? ""),
           designation: editingData.designation,
-          status:      editingData.status,
-          criticite:   editingData.criticite ?? "non_critique",
+          status: editingData.status,
+          criticite: editingData.criticite ?? "non_critique",
           // Formatage obligatoire pour que le champ date HTML5 reconnaisse la valeur
-          date_entree:   fmtDateForInput(editingData.date_entree),
-          valeur_entree: editingData.valeur_entree  ?? "",
-          description:   editingData.description    ?? "",
+          date_entree: fmtDateForInput(editingData.date_entree),
+          valeur_entree: editingData.valeur_entree ?? "",
+          description: editingData.description ?? "",
         } : {}}
         onSubmit={handleCreateOrUpdate}
         submitLabel={editingData ? "Mettre à jour" : "Enregistrer"}

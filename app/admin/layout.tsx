@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authService } from "../../services/AuthService";
 import Sidebar from "../components/Sidebar";
 import AppShell from "../components/AppShell";
+import { ToastProvider } from "../../contexts/ToastContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -25,11 +26,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!authorized) return null;
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
-      <Sidebar />
-      <AppShell>
-        <div className="flex-1 min-w-0">{children}</div>
-      </AppShell>
-    </div>
+    <ToastProvider>
+      <div className="flex min-h-screen bg-zinc-50">
+        <Sidebar />
+        <AppShell>
+          <div className="flex-1 min-w-0">{children}</div>
+        </AppShell>
+      </div>
+    </ToastProvider>
   );
 }

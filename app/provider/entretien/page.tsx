@@ -7,6 +7,8 @@ import DataTable, { ColumnConfig } from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
 import ActionGroup from "@/components/ActionGroup";
 import ReusableForm from "@/components/ReusableForm";
+import { useState, useEffect } from "react";
+import { useToast } from "../../../contexts/ToastContext";
 import {
   Eye, ArrowUpRight, Download, Filter, X,
   FileText, CheckCircle2, XCircle, AlertCircle,
@@ -15,7 +17,7 @@ import {
   PlayCircle, CheckSquare, AlertTriangle,
   RefreshCw
 } from "lucide-react";
-import { useState } from "react";
+
 import type { FieldConfig } from "@/components/ReusableForm";
 import { useProviderReports } from "../../../hooks/provider/useProviderReports";
 
@@ -61,13 +63,13 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  planifié:  "border-blue-200   bg-blue-50   text-blue-700",
-  en_cours:  "border-amber-200  bg-amber-50  text-amber-700",
-  rapporté:  "border-violet-200 bg-violet-50 text-violet-700",
-  validé:    "border-emerald-200 bg-emerald-50 text-emerald-700",
-  clos:      "border-slate-200  bg-slate-50  text-slate-500",
-  rejeté:    "border-red-200    bg-red-50    text-red-700",
-  anomalie:  "border-orange-200 bg-orange-50 text-orange-700",
+  planifié: "border-blue-200   bg-blue-50   text-blue-700",
+  en_cours: "border-amber-200  bg-amber-50  text-amber-700",
+  rapporté: "border-violet-200 bg-violet-50 text-violet-700",
+  validé: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  clos: "border-slate-200  bg-slate-50  text-slate-500",
+  rejeté: "border-red-200    bg-red-50    text-red-700",
+  anomalie: "border-orange-200 bg-orange-50 text-orange-700",
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -76,11 +78,11 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 const WORKFLOW_STEPS = [
-  { key: "planifié",  icon: CalendarDays,  label: "Planifié"  },
-  { key: "en_cours",  icon: PlayCircle,    label: "En cours"  },
-  { key: "rapporté",  icon: ClipboardList, label: "Rapporté"  },
-  { key: "validé",    icon: ShieldCheck,   label: "Validé"    },
-  { key: "clos",      icon: CheckSquare,   label: "Clôturé"   },
+  { key: "planifié", icon: CalendarDays, label: "Planifié" },
+  { key: "en_cours", icon: PlayCircle, label: "En cours" },
+  { key: "rapporté", icon: ClipboardList, label: "Rapporté" },
+  { key: "validé", icon: ShieldCheck, label: "Validé" },
+  { key: "clos", icon: CheckSquare, label: "Clôturé" },
 ];
 
 const MOCK_TICKETS: MaintenanceTicket[] = [
@@ -136,19 +138,7 @@ const formatDate = (d: string) =>
   d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "-";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
-
-function Toast({ msg, type }: { msg: string; type: "success" | "error" }) {
-  return (
-    <div className={`fixed bottom-6 right-6 z-[99999] flex items-center gap-3 px-5 py-4
-      rounded-2xl shadow-2xl border text-sm font-semibold animate-in slide-in-from-bottom-4 duration-300
-      ${type === "success" ? "bg-white border-green-100 text-green-700" : "bg-white border-red-100 text-red-700"}`}>
-      {type === "success"
-        ? <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-        : <XCircle size={18} className="text-red-500 shrink-0" />}
-      {msg}
-    </div>
-  );
-}
+// Remplacé par `Toast` global de `@/components/Toast`
 
 // ─── StatusBadge ──────────────────────────────────────────────────────────────
 
@@ -174,9 +164,9 @@ function WorkflowProgress({ status }: { status: MaintenanceStatus }) {
     <div className="flex items-start gap-0 w-full">
       {WORKFLOW_STEPS.map((step, i) => {
         const Icon = step.icon;
-        const done    = i < effectiveIdx;
+        const done = i < effectiveIdx;
         const current = i === effectiveIdx;
-        const future  = i > effectiveIdx;
+        const future = i > effectiveIdx;
         return (
           <div key={step.key} className="flex-1 flex flex-col items-center gap-1.5 relative">
             {i < WORKFLOW_STEPS.length - 1 && (
@@ -238,7 +228,6 @@ function QuickDevisModal({
                 <span className="text-xs font-black text-orange-600 uppercase tracking-widest">Devis requis</span>
               </div>
               <h2 className="text-xl font-black text-slate-900">Émettre un devis</h2>
-              <p className="text-slate-400 text-xs mt-0.5">Entretien {ticketRef} - anomalie non traitable sur place</p>
             </div>
             <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-xl transition">
               <X size={18} className="text-slate-500" />
@@ -396,8 +385,8 @@ function ReportFormPanel({
 
   const colorMap: Record<string, { ring: string; bg: string; text: string; dot: string }> = {
     emerald: { ring: "ring-emerald-500 border-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
-    amber:   { ring: "ring-amber-500 border-amber-500",   bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-500" },
-    orange:  { ring: "ring-orange-500 border-orange-500", bg: "bg-orange-50",  text: "text-orange-700",  dot: "bg-orange-500" },
+    amber: { ring: "ring-amber-500 border-amber-500", bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
+    orange: { ring: "ring-orange-500 border-orange-500", bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-500" },
   };
 
   return (
@@ -514,7 +503,7 @@ function ReportFormPanel({
                       )}
                     </div>
                     <input type="radio" className="hidden" name="anomaly_action"
-                      value={opt.value} checked={selected} onChange={() => {}} />
+                      value={opt.value} checked={selected} onChange={() => { }} />
                   </label>
                 );
               })}
@@ -533,9 +522,9 @@ function ReportFormPanel({
               <div className="flex-1 min-w-0">
                 {pdfFile
                   ? <><p className="text-xs font-bold text-slate-900 truncate">{pdfFile.name}</p>
-                      <p className="text-[10px] text-slate-400">Cliquez pour remplacer</p></>
+                    <p className="text-[10px] text-slate-400">Cliquez pour remplacer</p></>
                   : <><p className="text-xs font-semibold text-slate-600">Glissez ou cliquez pour uploader</p>
-                      <p className="text-[10px] text-slate-400">PDF · Max 10 Mo</p></>
+                    <p className="text-[10px] text-slate-400">PDF · Max 10 Mo</p></>
                 }
               </div>
               {pdfFile && (
@@ -632,14 +621,16 @@ function MaintenancePreviewPanel({
           {/* Champs */}
           <div className="space-y-0">
             {[
-              { label: "Référence", render: () => (
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-900 text-sm">{ticket.reference}</span>
-                  <button onClick={copyRef} className="p-1 hover:bg-slate-100 rounded-md transition">
-                    {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} className="text-slate-400" />}
-                  </button>
-                </div>
-              )},
+              {
+                label: "Référence", render: () => (
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900 text-sm">{ticket.reference}</span>
+                    <button onClick={copyRef} className="p-1 hover:bg-slate-100 rounded-md transition">
+                      {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} className="text-slate-400" />}
+                    </button>
+                  </div>
+                )
+              },
               { label: "Site", value: ticket.site?.nom ?? ticket.site?.name ?? "-" },
               { label: "Date planifiée", value: formatDate(ticket.scheduled_date) },
               ...(ticket.completed_date ? [{ label: "Date réalisée", value: formatDate(ticket.completed_date) }] : []),
@@ -703,6 +694,7 @@ function MaintenancePreviewPanel({
 
 export default function ProviderEntretienPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const {
     reports, filteredReports, stats,
@@ -712,8 +704,14 @@ export default function ProviderEntretienPage() {
     createReport, exportXlsx, refresh
   } = useProviderReports();
 
+  useEffect(() => { if (submitSuccess) toast.success(submitSuccess); }, [submitSuccess]);
+  useEffect(() => { if (submitError) toast.error(submitError); }, [submitError]);
+
+  // Forcer le filtre préventif au montage — cette page ne montre que les entretiens préventifs
+  useEffect(() => { setFilters({ type: "preventif" }); }, []);
+
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
-  const [isPanelOpen, setIsPanelOpen]   = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportTargetTicket, setReportTargetTicket] = useState<any | null>(null);
   const [isNewReportOpen, setIsNewReportOpen] = useState(false);
@@ -734,6 +732,18 @@ export default function ProviderEntretienPage() {
   // Un rapport d'entretien préventif : result + dates + description + observations + photos
   // Le ticket_id et intervention_type sont gérés automatiquement côté backend (planning)
   const newReportFields: FieldConfig[] = [
+    //  ca soit etre presectionné preventif et grisé si possible gere ca 
+    {
+      name: "intervention_type",
+      label: "Type",
+      type: "select",
+      required: true,
+      disabled: true, // 👈 AJOUT
+      options: [
+        { label: "préventif", value: "preventif" },
+        { label: "curatif", value: "curatif" },
+      ],
+    },
     {
       name: "result",
       label: "Résultat de la visite",
@@ -858,70 +868,68 @@ export default function ProviderEntretienPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-        <Navbar />
-        <main className="mt-20 p-6 space-y-8">
+      <Navbar />
+      <main className="mt-20 p-6 space-y-8">
 
-          <PageHeader
-            title="Mes Entretiens"
-            subtitle="Consultez vos visites d'entretien préventif et soumettez vos rapports d'intervention"
-          />
+        <PageHeader
+          title="Mes rapports préventifs"
+          subtitle="Consultez vos visites d'entretien préventif et vos rapports d'entretien"
+        />
 
-          {(error || submitError) && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
-              <AlertCircle size={15} className="shrink-0" /> {error || submitError}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
+        {(error || submitError) && (
+          <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
+            <AlertCircle size={15} className="shrink-0" /> {error || submitError}
           </div>
+        )}
 
-          <div className="shrink-0 flex justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Filter size={15} className="text-slate-400 shrink-0" />
-              <select 
-                value={filters.status || ""} 
-                onChange={e => setFilters({ ...filters, status: e.target.value })}
-                className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
+        </div>
+
+        <div className="shrink-0 flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter size={15} className="text-slate-400 shrink-0" />
+            <select
+              value={filters.status || ""}
+              onChange={e => setFilters({ ...filters, status: e.target.value })}
+              className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold
                   rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900 transition cursor-pointer"
-              >
-                <option value="">Tous les statuts</option>
-                {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-              </select>
-              {filters.status && (
-                <button onClick={() => setFilters({ ...filters, status: undefined })}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400">
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-            <ActionGroup actions={actions} />
+            >
+              <option value="">Tous les statuts</option>
+              {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+            </select>
+            {filters.status && (
+              <button onClick={() => setFilters({ ...filters, status: undefined })}
+                className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400">
+                <X size={14} />
+              </button>
+            )}
           </div>
+          <ActionGroup actions={actions} />
+        </div>
 
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-              <span className="text-xs text-slate-400">{filteredReports.length} entretien{filteredReports.length > 1 ? "s" : ""}</span>
-            </div>
-            <div className="px-6 py-4">
-              {loading ? (
-                <div className="flex justify-center py-10">
-                  <RefreshCw className="animate-spin text-slate-400" size={30} />
-                </div>
-              ) : (
-                <DataTable 
-                  title="Liste des entretiens"
-                  columns={columns} 
-                  data={filteredReports} 
-                  onViewAll={() => {}} 
-                />
-              )}
-            </div>
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+            <span className="text-xs text-slate-400">{filteredReports.length} entretien{filteredReports.length > 1 ? "s" : ""}</span>
           </div>
+          <div className="px-6 py-4">
+            {loading ? (
+              <div className="flex justify-center py-10">
+                <RefreshCw className="animate-spin text-slate-400" size={30} />
+              </div>
+            ) : (
+              <DataTable
+                title="Liste des entretiens"
+                columns={columns}
+                data={filteredReports}
+                onViewAll={() => { }}
+              />
+            )}
+          </div>
+        </div>
 
-        </main>
+      </main>
 
-      {submitSuccess && <Toast msg={submitSuccess} type="success" />}
-      
       {isPanelOpen && selectedTicket && (
         <MaintenancePreviewPanel
           ticket={selectedTicket}
@@ -947,6 +955,7 @@ export default function ProviderEntretienPage() {
         subtitle="Soumettez votre rapport d'intervention préventive"
         fields={newReportFields}
         submitLabel="Soumettre le rapport"
+        isSubmitting={submitting}
         onSubmit={async (values) => {
           const success = await createReport({
             ticket_id: 0, // sera ignoré côté backend pour les entretiens préventifs

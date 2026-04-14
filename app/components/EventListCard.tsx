@@ -47,7 +47,7 @@ export default function EventListCard({ interventions = [], loading = false, vie
 
   const formatDateTime = (isoDate: string): { day: string; time: string } => {
     const date = new Date(isoDate);
-    const now  = new Date();
+    const now = new Date();
     const isToday =
       date.getDate() === now.getDate() &&
       date.getMonth() === now.getMonth() &&
@@ -61,14 +61,16 @@ export default function EventListCard({ interventions = [], loading = false, vie
     const day = isToday
       ? t("interventions.today")
       : isTomorrow
-      ? t("interventions.tomorrow")
-      : date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+        ? t("interventions.tomorrow")
+        : date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
     const time = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     return { day, time };
   };
 
   return (
     <div className="w-full rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-sm">
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
@@ -80,11 +82,14 @@ export default function EventListCard({ interventions = [], loading = false, vie
             </h2>
             {!loading && !isEmpty && (
               <p className="text-xs text-gray-400 mt-0.5">
-                {interventions.length} intervention{interventions.length > 1 ? "s" : ""} {interventions.length > 1 ? t("interventions.planneds") : t("interventions.planned")}
+                {interventions.length} intervention{interventions.length > 1 ? "s" : ""}{" "}
+                {interventions.length > 1 ? t("interventions.planneds") : t("interventions.planned")}
               </p>
             )}
           </div>
         </div>
+
+        {/* Bouton "Voir tout" — pointe vers viewAllHref (inchangé) */}
         <Link
           href={viewAllHref}
           className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 font-semibold transition-colors group px-3 py-1.5 rounded-lg hover:bg-gray-50"
@@ -94,7 +99,10 @@ export default function EventListCard({ interventions = [], loading = false, vie
         </Link>
       </div>
 
+      {/* ── Body ───────────────────────────────────────────────────────────── */}
       <div className="p-5">
+
+        {/* État vide */}
         {isEmpty && (
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">
             <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-3">
@@ -105,43 +113,83 @@ export default function EventListCard({ interventions = [], loading = false, vie
           </div>
         )}
 
+        {/* Grille de cartes */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+          {/* Skeletons pendant le chargement */}
           {loading && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+
+          {/* ── Carte intervention ─────────────────────────────────────────
+              CHANGEMENT : la div racine est remplacée par un <Link> Next.js.
+              - href="/provider/planning" → redirection cible
+              - "block group" → block pour occuper toute la cellule du grid,
+                group pour propager le hover aux enfants
+              - key remontée sur <Link> car c'est l'élément racine du .map()
+              - hover:-translate-y-0.5 et hover:shadow-md migrent en
+                group-hover: car l'événement hover est désormais capté par
+                le <Link> parent (comportement visuel strictement identique)
+              - h-full sur la div intérieure pour conserver la hauteur complète
+                dans la cellule du grid
+          ─────────────────────────────────────────────────────────────────── */}
           {!loading && interventions.map((intervention) => {
             const { day, time } = formatDateTime(intervention.date_debut);
             const { dot, badge, label } = getStatusConfig(intervention.status);
             const isToday = day === t("interventions.today");
+
             return (
-              <div
+              <Link
                 key={intervention.id}
-                className={`relative rounded-2xl border bg-white p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden ${isToday ? "border-gray-300" : "border-gray-100"}`}
+                href="/provider/planning"
+                className="block group"
               >
-                {isToday && <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-gray-900 rounded-full" />}
-                <div className="flex items-start justify-between gap-2 mb-3 pl-1">
-                  <div className="flex items-start gap-2">
-                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} />
-                    <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
-                      {intervention.title ?? intervention.description ?? `Intervention #${intervention.id}`}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{label}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1.5 pl-1">
-                  <Clock size={11} strokeWidth={2} />
-                  <span>
-                    <span className={`font-semibold ${isToday ? "text-gray-900" : "text-gray-700"}`}>{day}</span>
-                    {" "}à {time}
-                  </span>
-                </div>
-                {(intervention.site || intervention.location) && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 pl-1">
-                    <MapPin size={11} strokeWidth={2} />
-                    <span className="uppercase tracking-wide truncate font-medium">
-                      {intervention.site ?? intervention.location}
+                <div
+                  className={`
+                    relative rounded-2xl border bg-white p-5 h-full overflow-hidden
+                    group-hover:shadow-md group-hover:-translate-y-0.5
+                    transition-all duration-200 cursor-pointer
+                    ${isToday ? "border-gray-300" : "border-gray-100"}
+                  `}
+                >
+                  {/* Barre latérale gauche pour les interventions du jour */}
+                  {isToday && (
+                    <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-gray-900 rounded-full" />
+                  )}
+
+                  {/* Titre + badge statut */}
+                  <div className="flex items-start justify-between gap-2 mb-3 pl-1">
+                    <div className="flex items-start gap-2">
+                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} />
+                      <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
+                        {intervention.title ?? intervention.description ?? `Intervention #${intervention.id}`}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>
+                      {label}
                     </span>
                   </div>
-                )}
-              </div>
+
+                  {/* Date & heure */}
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1.5 pl-1">
+                    <Clock size={11} strokeWidth={2} />
+                    <span>
+                      <span className={`font-semibold ${isToday ? "text-gray-900" : "text-gray-700"}`}>
+                        {day}
+                      </span>
+                      {" "}à {time}
+                    </span>
+                  </div>
+
+                  {/* Localisation (optionnelle) */}
+                  {(intervention.site || intervention.location) && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 pl-1">
+                      <MapPin size={11} strokeWidth={2} />
+                      <span className="uppercase tracking-wide truncate font-medium">
+                        {intervention.site ?? intervention.location}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Link>
             );
           })}
         </div>

@@ -41,17 +41,19 @@ export interface ReportValidator {
 
 export interface InterventionReport {
   id: number;
-  // Statuts BD : pending | validated
-  status: "pending" | "validated" | string;
+  // Statuts BD : pending | validated | submitted
+  status: "pending" | "validated" | "submitted" | string;
   // Types BD : curatif | preventif
   intervention_type?: "curatif" | "preventif" | string;
-  // Résultat (étape 4 logique métier) : ras | anomalie | resolu
-  result?: "ras" | "anomalie" | "resolu" | string;
+  // Résultat : RAS | anomalie
+  result?: "RAS" | "anomalie" | string;
   description?: string;
   findings?: string;
+  action_taken?: string;
   start_date?: string;
   end_date?: string;
   ticket_id?: number;
+  planning_id?: number;
   provider_id?: number;
   site_id?: number;
   validated_by?: number;
@@ -62,6 +64,7 @@ export interface InterventionReport {
   updated_at?: string;
   // Relations
   ticket?: ReportTicket;
+  planning?: { id: number; codification?: string; date_debut?: string };
   provider?: ReportProvider;
   site?: ReportSite;
   attachments?: ReportAttachment[];
@@ -78,20 +81,21 @@ export interface ReportStats {
 
 // Payload création — conforme à InterventionReportRequest + store()
 export interface CreateReportPayload {
-  ticket_id: number;
-  intervention_type: "curatif" | "preventif";
-  result: "ras" | "anomalie" | "resolu";
-  findings: string;        // requis par le back
-  action_taken: string;    // requis par le back
+  ticket_id?: number;          // optionnel si rapport préventif depuis planning
+  planning_id?: number;        // pour les rapports préventifs liés à un planning
+  intervention_type?: "curatif" | "preventif"; // auto-résolu par le back selon ticket_id/planning_id
+  result?: "RAS" | "anomalie"; // valeurs exactes attendues par le back (nullable)
+  findings: string;            // requis par le back
+  action_taken?: string;       // nullable côté back
   description?: string;
-  start_date: string;
+  start_date?: string;
   end_date?: string;
   anomaly_detected?: boolean;
   anomaly_description?: string;
   attachments?: File[];
 }
 
-export interface UpdateReportPayload extends Partial<Omit<CreateReportPayload, "ticket_id">> {}
+export interface UpdateReportPayload extends Partial<Omit<CreateReportPayload, "ticket_id" | "planning_id">> {}
 
 // ─── Constantes UI ────────────────────────────────────────────────────────────
 
@@ -121,15 +125,13 @@ export const TYPE_STYLES: Record<string, string> = {
 };
 
 export const RESULT_LABELS: Record<string, string> = {
-  ras:      "RAS",
+  RAS:      "RAS",
   anomalie: "Anomalie détectée",
-  resolu:   "Résolu",
 };
 
 export const RESULT_STYLES: Record<string, string> = {
-  ras:      "bg-green-50   text-green-600   border border-green-200",
+  RAS:      "bg-green-50   text-green-600   border border-green-200",
   anomalie: "bg-red-50     text-red-600     border border-red-200",
-  resolu:   "bg-emerald-50 text-emerald-600 border border-emerald-200",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -173,15 +175,15 @@ export const providerReportService = {
   /**
    * GET /provider/intervention-report
    * Backend filtre automatiquement sur provider_id (rôle PROVIDER)
-   * Retourne un tableau (index() renvoie get() sans pagination)
+   * Retourne { items: [...], meta: {...} } (paginé)
    */
   getReports: async (): Promise<InterventionReport[]> => {
     const res = await axiosInstance.get(BASE);
     const d   = res.data?.data ?? res.data;
-    // Gère les deux formats : tableau direct ou paginé { data: [...] }
-    if (Array.isArray(d))            return d;
-    if (Array.isArray(d?.data))      return d.data;
+    // Le back retourne { items: [...], meta: {...} }
     if (Array.isArray(d?.items))     return d.items;
+    if (Array.isArray(d?.data))      return d.data;
+    if (Array.isArray(d))            return d;
     return [];
   },
 
@@ -221,25 +223,28 @@ export const providerReportService = {
    * - Après création : notif gestionnaire + admins
    */
   createReport: async (payload: CreateReportPayload): Promise<InterventionReport> => {
-    // Workflow : ASSIGNÉ → EN_COURS/EN_TRAITEMENT → RAPPORTÉ
-    // Si le ticket est encore ASSIGNÉ, on doit d'abord démarrer l'intervention
-    try {
-      const ticketRes = await axiosInstance.get(`/provider/ticket/${payload.ticket_id}`);
-      const ticket = ticketRes.data?.data ?? ticketRes.data;
-      const status = (ticket?.status ?? "").toUpperCase();
-      if (status === "ASSIGNÉ" || status === "ASSIGNE") {
-        await axiosInstance.post(`/provider/ticket/${payload.ticket_id}/start`);
-      }
-    } catch { /* non bloquant — on tente quand même la création */ }
+    // Flux curatif : ticket_id obligatoire, on démarre l'intervention si besoin
+    if (payload.ticket_id) {
+      try {
+        const ticketRes = await axiosInstance.get(`/provider/ticket/${payload.ticket_id}`);
+        const ticket = ticketRes.data?.data ?? ticketRes.data;
+        const status = (ticket?.status ?? "").toUpperCase();
+        if (status === "ASSIGNÉ" || status === "ASSIGNE") {
+          await axiosInstance.post(`/provider/ticket/${payload.ticket_id}/start`);
+        }
+      } catch { /* non bloquant */ }
+    }
+    // Flux préventif depuis planning : pas de .start(), planning_id envoyé à la place
 
     const form = new FormData();
-    form.append("ticket_id",         String(payload.ticket_id));
-    form.append("intervention_type", payload.intervention_type);
-    form.append("result",            payload.result);
-    form.append("start_date",        payload.start_date);
-    form.append("findings",          payload.findings ?? "");
-    form.append("action_taken",      payload.action_taken ?? "");
-    form.append("anomaly_detected",  String(payload.anomaly_detected ?? false));
+    if (payload.ticket_id)        form.append("ticket_id",         String(payload.ticket_id));
+    if (payload.planning_id)      form.append("planning_id",        String(payload.planning_id));
+    if (payload.intervention_type) form.append("intervention_type", payload.intervention_type);
+    if (payload.result)           form.append("result",             payload.result);
+    if (payload.start_date)       form.append("start_date",         payload.start_date);
+    form.append("findings",       payload.findings ?? "");
+    if (payload.action_taken)     form.append("action_taken",       payload.action_taken);
+    form.append("anomaly_detected", String(payload.anomaly_detected ?? false));
     if (payload.end_date)             form.append("end_date",             payload.end_date);
     if (payload.description)          form.append("description",          payload.description);
     if (payload.anomaly_description)  form.append("anomaly_description",  payload.anomaly_description);

@@ -1,14 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
-import { Eye, X, Copy, Check, Tag, Clock, MapPin, Wrench, AlertTriangle, CheckCircle2, RefreshCw, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import ReusableForm from "@/components/ReusableForm";
+import type { FieldConfig } from "@/components/ReusableForm";
+import { Eye, X, Copy, Check, Tag, Clock, MapPin, Wrench, AlertTriangle, CheckCircle2, RefreshCw, AlertCircle, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 
 import { useProviderTickets } from "../../../hooks/provider/useProviderTickets";
+import { useProviderReports } from "../../../hooks/provider/useProviderReports";
+import { useToast } from "../../../contexts/ToastContext";
 import { Ticket, ProviderUpdatableStatus } from "../../../services/provider/providerTicketService";
+
+// ─── Champs formulaire Rapport ────────────────────────────────────────────────
+const reportFields: FieldConfig[] = [
+  {
+    name: "result", label: "Résultat de l'intervention", type: "select", required: false,
+    options: [
+      { label: "Sélectionner…", value: "" },
+      { label: "RAS - Rien à signaler", value: "RAS" },
+      { label: "Anomalie détectée", value: "anomalie" },
+    ], gridSpan: 2
+  },
+  { name: "start_date", label: "Date de début", type: "date", required: false },
+  { name: "end_date", label: "Date de fin", type: "date" },
+  {
+    name: "findings", label: "Observations / Constatations ",
+    type: "rich-text",
+    required: true, gridSpan: 2
+  },
+  {
+    name: "action_taken", label: "Actions menées / Travaux effectués", type: "rich-text",
+    required: false, gridSpan: 2
+  },
+  {
+    name: "attachments", label: "Photos & Documents justificatifs (PDF, images)",
+    type: "pdf-upload", maxPDFs: 10, gridSpan: 2
+  } as any,
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -27,18 +58,18 @@ const formatDate = (iso?: string | null): string => {
 // ─── Statuts ──────────────────────────────────────────────────────────────────
 
 const STATUS_LABELS: Record<string, string> = {
-  signalez: "Signalé",  validé: "Validé",   assigné: "Assigné",
+  signalez: "Signalé", validé: "Validé", assigné: "Assigné",
   en_cours: "En cours", rapporté: "Rapporté", évalué: "Évalué", clos: "Clôturé",
 };
 
 const STATUS_STYLES: Record<string, string> = {
   signalez: "border-slate-300 bg-slate-100 text-slate-700",
-  validé:   "border-blue-400 bg-blue-50 text-blue-700",
-  assigné:  "border-violet-400 bg-violet-50 text-violet-700",
+  validé: "border-blue-400 bg-blue-50 text-blue-700",
+  assigné: "border-violet-400 bg-violet-50 text-violet-700",
   en_cours: "border-orange-400 bg-orange-50 text-orange-600",
   rapporté: "border-amber-400 bg-amber-50 text-amber-700",
-  évalué:   "border-emerald-500 bg-emerald-50 text-emerald-700",
-  clos:     "border-emerald-200 bg-emerald-50 text-emerald-600",
+  évalué: "border-emerald-500 bg-emerald-50 text-emerald-700",
+  clos: "border-emerald-200 bg-emerald-50 text-emerald-600",
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -91,6 +122,7 @@ function FilterSelect({ label, value, onChange, options }: {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProviderTicketsPage() {
+  const { toast } = useToast();
   const {
     tickets, stats, meta, selectedTicket,
     loading, statsLoading, updateLoading,
@@ -99,14 +131,49 @@ export default function ProviderTicketsPage() {
     openTicket, closeTicket, updateStatus, refresh,
   } = useProviderTickets();
 
+  const { createReport, submitting, submitSuccess, submitError } = useProviderReports();
+
+  useEffect(() => { if (submitSuccess) toast.success(submitSuccess); }, [submitSuccess]);
+  useEffect(() => { if (submitError)   toast.error(submitError);     }, [submitError]);
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportTicketId, setReportTicketId] = useState<number | null>(null);
+
+  const handleOpenReportModal = (ticketId: number) => {
+    setReportTicketId(ticketId);
+    setIsReportModalOpen(true);
+  };
+
+  const handleCloseReportModal = () => {
+    setIsReportModalOpen(false);
+    setReportTicketId(null);
+  };
+
+  const handleCreateReport = async (formData: any) => {
+    if (!reportTicketId) return;
+    await createReport({
+      ticket_id: reportTicketId,
+      intervention_type: "curatif", // ou récupéré du ticket si nécessaire, mais par défaut curatif
+      result: formData.result,
+      start_date: formData.start_date,
+      end_date: formData.end_date || undefined,
+      findings: formData.findings || undefined,
+      action_taken: formData.action_taken || undefined,
+      attachments: formData.attachments ?? [],
+    });
+    handleCloseReportModal();
+    // Optionnel : on pourrait actualiser les tickets
+    refresh();
+  };
+
   // ── Colonnes DataTable ────────────────────────────────────────────────────
   const columns = [
-    {
-      header: "Référence",
-      key: "id",
-      render: (_: any, row: Ticket) => <span className="font-black text-slate-900 text-sm">{row.id}</span>,
-    },
-  
+    // {
+    //   header: "Référence",
+    //   key: "code",
+    //   render: (_: any, row: Ticket) => <span className="font-black text-slate-900 text-sm">{row.code}</span>,
+    // },
+
     {
       header: "Site",
       key: "site",
@@ -140,161 +207,182 @@ export default function ProviderTicketsPage() {
       header: "Actions",
       key: "actions",
       render: (_: any, row: Ticket) => (
-        <button
-          onClick={() => openTicket(row)}
-          className="flex items-center gap-1.5 text-sm font-bold text-slate-800 hover:text-blue-600 transition"
-        >
-          <Eye size={16} /> Aperçu
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => openTicket(row)}
+            className="flex items-center gap-1.5 text-sm font-bold text-slate-800 hover:text-blue-600 transition"
+            title="Aperçu du ticket"
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            onClick={() => handleOpenReportModal(row.id)}
+            className="flex items-center gap-1.5 text-sm font-bold text-slate-800 hover:text-indigo-600 transition"
+            title="Nouveau rapport"
+          >
+            <FileText size={16} />
+          </button>
+        </div>
       ),
     },
   ];
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const kpis1 = [
-    { label: "Coût moyen / ticket",  value: stats?.cout_moyen_par_ticket          ?? 0, isCurrency: true, delta: "", trend: "up" as const },
-   // AVANt
-// APRÈS
-{ label: "Total tickets",    value: stats?.total    ?? 0, delta: "", trend: "up" as const },
-{ label: "Tickets en cours", value: stats?.en_cours ?? 0, delta: "", trend: "up" as const },
-{ label: "Tickets clôturés", value: stats?.clotures ?? 0, delta: "", trend: "up" as const },
+    { label: "Coût moyen / ticket", value: stats?.cout_moyen_par_ticket ?? 0, isCurrency: true, delta: "", trend: "up" as const },
+    // AVANt
+    // APRÈS
+    { label: "Total tickets", value: stats?.total ?? 0, delta: "", trend: "up" as const },
+    { label: "Tickets en cours", value: stats?.en_cours ?? 0, delta: "", trend: "up" as const },
+    { label: "Tickets clôturés", value: stats?.clotures ?? 0, delta: "", trend: "up" as const },
   ];
- 
+
 
   return (
     <>
       <div className="flex-1 flex flex-col">
-          <Navbar />
+        <Navbar />
 
-          <main className="mt-20 p-6 space-y-8">
+        <main className="mt-20 p-6 space-y-8">
 
-            <div className="flex items-center justify-between">
-              <PageHeader
-                title="Mes Tickets"
-                subtitle="Consultez et mettez à jour le statut de vos interventions"
-              />
+          <div className="flex items-center justify-between">
+            <PageHeader
+              title="Mes Tickets"
+              subtitle="Consultez et mettez à jour le statut de vos interventions"
+            />
+            <button
+              onClick={refresh}
+              disabled={loading}
+              className="flex items-center gap-2 text-xs font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-400 transition disabled:opacity-40"
+            >
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+              Actualiser
+            </button>
+          </div>
+
+          {/* Erreur globale */}
+          {error && (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{error}</span>
+              <button onClick={refresh} className="ml-auto text-xs font-bold underline">Réessayer</button>
+            </div>
+          )}
+
+          {/* KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {statsLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
+              ))
+              : kpis1.map((k, i) => <StatsCard key={i} {...k} />)
+            }
+          </div>
+
+          {/* Filtres */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <FilterSelect
+              label="Tous les statuts"
+              value={filters.status ?? ""}
+              onChange={(v) => setFilters({ status: v || undefined })}
+              options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+            />
+            <FilterSelect
+              label="Tous les types"
+              value={filters.type ?? ""}
+              onChange={(v) => setFilters({ type: v || undefined })}
+              options={[{ value: "curatif", label: "Curatif" }, { value: "preventif", label: "Préventif" }]}
+            />
+            <FilterSelect
+              label="Toutes priorités"
+              value={filters.priority ?? ""}
+              onChange={(v) => setFilters({ priority: v || undefined })}
+              options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))}
+            />
+            {(filters.status || filters.type || filters.priority) && (
               <button
-                onClick={refresh}
-                disabled={loading}
-                className="flex items-center gap-2 text-xs font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-400 transition disabled:opacity-40"
+                onClick={() => setFilters({ status: undefined, type: undefined, priority: undefined })}
+                className="text-xs font-semibold text-gray-500 hover:text-gray-900 flex items-center gap-1 transition"
               >
-                <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-                Actualiser
+                <X size={12} /> Réinitialiser
               </button>
+            )}
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-800">Liste de mes tickets</h3>
+              {meta && (
+                <span className="text-xs text-gray-400 font-medium">
+                  {meta.total} ticket{meta.total > 1 ? "s" : ""}
+                </span>
+              )}
             </div>
 
-            {/* Erreur globale */}
-            {error && (
-              <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{error}</span>
-                <button onClick={refresh} className="ml-auto text-xs font-bold underline">Réessayer</button>
+            <div className="px-6 py-4">
+              {loading ? (
+                <div className="space-y-3 animate-pulse">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+                  ))}
+                </div>
+              ) : (
+                <DataTable title="Liste de mes tickets" columns={columns as any[]} data={tickets} />
+              )}
+            </div>
+
+            {/* Pagination */}
+            {meta && meta.last_page > 1 && (
+              <div className="px-6 py-4 border-t border-slate-50 flex items-center justify-between">
+                <span className="text-xs text-gray-400">
+                  Page {meta.current_page} / {meta.last_page}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setFilters({ page: meta.current_page - 1 })}
+                    disabled={meta.current_page <= 1}
+                    className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setFilters({ page: meta.current_page + 1 })}
+                    disabled={meta.current_page >= meta.last_page}
+                    className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
               </div>
             )}
+          </div>
 
-            {/* KPIs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {statsLoading
-                ? Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
-                  ))
-                : kpis1.map((k, i) => <StatsCard key={i} {...k} />)
-              }
-            </div>
-        
-            {/* Filtres */}
-            <div className="flex flex-wrap gap-3 items-center">
-              <FilterSelect
-                label="Tous les statuts"
-                value={filters.status ?? ""}
-                onChange={(v) => setFilters({ status: v || undefined })}
-                options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
-              />
-              <FilterSelect
-                label="Tous les types"
-                value={filters.type ?? ""}
-                onChange={(v) => setFilters({ type: v || undefined })}
-                options={[{ value: "curatif", label: "Curatif" }, { value: "preventif", label: "Préventif" }]}
-              />
-              <FilterSelect
-                label="Toutes priorités"
-                value={filters.priority ?? ""}
-                onChange={(v) => setFilters({ priority: v || undefined })}
-                options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))}
-              />
-              {(filters.status || filters.type || filters.priority) && (
-                <button
-                  onClick={() => setFilters({ status: undefined, type: undefined, priority: undefined })}
-                  className="text-xs font-semibold text-gray-500 hover:text-gray-900 flex items-center gap-1 transition"
-                >
-                  <X size={12} /> Réinitialiser
-                </button>
-              )}
-            </div>
+        </main>
+      </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-800">Liste de mes tickets</h3>
-                {meta && (
-                  <span className="text-xs text-gray-400 font-medium">
-                    {meta.total} ticket{meta.total > 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
+      {/* Panel détail ticket */}
+      {selectedTicket && (
+        <TicketDetailPanel
+          ticket={selectedTicket}
+          onClose={closeTicket}
+          onUpdateStatus={updateStatus}
+          updateLoading={updateLoading}
+          updateError={updateError}
+          updateSuccess={updateSuccess}
+        />
+      )}
 
-              <div className="px-6 py-4">
-                {loading ? (
-                  <div className="space-y-3 animate-pulse">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-gray-100 rounded-xl" />
-                    ))}
-                  </div>
-                ) : (
-                  <DataTable title="Liste de mes tickets" columns={columns as any[]} data={tickets} />
-                )}
-              </div>
-
-              {/* Pagination */}
-              {meta && meta.last_page > 1 && (
-                <div className="px-6 py-4 border-t border-slate-50 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">
-                    Page {meta.current_page} / {meta.last_page}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setFilters({ page: meta.current_page - 1 })}
-                      disabled={meta.current_page <= 1}
-                      className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      onClick={() => setFilters({ page: meta.current_page + 1 })}
-                      disabled={meta.current_page >= meta.last_page}
-                      className="p-2 rounded-xl border border-gray-200 hover:border-gray-400 disabled:opacity-30 transition"
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </main>
-        </div>
-
-        {/* Panel détail ticket */}
-        {selectedTicket && (
-          <TicketDetailPanel
-            ticket={selectedTicket}
-            onClose={closeTicket}
-            onUpdateStatus={updateStatus}
-            updateLoading={updateLoading}
-            updateError={updateError}
-            updateSuccess={updateSuccess}
-          />
-        )}
+      {/* Modal création rapport */}
+      <ReusableForm
+        isOpen={isReportModalOpen}
+        onClose={handleCloseReportModal}
+        title={`Soumettre un rapport pour le ticket ${reportTicketId}`}
+        subtitle="Renseignez les informations de votre intervention. Le gestionnaire de site sera notifié automatiquement à la soumission."
+        fields={reportFields}
+        onSubmit={handleCreateReport}
+        submitLabel={submitting ? "Soumission en cours..." : "Soumettre le rapport"}
+      />
     </>
   );
 }
@@ -321,7 +409,7 @@ function TicketDetailPanel({
 
   // Un PROVIDER peut passer un ticket à "en_cours" ou "rapporté"
   // uniquement si le ticket lui est assigné (le controller bloque sinon)
-  const canMarkEnCours  = ticket.status === "assigné";
+  const canMarkEnCours = ticket.status === "assigné";
   const canMarkRapporte = ticket.status === "en_cours";
 
   return (
@@ -372,12 +460,12 @@ function TicketDetailPanel({
 
           {/* Infos */}
           {[
-            { icon: <MapPin size={13} />,       label: "Site",            value: ticket.site?.nom ?? "-" },
-            { icon: <Wrench size={13} />,       label: "Actif",           value: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "-" },
-            { icon: <AlertTriangle size={13} />,label: "Service",         value: ticket.service?.name ?? "-" },
-            { icon: <Clock size={13} />,        label: "Planifié le",     value: formatDate(ticket.planned_at) },
-            { icon: <Clock size={13} />,        label: "Échéance",        value: formatDate(ticket.due_at) },
-            { icon: <CheckCircle2 size={13} />, label: "Résolu le",       value: formatDate(ticket.resolved_at) },
+            { icon: <MapPin size={13} />, label: "Site", value: ticket.site?.nom ?? "-" },
+            { icon: <Wrench size={13} />, label: "Actif", value: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "-" },
+            { icon: <AlertTriangle size={13} />, label: "Service", value: ticket.service?.name ?? "-" },
+            { icon: <Clock size={13} />, label: "Planifié le", value: formatDate(ticket.planned_at) },
+            { icon: <Clock size={13} />, label: "Échéance", value: formatDate(ticket.due_at) },
+            { icon: <CheckCircle2 size={13} />, label: "Résolu le", value: formatDate(ticket.resolved_at) },
           ].map(({ icon, label, value }) => (
             <div key={label} className="flex items-start justify-between py-2.5 border-b border-slate-50 last:border-0 gap-4">
               <div className="flex items-center gap-2 text-slate-400 shrink-0">

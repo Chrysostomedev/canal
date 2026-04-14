@@ -44,13 +44,13 @@ const STATUS_STYLES: Record<string, string> = {
     planifié: "border-blue-200   bg-blue-50   text-blue-700",
     en_cours: "border-amber-200  bg-amber-50  text-amber-700",
     rapporté: "border-violet-200 bg-violet-50 text-violet-700",
-    validé:   "border-emerald-200 bg-emerald-50 text-emerald-700",
-    clos:     "border-slate-200  bg-slate-50  text-slate-500",
-    rejeté:   "border-red-200    bg-red-50    text-red-700",
+    validé: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    clos: "border-slate-200  bg-slate-50  text-slate-500",
+    rejeté: "border-red-200    bg-red-50    text-red-700",
     anomalie: "border-orange-200 bg-orange-50 text-orange-700",
-    pending:   "border-amber-200  bg-amber-50  text-amber-700",
+    pending: "border-amber-200  bg-amber-50  text-amber-700",
     validated: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    rejected:  "border-red-200    bg-red-50    text-red-700",
+    rejected: "border-red-200    bg-red-50    text-red-700",
     submitted: "border-violet-200 bg-violet-50 text-violet-700",
 };
 
@@ -521,15 +521,17 @@ export default function ManagerEntretienPage() {
     };
     const closeValidation = () => { setIsValidationOpen(false); setValidationTarget(null); };
 
-    const filtered = statusFilter ? reports.filter(t => t.status === statusFilter) : reports;
+    const filtered = reports
+        .filter(t => t.intervention_type === "preventif")
+        .filter(t => statusFilter ? t.status === statusFilter : true);
 
     const pendingCount = reports.filter(t => t.status === "submitted" || t.status === "pending").length;
 
     const kpis = [
         { label: "Total entretiens", value: stats?.total_reports ?? reports.length, delta: "", trend: "up" as const },
-        { label: "À valider",        value: pendingCount, delta: "", trend: "up" as const },
-        { label: "Validés",          value: stats?.validated_reports ?? reports.filter(t => t.status === "validated").length, delta: "", trend: "up" as const },
-        { label: "Note moyenne",     value: stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : "-", delta: "", trend: "up" as const },
+        { label: "À valider", value: pendingCount, delta: "", trend: "up" as const },
+        { label: "Validés", value: stats?.validated_reports ?? reports.filter(t => t.status === "validated").length, delta: "", trend: "up" as const },
+        { label: "Note moyenne", value: stats?.average_rating ? `${Number(stats.average_rating).toFixed(1)}/5` : "-", delta: "", trend: "up" as const },
     ];
 
     const handleValidate = async (data: { rating: number; comment: string }) => {
@@ -662,7 +664,7 @@ export default function ManagerEntretienPage() {
                         </div>
                     )}
 
-                    {/* Bandeau "À valider" */}
+                    {/* Bandeau "À valider"
                     {pendingCount > 0 && (
                         <div className="flex items-center gap-3 bg-violet-50 border border-violet-200 text-violet-800
               px-5 py-4 rounded-2xl text-sm font-semibold">
@@ -678,7 +680,7 @@ export default function ManagerEntretienPage() {
                                 Voir ...
                             </button>
                         </div>
-                    )}
+                    )} */}
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
@@ -691,7 +693,7 @@ export default function ManagerEntretienPage() {
                                 className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold
                   rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900 transition cursor-pointer">
                                 <option value="">Tous les statuts</option>
-                                {["pending","submitted","validated","rejected"].map(s => (
+                                {["pending", "submitted", "validated", "rejected"].map(s => (
                                     <option key={s} value={s}>{STATUS_LABELS[s] ?? s}</option>
                                 ))}
                             </select>
@@ -718,7 +720,7 @@ export default function ManagerEntretienPage() {
                             </div>
                         ) : (
                             <div className="px-6 py-4">
-                                <DataTable title="Historique Maintenance" columns={columns} data={filtered} onViewAll={() => {}} />
+                                <DataTable title="Historique Maintenance" columns={columns} data={filtered} onViewAll={() => { }} />
                             </div>
                         )}
                     </div>

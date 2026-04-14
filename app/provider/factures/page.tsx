@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
@@ -10,6 +10,7 @@ import ActionGroup from "@/components/ActionGroup";
 import ReusableForm from "@/components/ReusableForm";
 import Paginate from "@/components/Paginate";
 import type { FieldConfig } from "@/components/ReusableForm";
+import { useToast } from "../../../contexts/ToastContext";
 
 import {
   Eye, ArrowUpRight, Download, Filter, X,
@@ -27,22 +28,7 @@ import {
 } from "../../../services/provider/providerInvoiceService";
 
 // ─── Toast ─────────────────────────────────────────────────────────────────────
-
-function Toast({ msg, type }: { msg: string; type: "success" | "error" }) {
-  return (
-    <div className={`fixed bottom-6 right-6 z-[99999] flex items-center gap-3 px-5 py-4
-      rounded-2xl shadow-2xl border text-sm font-semibold
-      animate-in slide-in-from-bottom-4 duration-300
-      ${type === "success"
-        ? "bg-white border-green-100 text-green-700"
-        : "bg-white border-red-100 text-red-700"}`}>
-      {type === "success"
-        ? <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-        : <XCircle      size={18} className="text-red-500 shrink-0"   />}
-      {msg}
-    </div>
-  );
-}
+// Remplacé par `Toast` global de `@/components/Toast`
 
 // ─── StatusBadge ──────────────────────────────────────────────────────────────
 
@@ -88,14 +74,14 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
 // ─── Side Panel - slide droite ────────────────────────────────────────────────
 
 function InvoiceSidePanel({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
-  const [copied,     setCopied]     = useState(false);
+  const [copied, setCopied] = useState(false);
   const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
 
-  const pdfUrl  = invoice.pdf_path ? getPdfUrl(invoice.pdf_path) : null;
+  const pdfUrl = invoice.pdf_path ? getPdfUrl(invoice.pdf_path) : null;
   const pdfName = invoice.pdf_path?.split("/").pop() ?? "facture.pdf";
-  const report  = getReport(invoice);
+  const report = getReport(invoice);
 
-  const amountHT  = toNum(invoice.amount_ht);
+  const amountHT = toNum(invoice.amount_ht);
   const taxAmount = toNum(invoice.tax_amount);
   const amountTTC = toNum(invoice.amount_ttc);
 
@@ -108,7 +94,7 @@ function InvoiceSidePanel({ invoice, onClose }: { invoice: Invoice; onClose: () 
   // Pièces jointes supplémentaires
   const attachments = (invoice.attachments ?? []).map((a) => ({
     name: a.file_path.split("/").pop() ?? "document",
-    url:  getPdfUrl(a.file_path),
+    url: getPdfUrl(a.file_path),
   }));
 
   return (
@@ -141,16 +127,16 @@ function InvoiceSidePanel({ invoice, onClose }: { invoice: Invoice; onClose: () 
                     <button onClick={copyRef} className="p-1 hover:bg-slate-100 rounded-md transition">
                       {copied
                         ? <Check size={12} className="text-green-500" />
-                        : <Copy  size={12} className="text-slate-400" />}
+                        : <Copy size={12} className="text-slate-400" />}
                     </button>
                   </div>
                 ),
               },
               { label: "Prestataire", value: getProviderName(invoice.provider) },
-              { label: "Date",        value: formatDate(invoice.invoice_date)   },
-              { label: "Échéance",    value: formatDate(invoice.due_date)       },
-              { label: "Site",        value: getSiteName(invoice.site)          },
-              { label: "Montant HT",  value: formatMontant(amountHT)            },
+              { label: "Date", value: formatDate(invoice.invoice_date) },
+              { label: "Échéance", value: formatDate(invoice.due_date) },
+              { label: "Site", value: getSiteName(invoice.site) },
+              { label: "Montant HT", value: formatMontant(amountHT) },
             ].map((f, i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                 <p className="text-xs text-slate-400 font-medium">{f.label}</p>
@@ -170,8 +156,8 @@ function InvoiceSidePanel({ invoice, onClose }: { invoice: Invoice; onClose: () 
           {/* Récap montants */}
           <div className="bg-slate-50 rounded-2xl border border-slate-100 px-4 py-3 space-y-1.5">
             {[
-              { label: "Montant HT", value: formatMontant(amountHT)  },
-              { label: "TVA",        value: formatMontant(taxAmount)  },
+              { label: "Montant HT", value: formatMontant(amountHT) },
+              { label: "TVA", value: formatMontant(taxAmount) },
             ].map((r) => (
               <div key={r.label} className="flex justify-between text-xs">
                 <span className="text-slate-500">{r.label}</span>
@@ -287,6 +273,7 @@ function InvoiceSidePanel({ invoice, onClose }: { invoice: Invoice; onClose: () 
 
 export default function ProviderFacturesPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const {
     invoices, stats, selectedInvoice, meta,
@@ -300,89 +287,114 @@ export default function ProviderFacturesPage() {
     createInvoice, exportXlsx,
   } = useProviderInvoices();
 
+  useEffect(() => { if (submitSuccess) toast.success(submitSuccess); }, [submitSuccess]);
+  useEffect(() => { if (submitError) toast.error(submitError); }, [submitError]);
+
+  // ── Chargement des rapports pour le select report_id ──────────────────────
+  const [reportOptions, setReportOptions] = useState<{ label: string; value: number }[]>([]);
+  useEffect(() => {
+    import("../../../services/provider/providerReportService").then(({ providerReportService }) => {
+      providerReportService.getReports().then((reports) => {
+        setReportOptions(
+          reports
+            .filter(r => r.intervention_type === "curatif")
+            .map(r => ({
+              label: `Rapport #${r.id} — Curatif — ${r.ticket?.subject ?? r.site?.nom ?? ""}`,
+              value: r.id,
+            }))
+        );
+      }).catch(() => {});
+    });
+  }, []);
+
   // ── Champs ReusableForm ────────────────────────────────────────────────────
   // createFromReport() attend : report_id (obligatoire), + optionnels si pas de devis
   const invoiceFields: FieldConfig[] = [
     {
-      name:     "report_id",
-      label:    "ID du Rapport d'intervention *",
-      type:     "text",
+      name: "report_id",
+      label: "Rapport d'intervention",
+      type: "select",
       required: true,
+      gridSpan: 2,
+      options: [
+        { label: "Sélectionner un rapport…", value: "" },
+        ...reportOptions,
+      ],
     },
+    // {
+    //   name:  "amount_ht",
+    //   label: "Montant HT (FCFA) - si pas de devis approuvé",
+    //   type:  "number",
+    // },
     {
-      name:  "amount_ht",
-      label: "Montant HT (FCFA) - si pas de devis approuvé",
-      type:  "number",
-    },
-    {
-      name:  "tax_amount",
+      name: "tax_amount",
       label: "Montant TVA (FCFA)",
-      type:  "number",
+      type: "number",
     },
     {
-      name:  "amount_ttc",
+      name: "amount_ttc",
       label: "Montant TTC (FCFA)",
-      type:  "number",
+      type: "number",
     },
     {
-      name:  "comment",
+      name: "comment",
       label: "Commentaire",
-      type:  "textarea",gridSpan: 2,
+      type: "rich-text", gridSpan: 2,
     },
     { name: "invoice_date", label: "Date ", type: "date", required: true, icon: CalendarDays },
-    { name: "due_date", label: "Date ", type: "date", required: true, icon: CalendarDays },
+    { name: "due_date", label: "Date limite", type: "date", required: true, icon: CalendarDays },
     {
-      name:     "pdf_file",
-      label:    "Facture PDF",
-      type:     "pdf-upload",
-      maxPDFs:  1,
+      name: "pdf_file",
+      label: "Facture PDF",
+      type: "pdf-upload",
+      maxPDFs: 1,
       gridSpan: 2,
     } as any,
   ];
 
   const handleCreate = async (formData: any) => {
     await createInvoice({
-      report_id:  parseInt(formData.report_id),
-      amount_ht:  formData.amount_ht  ? parseFloat(formData.amount_ht)  : undefined,
+      report_id: parseInt(formData.report_id),
+      amount_ht: formData.amount_ht ? parseFloat(formData.amount_ht) : undefined,
       tax_amount: formData.tax_amount ? parseFloat(formData.tax_amount) : undefined,
       amount_ttc: formData.amount_ttc ? parseFloat(formData.amount_ttc) : undefined,
-      comment:    formData.comment    || undefined,
-      pdf_file:   formData.pdf_file || undefined,
+      comment: formData.comment || undefined,
+      pdf_file: formData.pdf_file || undefined,
     });
   };
 
   // ── KPIs - calqués sur la page admin ──────────────────────────────────────
   const totalInvoices = stats?.total_invoices ?? 0;
-  const totalAmount   = toNum(stats?.total_amount);
-  const avgCost       = totalInvoices > 0 ? Math.round(totalAmount / totalInvoices) : 0;
+  const totalAmount = toNum(stats?.total_amount);
+  const avgCost = totalInvoices > 0 ? Math.round(totalAmount / totalInvoices) : 0;
 
   const kpis = [
-    { label: "Coût moyen par facture",   value: statsLoading ? "-" : formatMontant(avgCost),      delta: "", trend: "up" as const },
-    { label: "Nombre total de factures", value: statsLoading ? "-" : totalInvoices,               delta: "", trend: "up" as const },
-    { label: "Factures en attente",      value: statsLoading ? "-" : (stats?.total_unpaid  ?? 0), delta: "", trend: "up" as const },
-    { label: "Factures payées",          value: statsLoading ? "-" : (stats?.total_paid    ?? 0), delta: "", trend: "up" as const },
+    { label: "Coût moyen par facture", value: statsLoading ? "-" : formatMontant(avgCost), delta: "", trend: "up" as const },
+    { label: "Nombre total de factures", value: statsLoading ? "-" : totalInvoices, delta: "", trend: "up" as const },
+    { label: "Factures en attente", value: statsLoading ? "-" : (stats?.total_unpaid ?? 0), delta: "", trend: "up" as const },
+    { label: "Factures payées", value: statsLoading ? "-" : (stats?.total_paid ?? 0), delta: "", trend: "up" as const },
   ];
 
   // ── ActionGroup ───────────────────────────────────────────────────────────
   const pageActions = [
-    { label: "Exporter",          icon: Download,   onClick: exportXlsx, variant: "secondary" as const },
-    { label: "Nouvelle facture",  icon: PlusCircle, onClick: openCreate, variant: "primary"   as const },
+    { label: "Exporter", icon: Download, onClick: exportXlsx, variant: "secondary" as const },
+    { label: "Nouvelle facture", icon: PlusCircle, onClick: openCreate, variant: "primary" as const },
   ];
 
   // ── Colonnes DataTable ────────────────────────────────────────────────────
   const columns: ColumnConfig<Invoice>[] = [
     {
-      header: "ID Facture", key: "reference",
+      header: " Facture", key: "reference",
       render: (_: any, row: Invoice) => (
         <span className="font-black text-slate-900 text-sm">{row.reference}</span>
       ),
     },
-    {
-      header: "Prestataire", key: "provider",
-      render: (_: any, row: Invoice) => (
-        <span className="text-xs text-slate-600 font-medium">{getProviderName(row.provider)}</span>
-      ),
-    },
+    // {
+    //   header: "Prestataire", key: "provider",
+    //   render: (_: any, row: Invoice) => (
+    //     <span className="text-xs text-slate-600 font-medium">{getProviderName(row.provider)}</span>
+    //   ),
+    // },
     {
       header: "Date", key: "invoice_date",
       render: (_: any, row: Invoice) => (
@@ -434,108 +446,104 @@ export default function ProviderFacturesPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-        <Navbar />
-        <main className="mt-20 p-6 space-y-8">
+      <Navbar />
+      <main className="mt-20 p-6 space-y-8">
 
-          <PageHeader
-            title="Mes Factures"
-            subtitle="Ce menu vous permet de voir les différentes factures disponibles"
-          />
+        <PageHeader
+          title="Mes Factures"
+          subtitle="Ce menu vous permet de voir les différentes factures disponibles"
+        />
 
-          {/* Erreur globale */}
-          {error && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
-              <AlertCircle size={15} className="shrink-0" /> {error}
-            </div>
-          )}
-
-          {/* KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {statsLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
-                ))
-              : kpis.map((k, i) => <StatsCard key={i} {...k} />)
-            }
+        {/* Erreur globale */}
+        {error && (
+          <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm font-medium">
+            <AlertCircle size={15} className="shrink-0" /> {error}
           </div>
+        )}
 
-          {/* Toolbar : filtre SELECT + ActionGroup */}
-          <div className="flex justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Filter size={15} className="text-slate-400 shrink-0" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold
+        {/* KPIs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statsLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-28" />
+            ))
+            : kpis.map((k, i) => <StatsCard key={i} {...k} />)
+          }
+        </div>
+
+        {/* Toolbar : filtre SELECT + ActionGroup */}
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter size={15} className="text-slate-400 shrink-0" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-slate-200 bg-white text-slate-700 text-sm font-semibold
                   rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900
                   transition cursor-pointer"
+            >
+              <option value="">Tous les statuts</option>
+              {ALL_STATUSES.map((s) => (
+                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+              ))}
+            </select>
+            {statusFilter && (
+              <button
+                onClick={() => setStatusFilter("")}
+                className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400 hover:text-slate-700"
               >
-                <option value="">Tous les statuts</option>
-                {ALL_STATUSES.map((s) => (
-                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                ))}
-              </select>
-              {statusFilter && (
-                <button
-                  onClick={() => setStatusFilter("")}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400 hover:text-slate-700"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            <ActionGroup actions={pageActions} />
-          </div>
-
-          {/* Filtre actif pill */}
-          {statusFilter && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Filtré par :</span>
-              <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
-                {STATUS_LABELS[statusFilter] ?? statusFilter}
-                <button onClick={() => setStatusFilter("")} className="hover:opacity-70 transition">
-                  <X size={11} />
-                </button>
-              </span>
-            </div>
-          )}
-
-          {/* DataTable */}
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-800">Liste des factures</h3>
-              {meta && <span className="text-xs text-slate-400">{meta.total} facture{meta.total > 1 ? "s" : ""}</span>}
-            </div>
-
-            <div className="px-6 py-4">
-              {loading
-                ? <div className="space-y-3 animate-pulse">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-gray-100 rounded-xl" />
-                    ))}
-                  </div>
-                : <DataTable title="Liste des factures" columns={columns} data={invoices} onViewAll={() => {}} />
-              }
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
-                <Paginate
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setPage}
-                />
-              </div>
+                <X size={14} />
+              </button>
             )}
           </div>
 
-        </main>
-      
-      {/* Toasts */}
-      {submitSuccess && <Toast msg={submitSuccess} type="success" />}
-      {submitError   && <Toast msg={submitError}   type="error"   />}
+          <ActionGroup actions={pageActions} />
+        </div>
+
+        {/* Filtre actif pill */}
+        {statusFilter && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Filtré par :</span>
+            <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+              {STATUS_LABELS[statusFilter] ?? statusFilter}
+              <button onClick={() => setStatusFilter("")} className="hover:opacity-70 transition">
+                <X size={11} />
+              </button>
+            </span>
+          </div>
+        )}
+
+        {/* DataTable */}
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-800">Liste des factures</h3>
+            {meta && <span className="text-xs text-slate-400">{meta.total} facture{meta.total > 1 ? "s" : ""}</span>}
+          </div>
+
+          <div className="px-6 py-4">
+            {loading
+              ? <div className="space-y-3 animate-pulse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+                ))}
+              </div>
+              : <DataTable title="Liste des factures" columns={columns} data={invoices} onViewAll={() => { }} />
+            }
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
+              <Paginate
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
+        </div>
+
+      </main>
 
       {/* Panel aperçu - slide droite */}
       {isPanelOpen && selectedInvoice && (
@@ -550,6 +558,7 @@ export default function ProviderFacturesPage() {
         subtitle="Les informations ci-dessous permettront de générer une nouvelle facture à partir d'un rapport d'intervention."
         fields={invoiceFields}
         onSubmit={handleCreate}
+        isSubmitting={submitting}
         submitLabel={submitting ? "Génération en cours..." : "Générer la facture"}
       />
 

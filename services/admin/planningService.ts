@@ -150,14 +150,14 @@ export async function deletePlanning(id: number): Promise<void> {
 // ─── Helpers métier ───────────────────────────────────────────────────────────
 
 export const STATUS_COLORS: Record<PlanningStatus, string> = {
-  PLANIFIÉ:  "#3b82f6", // Bleu
-  EN_COURS:  "#0ea5e9", // Sky
+  PLANIFIÉ:  "#64748b", // Gris (slate-500)
+  EN_COURS:  "#0ea5e9", // Sky (Bleu clair)
   EN_RETARD: "#ef4444", // Rouge
   RÉALISÉ:   "#22c55e", // Vert
 };
 
 export const STATUS_BG: Record<PlanningStatus, string> = {
-  PLANIFIÉ:  "#eff6ff",
+  PLANIFIÉ:  "#f1f5f9", // slate-100
   EN_COURS:  "#e0f2fe",
   EN_RETARD: "#fef2f2",
   RÉALISÉ:   "#f0fdf4",

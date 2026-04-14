@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { authService } from "../../services/AuthService";
 import Sidebar from "../components/Sidebar";
 import AppShell from "../components/AppShell";
+// ✅ AJOUT : ToastProvider global pour tous les toasts de l'espace manager
+import { ToastProvider } from "../../contexts/ToastContext";
 
 export default function ManagerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -25,11 +27,16 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
   if (!authorized) return null;
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
-      <Sidebar />
-      <AppShell>
-        <div className="flex-1 min-w-0">{children}</div>
-      </AppShell>
-    </div>
+    // ✅ ToastProvider wrappe tout le layout :
+    //    - les toasts s'affichent en haut au-dessus de toutes les modales
+    //    - useToast() est disponible dans toutes les pages manager/*
+    <ToastProvider>
+      <div className="flex min-h-screen bg-zinc-50">
+        <Sidebar />
+        <AppShell>
+          <div className="flex-1 min-w-0">{children}</div>
+        </AppShell>
+      </div>
+    </ToastProvider>
   );
 }

@@ -289,7 +289,6 @@ export default function PlanningPage() {
   };
 
   const handleEventDrop = async (planningId: number, newDate: Date) => {
-    // On garde l'heure d'origine mais change le jour
     const p = plannings.find(pl => pl.id === planningId);
     if (!p) return;
 
@@ -301,15 +300,39 @@ export default function PlanningPage() {
     nextStart.setHours(start.getHours(), start.getMinutes());
     const nextEnd   = new Date(nextStart.getTime() + diff);
 
+    // Formatage local pour éviter le décalage UTC
+    const toLocalISO = (d: Date) => {
+      const y  = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, "0");
+      const da = String(d.getDate()).padStart(2, "0");
+      const h  = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      return `${y}-${mo}-${da}T${h}:${mi}:00`;
+    };
+
     const ok = await handleUpdate(planningId, {
-      date_debut: nextStart.toISOString(),
-      date_fin:   nextEnd.toISOString(),
+      date_debut: toLocalISO(nextStart),
+      date_fin:   toLocalISO(nextEnd),
     });
 
     showToast(
       ok ? "Planning déplacé avec succès !" : "Erreur lors du déplacement",
       ok ? "success" : "error"
     );
+  };
+
+  const handleEventAdd = (date: Date) => {
+    // Formatage local pour éviter le décalage UTC (toISOString() retourne UTC)
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${y}-${m}-${d}`;
+    setFormInitialValues((prev) => ({
+      ...prev,
+      date_debut: formattedDate,
+      date_fin: formattedDate,
+    }));
+    openCreateModal();
   };
 
 
@@ -507,6 +530,8 @@ export default function PlanningPage() {
             onEventClick={openPanel}
             onPanelClose={closePanel}
             onEventDrop={handleEventDrop} // Ajouté
+            canAddEvent={true}
+            onEventAdd={handleEventAdd}
             onEditClick={() => selectedPlanning && openEditModal(selectedPlanning)}
             onDeleteClick={async () => {
               if (!selectedPlanning) return;
