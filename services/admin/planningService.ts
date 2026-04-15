@@ -191,7 +191,7 @@ export function getProviderName(provider?: PlanningProvider): string {
 
 export function getSiteName(site?: PlanningSite): string {
   if (!site) return "—";
-  return site.nom ?? `Site #${site.id}`;
+  return site.nom ?? `Site ${site.id}`;
 }
 
 export function isPlanningOnDate(planning: Planning, date: Date): boolean {

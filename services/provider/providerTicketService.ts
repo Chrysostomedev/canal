@@ -28,6 +28,7 @@ export interface Ticket {
   closed_at?: string | null;
   started_at?: string | null;
   reported_at?: string | null;
+  assigned_at?: string | null;
   created_at?: string;
   cout?: number;
   images?: string[];
@@ -67,28 +68,49 @@ export type TicketStatus = typeof TICKET_STATUS[keyof typeof TICKET_STATUS];
 
 // ─── Logique UX : quels boutons afficher selon le statut ─────────────────────
 export function canStartIntervention(ticket: Ticket): boolean {
-  // Préventif : PLANIFIÉ → EN_COURS
-  // Curatif   : ASSIGNÉ ou DEVIS_APPROUVÉ → EN_TRAITEMENT
-  return [
+  // State machine back — transitions autorisées pour le PROVIDER :
+  // Curatif   : ASSIGNÉ → EN_TRAITEMENT | DEVIS_APPROUVÉ → EN_TRAITEMENT | EN_RETARD → EN_TRAITEMENT
+  // Préventif : PLANIFIÉ → EN_COURS | EN_RETARD → EN_COURS
+  //
+  // Cas spécial : ticket SIGNALÉ avec provider_id ET assigned_at rempli
+  // = ticket créé par admin avec provider déjà assigné mais transition non faite côté back
+  // → on autorise le démarrage (le back gère l'erreur si la transition échoue)
+  const normalAllowed: string[] = [
     TICKET_STATUS.PLANIFIE,
     TICKET_STATUS.ASSIGNE,
     TICKET_STATUS.DEVIS_APPROUVE,
     TICKET_STATUS.EN_RETARD,
-  ].includes(ticket.status as TicketStatus);
+  ];
+  if (normalAllowed.includes(ticket.status)) return true;
+
+  // Cas spécial : SIGNALÉ avec assigned_at = ticket déjà assigné de fait
+  if (
+    ticket.status === TICKET_STATUS.SIGNALE &&
+    (ticket as any).assigned_at &&
+    (ticket as any).provider_id
+  ) return true;
+
+  return false;
+}
+
+/** Ticket en attente d'action admin — provider ne peut pas encore agir */
+export function isPendingAdminAction(ticket: Ticket): boolean {
+  // SIGNALÉ sans assigned_at = vraiment en attente d'admin
+  if (ticket.status === TICKET_STATUS.SIGNALE && !(ticket as any).assigned_at) return true;
+  // VALIDÉ = en attente d'assignation
+  if (ticket.status === TICKET_STATUS.VALIDE) return true;
+  return false;
 }
 
 export function canSubmitReport(ticket: Ticket): boolean {
-  // Préventif : EN_COURS → RAPPORTÉ
-  // Curatif   : EN_TRAITEMENT → RAPPORTÉ
-  // Bloqué si déjà RAPPORTÉ (un rapport a déjà été soumis)
-  return [
+  const allowed: string[] = [
     TICKET_STATUS.EN_COURS,
     TICKET_STATUS.EN_TRAITEMENT,
-  ].includes(ticket.status as TicketStatus);
+  ];
+  return allowed.includes(ticket.status);
 }
 
 export function canRequestDevis(ticket: Ticket): boolean {
-  // Uniquement curatif ASSIGNÉ
   return ticket.type === "curatif" && ticket.status === TICKET_STATUS.ASSIGNE;
 }
 
@@ -181,6 +203,9 @@ export const providerTicketService = {
   /**
    * POST /provider/ticket/:id/start
    * PLANIFIÉ → EN_COURS (préventif) | ASSIGNÉ/DEVIS_APPROUVÉ → EN_TRAITEMENT (curatif)
+   *
+   * Cas spécial : si le ticket est SIGNALÉ avec provider déjà assigné (créé par admin),
+   * on tente directement le start — le back gère la transition.
    */
   startIntervention: async (id: number): Promise<Ticket> => {
     const response = await axiosInstance.post(`${BASE}/${id}/start`);

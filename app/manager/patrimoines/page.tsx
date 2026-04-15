@@ -114,10 +114,7 @@ export default function PatrimoinesPage() {
         </span>
       ),  
     },
-    // {
-    //   header: "Valeur", key: "valeur",
-    //   render: (_: any, row: any) => formatMontant(row.acquisition_value),
-    // },
+    
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (

@@ -12,6 +12,7 @@ import {
 import {
   providerTicketService, Ticket,
   canStartIntervention, canSubmitReport, canRequestDevis, isAlreadyReported,
+  isPendingAdminAction,
   TICKET_STATUS,
 } from "../../../../services/provider/providerTicketService";
 import { useToast } from "../../../../contexts/ToastContext";
@@ -134,6 +135,25 @@ export default function ProviderTicketDetailPage() {
   const docs   = attachments.filter(a => a.file_type === "document" || /\.pdf$/i.test(a.path ?? a.file_path ?? ""));
   const reports = ((ticket as any)?.reports ?? []) as any[];
 
+  // ── Calcul délai depuis planned_at ────────────────────────────────────────
+  const computeDelay = (t: Ticket) => {
+    if (!t.planned_at || !t.due_at) return null;
+    const start = new Date(t.planned_at);
+    const due   = new Date(t.due_at);
+    const now   = new Date();
+    const totalMs  = due.getTime() - start.getTime();
+    const elapsedMs = now.getTime() - start.getTime();
+    const remainMs  = due.getTime() - now.getTime();
+    const totalH   = Math.round(totalMs / 3_600_000);
+    const remainH  = Math.round(remainMs / 3_600_000);
+    const remainD  = Math.floor(remainMs / 86_400_000);
+    const isLate   = remainMs < 0;
+    const isUrgent = !isLate && remainMs < 86_400_000; // < 24h
+    const pct      = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
+    return { totalH, remainH, remainD, isLate, isUrgent, pct };
+  };
+  const delay = ticket ? computeDelay(ticket) : null;
+
   const kpis = [
     { label: "Priorité",       value: PRIORITY_LABEL[ticket?.priority ?? ""] ?? ticket?.priority ?? "—", delta: "", trend: "up" as const },
     { label: "Site",           value: ticket?.site?.nom ?? "—", delta: "", trend: "up" as const },
@@ -187,8 +207,9 @@ export default function ProviderTicketDetailPage() {
                       {ticket.asset && <span className="flex items-center gap-1.5"><Wrench size={13}/> {ticket.asset.designation}</span>}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-3 min-w-[220px]">
-                    <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-2">
+                  <div className="flex flex-col gap-3 min-w-[240px]">
+                    {/* Bloc dates + délai */}
+                    <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-2.5">
                       {[
                         { l: "Planifié le", v: fmtDateTime(ticket.planned_at) },
                         { l: "Échéance",    v: fmtDateTime(ticket.due_at) },
@@ -198,19 +219,67 @@ export default function ProviderTicketDetailPage() {
                           <span className="font-bold text-slate-900">{r.v}</span>
                         </div>
                       ))}
-                      {(ticket as any).delai_restant && (
-                        <div className={`mt-1 px-3 py-2 rounded-xl text-xs font-bold border ${(ticket as any).delai_restant.est_en_retard ? "bg-red-50 border-red-200 text-red-700" : "bg-slate-50 border-slate-200 text-slate-600"}`}>
-                          {(ticket as any).delai_restant.libelle}
+
+                      {/* Barre de progression SLA */}
+                      {delay && (
+                        <div className="pt-1 space-y-1.5">
+                          <div className="flex justify-between text-[10px] font-medium text-slate-400">
+                            <span>SLA {delay.totalH}h</span>
+                            <span className={delay.isLate ? "text-red-600 font-black" : delay.isUrgent ? "text-orange-500 font-black" : "text-slate-500"}>
+                              {delay.isLate
+                                ? `En retard de ${Math.abs(delay.remainH)}h`
+                                : delay.remainD > 0
+                                  ? `${delay.remainD}j ${Math.abs(delay.remainH % 24)}h restants`
+                                  : `${delay.remainH}h restantes`}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${delay.isLate ? "bg-red-500" : delay.isUrgent ? "bg-orange-400" : "bg-emerald-500"}`}
+                              style={{ width: `${delay.pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Alerte urgence */}
+                      {delay?.isUrgent && !delay.isLate && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs font-bold">
+                          <AlertCircle size={13}/> Intervention urgente — moins de 24h
+                        </div>
+                      )}
+                      {delay?.isLate && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold">
+                          <AlertCircle size={13}/> SLA dépassé
                         </div>
                       )}
                     </div>
 
                     {/* Actions provider */}
                     <div className="flex flex-col gap-2">
+                      {/* En attente d'action admin */}
+                      {isPendingAdminAction(ticket) && (
+                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                          <AlertCircle size={14} className="shrink-0"/>
+                          <span>
+                            {ticket.status === TICKET_STATUS.SIGNALE
+                              ? "En attente de validation et d'assignation par l'admin."
+                              : "En attente d'assignation par l'admin."}
+                          </span>
+                        </div>
+                      )}
                       {canStartIntervention(ticket) && (
-                        <button onClick={handleStart} disabled={actionLoading} className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 disabled:opacity-50 transition">
+                        <button
+                          onClick={handleStart}
+                          disabled={actionLoading}
+                          className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-white text-sm font-bold disabled:opacity-50 transition ${
+                            delay?.isLate || delay?.isUrgent
+                              ? "bg-red-600 hover:bg-red-700 animate-pulse"
+                              : "bg-orange-500 hover:bg-orange-600"
+                          }`}
+                        >
                           {actionLoading ? <RefreshCw size={14} className="animate-spin"/> : <Wrench size={14}/>}
-                          Démarrer l'intervention
+                          {delay?.isLate ? "Démarrer maintenant — SLA dépassé" : "Démarrer l'intervention"}
                         </button>
                       )}
                       {canSubmitReport(ticket) && (

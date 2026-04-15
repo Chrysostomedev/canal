@@ -1194,10 +1194,11 @@ export default function TicketsPage() {
     },
     {
       name: "type", label: "Type", type: "select", required: true,
- options: [
+      defaultValue: "curatif",
+      options: [
         { label: "Curatif", value: "curatif" },
         { label: "Préventif", value: "preventif" },
-      ],      
+      ],
     },
     {
       name: "priority", label: "Priorité", type: "select", required: true,
@@ -1206,7 +1207,7 @@ export default function TicketsPage() {
         { label: "Haute", value: "haute" },   { label: "Critique", value: "critique" },
       ],
     },
-    { name: "subject",    label: "Sujet",          type: "text" },
+    { name: "subject",    label: "Sujet",          type: "text", placeholder: "Decrivez ce probleme rencontré", },
     { name: "planned_at", label: "Date planifiée", type: "date", required: true, disablePastDates: true, icon: CalendarDays },
 
     {
@@ -1425,7 +1426,6 @@ export default function TicketsPage() {
       />
 
       <ReusableForm
-        key={`ticket-form-${ticketFormType}-${ticketFormPlanned}`}
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingTicket(null); setSelectedSiteId(null); setTicketFormType(""); setTicketFormPlanned(""); }}
         title={editingTicket ? "Modifier le ticket" : "Nouveau ticket"}

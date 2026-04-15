@@ -291,7 +291,7 @@ export default function TicketsPage() {
   label: "Photo justificative",
   type: "image-upload",
   required: false,
-  // pas de gridSpan → col-span-1 (moitié droite) ✓
+gridSpan: 2,
 },
 
   ];

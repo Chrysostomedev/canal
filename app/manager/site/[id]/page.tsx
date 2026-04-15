@@ -114,14 +114,7 @@ export default function SitePage() {
         </span>
       ),
     },
-    {
-      header: "Date entrée", key: "acquisition_date",
-      render: (_: any, row: any) => formatDate(row.acquisition_date),
-    },
-    {
-      header: "Valeur", key: "acquisition_value",
-      render: (_: any, row: any) => formatMontant(row.acquisition_value),
-    },
+    
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (

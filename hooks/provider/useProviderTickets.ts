@@ -63,7 +63,7 @@ export function useProviderTickets(): UseProviderTicketsReturn {
   const [updateError,   setUpdateError]   = useState("");
   const [updateSuccess, setUpdateSuccess] = useState("");
 
-  // Filtre par défaut : curatif uniquement pour la page tickets
+  // Filtre type=curatif envoyé directement à l'API — le back filtre côté serveur
   const [filters, setFiltersState] = useState<TicketFilters>({ page: 1, per_page: 15, type: "curatif" });
 
   const fetchTickets = useCallback(async () => {

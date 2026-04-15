@@ -12,7 +12,7 @@ import { Eye, X, Copy, Check, Tag, Clock, MapPin, Wrench, AlertTriangle, CheckCi
 import { useProviderTickets } from "../../../hooks/provider/useProviderTickets";
 import { useProviderReports } from "../../../hooks/provider/useProviderReports";
 import { useToast } from "../../../contexts/ToastContext";
-import { Ticket } from "../../../services/provider/providerTicketService";
+import { Ticket, isPendingAdminAction, TICKET_STATUS } from "../../../services/provider/providerTicketService";
 
 // ─── Champs formulaire Rapport ────────────────────────────────────────────────
 const reportFields: FieldConfig[] = [
@@ -54,26 +54,51 @@ const formatDate = (iso?: string | null): string => {
   return time === "00:00" ? date : `${date} à ${time}`;
 };
 
-// ─── Statuts ──────────────────────────────────────────────────────────────────
+// ─── Statuts — valeurs exactes retournées par le back ────────────────────────
 
 const STATUS_LABELS: Record<string, string> = {
+  // Majuscules (back v3)
+  "SIGNALÉ":          "Signalé",
+  "VALIDÉ":           "Validé",
+  "ASSIGNÉ":          "Assigné",
+  "PLANIFIÉ":         "Planifié",
+  "EN_COURS":         "En cours",
+  "EN_TRAITEMENT":    "En traitement",
+  "DEVIS_EN_ATTENTE": "Devis en attente",
+  "DEVIS_APPROUVÉ":   "Devis approuvé",
+  "RAPPORTÉ":         "Rapporté",
+  "ÉVALUÉ":           "Évalué",
+  "CLOS":             "Clôturé",
+  "EN_RETARD":        "En retard",
+  "RÉSOLU":           "Résolu",
+  // Minuscules legacy
   signalez: "Signalé", validé: "Validé", assigné: "Assigné",
   en_cours: "En cours", rapporté: "Rapporté", évalué: "Évalué", clos: "Clôturé",
 };
 
 const STATUS_STYLES: Record<string, string> = {
+  // Majuscules (back v3)
+  "SIGNALÉ":          "border-slate-300 bg-slate-100 text-slate-700",
+  "VALIDÉ":           "border-blue-400 bg-blue-50 text-blue-700",
+  "ASSIGNÉ":          "border-violet-400 bg-violet-50 text-violet-700",
+  "PLANIFIÉ":         "border-sky-400 bg-sky-50 text-sky-700",
+  "EN_COURS":         "border-orange-400 bg-orange-50 text-orange-600",
+  "EN_TRAITEMENT":    "border-orange-400 bg-orange-50 text-orange-600",
+  "DEVIS_EN_ATTENTE": "border-yellow-400 bg-yellow-50 text-yellow-700",
+  "DEVIS_APPROUVÉ":   "border-teal-400 bg-teal-50 text-teal-700",
+  "RAPPORTÉ":         "border-amber-400 bg-amber-50 text-amber-700",
+  "ÉVALUÉ":           "border-emerald-500 bg-emerald-50 text-emerald-700",
+  "CLOS":             "border-black bg-black text-white",
+  "EN_RETARD":        "border-red-400 bg-red-50 text-red-700",
+  "RÉSOLU":           "border-green-400 bg-green-50 text-green-700",
+  // Minuscules legacy
   signalez: "border-slate-300 bg-slate-100 text-slate-700",
   validé: "border-blue-400 bg-blue-50 text-blue-700",
   assigné: "border-violet-400 bg-violet-50 text-violet-700",
   en_cours: "border-orange-400 bg-orange-50 text-orange-600",
   rapporté: "border-amber-400 bg-amber-50 text-amber-700",
   évalué: "border-emerald-500 bg-emerald-50 text-emerald-700",
-  clos: "border-emerald-200 bg-emerald-50 text-emerald-600",
-};
-
-const STATUS_DOT: Record<string, string> = {
-  signalez: "#94a3b8", validé: "#3b82f6", assigné: "#8b5cf6",
-  en_cours: "#f97316", rapporté: "#f59e0b", évalué: "#10b981", clos: "#059669",
+  clos: "border-black bg-black text-white",
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -170,12 +195,31 @@ export default function ProviderTicketsPage() {
 
   // ── Colonnes DataTable ────────────────────────────────────────────────────
   const columns = [
-    // {
-    //   header: "Référence",
-    //   key: "code",
-    //   render: (_: any, row: Ticket) => <span className="font-black text-slate-900 text-sm">{row.code}</span>,
-    // },
-
+    {
+      header: "Référence",
+      key: "code_ticket",
+      render: (_: any, row: Ticket) => (
+        <span className="font-mono text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg whitespace-nowrap">
+          {row.code_ticket ?? `#${row.id}`}
+        </span>
+      ),
+    },
+    {
+      header: "Sujet",
+      key: "subject",
+      render: (_: any, row: Ticket) => (
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900 truncate max-w-[160px]">
+            {row.subject ?? row.asset?.designation ?? `Ticket #${row.id}`}
+          </p>
+          {row.asset && (
+            <p className="text-[10px] text-slate-400 font-medium truncate max-w-[160px]">
+              {row.asset.codification}
+            </p>
+          )}
+        </div>
+      ),
+    },
     {
       header: "Site",
       key: "site",
@@ -198,7 +242,21 @@ export default function ProviderTicketsPage() {
     {
       header: "Statut",
       key: "status",
-      render: (_: any, row: Ticket) => <StatusBadge status={row.status} />,
+      render: (_: any, row: Ticket) => (
+        <div className="flex flex-col gap-1">
+          <StatusBadge status={row.status} />
+          {row.delai_restant?.est_en_retard && (
+            <span className="text-[10px] font-bold text-red-600 whitespace-nowrap">
+              ⚠ {row.delai_restant.libelle}
+            </span>
+          )}
+          {row.delai_restant?.est_urgent && !row.delai_restant.est_en_retard && (
+            <span className="text-[10px] font-bold text-orange-500 whitespace-nowrap">
+              ⏰ {row.delai_restant.libelle}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       header: "Planifié le",
@@ -540,6 +598,75 @@ function TicketDetailPanel({
             </div>
           )}
 
+          {/* ── Bouton Démarrer — prioritaire et visible ──────────────────── */}
+          {isPendingAdminAction(ticket) && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+              <AlertCircle size={13} className="shrink-0"/>
+              <span>
+                {ticket.status === TICKET_STATUS.SIGNALE
+                  ? "En attente de validation par l'admin avant assignation."
+                  : "En attente d'assignation par l'admin."}
+              </span>
+            </div>
+          )}
+          {canStart && (
+            <div className={`rounded-2xl border p-4 space-y-3 ${
+              ticket.delai_restant?.est_en_retard
+                ? "bg-red-50 border-red-200"
+                : ticket.delai_restant?.est_urgent
+                  ? "bg-orange-50 border-orange-200"
+                  : "bg-orange-50 border-orange-200"
+            }`}>
+              {/* Délai */}
+              {ticket.due_at && ticket.planned_at && (() => {
+                const start = new Date(ticket.planned_at!);
+                const due   = new Date(ticket.due_at!);
+                const now   = new Date();
+                const totalH  = Math.round((due.getTime() - start.getTime()) / 3_600_000);
+                const remainH = Math.round((due.getTime() - now.getTime()) / 3_600_000);
+                const remainD = Math.floor((due.getTime() - now.getTime()) / 86_400_000);
+                const isLate  = remainH < 0;
+                const pct     = Math.min(100, Math.max(0, ((now.getTime() - start.getTime()) / (due.getTime() - start.getTime())) * 100));
+                return (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] font-medium">
+                      <span className="text-slate-500">SLA {totalH}h</span>
+                      <span className={`font-black ${isLate ? "text-red-600" : remainD < 1 ? "text-orange-600" : "text-slate-600"}`}>
+                        {isLate
+                          ? `En retard de ${Math.abs(remainH)}h`
+                          : remainD > 0
+                            ? `${remainD}j ${Math.abs(remainH % 24)}h restants`
+                            : `${remainH}h restantes`}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${isLate ? "bg-red-500" : remainD < 1 ? "bg-orange-400" : "bg-emerald-500"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+              <button
+                onClick={onStart}
+                disabled={updateLoading}
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-black disabled:opacity-50 transition ${
+                  ticket.delai_restant?.est_en_retard
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-orange-500 hover:bg-orange-600"
+                }`}
+              >
+                {updateLoading
+                  ? <RefreshCw size={14} className="animate-spin"/>
+                  : <Wrench size={14}/>}
+                {ticket.delai_restant?.est_en_retard
+                  ? "Démarrer maintenant — SLA dépassé"
+                  : "Démarrer l'intervention"}
+              </button>
+            </div>
+          )}
+
           {/* Section rapport curatif */}
           <div className="border border-slate-100 rounded-2xl overflow-hidden">
             <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
@@ -576,32 +703,18 @@ function TicketDetailPanel({
             )}
           </div>
 
-          {/* Actions statut PROVIDER — boutons démarrer/devis dans le panel */}
-          {(canStart || canDevis) && (
+          {/* Demander un devis */}
+          {canDevis && (
             <div>
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Actions</p>
-              <div className="flex gap-3">
-                {canStart && (
-                  <button
-                    onClick={onStart}
-                    disabled={updateLoading}
-                    className="flex-1 py-2.5 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 disabled:opacity-50 transition flex items-center justify-center gap-2"
-                  >
-                    {updateLoading ? <RefreshCw size={12} className="animate-spin" /> : null}
-                    Démarrer l'intervention
-                  </button>
-                )}
-                {canDevis && (
-                  <button
-                    onClick={onDevis}
-                    disabled={updateLoading}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 disabled:opacity-50 transition flex items-center justify-center gap-2"
-                  >
-                    {updateLoading ? <RefreshCw size={12} className="animate-spin" /> : null}
-                    Demander un devis
-                  </button>
-                )}
-              </div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Devis</p>
+              <button
+                onClick={onDevis}
+                disabled={updateLoading}
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 disabled:opacity-50 transition flex items-center justify-center gap-2"
+              >
+                {updateLoading ? <RefreshCw size={12} className="animate-spin" /> : <Tag size={12}/>}
+                Demander un devis
+              </button>
             </div>
           )}
 

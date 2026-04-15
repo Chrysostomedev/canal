@@ -6,7 +6,7 @@ import {
   Download, Eye, ChevronRight, MapPin, AlertTriangle,
   Building2, Ticket, TrendingUp, Layers,
 } from "lucide-react";
-
+import PageHeader from "@/components/PageHeader";
 import Navbar    from "@/components/Navbar";
 import Paginate  from "@/components/Paginate";
 import StatsCard from "@/components/StatsCard";
@@ -153,9 +153,12 @@ export default function SitesPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Mes Sites</h1>
+   <PageHeader title="Sites" subtitle="Suivi et gestion de tous les sites" />
                 <p className="text-slate-400 text-sm mt-1">{sites.length} site{sites.length > 1 ? "s" : ""} assigné{sites.length > 1 ? "s" : ""}</p>
               </div>
+            </div>
+
+            {/* KPIs */}
               <button
                 onClick={async () => {
                   try {
@@ -171,9 +174,6 @@ export default function SitesPage() {
               >
                 <Download size={16} /> Exporter
               </button>
-            </div>
-
-            {/* KPIs */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
               {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
             </div>

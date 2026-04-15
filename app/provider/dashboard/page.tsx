@@ -194,7 +194,7 @@ export default function ProviderDashboard() {
     { header: "Code ", key: "code_ticket", render: (_: any, row: any) => `${row.code_ticket}` },
     { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
     { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom ?? "-" },
-    { header: "Catégorie", key: "category", render: (_: any, row: any) => row.category?.name ?? "-" },
+    // { header: "Catégorie", key: "category", render: (_: any, row: any) => row.category?.name ?? "-" },
     {
       header: "Type", key: "type",
       render: (_: any, row: any) => row.type === "curatif" ? "Curatif" : "Préventif",
