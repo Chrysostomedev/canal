@@ -68,37 +68,22 @@ export type TicketStatus = typeof TICKET_STATUS[keyof typeof TICKET_STATUS];
 
 // ─── Logique UX : quels boutons afficher selon le statut ─────────────────────
 export function canStartIntervention(ticket: Ticket): boolean {
-  // State machine back — transitions autorisées pour le PROVIDER :
-  // Curatif   : ASSIGNÉ → EN_TRAITEMENT | DEVIS_APPROUVÉ → EN_TRAITEMENT | EN_RETARD → EN_TRAITEMENT
-  // Préventif : PLANIFIÉ → EN_COURS | EN_RETARD → EN_COURS
-  //
-  // Cas spécial : ticket SIGNALÉ avec provider_id ET assigned_at rempli
-  // = ticket créé par admin avec provider déjà assigné mais transition non faite côté back
-  // → on autorise le démarrage (le back gère l'erreur si la transition échoue)
-  const normalAllowed: string[] = [
-    TICKET_STATUS.PLANIFIE,
-    TICKET_STATUS.ASSIGNE,
-    TICKET_STATUS.DEVIS_APPROUVE,
-    TICKET_STATUS.EN_RETARD,
+  // Règle simple : le provider peut démarrer dès que le ticket lui est assigné
+  // et qu'il n'est pas encore en cours, rapporté, évalué ou clôturé
+  const blocked: string[] = [
+    TICKET_STATUS.EN_COURS,
+    TICKET_STATUS.EN_TRAITEMENT,
+    TICKET_STATUS.RAPPORTE,
+    TICKET_STATUS.EVALUE,
+    TICKET_STATUS.CLOS,
+    TICKET_STATUS.RESOLU,
   ];
-  if (normalAllowed.includes(ticket.status)) return true;
-
-  // Cas spécial : SIGNALÉ avec assigned_at = ticket déjà assigné de fait
-  if (
-    ticket.status === TICKET_STATUS.SIGNALE &&
-    (ticket as any).assigned_at &&
-    (ticket as any).provider_id
-  ) return true;
-
-  return false;
+  return !blocked.includes(ticket.status);
 }
 
 /** Ticket en attente d'action admin — provider ne peut pas encore agir */
 export function isPendingAdminAction(ticket: Ticket): boolean {
-  // SIGNALÉ sans assigned_at = vraiment en attente d'admin
-  if (ticket.status === TICKET_STATUS.SIGNALE && !(ticket as any).assigned_at) return true;
-  // VALIDÉ = en attente d'assignation
-  if (ticket.status === TICKET_STATUS.VALIDE) return true;
+  // Plus utilisé — on laisse le back retourner l'erreur si la transition échoue
   return false;
 }
 

@@ -257,17 +257,6 @@ export default function ProviderTicketDetailPage() {
 
                     {/* Actions provider */}
                     <div className="flex flex-col gap-2">
-                      {/* En attente d'action admin */}
-                      {isPendingAdminAction(ticket) && (
-                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                          <AlertCircle size={14} className="shrink-0"/>
-                          <span>
-                            {ticket.status === TICKET_STATUS.SIGNALE
-                              ? "En attente de validation et d'assignation par l'admin."
-                              : "En attente d'assignation par l'admin."}
-                          </span>
-                        </div>
-                      )}
                       {canStartIntervention(ticket) && (
                         <button
                           onClick={handleStart}

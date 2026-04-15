@@ -599,16 +599,6 @@ function TicketDetailPanel({
           )}
 
           {/* ── Bouton Démarrer — prioritaire et visible ──────────────────── */}
-          {isPendingAdminAction(ticket) && (
-            <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-              <AlertCircle size={13} className="shrink-0"/>
-              <span>
-                {ticket.status === TICKET_STATUS.SIGNALE
-                  ? "En attente de validation par l'admin avant assignation."
-                  : "En attente d'assignation par l'admin."}
-              </span>
-            </div>
-          )}
           {canStart && (
             <div className={`rounded-2xl border p-4 space-y-3 ${
               ticket.delai_restant?.est_en_retard
