@@ -258,8 +258,8 @@ export default function PlanningPage() {
       type: "select", required: true,
       options: sites.map(s => ({ label: s.nom, value: s.id })),
     },
-    { name: "date_debut",        label: "Date de début",            type: "date", required: true, icon: CalendarClock },
-    { name: "date_fin",          label: "Date de fin",              type: "date", required: true, icon: CalendarClock },
+    { name: "date_debut",        label: "Date de début",            type: "date", required: true, disablePastDates: true, icon: CalendarClock },
+    { name: "date_fin",          label: "Date de fin",              type: "date", required: true, disablePastDates: true, icon: CalendarClock },
     { name: "responsable_name",  label: "Nom du responsable",       type: "text", required: false, disabled: true },
     { name: "responsable_phone", label: "Téléphone du responsable", type: "text", required: false, disabled: true },
     {

@@ -57,6 +57,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 // ── Helper toEventItem - inchangé ─────────────────────────────────────────────
+const stripHtml = (html?: string | null) =>
+  html ? html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim() : "";
+
 function toEventItem(i: Intervention) {
   const date = new Date(i.date_debut);
   const now = new Date();
@@ -86,7 +89,7 @@ function toEventItem(i: Intervention) {
 
   return {
     id: i.id,
-    title: i.title ?? i.description ?? `Intervention #${i.id}`,
+    title: stripHtml(i.title ?? i.description ?? `Intervention #${i.id}`),
     time: `${dayLabel} à ${timeLabel}`,
     location: i.site ?? i.location ?? "",
     href: "#",
@@ -155,7 +158,7 @@ export default function ProviderDashboard() {
 
   // ── Raccourcis données ─────────────────────────────────────────────────────
   const stats = data?.stats;
-  const tickets = (data?.tickets_recents ?? []).filter((t: any) => t.type === "curatif");
+  const tickets = data?.tickets_recents ?? [];
 
   // ── Panneau détail ticket ──────────────────────────────────────────────────
   const handleOpenDetails = (ticket: any) => {
@@ -166,8 +169,8 @@ export default function ProviderDashboard() {
 
     setSelectedTicket({
       id: ticket.id,          // ✅ conservé pour construire le redirectHref
-      title: ticket.subject ?? `Ticket #${ticket.id}`,
-      reference: `#${ticket.id}`,
+      title: ticket.subject ?? `Ticket ${ticket.code_ticket}`,
+      reference: `${ticket.code_ticket}`,
       description: "Ticket récent visualisé depuis le tableau de bord.",
       fields: [
         { label: "Type", value: ticket.type === "curatif" ? "Curatif" : "Préventif" },
@@ -188,7 +191,7 @@ export default function ProviderDashboard() {
 
   // ── Colonnes DataTable - inchangées ──────────────────────────────────────
   const columns: ColumnConfig<any>[] = [
-    { header: "ID ticket", key: "id", render: (_: any, row: any) => `#${row.id}` },
+    { header: "Code ", key: "code_ticket", render: (_: any, row: any) => `${row.code_ticket}` },
     { header: "Nom", key: "subject", render: (_: any, row: any) => row.subject ?? "-" },
     { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom ?? "-" },
     { header: "Catégorie", key: "category", render: (_: any, row: any) => row.category?.name ?? "-" },
@@ -272,6 +275,7 @@ export default function ProviderDashboard() {
             interventions={data?.prochaines_interventions ?? []}
             loading={loading}
             viewAllHref="/provider/planning"
+            cardHref="/provider/planning"
           />
         </div>
 
@@ -304,7 +308,7 @@ export default function ProviderDashboard() {
         → 1 seul bouton "Voir le ticket" qui redirige + ferme le panel
         → labels "Annuler" / "Modifier" supprimés de cette vue
       */}
-      {/* <SideDetailsPanel
+      <SideDetailsPanel
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         title={selectedTicket?.title ?? ""}
@@ -316,8 +320,8 @@ export default function ProviderDashboard() {
         }
         redirectLabel="Voir le ticket"
       />
-       */}
-      <SideDetailsPanel
+      
+      {/* <SideDetailsPanel
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         title={selectedTicket?.title ?? ""}
@@ -326,7 +330,7 @@ export default function ProviderDashboard() {
         descriptionContent={selectedTicket?.description}
         redirectHref="/provider/tickets"
         redirectLabel="Voir le ticket"
-      />
+      /> */}
 
 
     </div>

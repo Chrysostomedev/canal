@@ -12,20 +12,19 @@ import { Eye, X, Copy, Check, Tag, Clock, MapPin, Wrench, AlertTriangle, CheckCi
 import { useProviderTickets } from "../../../hooks/provider/useProviderTickets";
 import { useProviderReports } from "../../../hooks/provider/useProviderReports";
 import { useToast } from "../../../contexts/ToastContext";
-import { Ticket, ProviderUpdatableStatus } from "../../../services/provider/providerTicketService";
+import { Ticket } from "../../../services/provider/providerTicketService";
 
 // ─── Champs formulaire Rapport ────────────────────────────────────────────────
 const reportFields: FieldConfig[] = [
   {
-    name: "result", label: "Résultat de l'intervention", type: "select", required: false,
+    name: "result", label: "Résultat de l'intervention", type: "select", required: true,
     options: [
       { label: "Sélectionner…", value: "" },
       { label: "RAS - Rien à signaler", value: "RAS" },
       { label: "Anomalie détectée", value: "anomalie" },
     ], gridSpan: 2
   },
-  { name: "start_date", label: "Date de début", type: "date", required: false },
-  { name: "end_date", label: "Date de fin", type: "date" },
+  { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: true, gridSpan: 2, disablePastDates: true },
   {
     name: "findings", label: "Observations / Constatations ",
     type: "rich-text",
@@ -128,7 +127,10 @@ export default function ProviderTicketsPage() {
     loading, statsLoading, updateLoading,
     error, updateError, updateSuccess,
     filters, setFilters,
-    openTicket, closeTicket, updateStatus, refresh,
+    openTicket, closeTicket,
+    startIntervention, requestDevis,
+    canStart, canReport, canDevis, alreadyReported,
+    refresh,
   } = useProviderTickets();
 
   const { createReport, submitting, submitSuccess, submitError } = useProviderReports();
@@ -215,13 +217,43 @@ export default function ProviderTicketsPage() {
           >
             <Eye size={16} />
           </button>
-          <button
-            onClick={() => handleOpenReportModal(row.id)}
-            className="flex items-center gap-1.5 text-sm font-bold text-slate-800 hover:text-indigo-600 transition"
-            title="Nouveau rapport"
-          >
-            <FileText size={16} />
-          </button>
+          {/* Démarrer l'intervention */}
+          {canStart(row) && (
+            <button
+              onClick={() => startIntervention(row.id)}
+              disabled={updateLoading}
+              className="flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-800 transition disabled:opacity-40"
+              title="Démarrer l'intervention"
+            >
+              <RefreshCw size={14} className={updateLoading ? "animate-spin" : ""} />
+            </button>
+          )}
+          {/* Soumettre rapport — désactivé si déjà rapporté */}
+          {canReport(row) && (
+            <button
+              onClick={() => handleOpenReportModal(row.id)}
+              className="flex items-center gap-1.5 text-sm font-bold text-slate-800 hover:text-indigo-600 transition"
+              title="Soumettre un rapport"
+            >
+              <FileText size={16} />
+            </button>
+          )}
+          {alreadyReported(row) && (
+            <span className="text-xs text-amber-500 font-semibold" title="Rapport déjà soumis — en attente de validation">
+              <FileText size={16} className="opacity-40" />
+            </span>
+          )}
+          {/* Demander un devis */}
+          {canDevis(row) && (
+            <button
+              onClick={() => requestDevis(row.id)}
+              disabled={updateLoading}
+              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition disabled:opacity-40"
+              title="Demander un devis"
+            >
+              <AlertCircle size={14} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -366,10 +398,16 @@ export default function ProviderTicketsPage() {
         <TicketDetailPanel
           ticket={selectedTicket}
           onClose={closeTicket}
-          onUpdateStatus={updateStatus}
+          onStart={() => startIntervention(selectedTicket.id)}
+          onDevis={() => requestDevis(selectedTicket.id)}
+          onReport={() => handleOpenReportModal(selectedTicket.id)}
           updateLoading={updateLoading}
           updateError={updateError}
           updateSuccess={updateSuccess}
+          canStart={canStart(selectedTicket)}
+          canReport={canReport(selectedTicket)}
+          canDevis={canDevis(selectedTicket)}
+          alreadyReported={alreadyReported(selectedTicket)}
         />
       )}
 
@@ -390,14 +428,22 @@ export default function ProviderTicketsPage() {
 // ─── Panel détail ticket ──────────────────────────────────────────────────────
 
 function TicketDetailPanel({
-  ticket, onClose, onUpdateStatus, updateLoading, updateError, updateSuccess,
+  ticket, onClose, onStart, onDevis, onReport,
+  updateLoading, updateError, updateSuccess,
+  canStart, canReport, canDevis, alreadyReported,
 }: {
   ticket: Ticket;
   onClose: () => void;
-  onUpdateStatus: (id: number, status: ProviderUpdatableStatus) => Promise<void>;
+  onStart: () => void;
+  onDevis: () => void;
+  onReport: () => void;
   updateLoading: boolean;
   updateError: string;
   updateSuccess: string;
+  canStart: boolean;
+  canReport: boolean;
+  canDevis: boolean;
+  alreadyReported: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -406,11 +452,6 @@ function TicketDetailPanel({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  // Un PROVIDER peut passer un ticket à "en_cours" ou "rapporté"
-  // uniquement si le ticket lui est assigné (le controller bloque sinon)
-  const canMarkEnCours = ticket.status === "assigné";
-  const canMarkRapporte = ticket.status === "en_cours";
 
   return (
     <>
@@ -499,16 +540,50 @@ function TicketDetailPanel({
             </div>
           )}
 
-          {/* Actions statut PROVIDER */}
-          {(canMarkEnCours || canMarkRapporte) && (
+          {/* Section rapport curatif */}
+          <div className="border border-slate-100 rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rapport curatif</p>
+            </div>
+            {alreadyReported ? (
+              <div className="px-4 py-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-amber-600">
+                  <FileText size={14} className="shrink-0" />
+                  <span className="text-xs font-semibold">Rapport soumis — en attente de validation</span>
+                </div>
+                <a href="/provider/rapports" className="text-xs font-bold text-slate-900 underline underline-offset-2 hover:text-black transition shrink-0">
+                  Voir mes rapports
+                </a>
+              </div>
+            ) : canReport ? (
+              <div className="px-4 py-4 flex items-center justify-between gap-3">
+                <span className="text-xs text-slate-500 font-medium">Aucun rapport soumis pour ce ticket.</span>
+                <button
+                  onClick={onReport}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-black transition shrink-0"
+                >
+                  <FileText size={13} /> Soumettre un rapport
+                </button>
+              </div>
+            ) : (
+              <div className="px-4 py-4">
+                <span className="text-xs text-slate-400 font-medium italic">
+                  {ticket.status === "CLOS" || ticket.status === "ÉVALUÉ"
+                    ? "Ticket clôturé."
+                    : "Démarrez l'intervention pour soumettre un rapport."}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Actions statut PROVIDER — boutons démarrer/devis dans le panel */}
+          {(canStart || canDevis) && (
             <div>
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
-                Mettre à jour le statut
-              </p>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Actions</p>
               <div className="flex gap-3">
-                {canMarkEnCours && (
+                {canStart && (
                   <button
-                    onClick={() => onUpdateStatus(ticket.id, "en_cours")}
+                    onClick={onStart}
                     disabled={updateLoading}
                     className="flex-1 py-2.5 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 disabled:opacity-50 transition flex items-center justify-center gap-2"
                   >
@@ -516,14 +591,14 @@ function TicketDetailPanel({
                     Démarrer l'intervention
                   </button>
                 )}
-                {canMarkRapporte && (
+                {canDevis && (
                   <button
-                    onClick={() => onUpdateStatus(ticket.id, "rapporté")}
+                    onClick={onDevis}
                     disabled={updateLoading}
-                    className="flex-1 py-2.5 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-black disabled:opacity-50 transition flex items-center justify-center gap-2"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 disabled:opacity-50 transition flex items-center justify-center gap-2"
                   >
                     {updateLoading ? <RefreshCw size={12} className="animate-spin" /> : null}
-                    Marquer comme rapporté
+                    Demander un devis
                   </button>
                 )}
               </div>

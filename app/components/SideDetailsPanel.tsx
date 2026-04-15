@@ -182,9 +182,10 @@ export default function SideDetailsPanel({
           {descriptionContent && (
             <div className="space-y-3 pb-10">
               <div className="p-6 rounded-2xl border border-slate-100 bg-slate-50/30">
-                <p className="text-slate-600 text-[15px] leading-relaxed font-medium">
-                  {descriptionContent}
-                </p>
+                <div
+                  className="prose prose-sm max-w-none text-slate-600 text-[15px] leading-relaxed font-medium"
+                  dangerouslySetInnerHTML={{ __html: descriptionContent }}
+                />
               </div>
             </div>
           )}

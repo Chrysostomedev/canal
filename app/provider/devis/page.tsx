@@ -152,9 +152,10 @@ function QuotePreviewPanel({ quote, onClose }: { quote: Quote; onClose: () => vo
           {quote.description && (
             <div>
               <p className="text-xs text-slate-400 font-medium mb-2">Description</p>
-              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-                {quote.description}
-              </p>
+              <div
+                className="prose prose-sm max-w-none text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100"
+                dangerouslySetInnerHTML={{ __html: quote.description ?? "" }}
+              />
             </div>
           )}
 
@@ -294,7 +295,6 @@ export default function ProviderDevisPage() {
       required: true,
       gridSpan: 2,
       options: [
-        { label: "Sélectionner un ticket…", value: "" },
         ...ticketOptions,
       ],
     },
@@ -312,7 +312,7 @@ export default function ProviderDevisPage() {
       name: "description",
       label: "Description",
       type: "rich-text",
-      required: false,
+      required: true,
       gridSpan: 2
     },
 
@@ -364,6 +364,8 @@ export default function ProviderDevisPage() {
   ];
 
   // ── ActionGroup ───────────────────────────────────────────────────────────
+  const [dateRange, setDateRange] = useState<import("react-day-picker").DateRange | undefined>(undefined);
+
   const actions = [
     {
       label: "Exporter",
@@ -378,6 +380,18 @@ export default function ProviderDevisPage() {
       variant: "primary" as const,
     },
   ];
+
+  // Filtre date côté client
+  const filteredQuotes = dateRange?.from
+    ? quotes.filter(q => {
+        const d = new Date(q.created_at ?? "");
+        if (isNaN(d.getTime())) return true;
+        const from = dateRange.from!;
+        const to = dateRange.to ?? dateRange.from!;
+        const toEnd = new Date(to); toEnd.setHours(23, 59, 59, 999);
+        return d >= from && d <= toEnd;
+      })
+    : quotes;
 
   // ── Colonnes DataTable ────────────────────────────────────────────────────
   const columns: ColumnConfig<Quote>[] = [
@@ -493,7 +507,12 @@ export default function ProviderDevisPage() {
             )}
           </div>
 
-          <ActionGroup actions={actions} />
+          <ActionGroup
+            actions={actions}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            dateRangePlaceholder="Filtrer par date"
+          />
         </div>
 
         {/* Table */}
@@ -510,7 +529,7 @@ export default function ProviderDevisPage() {
                   <div key={i} className="h-12 bg-gray-100 rounded-xl" />
                 ))}
               </div>
-              : <DataTable title="Liste des devis" columns={columns} data={quotes} onViewAll={() => { }} />
+              : <DataTable title="Liste des devis" columns={columns} data={filteredQuotes} onViewAll={() => { }} />
             }
           </div>
         </div>

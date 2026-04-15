@@ -267,9 +267,9 @@ export default function Dashboard() {
             </div>
             <div className="px-6 py-4">
               <DataTable
-                title="Tickets Récents"
+                title="Liste Tickets curatifs récents"
                 columns={columns}
-                data={(dashboard?.tickets_recents ?? []).filter((t: any) => t.type === "curatif")}
+                data={dashboard?.tickets_recents ?? []}
                 onViewAll={() => (window.location.href = "/admin/tickets")}
               />
             </div>

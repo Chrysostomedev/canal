@@ -96,27 +96,21 @@ export default function ProviderPlanningPage() {
       name: "result",
       label: "Résultat de la visite",
       type: "select",
-      required: false,
+      required: true,
       options: [
-        { label: "Sélectionner…", value: "" },
         { label: "RAS - Rien à signaler", value: "RAS" },
         { label: "Anomalie détectée", value: "anomalie" },
       ],
       icon: <CheckCircle2 size={18} />,
+      gridSpan: 2,
     },
     {
-      name: "start_date",
-      label: "Date de début",
-      type: "date",
-      required: false,
-      icon: <CalendarDays size={18} />,
-    },
-    {
-      name: "end_date",
-      label: "Date de fin",
-      type: "date",
-      required: false,
-      icon: <CalendarDays size={18} />,
+      name: "period",
+      label: "Période de l'intervention (Début - Fin)",
+      type: "date-range",
+      disablePastDates: true,
+      required: true,
+      gridSpan: 2,
     },
     {
       name: "findings",
@@ -147,7 +141,7 @@ export default function ProviderPlanningPage() {
     ? {
       title: selectedPlanning.codification,
       reference: `#${String(selectedPlanning.id).padStart(7, "0")}`,
-      description: selectedPlanning.description ?? "Aucune description disponible.",
+      description: selectedPlanning.description ?? undefined,
       fields: [
         { label: "Site", value: getSiteName(selectedPlanning.site) },
         { label: "Prestataire", value: getProviderName(selectedPlanning.provider) },
@@ -166,6 +160,10 @@ export default function ProviderPlanningPage() {
           value: STATUS_LABELS[selectedPlanning.status] ?? selectedPlanning.status,
           isStatus: true,
           statusColor: STATUS_COLORS[selectedPlanning.status],
+        },
+        {
+          label: "Rapport préventif",
+          value: "Aucun rapport soumis pour ce planning.",
         },
       ],
     }

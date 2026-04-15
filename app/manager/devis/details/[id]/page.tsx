@@ -208,7 +208,7 @@ export default function DevisDetailsPage() {
             </h3>
 
             <p className="text-sm text-gray-600">
-              {quote.description}
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: quote.description ?? "" }}/>
             </p>
 
           </div>

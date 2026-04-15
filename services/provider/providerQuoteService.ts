@@ -69,6 +69,10 @@ export interface QuoteFilters {
   status?: string;
   page?: number;
   per_page?: number;
+  date_debut?: string;  // YYYY-MM-DD — filtre date création >=
+  date_fin?: string;    // YYYY-MM-DD — filtre date création <=
+  site_id?: number;
+  ticket_id?: number;
 }
 
 export interface CreateQuotePayload {

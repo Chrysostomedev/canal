@@ -427,8 +427,8 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
                     <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-white"><Wrench size={16}/></div>
                     <label className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Travaux effectués</label>
                   </div>
-                  <p className="text-sm text-slate-600 leading-relaxed font-medium bg-slate-50/50 p-6 rounded-2xl border border-slate-50 italic">
-                    {report.description || "Aucune description détaillée fournie."}
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium bg-slate-50/50 p-6 rounded-2xl border border-slate-50">
+                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: report.description || "Aucune description détaillée fournie." }}/>
                   </p>
                 </div>
                 

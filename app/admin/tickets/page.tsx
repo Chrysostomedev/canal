@@ -1,13 +1,14 @@
 ﻿"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import { Check, Copy, Eye, Filter, Download, Upload, TicketPlus, X,
-  CalendarCheck, CalendarDays, Clock, MapPin,
+  CalendarCheck, CalendarDays, Clock, MapPin, ArrowUpRight,
   Wrench, User, Tag, AlertTriangle, CheckCircle2, Plus,
   FileSpreadsheet, ChevronLeft, ChevronRight, Loader2, ShieldCheck, AlertCircle,
 } from "lucide-react";
-
+import Link from "next/link";
 import ReusableForm from "@/components/ReusableForm";
 import Navbar from "@/components/Navbar";
 import DataTable from "@/components/DataTable";
@@ -1149,12 +1150,20 @@ export default function TicketsPage() {
     {
       header: "Actions", key: "actions",
       render: (_: any, row: Ticket) => (
+         <div className="flex items-center gap-1">
         <button
           onClick={() => handleOpenDetails(row)}
           className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition"
         >
           <Eye size={18} /> Aperçu
         </button>
+
+         
+          <span className="w-px h-4 bg-slate-200 mx-0.5" />
+          <Link href={`/admin/tickets/${row.id}`} className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition" title="Voir les détails">
+            <ChevronRight size={16} />
+          </Link>
+</div>
       ),
     },
   ];
@@ -1176,7 +1185,8 @@ export default function TicketsPage() {
       options: services.map((s: any) => ({ label: s.name, value: String(s.id) })),
     },
     {
-      name: "provider_id", label: "Prestataire", type: "select", required: false,
+      name: "provider_id", label: "Prestataire", type: "select", required: true,
+     
       options: providers.map((p: any) => ({
         label: p.company_name ?? p.user?.name ?? p.name ?? `Prestataire #${p.id}`,
         value: String(p.id),
@@ -1197,7 +1207,7 @@ export default function TicketsPage() {
       ],
     },
     { name: "subject",    label: "Sujet",          type: "text" },
-    { name: "planned_at", label: "Date planifiée", type: "date", required: true, icon: CalendarDays },
+    { name: "planned_at", label: "Date planifiée", type: "date", required: true, disablePastDates: true, icon: CalendarDays },
 
     {
       name: "description", label: "Description", type: "rich-text", gridSpan: 2,
@@ -1236,8 +1246,8 @@ export default function TicketsPage() {
         value: String(p.id),
       })),
     },
-    { name: "date_debut", label: "Date de début", type: "date", required: true },
-    { name: "date_fin",   label: "Date de fin",   type: "date", required: true },
+    { name: "date_debut", label: "Date de début", type: "date", required: true, disablePastDates: true },
+    { name: "date_fin",   label: "Date de fin",   type: "date", required: true, disablePastDates: true },
     { name: "description", label: "Description", type: "rich-text", gridSpan: 2 },
   ];
 

@@ -182,9 +182,31 @@ export const ReportService = {
    * 
    * Triés par date décroissante (created_at DESC)
    */
-  async getReports(): Promise<InterventionReport[]> {
-    const res = await axiosInstance.get("/admin/intervention-report");
-    return res.data.data;
+  /**
+   * GET /admin/intervention-report
+   * Filtres supportés : intervention_type, status, site_id, provider_id,
+   * planning_id, ticket_id, result, date_debut, date_fin, per_page
+   */
+  async getReports(params?: {
+    intervention_type?: string;
+    status?: string;
+    site_id?: number;
+    provider_id?: number;
+    planning_id?: number;
+    ticket_id?: number;
+    result?: string;
+    date_debut?: string;
+    date_fin?: string;
+    per_page?: number;
+    page?: number;
+  }): Promise<InterventionReport[]> {
+    const res = await axiosInstance.get("/admin/intervention-report", { params });
+    const d = res.data?.data ?? res.data;
+    // Gère { items: [...], meta: {...} } ou tableau direct
+    if (Array.isArray(d?.items)) return d.items;
+    if (Array.isArray(d?.data))  return d.data;
+    if (Array.isArray(d))        return d;
+    return [];
   },
 
   /**
@@ -311,13 +333,19 @@ export const ReportService = {
    * - Si anomalie détectée : Nouveau ticket curatif créé
    * - Déclenchement possible génération facture
    */
+  /**
+   * POST /admin/intervention-report/:id/validate
+   * Fonctionne pour curatif ET préventif (le back détecte automatiquement)
+   * result: "RAS" | "anomalie" (insensible à la casse côté back)
+   * Si result = "anomalie" → ticket curatif généré automatiquement
+   */
   async validateReport(id: number, payload: ValidateReportPayload): Promise<InterventionReport> {
     const res = await axiosInstance.post(`/admin/intervention-report/${id}/validate`, {
       result:  payload.result,
       rating:  payload.rating ?? null,
-      comment: payload.comment || "Validé",  // back exige required|string — jamais null
+      comment: payload.comment || "Validé",
     });
-    return res.data.data;
+    return res.data?.data ?? res.data;
   },
 
   /**

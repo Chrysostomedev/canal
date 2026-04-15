@@ -234,9 +234,10 @@ function ValidationModal({
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                 Rapport soumis par le prestataire
                             </p>
-                            <p className="text-sm text-slate-700 leading-relaxed">
-                                {ticket.description ?? "Aucune observation."}
-                            </p>
+                            <div
+                                className="prose prose-sm max-w-none text-sm text-slate-700 leading-relaxed"
+                                dangerouslySetInnerHTML={{ __html: ticket.description ?? "Aucune observation." }}
+                            />
                         </div>
 
                         {/* Toggle Valider / Rejeter */}
@@ -389,17 +390,7 @@ function MaintenancePreviewPanel({
 
                 <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
 
-                    {/* Workflow */}
-                    <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Progression</p>
-                        <WorkflowProgress status={ticket.status ?? "pending"} />
-                        {(status === "rejected") && (
-                            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-red-600">
-                                <AlertTriangle size={12} />
-                                {status === "rejected" ? "Rapport rejeté par le gestionnaire" : "Anomalie détectée"}
-                            </div>
-                        )}
-                    </div>
+            
 
                     {/* Champs */}
                     <div className="space-y-0">
@@ -434,9 +425,10 @@ function MaintenancePreviewPanel({
                     {/* Rapport */}
                     <div>
                         <p className="text-xs text-slate-400 font-medium mb-2">Observations du rapport</p>
-                        <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-                            {ticket.description ?? "Aucune observation."}
-                        </p>
+                        <div
+                            className="prose prose-sm max-w-none text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100"
+                            dangerouslySetInnerHTML={{ __html: ticket.description ?? "Aucune observation." }}
+                        />
                     </div>
 
                     {/* Note si déjà évaluée */}
@@ -521,9 +513,19 @@ export default function ManagerEntretienPage() {
     };
     const closeValidation = () => { setIsValidationOpen(false); setValidationTarget(null); };
 
+    const [dateRange, setDateRange] = useState<import("react-day-picker").DateRange | undefined>(undefined);
+
     const filtered = reports
         .filter(t => t.intervention_type === "preventif")
-        .filter(t => statusFilter ? t.status === statusFilter : true);
+        .filter(t => statusFilter ? t.status === statusFilter : true)
+        .filter(t => {
+            if (!dateRange?.from) return true;
+            const d = new Date(t.created_at ?? "");
+            if (isNaN(d.getTime())) return true;
+            const to = dateRange.to ?? dateRange.from;
+            const toEnd = new Date(to); toEnd.setHours(23, 59, 59, 999);
+            return d >= dateRange.from && d <= toEnd;
+        });
 
     const pendingCount = reports.filter(t => t.status === "submitted" || t.status === "pending").length;
 

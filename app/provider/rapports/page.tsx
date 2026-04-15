@@ -223,9 +223,10 @@ function ReportSidePanel({
           {report.description && (
             <div>
               <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Description</p>
-              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-                {report.description}
-              </p>
+              <div
+                className="prose prose-sm max-w-none text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100"
+                dangerouslySetInnerHTML={{ __html: report.description ?? "" }}
+              />
             </div>
           )}
 
@@ -343,15 +344,14 @@ const baseFields: FieldConfig[] = [
   {
     name: "result", label: "Résultat de l'intervention", type: "select", required: false,
     options: [
-      { label: "Sélectionner…", value: "" },
+   
       { label: "RAS - Rien à signaler", value: "RAS" },
       { label: "Anomalie détectée", value: "anomalie" },
     ], gridSpan: 2
   },
-  { name: "start_date", label: "Date de début", type: "date", required: false },
-  { name: "end_date", label: "Date de fin", type: "date" },
-  { name: "findings", label: "Observations / Constatations *", type: "textarea", required: true, gridSpan: 2 as 2 },
-  { name: "action_taken", label: "Actions menées / Travaux effectués", type: "textarea", required: false, gridSpan: 2 as 2 },
+  { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: false, gridSpan: 2, disablePastDates: true },
+  { name: "findings", label: "Observations / Constatations *", type: "rich-text", required: true, gridSpan: 2 as 2 },
+  { name: "action_taken", label: "Actions menées / Travaux effectués", type: "rich-text", required: false, gridSpan: 2 as 2 },
   {
     name: "attachments", label: "Photos & Documents justificatifs (PDF, images)",
     type: "pdf-upload", maxPDFs: 10, gridSpan: 2
@@ -401,6 +401,18 @@ export default function ProviderRapportsPage() {
   const totalPages = Math.ceil(filteredReports.length / PER_PAGE);
   const paginated = filteredReports.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
+  // ── Date range ────────────────────────────────────────────────────────────
+  const [dateRange, setDateRange] = useState<import("react-day-picker").DateRange | undefined>(undefined);
+  const handleDateRange = (range: import("react-day-picker").DateRange | undefined) => {
+    setDateRange(range);
+    setFilters({
+      ...filters,
+      date_from: range?.from ? range.from.toISOString().split("T")[0] : undefined,
+      date_to:   range?.to   ? range.to.toISOString().split("T")[0]   : undefined,
+    });
+    setCurrentPage(1);
+  };
+
   const handleCreate = async (formData: any) => {
     await createReport({
       ticket_id: parseInt(formData.ticket_id),
@@ -427,15 +439,24 @@ export default function ProviderRapportsPage() {
     });
   };
 
-  // KPIs
-  const avgRating = typeof stats?.average_rating === "string"
-    ? parseFloat(stats.average_rating) : (stats?.average_rating ?? 0);
+  // Stats calculées depuis les rapports curatifs filtrés (pas les stats globales de l'API)
+  const curatifReports = filteredReports; // déjà filtrés sur type=curatif
+  const curatifStats = {
+    total:     curatifReports.length,
+    validated: curatifReports.filter(r => r.status === "validated").length,
+    pending:   curatifReports.filter(r => r.status === "submitted" || r.status === "pending").length,
+    avg_rating: (() => {
+      const rated = curatifReports.filter(r => r.rating);
+      if (!rated.length) return null;
+      return (rated.reduce((s, r) => s + (r.rating ?? 0), 0) / rated.length).toFixed(1);
+    })(),
+  };
 
   const kpis = [
-    { label: "Total rapports", value: statsLoading ? "-" : (stats?.total_reports ?? 0), delta: "", trend: "up" as const },
-    { label: "Rapports validés", value: statsLoading ? "-" : (stats?.validated_reports ?? 0), delta: "", trend: "up" as const },
-    { label: "En attente", value: statsLoading ? "-" : (stats?.pending_reports ?? 0), delta: "", trend: "up" as const },
-    { label: "Note moyenne", value: statsLoading ? "-" : (avgRating > 0 ? `${avgRating.toFixed(1)}/5` : "-"), delta: "", trend: "up" as const },
+    { label: "Total rapports",  value: loading ? "-" : curatifStats.total,     delta: "", trend: "up" as const },
+    { label: "Rapports validés",value: loading ? "-" : curatifStats.validated,  delta: "", trend: "up" as const },
+    { label: "En attente",      value: loading ? "-" : curatifStats.pending,    delta: "", trend: "up" as const },
+    { label: "Note moyenne",    value: loading ? "-" : (curatifStats.avg_rating ? `${curatifStats.avg_rating}/5` : "—"), delta: "", trend: "up" as const },
   ];
 
   const pageActions = [
@@ -517,7 +538,12 @@ export default function ProviderRapportsPage() {
             </button>
             <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
           </div>
-          <ActionGroup actions={pageActions} />
+          <ActionGroup
+            actions={pageActions}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRange}
+            dateRangePlaceholder="Filtrer par date"
+          />
         </div>
 
         {/* Chips filtres actifs */}

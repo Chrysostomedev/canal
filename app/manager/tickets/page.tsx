@@ -119,8 +119,8 @@ function TicketSidePanel({
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8 scrollbar-hide">
           <div className="space-y-3">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Description du problème</h3>
-            <div className="bg-slate-50/50 rounded-[2rem] p-6 border border-slate-100 text-sm text-slate-700 leading-relaxed font-medium italic">
-              "{ticket.description || "Aucune description fournie"}"
+            <div className="bg-slate-50/50 rounded-[2rem] p-6 border border-slate-100 text-sm text-slate-700 leading-relaxed font-medium">
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: ticket.description || "Aucune description fournie" }}/>
             </div>
           </div>
 
@@ -265,6 +265,7 @@ export default function TicketsPage() {
       name: "planned_at",
       label: "Début souhaité",
       type: "date",
+      disablePastDates: true,
       required: true,
       icon: <CalendarDays size={18} />
     },
@@ -274,13 +275,13 @@ export default function TicketsPage() {
   label: "Échéance",
   type: "date",
   required: true,
+  disablePastDates: true,
   icon: <Clock size={18} />,
-  // pas de gridSpan → col-span-1 (moitié gauche) ✓
 },
 {
   name: "description",
   label: "Détails supplémentaires",
-  type: "textarea",
+  type: "rich-text",
   placeholder: "Décrivez précisément le problème constaté...",
   required: true,
   gridSpan: 2,   // ← pleine largeur ✓
@@ -308,7 +309,7 @@ export default function TicketsPage() {
       key: "id",
       render: (_: any, row: Ticket) => (
         <span className="font-mono text-[10px] font-black text-slate-900 bg-slate-100 px-2 py-1 rounded-lg">
-          {row.reference || `#${row.id}`}
+          {row.reference || `${row.id}`}
         </span>
       )
     },

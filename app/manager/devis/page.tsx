@@ -253,9 +253,10 @@ export default function DevisPage() {
               {selectedQuote.description && (
                 <div className="pt-4">
                   <p className="text-xs text-slate-400 font-medium mb-2">Description</p>
-                  <p className="text-sm text-slate-700 bg-slate-50 rounded-xl p-4 border border-slate-100 leading-relaxed">
-                    {selectedQuote.description}
-                  </p>
+                  <div
+                    className="prose prose-sm max-w-none text-slate-700 bg-slate-50 rounded-xl p-4 border border-slate-100 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: selectedQuote.description ?? "" }}
+                  />
                 </div>
               )}
             </div>

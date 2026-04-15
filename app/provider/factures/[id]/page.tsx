@@ -330,7 +330,7 @@ export default function ProviderFacturesDetailPage() {
                         Rapport d'intervention
                       </h3>
                       <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-                        {report?.findings ?? report?.description}
+                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: report?.findings ?? report?.description ?? "" }}/>
                       </p>
                     </div>
                   )}

@@ -5,6 +5,12 @@ import { Calendar, MapPin, ChevronRight, Clock, Zap } from "lucide-react";
 import { Intervention } from "../../services/provider/providerDashboardService";
 import { useLanguage } from "../../contexts/LanguageContext";
 
+// ─── Strip HTML tags pour afficher du texte propre ───────────────────────────
+function stripHtml(html?: string | null): string {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function getStatusConfig(status?: string): { dot: string; badge: string; label: string } {
   switch (status?.toLowerCase()) {
     case "en_cours":
@@ -15,7 +21,12 @@ function getStatusConfig(status?: string): { dot: string; badge: string; label: 
       return { dot: "bg-blue-500", badge: "bg-blue-50 text-blue-600 border-blue-200", label: "Planifié" };
     case "terminé":
     case "termine":
-      return { dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-600 border-emerald-200", label: "Terminé" };
+    case "realise":
+    case "réalisé":
+      return { dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-600 border-emerald-200", label: "Réalisé" };
+    case "rapporté":
+    case "rapporte":
+      return { dot: "bg-amber-400", badge: "bg-amber-50 text-amber-600 border-amber-200", label: "Rapporté" };
     default:
       return { dot: "bg-gray-800", badge: "bg-gray-50 text-gray-600 border-gray-200", label: status ?? "Planifié" };
   }
@@ -39,9 +50,16 @@ type Props = {
   interventions?: Intervention[];
   loading?: boolean;
   viewAllHref?: string;
+  /** Href de chaque carte — si omis les cartes ne sont pas cliquables */
+  cardHref?: string | ((intervention: Intervention) => string);
 };
 
-export default function EventListCard({ interventions = [], loading = false, viewAllHref = "#" }: Props) {
+export default function EventListCard({
+  interventions = [],
+  loading = false,
+  viewAllHref = "#",
+  cardHref,
+}: Props) {
   const { t } = useLanguage();
   const isEmpty = !loading && interventions.length === 0;
 
@@ -70,7 +88,7 @@ export default function EventListCard({ interventions = [], loading = false, vie
   return (
     <div className="w-full rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-sm">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
@@ -88,8 +106,6 @@ export default function EventListCard({ interventions = [], loading = false, vie
             )}
           </div>
         </div>
-
-        {/* Bouton "Voir tout" — pointe vers viewAllHref (inchangé) */}
         <Link
           href={viewAllHref}
           className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 font-semibold transition-colors group px-3 py-1.5 rounded-lg hover:bg-gray-50"
@@ -99,10 +115,8 @@ export default function EventListCard({ interventions = [], loading = false, vie
         </Link>
       </div>
 
-      {/* ── Body ───────────────────────────────────────────────────────────── */}
+      {/* Body */}
       <div className="p-5">
-
-        {/* État vide */}
         {isEmpty && (
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">
             <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-3">
@@ -113,83 +127,73 @@ export default function EventListCard({ interventions = [], loading = false, vie
           </div>
         )}
 
-        {/* Grille de cartes */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-          {/* Skeletons pendant le chargement */}
           {loading && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
 
-          {/* ── Carte intervention ─────────────────────────────────────────
-              CHANGEMENT : la div racine est remplacée par un <Link> Next.js.
-              - href="/provider/planning" → redirection cible
-              - "block group" → block pour occuper toute la cellule du grid,
-                group pour propager le hover aux enfants
-              - key remontée sur <Link> car c'est l'élément racine du .map()
-              - hover:-translate-y-0.5 et hover:shadow-md migrent en
-                group-hover: car l'événement hover est désormais capté par
-                le <Link> parent (comportement visuel strictement identique)
-              - h-full sur la div intérieure pour conserver la hauteur complète
-                dans la cellule du grid
-          ─────────────────────────────────────────────────────────────────── */}
           {!loading && interventions.map((intervention) => {
             const { day, time } = formatDateTime(intervention.date_debut);
             const { dot, badge, label } = getStatusConfig(intervention.status);
             const isToday = day === t("interventions.today");
 
-            return (
-              <Link
-                key={intervention.id}
-                href="/provider/planning"
-                className="block group"
+            // Titre propre sans balises HTML
+            const title = stripHtml(
+              intervention.title ?? intervention.description ?? `Intervention #${intervention.id}`
+            );
+
+            // Résoudre le href de la carte
+            const href = typeof cardHref === "function"
+              ? cardHref(intervention)
+              : cardHref;
+
+            const cardContent = (
+              <div
+                className={`
+                  relative rounded-2xl border bg-white p-5 h-full overflow-hidden
+                  transition-all duration-200
+                  ${href ? "hover:shadow-md hover:-translate-y-0.5 cursor-pointer" : ""}
+                  ${isToday ? "border-gray-300" : "border-gray-100"}
+                `}
               >
-                <div
-                  className={`
-                    relative rounded-2xl border bg-white p-5 h-full overflow-hidden
-                    group-hover:shadow-md group-hover:-translate-y-0.5
-                    transition-all duration-200 cursor-pointer
-                    ${isToday ? "border-gray-300" : "border-gray-100"}
-                  `}
-                >
-                  {/* Barre latérale gauche pour les interventions du jour */}
-                  {isToday && (
-                    <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-gray-900 rounded-full" />
-                  )}
-
-                  {/* Titre + badge statut */}
-                  <div className="flex items-start justify-between gap-2 mb-3 pl-1">
-                    <div className="flex items-start gap-2">
-                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} />
-                      <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
-                        {intervention.title ?? intervention.description ?? `Intervention #${intervention.id}`}
-                      </p>
-                    </div>
-                    <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>
-                      {label}
-                    </span>
+                {isToday && (
+                  <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-gray-900 rounded-full" />
+                )}
+                <div className="flex items-start justify-between gap-2 mb-3 pl-1">
+                  <div className="flex items-start gap-2">
+                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} />
+                    <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
+                      {title}
+                    </p>
                   </div>
-
-                  {/* Date & heure */}
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1.5 pl-1">
-                    <Clock size={11} strokeWidth={2} />
-                    <span>
-                      <span className={`font-semibold ${isToday ? "text-gray-900" : "text-gray-700"}`}>
-                        {day}
-                      </span>
-                      {" "}à {time}
-                    </span>
-                  </div>
-
-                  {/* Localisation (optionnelle) */}
-                  {(intervention.site || intervention.location) && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 pl-1">
-                      <MapPin size={11} strokeWidth={2} />
-                      <span className="uppercase tracking-wide truncate font-medium">
-                        {intervention.site ?? intervention.location}
-                      </span>
-                    </div>
-                  )}
+                  <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>
+                    {label}
+                  </span>
                 </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1.5 pl-1">
+                  <Clock size={11} strokeWidth={2} />
+                  <span>
+                    <span className={`font-semibold ${isToday ? "text-gray-900" : "text-gray-700"}`}>{day}</span>
+                    {" "}à {time}
+                  </span>
+                </div>
+                {(intervention.site || intervention.location) && (
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 pl-1">
+                    <MapPin size={11} strokeWidth={2} />
+                    <span className="uppercase tracking-wide truncate font-medium">
+                      {intervention.site ?? intervention.location}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+
+            return href ? (
+              <Link key={intervention.id} href={href} className="block group">
+                {cardContent}
               </Link>
+            ) : (
+              <div key={intervention.id}>
+                {cardContent}
+              </div>
             );
           })}
         </div>

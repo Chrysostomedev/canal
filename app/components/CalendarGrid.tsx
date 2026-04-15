@@ -26,6 +26,8 @@ interface CalendarGridProps {
   onEventDrop?: (planningId: number, newDate: Date) => void;
   canAddEvent?: boolean;
   onEventAdd?: (date: Date) => void;
+  /** Appelé quand on clique "+N autres" — reçoit tous les plannings du jour */
+  onShowMore?: (plannings: Planning[], date: Date) => void;
 }
 
 export default function CalendarGrid({
@@ -36,6 +38,7 @@ export default function CalendarGrid({
   onEventDrop,
   canAddEvent,
   onEventAdd,
+  onShowMore,
 }: CalendarGridProps) {
   const year = activeMonth.getFullYear();
   const month = activeMonth.getMonth();
@@ -125,6 +128,9 @@ export default function CalendarGrid({
             onClick={(event) => {
               if (event?.planning) onEventClick(event.planning);
             }}
+            onShowMore={onShowMore ? (evts, date) => {
+              onShowMore(evts.map(e => e.planning), date);
+            } : undefined}
             onDrop={(planningId) => {
               if (cell.currentMonth && onEventDrop) {
                 onEventDrop(planningId, new Date(year, month, cell.day));

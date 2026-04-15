@@ -69,7 +69,7 @@ export default function Dashboard() {
   const buildBarData = () => {
     // Le backend renvoie déjà les volumes mensuels filtrés/agrégés
     const map: Record<number, number> = {};
-    stats?.tendance_annuelle_maintenance.forEach((i: any) => {
+    stats?.tendance_annuelle_maintenance?.forEach((i: any) => {
       if (i.annee === selectedYear) {
         map[i.mois] = i.total;
       }

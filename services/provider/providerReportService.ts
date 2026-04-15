@@ -174,13 +174,23 @@ export const providerReportService = {
 
   /**
    * GET /provider/intervention-report
-   * Backend filtre automatiquement sur provider_id (rôle PROVIDER)
-   * Retourne { items: [...], meta: {...} } (paginé)
+   * Filtres supportés par le back : intervention_type, status, site_id,
+   * planning_id, ticket_id, result, date_debut, date_fin, per_page
    */
-  getReports: async (): Promise<InterventionReport[]> => {
-    const res = await axiosInstance.get(BASE);
+  getReports: async (params?: {
+    intervention_type?: string;
+    status?: string;
+    site_id?: number;
+    planning_id?: number;
+    ticket_id?: number;
+    result?: string;
+    date_debut?: string;
+    date_fin?: string;
+    per_page?: number;
+    page?: number;
+  }): Promise<InterventionReport[]> => {
+    const res = await axiosInstance.get(BASE, { params });
     const d   = res.data?.data ?? res.data;
-    // Le back retourne { items: [...], meta: {...} }
     if (Array.isArray(d?.items))     return d.items;
     if (Array.isArray(d?.data))      return d.data;
     if (Array.isArray(d))            return d;

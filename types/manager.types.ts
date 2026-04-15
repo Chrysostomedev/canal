@@ -65,7 +65,10 @@ export interface ManagerSite {
   name?: string;
   adresse?: string;
   ville?: string;
+  localisation?: string;
+  status?: string;
   manager_id: number;
+  tickets_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -75,6 +78,18 @@ export interface SiteStats {
   total_tickets: number;
   total_plannings: number;
   active_providers: number;
+  // Nouveaux champs multi-sites (back v2)
+  nombre_total_sites?: number;
+  nombre_sites_assignes?: number;
+  nombre_sites_actifs?: number;
+  nombre_sites_inactifs?: number;
+  cout_loyer_moyen_par_site?: number;
+  tickets_par_site?: { site_id: number; nom: string; tickets_en_cours: number; tickets_clos: number }[];
+  // Champs legacy
+  total?: number;
+  active?: number;
+  in_maintenance?: number;
+  total_value?: number;
 }
 
 // ════════════════════════════════════════════════════════════════

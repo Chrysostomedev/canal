@@ -248,7 +248,7 @@ export default function ProviderQuoteDetailPage() {
                   <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Description</h3>
                     {quote.description
-                      ? <p className="text-sm text-slate-700 leading-relaxed">{quote.description}</p>
+                      ? <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: quote.description }}/>
                       : <p className="text-slate-400 text-sm italic">Aucune description renseignée.</p>
                     }
                   </div>

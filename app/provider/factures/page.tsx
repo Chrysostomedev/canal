@@ -299,7 +299,7 @@ export default function ProviderFacturesPage() {
           reports
             .filter(r => r.intervention_type === "curatif")
             .map(r => ({
-              label: `Rapport #${r.id} — Curatif — ${r.ticket?.subject ?? r.site?.nom ?? ""}`,
+              label: `Rapport ${r.id} — Curatif — ${r.ticket?.subject ?? r.site?.nom ?? ""}`,
               value: r.id,
             }))
         );
@@ -317,7 +317,6 @@ export default function ProviderFacturesPage() {
       required: true,
       gridSpan: 2,
       options: [
-        { label: "Sélectionner un rapport…", value: "" },
         ...reportOptions,
       ],
     },
@@ -340,6 +339,7 @@ export default function ProviderFacturesPage() {
       name: "comment",
       label: "Commentaire",
       type: "rich-text", gridSpan: 2,
+      required: true, 
     },
     { name: "invoice_date", label: "Date ", type: "date", required: true, icon: CalendarDays },
     { name: "due_date", label: "Date limite", type: "date", required: true, icon: CalendarDays },
@@ -376,10 +376,24 @@ export default function ProviderFacturesPage() {
   ];
 
   // ── ActionGroup ───────────────────────────────────────────────────────────
+  const [dateRange, setDateRange] = useState<import("react-day-picker").DateRange | undefined>(undefined);
+
   const pageActions = [
     { label: "Exporter", icon: Download, onClick: exportXlsx, variant: "secondary" as const },
     { label: "Nouvelle facture", icon: PlusCircle, onClick: openCreate, variant: "primary" as const },
   ];
+
+  // Filtre date côté client
+  const filteredInvoices = dateRange?.from
+    ? invoices.filter(inv => {
+        const d = new Date(inv.invoice_date ?? inv.created_at ?? "");
+        if (isNaN(d.getTime())) return true;
+        const from = dateRange.from!;
+        const to = dateRange.to ?? dateRange.from!;
+        const toEnd = new Date(to); toEnd.setHours(23, 59, 59, 999);
+        return d >= from && d <= toEnd;
+      })
+    : invoices;
 
   // ── Colonnes DataTable ────────────────────────────────────────────────────
   const columns: ColumnConfig<Invoice>[] = [
@@ -497,7 +511,12 @@ export default function ProviderFacturesPage() {
             )}
           </div>
 
-          <ActionGroup actions={pageActions} />
+          <ActionGroup
+            actions={pageActions}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            dateRangePlaceholder="Filtrer par date"
+          />
         </div>
 
         {/* Filtre actif pill */}
@@ -527,7 +546,7 @@ export default function ProviderFacturesPage() {
                   <div key={i} className="h-12 bg-gray-100 rounded-xl" />
                 ))}
               </div>
-              : <DataTable title="Liste des factures" columns={columns} data={invoices} onViewAll={() => { }} />
+              : <DataTable title="Liste des factures" columns={columns} data={filteredInvoices} onViewAll={() => { }} />
             }
           </div>
 

@@ -772,6 +772,8 @@ export default function PatrimoinesPage() {
   const [panelAsset, setPanelAsset] = useState<CompanyAsset | null>(null);
   const [filters, setFilters] = useState<AssetFilters>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Sous-types filtrés dynamiquement selon le type sélectionné dans le formulaire
+  const [selectedTypeId, setSelectedTypeId] = useState<string>("");
   const [importLoading, setImportLoading] = useState(false);
   const [flash, setFlash] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
@@ -863,6 +865,11 @@ export default function PatrimoinesPage() {
   const activeFiltersCount = [filters.status, filters.type_id, filters.sub_type_id, filters.site_id, filters.search]
     .filter(Boolean).length;
 
+  // Sous-types filtrés selon le type sélectionné dans le formulaire
+  const filteredSubTypesForForm = selectedTypeId
+    ? subTypes.filter((st: any) => String(st.type_company_asset_id) === selectedTypeId)
+    : subTypes;
+
   const assetFields: FieldConfig[] = [
     {
       name: "type_company_asset_id", label: "Famille / Type", type: "select", required: true,
@@ -870,7 +877,7 @@ export default function PatrimoinesPage() {
     },
     {
       name: "sub_type_company_asset_id", label: "Sous-type", type: "select", required: true,
-      options: subTypes.map((st: any) => ({ label: st.name, value: String(st.id) })),
+      options: filteredSubTypesForForm.map((st: any) => ({ label: st.name, value: String(st.id) })),
     },
     {
       name: "site_id", label: "Site", type: "select", required: true,
@@ -1051,7 +1058,7 @@ export default function PatrimoinesPage() {
 
               {/* Ajouter */}
               <button
-                onClick={() => { setEditingData(null); setIsModalOpen(true); }}
+                onClick={() => { setEditingData(null); setSelectedTypeId(""); setIsModalOpen(true); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm"
               >
                 <Plus size={14} /> Ajouter un patrimoine
@@ -1093,29 +1100,32 @@ export default function PatrimoinesPage() {
       <AssetSidePanel
         asset={panelAsset}
         onClose={() => setPanelAsset(null)}
-        onEdit={() => { setEditingData(panelAsset); setPanelAsset(null); setIsModalOpen(true); }}
+        onEdit={() => { setEditingData(panelAsset); setSelectedTypeId(String(panelAsset?.type_company_asset_id ?? "")); setPanelAsset(null); setIsModalOpen(true); }}
       />
 
       {/* Formulaire création / édition */}
       <ReusableForm
         isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setEditingData(null); }}
+        onClose={() => { setIsModalOpen(false); setEditingData(null); setSelectedTypeId(""); }}
         title={editingData ? "Modifier le patrimoine" : "Ajouter un patrimoine"}
         subtitle="La codification est générée automatiquement"
         fields={assetFields}
         initialValues={editingData ? {
           type_company_asset_id: String(editingData.type_company_asset_id ?? ""),
           sub_type_company_asset_id: String(editingData.sub_type_company_asset_id ?? ""),
-          // Récupération de l'ID du site (soit via l'objet 'site', soit via 'site_id' direct)
           site_id: String(editingData.site_id ?? (editingData.site as any)?.id ?? ""),
           designation: editingData.designation,
           status: editingData.status,
           criticite: editingData.criticite ?? "non_critique",
-          // Formatage obligatoire pour que le champ date HTML5 reconnaisse la valeur
           date_entree: fmtDateForInput(editingData.date_entree),
           valeur_entree: editingData.valeur_entree ?? "",
           description: editingData.description ?? "",
         } : {}}
+        onFieldChange={(name, value) => {
+          if (name === "type_company_asset_id") {
+            setSelectedTypeId(String(value));
+          }
+        }}
         onSubmit={handleCreateOrUpdate}
         submitLabel={editingData ? "Mettre à jour" : "Enregistrer"}
       />

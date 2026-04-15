@@ -65,25 +65,29 @@ export const useNotifications = () => {
         else if (sourceStr.includes("devis") || sourceStr.includes("quote")) source = "devis";
         else if (sourceStr.includes("user") || sourceStr.includes("utilisateur")) source = "utilisateur";
 
-        // Génération automatique du lien de navigation selon le rôle + source
+        // Génération automatique du lien de navigation selon le rôle + source + type
         const role = authService.getRole();
         const prefix = role === "MANAGER" ? "/manager" : role === "PROVIDER" ? "/provider" : "/admin";
-        const entityId = notifData.id || notifData.entity_id || notifData.ticket_id || notifData.asset_id;
+        const entityId = notifData.id || notifData.entity_id || notifData.ticket_id || notifData.asset_id || notifData.report_id;
+        const interventionType = (notifData.intervention_type || notifData.type_rapport || "").toLowerCase();
+        const isPreventif = interventionType.includes("preventif") || interventionType.includes("prév");
 
         let autoHref = notifData.url || notifData.action_url || notifData.href;
-        if (!autoHref && entityId) {
-          if (source === "ticket")      autoHref = `${prefix}/tickets`;
-          else if (source === "rapport") autoHref = `${prefix}/rapports`;
-          else if (source === "devis")   autoHref = `${prefix}/devis`;
-          else if (source === "facture") autoHref = `${prefix}/factures`;
-          else if (source === "planning") autoHref = `${prefix}/planning`;
-          else if (source === "site")    autoHref = `${prefix}/site`;
-          else if (source === "patrimoine") autoHref = `${prefix}/patrimoines`;
-        } else if (!autoHref) {
-          if (source === "ticket")      autoHref = `${prefix}/tickets`;
-          else if (source === "rapport") autoHref = `${prefix}/rapports`;
-          else if (source === "devis")   autoHref = `${prefix}/devis`;
-          else if (source === "facture") autoHref = `${prefix}/factures`;
+        if (!autoHref) {
+          if (source === "ticket") {
+            autoHref = entityId ? `${prefix}/tickets/${entityId}` : `${prefix}/tickets`;
+          } else if (source === "rapport") {
+            // Rapport préventif → entretien, curatif → rapports
+            if (isPreventif) {
+              autoHref = `${prefix}/entretien`;
+            } else {
+              autoHref = entityId ? `${prefix}/rapports/${entityId}` : `${prefix}/rapports`;
+            }
+          } else if (source === "devis")      autoHref = entityId ? `${prefix}/devis/${entityId}` : `${prefix}/devis`;
+          else if (source === "facture")      autoHref = entityId ? `${prefix}/factures/${entityId}` : `${prefix}/factures`;
+          else if (source === "site")         autoHref = `${prefix}/sites`;
+          else if (source === "patrimoine")   autoHref = `${prefix}/patrimoines`;
+          else if (source === "prestataire")  autoHref = `${prefix}/prestataires`;
         }
 
         return {

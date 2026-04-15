@@ -306,12 +306,12 @@ function NotifRow({ notif, isActive, onClick, onDelete }: {
           )}
         </div>
       </div>
-      {/* <div className="flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
-        <button onClick={onDelete} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-400 transition">
-          <Trash2 size={13} />
-        </button>
-        <ChevronRight size={14} className="text-slate-300 mt-1" />
-      </div> */}
+      {/* Indicateur non-lu */}
+      {!notif.read && (
+        <div className="shrink-0 mt-2">
+          <span className="w-2 h-2 rounded-full bg-slate-900 block" />
+        </div>
+      )}
     </div>
   );
 }
@@ -386,7 +386,7 @@ function NotifDetail({ notif, onBack, onDelete }: {
       </div>
 
       {notif.href && (
-        <div className="px-6 py-5 border-t border-slate-100 shrink-0">
+        <div className="px-6 py-5 border-t border-slate-100 shrink-0 space-y-2">
           <a
             href={notif.href}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition"

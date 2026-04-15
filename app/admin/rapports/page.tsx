@@ -13,6 +13,7 @@ import StatsCard from "@/components/StatsCard";
 import DataTable, { ColumnConfig } from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
+import ActionGroup from "@/components/ActionGroup";
 
 import { useReports } from "../../../hooks/admin/useReports";
 import { InterventionReport, ReportService, ValidateReportPayload } from "../../../services/admin/report.service";
@@ -532,9 +533,20 @@ export default function RapportsPage() {
   const showFlash = (type: "success" | "error", message: string) => setFlashMessage({ type, message });
   const applyFilters = (f: { status?: string; type?: string }) => { setFilters(f); setCurrentPage(1); };
 
+  const [dateRange, setDateRange] = useState<import("react-day-picker").DateRange | undefined>(undefined);
+
   const filtered = reports.filter(r => {
     if (filters.status && r.status !== filters.status) return false;
     if (filters.type && r.intervention_type !== filters.type) return false;
+    if (dateRange?.from) {
+      const d = new Date(r.created_at ?? "");
+      if (isNaN(d.getTime()) || d < dateRange.from) return false;
+    }
+    if (dateRange?.to) {
+      const d = new Date(r.created_at ?? "");
+      const toEnd = new Date(dateRange.to); toEnd.setHours(23, 59, 59, 999);
+      if (isNaN(d.getTime()) || d > toEnd) return false;
+    }
     return true;
   });
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
@@ -667,16 +679,12 @@ export default function RapportsPage() {
             </button>
             <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
           </div>
-          <button
-            onClick={handleExport}
-            disabled={exportLoading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-wait"
-          >
-            {exportLoading
-              ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
-              : <Upload size={16} />}
-            Exporter
-          </button>
+          <ActionGroup
+            actions={[{ label: exportLoading ? "Export…" : "Exporter", icon: Upload, onClick: handleExport, variant: "secondary" as const }]}
+            dateRange={dateRange}
+            onDateRangeChange={(r) => { setDateRange(r); setCurrentPage(1); }}
+            dateRangePlaceholder="Filtrer par date"
+          />
         </div>
 
         {/* Chips filtres actifs */}

@@ -98,8 +98,13 @@ export interface InvoiceListResponse {
 
 export interface InvoiceFilters {
   status?: string;
+  payment_status?: string;
   page?: number;
   per_page?: number;
+  date_debut?: string;  // YYYY-MM-DD — filtre invoice_date >=
+  date_fin?: string;    // YYYY-MM-DD — filtre invoice_date <=
+  site_id?: number;
+  intervention_type?: "curatif" | "preventif";
 }
 
 /**

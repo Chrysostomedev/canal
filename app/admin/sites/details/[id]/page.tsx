@@ -210,7 +210,7 @@ function AssetSidePanel({
   if (!patrimoine) return null;
 
   const typeName    = patrimoine.type?.name    ?? "-";
-  const subTypeName = patrimoine.subType?.name ?? "-";
+  const subTypeName = (patrimoine as any).sub_type?.name ?? patrimoine.subType?.name ?? "-";
   const siteName    = patrimoine.site?.nom     ?? "-";
 
   const infoRows = [
@@ -499,7 +499,7 @@ export default function SiteDetailsPage() {
     {
       header: "Sous-type", key: "subType",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm text-slate-700">{row.subType?.name ?? "-"}</span>
+        <span className="text-sm text-slate-700">{(row as any).sub_type?.name ?? row.subType?.name ?? "-"}</span>
       ),
     },
     {

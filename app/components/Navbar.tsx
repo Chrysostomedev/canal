@@ -42,7 +42,7 @@ interface InAppBannerProps {
 
 function InAppBanner({ title, body, onClose, href }: InAppBannerProps) {
   useEffect(() => {
-    const t = setTimeout(onClose, 5000);
+    const t = setTimeout(onClose, 10000);
     return () => clearTimeout(t);
   }, [onClose]);
 

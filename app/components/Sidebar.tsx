@@ -142,8 +142,8 @@ export default function Sidebar() {
     { label: t("nav.planning"), icon: <Calendar size={20} />, href: "/provider/planning" },
     { label: t("nav.devis"), icon: <FileSignature size={20} />, href: "/provider/devis" },
     { label: t("nav.factures"), icon: <FileText size={20} />, href: "/provider/factures" },
-    { label: t("nav.entretien"), icon: <Calendar size={20} />, href: "/provider/entretien" },
     { label: t("nav.rapports"), icon: <ChartNoAxesColumnIncreasing size={20} />, href: "/provider/rapports" },
+    { label: t("nav.entretien"), icon: <Calendar size={20} />, href: "/provider/entretien" },
     { label: t("nav.notifications"), icon: <Bell size={20} />, href: "/provider/notifications" },
   ];
 

@@ -1,3 +1,5 @@
+//cette page doit recuperer tous les pattrimoines et confondues de tous les sites de manager
+
 "use client";
 
 import { useState } from "react";

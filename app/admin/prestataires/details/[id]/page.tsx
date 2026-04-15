@@ -228,8 +228,8 @@ export default function ProviderDetailsPage() {
         { label: "Critique", value: "critique" },
       ],
     },
-    { name: "planned_at", label: "Date planifiée", type: "date", required: true, icon: CalendarDays },
-    { name: "due_at", label: "Date limite", type: "date", required: true, icon: CalendarCheck },
+    { name: "planned_at", label: "Date planifiée", type: "date", required: true, disablePastDates: true, icon: CalendarDays },
+    { name: "due_at", label: "Date limite", type: "date", required: true, disablePastDates: true, icon: CalendarCheck },
     { name: "description", label: "Description", type: "rich-text", gridSpan: 2 },
   ];
 

@@ -1,13 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import SideModal from "@/components/form/SideModal";
 import FormButton from "@/components/form/FormButton";
-import { FormField, Input, Select, PasswordInput, DateInput, RichTextEditor, ImageUpload, PdfUpload, PhoneInput } from "@/components/form/FormInput";
+import { FormField, Input, Select, PasswordInput, DateInput, DateRangeInput, RichTextEditor, ImageUpload, PdfUpload, PhoneInput } from "@/components/form/FormInput";
 
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "password" | "date" | "select" | "email" | "number" | "rich-text" | "image-upload" | "pdf-upload" | "textarea" | "tel";
+  type: "text" | "password" | "date" | "date-range" | "select" | "email" | "number" | "rich-text" | "image-upload" | "pdf-upload" | "textarea" | "tel";
   placeholder?: string;
   required?: boolean;
   gridSpan?: 1 | 2;
@@ -16,7 +17,8 @@ export interface FieldConfig {
   maxImages?: number;
   maxPDFs?: number;
   disabled?: boolean;
-  defaultValue?: string; // ✅ AJOUTÉ
+  defaultValue?: string;
+  disablePastDates?: boolean;
 }
 
 interface ReusableFormProps {
@@ -25,7 +27,7 @@ interface ReusableFormProps {
   title: string;
   subtitle: string;
   fields: FieldConfig[];
-  onSubmit: (formData: Record<string, any>) => void;
+  onSubmit: (formData: Record<string, any>) => void | Promise<any>;
   submitLabel?: string;
   cancelLabel?: string;
   initialValues?: Record<string, any>;
@@ -46,16 +48,35 @@ export default function ReusableForm({
   onFieldChange,
   isSubmitting = false,
 }: ReusableFormProps) {
+  // État local : actif pendant que onSubmit est en cours (async)
+  const [localSubmitting, setLocalSubmitting] = useState(false);
+
+  // Combiné : spinner si l'un ou l'autre est actif
+  const busy = isSubmitting || localSubmitting;
 
   // ── Helper : initialValues en priorité, sinon field.defaultValue, sinon "" ──
-  const getDefault = (field: FieldConfig): string =>
-    initialValues[field.name] ?? field.defaultValue ?? "";
+  // Pour les textarea, on strip le HTML pour afficher du texte propre
+  const stripHtml = (html: string) =>
+    html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const getDefault = (field: FieldConfig): string => {
+    const raw = initialValues[field.name] ?? field.defaultValue ?? "";
+    // textarea : strip HTML pour éviter l'affichage des balises
+    if (field.type === "textarea" && typeof raw === "string") return stripHtml(raw);
+    return raw;
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (busy) return;
     const data = new FormData(e.currentTarget);
     const formDataObj = Object.fromEntries(data.entries());
-    onSubmit(formDataObj);
+    setLocalSubmitting(true);
+    try {
+      await onSubmit(formDataObj);
+    } finally {
+      setLocalSubmitting(false);
+    }
   };
 
   return (
@@ -123,8 +144,18 @@ export default function ReusableForm({
                       name={field.name}
                       required={field.required}
                       disabled={field.disabled}
+                      disablePastDates={field.disablePastDates ?? false}
                       icon={field.icon}
-                      defaultValue={getDefault(field)} // ✅ CORRIGÉ
+                      defaultValue={getDefault(field)}
+                    />
+
+                  ) : field.type === "date-range" ? (
+                    <DateRangeInput
+                      name={field.name}
+                      required={field.required}
+                      disabled={field.disabled}
+                      disablePastDates={field.disablePastDates ?? false}
+                      defaultValue={getDefault(field)}
                     />
 
                   ) : field.type === "textarea" ? (
@@ -168,11 +199,11 @@ export default function ReusableForm({
         </div>
 
         <div className="sticky bottom-0 bg-white pt-6 pb-2 border-t border-slate-100 flex gap-4 mt-auto">
-          <FormButton type="button" variant="secondary" onClick={onClose} className="flex-1" disabled={isSubmitting}>
+          <FormButton type="button" variant="secondary" onClick={onClose} className="flex-1" disabled={busy}>
             {cancelLabel}
           </FormButton>
-          <FormButton type="submit" variant="primary" className="flex-1" isLoading={isSubmitting}>
-            {submitLabel}
+          <FormButton type="submit" variant="primary" className="flex-1" isLoading={busy}>
+            {busy && !isSubmitting ? "En cours..." : submitLabel}
           </FormButton>
         </div>
       </form>

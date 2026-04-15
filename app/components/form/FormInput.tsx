@@ -6,6 +6,9 @@ import {
   Palette, Highlighter, AlignLeft, AlignCenter, AlignRight,
   CornerDownLeft, Plus, Minus, ImagePlus, X, Upload, FileText, ChevronDown
 } from "lucide-react";
+import { DateRangePicker } from "@/components/AgeFilter";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 // Input Standard
 export const FormField = ({ label, required, children }: any) => (
@@ -65,18 +68,64 @@ export const PasswordInput = ({ disabled, ...props }: any) => {
   );
 };
 
-// Champ Date
-export const DateInput = ({ disabled, ...props }: any) => (
-  <div className="relative">
-    <input
-      {...props}
-      disabled={disabled}
-      type="date"
-      className={`w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 transition-all appearance-none ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-100' : ''}`}
-    />
-    <Calendar size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-  </div>
-);
+// Champ Date — style booking, single date, avec option grisage passé
+export const DateInput = ({ name, required, disabled, disablePastDates, defaultValue, icon }: any) => {
+  const [range, setRange] = useState<DateRange | undefined>(() => {
+    if (!defaultValue) return undefined;
+    const d = new Date(defaultValue);
+    return isNaN(d.getTime()) ? undefined : { from: d, to: d };
+  });
+
+  React.useEffect(() => {
+    if (!defaultValue) { setRange(undefined); return; }
+    const d = new Date(defaultValue);
+    if (!isNaN(d.getTime())) setRange({ from: d, to: d });
+  }, [defaultValue]);
+
+  const value = range?.from ? format(range.from, "yyyy-MM-dd") : "";
+
+  return (
+    <div className="w-full">
+      <DateRangePicker
+        date={range}
+        onDateChange={(r) => !disabled && setRange(r)}
+        disablePastDates={disablePastDates ?? false}
+        singleDate
+        placeholder="Choisir une date"
+        className="w-full [&>button]:w-full [&>button]:justify-between [&>button]:bg-slate-50 [&>button]:border-slate-200 [&>button]:rounded-2xl [&>button]:px-4 [&>button]:py-4 [&>button]:text-slate-700 [&>button]:font-medium [&>button]:text-sm"
+      />
+      <input type="hidden" name={name} value={value} required={required} />
+    </div>
+  );
+};
+
+// Champ Date Range (Période Booking Style) — envoie start_date + end_date
+export const DateRangeInput = ({ name, required, disabled, disablePastDates, defaultValue }: any) => {
+  const [range, setRange] = useState<DateRange | undefined>(() => {
+    // Support initialValues : { start_date, end_date } ou string ISO
+    if (!defaultValue) return undefined;
+    if (typeof defaultValue === "object" && defaultValue.start_date) {
+      const from = new Date(defaultValue.start_date);
+      const to   = defaultValue.end_date ? new Date(defaultValue.end_date) : from;
+      return { from, to };
+    }
+    return undefined;
+  });
+
+  return (
+    <div className="w-full">
+      <DateRangePicker
+        date={range}
+        onDateChange={(r) => !disabled && setRange(r)}
+        disablePastDates={disablePastDates ?? false}
+        placeholder="Sélectionner la période (début → fin)"
+        className="w-full [&>button]:w-full [&>button]:justify-between [&>button]:bg-slate-50 [&>button]:border-slate-200 [&>button]:rounded-2xl [&>button]:px-4 [&>button]:py-4 [&>button]:text-slate-700 [&>button]:font-medium [&>button]:text-sm"
+      />
+      <input type="hidden" name="start_date" value={range?.from ? format(range.from, "yyyy-MM-dd") : ""} />
+      <input type="hidden" name="end_date"   value={range?.to   ? format(range.to,   "yyyy-MM-dd") : (range?.from ? format(range.from, "yyyy-MM-dd") : "")} />
+    </div>
+  );
+};
 
 // ─── IMAGE UPLOAD ──────────────────────────────────────────────────────────────
 interface ImageFile {

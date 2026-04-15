@@ -606,7 +606,7 @@ function MaintenancePreviewPanel({
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
-          {/* Workflow */}
+          {/* Workflow
           <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Progression</p>
             <WorkflowProgress status={ticket.status} />
@@ -616,7 +616,7 @@ function MaintenancePreviewPanel({
                 {ticket.status === "rejeté" ? "Rapport rejeté - correction requise" : "Anomalie détectée"}
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Champs */}
           <div className="space-y-0">
@@ -698,7 +698,7 @@ export default function ProviderEntretienPage() {
 
   const {
     reports, filteredReports, stats,
-    loading, submitting,
+    loading, statsLoading, submitting, // 👈 AJOUT ICI
     error, submitSuccess, submitError,
     filters, setFilters,
     createReport, exportXlsx, refresh
@@ -709,6 +709,16 @@ export default function ProviderEntretienPage() {
 
   // Forcer le filtre préventif au montage — cette page ne montre que les entretiens préventifs
   useEffect(() => { setFilters({ type: "preventif" }); }, []);
+
+  const [dateRange, setDateRange] = useState<import("react-day-picker").DateRange | undefined>(undefined);
+  const handleDateRange = (range: import("react-day-picker").DateRange | undefined) => {
+    setDateRange(range);
+    setFilters({
+      type: "preventif",
+      date_from: range?.from ? range.from.toISOString().split("T")[0] : undefined,
+      date_to:   range?.to   ? range.to.toISOString().split("T")[0]   : undefined,
+    });
+  };
 
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -761,6 +771,7 @@ export default function ProviderEntretienPage() {
       label: "Date de début",
       type: "date",
       required: true,
+      disablePastDates: true,
       icon: <CalendarDays size={18} />,
     },
     {
@@ -768,6 +779,7 @@ export default function ProviderEntretienPage() {
       label: "Date de fin",
       type: "date",
       required: false,
+      disablePastDates: true,
       icon: <CalendarDays size={18} />,
     },
     {
@@ -794,11 +806,24 @@ export default function ProviderEntretienPage() {
     },
   ];
 
+  // Stats calculées depuis les rapports déjà filtrés (préventifs uniquement)
+  const preventifReports = filteredReports; // déjà filtrés sur type=preventif
+  const preventifStats = {
+    total:   preventifReports.length,
+    pending: preventifReports.filter(r => r.status === "submitted" || r.status === "pending").length,
+    validated: preventifReports.filter(r => r.status === "validated").length,
+    avg_rating: (() => {
+      const rated = preventifReports.filter(r => r.rating);
+      if (!rated.length) return null;
+      return (rated.reduce((s, r) => s + (r.rating ?? 0), 0) / rated.length).toFixed(1);
+    })(),
+  };
+
   const kpis = [
-    { label: "Total rapports", value: stats?.total_reports ?? 0, delta: "", trend: "up" as const },
-    { label: "En attente", value: stats?.pending_reports ?? 0, delta: "", trend: "up" as const },
-    { label: "Validés", value: stats?.validated_reports ?? 0, delta: "", trend: "up" as const },
-    { label: "Note moyenne", value: stats?.average_rating ?? "-", delta: "", trend: "up" as const },
+    { label: "Total rapports", value: statsLoading ? "-" : preventifStats.total, delta: "", trend: "up" as const },
+    { label: "En attente",     value: statsLoading ? "-" : preventifStats.pending, delta: "", trend: "up" as const },
+    { label: "Validés",        value: statsLoading ? "-" : preventifStats.validated, delta: "", trend: "up" as const },
+    { label: "Note moyenne",   value: statsLoading ? "-" : (preventifStats.avg_rating ? `${preventifStats.avg_rating}/5` : "—"), delta: "", trend: "up" as const },
   ];
 
   const actions = [
@@ -830,24 +855,19 @@ export default function ProviderEntretienPage() {
       ),
     },
     {
-      header: "Date planifiée", key: "created_at",
+      header: "Date ", key: "created_at",
       render: (_: any, row: any) => (
         <span className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
           <CalendarDays size={12} className="text-slate-400" />
           {formatDate(row.ticket?.planned_at || row.created_at)}
-        </span>
+        </span> 
       ),
     },
     {
       header: "Statut", key: "status",
       render: (_: any, row: any) => <StatusBadge status={row.status.toLowerCase()} />,
     },
-    {
-      header: "Progression", key: "id",
-      render: (_: any, row: any) => (
-        <div className="w-36"><WorkflowProgress status={row.status.toLowerCase()} /></div>
-      ),
-    },
+  
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
@@ -905,7 +925,12 @@ export default function ProviderEntretienPage() {
               </button>
             )}
           </div>
-          <ActionGroup actions={actions} />
+          <ActionGroup
+            actions={actions}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRange}
+            dateRangePlaceholder="Filtrer par date"
+          />
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
