@@ -639,11 +639,7 @@ export default function ManagerEntretienPage() {
                             <ShieldCheck size={13} /> Valider
                         </button>
                     )}
-                    <button
-                        onClick={() => router.push(`/admin/rapports/details/${row.id}`)}
-                        className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition">
-                        <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
-                    </button>
+                   
                 </div>
             ),
         },

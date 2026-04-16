@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import AttachmentViewer from "@/components/AttachmentViewer";
 import { useState, useEffect, useRef } from "react";
 import {
   Eye, Filter, Upload, Download, X,
   CheckCircle2, Clock, FileText, Star,
   ArrowUpRight,
 } from "lucide-react";
-
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable, { ColumnConfig } from "@/components/DataTable";
@@ -240,8 +240,6 @@ function ReportSidePanel({
   if (!report) return null;
 
   const isValidated = report.status === "validated";
-  const pdfs = (report.attachments ?? []).filter(a => a.file_type === "document");
-  const photos = (report.attachments ?? []).filter(a => a.file_type === "photo");
   const providerName = report.provider?.company_name ?? report.provider?.name ?? "-";
   const siteName = report.site?.nom ?? report.site?.name ?? "-";
   const ticketSubject = report.ticket?.subject ?? `Ticket #${report.ticket_id}`;
@@ -262,7 +260,7 @@ function ReportSidePanel({
         {/* Titre */}
         <div className="px-6 pt-4 pb-5 shrink-0">
           <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-2xl font-black text-slate-900">Rapport #{report.id}</h2>
+            <h2 className="text-2xl font-black text-slate-900">Rapport {report.id}</h2>
             <StatusBadge status={report.status} />
           </div>
           <p className="text-slate-400 text-xs">{ticketSubject}</p>
@@ -320,69 +318,24 @@ function ReportSidePanel({
             </div>
           )}
 
-          {/* Pièces jointes PDF */}
-          {pdfs.length > 0 && (
-            <div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                Documents ({pdfs.length})
-              </p>
-              <div className="space-y-2">
-                {pdfs.map(att => {
-                  const url = ReportService.getAttachmentUrl(att.file_path);
-                  const name = att.file_path.split("/").pop() ?? "document.pdf";
-                  return (
-                    <div key={att.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white">
-                      <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-                        <FileText size={16} className="text-red-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
-                        <p className="text-[10px] text-slate-400">PDF</p>
-                      </div>
-                      <button
-                        onClick={() => setPdfPreview({ url, name })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition shrink-0"
-                      >
-                        <Eye size={13} /> Aperçu
-                      </button>
-                      <a href={url} download target="_blank" rel="noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition shrink-0">
-                        <Download size={13} />
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          {/* Pièces jointes */}
+          <AttachmentViewer attachments={report.attachments ?? []} title="Pièces jointes" />
 
-          {/* Pièces jointes photos */}
-          {photos.length > 0 && (
-            <div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                Photos ({photos.length})
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {photos.map(att => {
-                  const url = ReportService.getAttachmentUrl(att.file_path);
-                  return (
-                    <a key={att.id} href={url} target="_blank" rel="noreferrer"
-                      className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition">
-                      <img src={url} alt="photo" className="w-full h-full object-cover" />
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Aucune pièce jointe */}
-          {!pdfs.length && !photos.length && (
-            <div className="border border-dashed border-slate-200 rounded-2xl px-5 py-5 flex items-center gap-3 text-slate-400">
-              <FileText size={18} className="shrink-0" />
-              <p className="text-sm font-medium">Aucune pièce jointe</p>
-            </div>
-          )}
+          {/* CTAs navigation */}
+          <div className="space-y-2 pt-2">
+            {report.ticket_id && (
+              <a href={`/admin/tickets/${report.ticket_id}`}
+                className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition group">
+                <span className="text-xs font-bold text-slate-700">Voir le ticket lié</span>
+                <ArrowUpRight size={14} className="text-slate-400 group-hover:text-slate-900 transition" />
+              </a>
+            )}
+            <a href={`/admin/rapports/details/${report.id}`}
+              className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-900 bg-slate-900 hover:bg-black transition group">
+              <span className="text-xs font-bold text-white">Voir le détail complet</span>
+              <ArrowUpRight size={14} className="text-white/70 group-hover:text-white transition" />
+            </a>
+          </div>
         </div>
 
         {/* Footer - Valider */}
@@ -628,7 +581,7 @@ export default function RapportsPage() {
       render: (_: any, row: InterventionReport) => (
         <div className="flex items-center gap-3">
 
-          {/* Aperçu side panel */}
+          {/* Aperçu side panel
           <button
             onClick={() => {
               setSelectedReport(row);
@@ -637,14 +590,14 @@ export default function RapportsPage() {
             className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition"
           >
             <Eye size={18} />
-          </button>
+          </button> */}
 
           {/* Redirection vers page détails */}
           <Link
             href={`/admin/rapports/details/${row.id}`}
             className="group p-2 rounded-xl bg-white hover:bg-black transition flex items-center justify-center"
           >
-            <ArrowUpRight
+            <Eye
               size={16}
               className="group-hover:rotate-45 transition-transform"
             />

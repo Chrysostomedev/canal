@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDashboard } from "../../../hooks/manager/useDashboard";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DonutChartCard from "@/components/DonutChartCard";
@@ -10,32 +11,32 @@ import DataTable, { ColumnConfig } from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 import { Eye, AlertTriangle } from "lucide-react";
 
-const MOIS_LABELS = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
+const MOIS_LABELS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"];
 
-const DONUT_COLORS = ["#df1414","#07ad07","#606eee","#050f6b","#f97316","#94a3b8","#22c55e"];
+const DONUT_COLORS = ["#df1414", "#07ad07", "#606eee", "#050f6b", "#f97316", "#94a3b8", "#22c55e"];
 
 const STATUS_DONUT_LABELS: Record<string, string> = {
-  SIGNALÉ:  "Signalé",
-  VALIDÉ:   "Validé",
-  ASSIGNÉ:  "Assigné",
+  SIGNALÉ: "Signalé",
+  VALIDÉ: "Validé",
+  ASSIGNÉ: "Assigné",
   EN_COURS: "En cours",
   RAPPORTÉ: "Rapporté",
-  ÉVALUÉ:   "Évalué",
-  CLOS:     "Clôturé",
+  ÉVALUÉ: "Évalué",
+  CLOS: "Clôturé",
   // variantes minuscules
   signalez: "Signalé",
-  validé:   "Validé",
-  assigné:  "Assigné",
+  validé: "Validé",
+  assigné: "Assigné",
   en_cours: "En cours",
   rapporté: "Rapporté",
-  évalué:   "Évalué",
-  clos:     "Clôturé",
+  évalué: "Évalué",
+  clos: "Clôturé",
 };
 
 const BAR_COLORS = [
-  "#01050e","#041022","#192535","#2d3748",
-  "#373e46","#4a5568","#718096","#969799",
-  "#a0aec0","#cbd5e0","#e2e8f0","#94a3b8"
+  "#01050e", "#041022", "#192535", "#2d3748",
+  "#373e46", "#4a5568", "#718096", "#969799",
+  "#a0aec0", "#cbd5e0", "#e2e8f0", "#94a3b8"
 ];
 
 const STATUS_LABELS = {
@@ -63,6 +64,7 @@ export default function Dashboard() {
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const router = useRouter();
 
 
 
@@ -98,8 +100,8 @@ export default function Dashboard() {
     const status = (ticket.status || "").toUpperCase();
     const statusColor =
       status === "CLOS" ? "#000" :
-      status === "EN_COURS" ? "#f97316" :
-      status === "ÉVALUÉ" ? "#22c55e" : "#64748b";
+        status === "EN_COURS" ? "#f97316" :
+          status === "ÉVALUÉ" ? "#22c55e" : "#64748b";
 
     setSelectedTicket({
       title: ticket.subject ?? `Ticket #${ticket.id}`,
@@ -169,7 +171,11 @@ export default function Dashboard() {
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
-        <button onClick={() => handleOpenDetails(row)} className="font-bold text-slate-800 hover:text-blue-600 transition">
+        <button
+          onClick={() => router.push(`/manager/tickets/${row.id}`)}
+          className="font-bold text-slate-800 hover:text-blue-600 transition"
+          aria-label={`Voir détail ticket #${row.id}`}
+        >
           <Eye size={18} />
         </button>
       )
@@ -183,7 +189,7 @@ export default function Dashboard() {
         <main className="flex-1 p-8 pt-24 space-y-8">
           {isLoading ? (
             <div className="flex h-64 items-center justify-center">
-               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : (error || !stats) ? (
             <div className="flex h-64 items-center justify-center">
@@ -194,49 +200,49 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatsCard label="Nombre total de tickets" value={stats.kpis.nombre_total_tickets} href="/manager/tickets" />
-            <StatsCard label="Tickets traités" value={stats.kpis.nombre_tickets_traités} href="/manager/tickets" />
-            <StatsCard label="Tickets non traités" value={stats.kpis.nombre_tickets_non_traités} href="/manager/tickets" />
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatsCard label="Nombre total de tickets" value={stats.kpis.nombre_total_tickets} href="/manager/tickets" />
+                <StatsCard label="Tickets traités" value={stats.kpis.nombre_tickets_traités} href="/manager/tickets" />
+                <StatsCard label="Tickets non traités" value={stats.kpis.nombre_tickets_non_traités} href="/manager/tickets" />
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <StatsCard label="Mes prestataires" value={stats.kpis.nombre_prestataires} href="/manager/prestataires" />
-            <StatsCard label="Coût de maintenance de mon site" value={stats.kpis.cout_global_maintenance} isCurrency href="/manager/factures" />
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <StatsCard label="Mes prestataires" value={stats.kpis.nombre_prestataires} href="/manager/prestataires" />
+                <StatsCard label="Coût de maintenance de mon site" value={stats.kpis.cout_global_maintenance} isCurrency href="/manager/factures" />
+              </div>
 
-          <section className="grid grid-cols-1 lg:grid-cols-8 gap-12">
-            <div className="lg:col-span-4">
-              <BarChartCard
-                title="Tendance de l'année"
-                data={buildBarData()}
-                onYearChange={(year) => setSelectedYear(Number(year))}
-              />
-            </div>
-            <div className="lg:col-span-4">
-              <DonutChartCard
-                title="Répartition des tickets par statut"
-                data={buildDonutData()}
-              />
-            </div>
-          </section>
+              <section className="grid grid-cols-1 lg:grid-cols-8 gap-12">
+                <div className="lg:col-span-4">
+                  <BarChartCard
+                    title="Tendance de l'année"
+                    data={buildBarData()}
+                    onYearChange={(year) => setSelectedYear(Number(year))}
+                  />
+                </div>
+                <div className="lg:col-span-4">
+                  <DonutChartCard
+                    title="Répartition des tickets par statut"
+                    data={buildDonutData()}
+                  />
+                </div>
+              </section>
 
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4">
-              <h3 className="text-base font-bold text-slate-800">
-                Listes tickets récents
-              </h3>
-            </div>
-            <div className="px-6 py-4">
-              <DataTable
-                title="Tickets récents"
-                columns={columns}
-                data={recentTickets}
-                onViewAll={() => window.location.href = "/manager/tickets"}
-              />
-            </div>
-          </div>
-          </>
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4">
+                  <h3 className="text-base font-bold text-slate-800">
+                    Listes tickets récents
+                  </h3>
+                </div>
+                <div className="px-6 py-4">
+                  <DataTable
+                    title="Tickets récents"
+                    columns={columns}
+                    data={recentTickets}
+                    onViewAll={() => window.location.href = "/manager/tickets"}
+                  />
+                </div>
+              </div>
+            </>
           )}
         </main>
       </div>

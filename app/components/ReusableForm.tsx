@@ -48,8 +48,8 @@ export default function ReusableForm({
   onFieldChange,
   isSubmitting = false,
 }: ReusableFormProps) {
-  // État local : actif pendant que onSubmit est en cours (async)
   const [localSubmitting, setLocalSubmitting] = useState(false);
+  const [customValues, setCustomValues] = useState<Record<string, any>>({});
 
   // Combiné : spinner si l'un ou l'autre est actif
   const busy = isSubmitting || localSubmitting;
@@ -59,11 +59,16 @@ export default function ReusableForm({
   const stripHtml = (html: string) =>
     html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 
-  const getDefault = (field: FieldConfig): string => {
+  const getDefault = (field: FieldConfig): any => {
     const raw = initialValues[field.name] ?? field.defaultValue ?? "";
     // textarea : strip HTML pour éviter l'affichage des balises
     if (field.type === "textarea" && typeof raw === "string") return stripHtml(raw);
     return raw;
+  };
+
+  const handleCustomChange = (name: string, value: any) => {
+    setCustomValues((prev) => ({ ...prev, [name]: value }));
+    onFieldChange?.(name, value);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,6 +76,12 @@ export default function ReusableForm({
     if (busy) return;
     const data = new FormData(e.currentTarget);
     const formDataObj = Object.fromEntries(data.entries());
+    
+    // Remplacer les valeurs natives par les customValues (utile pour les files array)
+    Object.keys(customValues).forEach((key) => {
+      formDataObj[key] = customValues[key];
+    });
+
     setLocalSubmitting(true);
     try {
       await onSubmit(formDataObj);
@@ -96,12 +107,16 @@ export default function ReusableForm({
                     <ImageUpload
                       name={field.name}
                       maxImages={field.maxImages ?? 3}
+                      defaultValue={getDefault(field)}
+                      onChange={(files: File[]) => handleCustomChange(field.name, files)}
                     />
 
                   ) : field.type === "pdf-upload" ? (
                     <PdfUpload
                       name={field.name}
                       maxPDFs={field.maxPDFs ?? 1}
+                      defaultValue={getDefault(field)}
+                      onChange={(files: File[]) => handleCustomChange(field.name, files)}
                     />
 
                   ) : field.type === "select" ? (

@@ -302,18 +302,37 @@ export default function ProviderDevisPage() {
       name: "unit_price",
       label: "Prix unitaire",
       type: "number",
+      placeholder: "5000",
+
+    },
+    {
+      name: "amount_ht",
+      label: "Montant HT",
+      type: "number",
+      placeholder: "25000",
+    },
+    {
+      name: "tax_rate",
+      label: "TVA",
+      type: "number",
+            placeholder: "18",
+
     },
     {
       name: "quantity",
       label: "Quantité",
       type: "number",
+            placeholder: "7",
+
     },
     {
       name: "description",
       label: "Description",
       type: "rich-text",
       required: true,
-      gridSpan: 2
+      gridSpan: 2,
+            placeholder: "Dévrivez ce que vous voulez",
+
     },
 
     {
@@ -436,18 +455,18 @@ export default function ProviderDevisPage() {
       render: (_: any, row: Quote) => (
         <div className="flex items-center gap-3">
           {/* Aperçu panel droite */}
-          <button
+          {/* <button
             onClick={() => openPanel(row)}
             className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition"
           >
             <Eye size={18} />
-          </button>
+          </button> */}
           {/* Détails - page [id] */}
           <button
             onClick={() => router.push(`/provider/devis/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center"
           >
-            <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
+            <Eye size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
           </button>
         </div>
       ),

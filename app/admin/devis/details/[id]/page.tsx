@@ -11,6 +11,7 @@ import {
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
+import { resolveUrl } from "@/components/AttachmentViewer";
 
 import { QuoteService, Quote, QuoteHistory } from "../../../../../services/admin/quote.service";
 
@@ -316,7 +317,7 @@ export default function DevisDetailsPage() {
   // Pièces jointes PDF
   const pdfFiles = (quote?.pdf_paths ?? []).map((path) => ({
     name: path.split("/").pop() ?? "devis.pdf",
-    url: QuoteService.getPdfUrl(path),
+    url: resolveUrl(path),
   }));
 
   // Historique

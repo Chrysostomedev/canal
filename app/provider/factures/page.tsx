@@ -303,7 +303,7 @@ export default function ProviderFacturesPage() {
               value: r.id,
             }))
         );
-      }).catch(() => {});
+      }).catch(() => { });
     });
   }, []);
 
@@ -339,7 +339,7 @@ export default function ProviderFacturesPage() {
       name: "comment",
       label: "Commentaire",
       type: "rich-text", gridSpan: 2,
-      required: true, 
+      required: true,
     },
     { name: "invoice_date", label: "Date ", type: "date", required: true, icon: CalendarDays },
     { name: "due_date", label: "Date limite", type: "date", required: true, icon: CalendarDays },
@@ -386,13 +386,13 @@ export default function ProviderFacturesPage() {
   // Filtre date côté client
   const filteredInvoices = dateRange?.from
     ? invoices.filter(inv => {
-        const d = new Date(inv.invoice_date ?? inv.created_at ?? "");
-        if (isNaN(d.getTime())) return true;
-        const from = dateRange.from!;
-        const to = dateRange.to ?? dateRange.from!;
-        const toEnd = new Date(to); toEnd.setHours(23, 59, 59, 999);
-        return d >= from && d <= toEnd;
-      })
+      const d = new Date(inv.invoice_date ?? inv.created_at ?? "");
+      if (isNaN(d.getTime())) return true;
+      const from = dateRange.from!;
+      const to = dateRange.to ?? dateRange.from!;
+      const toEnd = new Date(to); toEnd.setHours(23, 59, 59, 999);
+      return d >= from && d <= toEnd;
+    })
     : invoices;
 
   // ── Colonnes DataTable ────────────────────────────────────────────────────
@@ -435,21 +435,20 @@ export default function ProviderFacturesPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: Invoice) => (
         <div className="flex items-center gap-3">
-          {/* Aperçu panel droite */}
-          <button
+          {/* <button
             onClick={() => openPanel(row)}
             className="flex items-center gap-2 text-slate-800 hover:text-gray-500 transition"
             title="Aperçu"
           >
             <Eye size={18} />
-          </button>
+          </button> */}
           {/* Détails ...page [id] */}
           <button
             onClick={() => router.push(`/provider/factures/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center"
             title="Voir les détails"
           >
-            <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
+            <Eye size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
           </button>
         </div>
       ),

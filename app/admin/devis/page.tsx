@@ -21,6 +21,7 @@ import { useQuotes } from "../../../hooks/admin/useQuotes";
 import { Quote, QuoteService } from "../../../services/admin/quote.service";
 import { exportToXlsx } from "../../../core/export";
 import axiosInstance from "../../../core/axios";
+import { resolveStorageUrl } from "../../../lib/url";
 
 // ══════════════════════════════════════════════
 // HELPERS
@@ -222,7 +223,7 @@ function QuoteSidePanel({
   const pdfFiles: Array<{ name: string; url: string; size?: string }> =
     (quote as any).pdf_paths?.map((p: string) => ({
       name: p.split("/").pop() ?? "document.pdf",
-      url:  `${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ?? ""}/storage/${p}`,
+      url:  resolveStorageUrl(p),
     })) ?? [];
 
   const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
@@ -734,25 +735,34 @@ export default function DevisPage() {
     },
     {
       name: "site_id",
-      label: "Site (auto-rempli depuis le ticket)",
-      type: "text",
+      label: "Site",
+      type: "text", 
       required: false,
       disabled: true,
       placeholder: "Sélectionnez un ticket",
     },
-    {
-      name: "description",
-      label: "Description",
-      type: "textarea",
-      required: true,
-      placeholder: "Décrivez les prestations à réaliser...",
-    },
+    
     {
       name: "amount_ht",
       label: "Montant HT (FCFA)",
       type: "number",
       required: true,
       placeholder: "Ex: 150000",
+    },
+    {
+      name: "amount_ht",
+      label: "Montant TVA",
+      type: "number",
+      required: false,
+      placeholder: "Ex: 150000",
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "rich-text",
+      required: true,
+      placeholder: "Décrivez les prestations à réaliser...",
+      gridSpan: 2,
     },
   ];
 
@@ -809,7 +819,7 @@ export default function DevisPage() {
   
   const columns: ColumnConfig<Quote>[] = [
     { header: "Référence",   key: "reference",  render: (_: any, row: Quote) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
-    { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `#${row.ticket_id}` },
+    // { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `${row.ticket_code_ticket}` },
     { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.company_name ?? row.provider?.name ?? "-" },
     { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? "-" },
     { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
@@ -822,16 +832,16 @@ export default function DevisPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: Quote) => (
         <div className="flex items-center gap-3">
-          {/* Aperçu side panel */}
+          {/* Aperçu side panel
           <button onClick={() => { setSelectedQuote(row); setIsDetailsOpen(true); }}
             className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition">
             <Eye size={18} />
-          </button>
+          </button> */}
           
           {/* Redirection vers page détails */}
           <Link href={`/admin/devis/details/${row.id}`}
-            className="group p-2 rounded-xl bg-white hover:bg-black transition flex items-center justify-center">
-            <ArrowUpRight size={16} className="group-hover:rotate-45 transition-transform" />
+            className="group p-2 rounded-xl bg-white transition flex items-center justify-center">
+            <Eye size={16} />
           </Link>
         </div>
       ),

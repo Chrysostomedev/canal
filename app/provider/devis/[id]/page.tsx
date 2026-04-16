@@ -7,8 +7,10 @@ import StatsCard from "@/components/StatsCard";
 import {
   ChevronLeft, CheckCircle2, XCircle, Clock,
   FileText, Eye, Download, X, User, AlertCircle,
-  RefreshCw, MapPin, Tag,
+  RefreshCw, MapPin, Tag, Pencil,
 } from "lucide-react";
+
+import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 
 import {
   providerQuoteService, Quote, QuoteHistory,
@@ -124,23 +126,54 @@ export default function ProviderQuoteDetailPage() {
   const [error,      setError]      = useState("");
   const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
 
-  useEffect(() => {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [flash, setFlash] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+
+  const showFlash = (type: "success" | "error", msg: string) => {
+    setFlash({ type, msg });
+    setTimeout(() => setFlash(null), 5000);
+  };
+
+  const loadQuoteData = async () => {
     if (!quoteId) return;
-    const load = async () => {
-      setLoading(true); setError("");
-      try {
-        const data = await providerQuoteService.getQuoteById(quoteId);
-        setQuote(data);
-      } catch (e: any) {
-        setError(
-          e.response?.data?.message ??
-          e.response?.data?.error   ??
-          "Impossible de charger ce devis."
-        );
-      } finally { setLoading(false); }
-    };
-    load();
+    setLoading(true); setError("");
+    try {
+      const data = await providerQuoteService.getQuoteById(quoteId);
+      setQuote(data);
+    } catch (e: any) {
+      setError(e.response?.data?.message ?? "Impossible de charger ce devis.");
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    loadQuoteData();
   }, [quoteId]);
+
+  const handleEditSubmit = async (formData: any) => {
+    if (!quote) return;
+    try {
+      await providerQuoteService.updateQuote(quote.id, {
+        ticket_id: quote.ticket_id!,
+        description: formData.description,
+        tax_rate: Number(formData.tax_rate),
+        items: quote.items || [], // Items are usually managed separately or kept as is
+        pdf_file: formData.quote_pdf?.[0],
+      });
+      showFlash("success", "Devis mis à jour avec succès.");
+      setIsEditModalOpen(false);
+      loadQuoteData();
+    } catch (err: any) {
+      showFlash("error", err?.response?.data?.message ?? "Erreur lors de la mise à jour.");
+    }
+  };
+
+  const quoteFields: FieldConfig[] = [
+    { name: "tax_rate", label: "TVA (%)", type: "number", required: true },
+    { name: "description", label: "Description / Détails", type: "rich-text", required: true, gridSpan: 2 },
+    { name: "quote_pdf", label: "Devis PDF (optionnel)", type: "pdf-upload", maxPDFs: 1, gridSpan: 2 },
+  ];
+
+  const canEdit = quote && quote.status !== "approuvé";
 
   // ── Calculs ────────────────────────────────────────────────────────────────
   const totalHT   = quote?.amount_ht    ?? 0;
@@ -164,15 +197,23 @@ export default function ProviderQuoteDetailPage() {
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 space-y-8">
+        <main className="mt-4 p-8 space-y-8">
 
           {/* Retour */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-slate-500 hover:text-black transition-colors bg-white px-4 py-2 rounded-xl border border-slate-100 w-fit text-sm font-medium"
-          >
-            <ChevronLeft size={16} /> Retour
-          </button>
+          <div className="flex items-center justify-between gap-4">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-slate-500 hover:text-black transition-colors bg-white px-4 py-2 rounded-xl border border-slate-100 w-fit text-sm font-medium"
+            >
+              <ChevronLeft size={16} /> Retour
+            </button>
+
+            {flash && (
+              <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${flash.type === "success" ? "text-green-700 bg-green-50 border-green-200" : "text-red-600 bg-red-100 border-red-300"}`}>
+                {flash.msg}
+              </div>
+            )}
+          </div>
 
           {/* Erreur */}
           {error && (
@@ -219,17 +260,26 @@ export default function ProviderQuoteDetailPage() {
                 </div>
 
                 {/* Dates */}
-                <div className="bg-slate-50 p-5 rounded-[24px] border border-slate-100 min-w-[260px] space-y-2.5">
-                  {[
-                    { label: "Créé le",     value: formatDate(quote.created_at),  show: true },
-                    { label: "Approuvé le", value: formatDate(quote.approved_at), show: !!quote.approved_at },
-                    { label: "Rejeté le",   value: formatDate(quote.rejected_at), show: !!quote.rejected_at },
-                  ].filter(r => r.show).map((r, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400 font-medium">{r.label}</span>
-                      <span className="font-bold text-slate-900">{r.value}</span>
-                    </div>
-                  ))}
+                <div className="flex flex-col md:flex-row items-center gap-6 shrink-0">
+                  <div className="bg-slate-50 p-5 rounded-[24px] border border-slate-100 min-w-[260px] space-y-2.5">
+                    {[
+                      { label: "Créé le",     value: formatDate(quote.created_at),  show: true },
+                      { label: "Approuvé le", value: formatDate(quote.approved_at), show: !!quote.approved_at },
+                      { label: "Rejeté le",   value: formatDate(quote.rejected_at), show: !!quote.rejected_at },
+                    ].filter(r => r.show).map((r, i) => (
+                      <div key={i} className="flex justify-between items-center text-sm">
+                        <span className="text-slate-400 font-medium">{r.label}</span>
+                        <span className="font-bold text-slate-900">{r.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    disabled={!canEdit}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition shadow-sm ${canEdit ? "bg-slate-900 text-white hover:bg-black" : "bg-slate-100 text-slate-400 cursor-not-allowed"}`}
+                  >
+                    <Pencil size={14} /> Modifier le devis
+                  </button>
                 </div>
               </div>
 
@@ -421,6 +471,23 @@ export default function ProviderQuoteDetailPage() {
       {/* PDF Preview Modal - centre */}
       {pdfPreview && (
         <PdfPreviewModal url={pdfPreview.url} name={pdfPreview.name} onClose={() => setPdfPreview(null)} />
+      )}
+
+      {/* Modifier Modal */}
+      {quote && (
+        <ReusableForm
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          title="Modifier le devis"
+          subtitle="Mettez à jour les informations de votre devis"
+          fields={quoteFields}
+          initialValues={{
+            tax_rate: quote.tax_rate,
+            description: quote.description,
+          }}
+          onSubmit={handleEditSubmit}
+          submitLabel="Enregistrer les modifications"
+        />
       )}
     </div>
   );

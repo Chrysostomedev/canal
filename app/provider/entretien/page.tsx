@@ -361,7 +361,7 @@ function ReportFormPanel({
 
   const radioOptions: { value: AnomalyAction; label: string; desc: string; icon: any; color: string }[] = [
     {
-      value: "ras",
+      value: "RAS",
       label: "RAS - Rien à signaler",
       desc: "Tout est en bon état. Le ticket sera clôturé automatiquement.",
       icon: CheckCircle2,
@@ -716,7 +716,7 @@ export default function ProviderEntretienPage() {
     setFilters({
       type: "preventif",
       date_from: range?.from ? range.from.toISOString().split("T")[0] : undefined,
-      date_to:   range?.to   ? range.to.toISOString().split("T")[0]   : undefined,
+      date_to: range?.to ? range.to.toISOString().split("T")[0] : undefined,
     });
   };
 
@@ -760,9 +760,8 @@ export default function ProviderEntretienPage() {
       type: "select",
       required: true,
       options: [
-        { label: "RAS - Rien à signaler", value: "ras" },
+        { label: "RAS - Rien à signaler", value: "RAS" },
         { label: "Anomalie détectée", value: "anomalie" },
-        { label: "Résolu sur place", value: "resolu" },
       ],
       icon: <CheckCircle2 size={18} />,
     },
@@ -783,7 +782,7 @@ export default function ProviderEntretienPage() {
       icon: <CalendarDays size={18} />,
     },
     {
-      name: "description",
+      name: "action_taken",
       label: "Travaux effectués / Actions menées",
       type: "rich-text",
       required: true,
@@ -809,7 +808,7 @@ export default function ProviderEntretienPage() {
   // Stats calculées depuis les rapports déjà filtrés (préventifs uniquement)
   const preventifReports = filteredReports; // déjà filtrés sur type=preventif
   const preventifStats = {
-    total:   preventifReports.length,
+    total: preventifReports.length,
     pending: preventifReports.filter(r => r.status === "submitted" || r.status === "pending").length,
     validated: preventifReports.filter(r => r.status === "validated").length,
     avg_rating: (() => {
@@ -821,9 +820,9 @@ export default function ProviderEntretienPage() {
 
   const kpis = [
     { label: "Total rapports", value: statsLoading ? "-" : preventifStats.total, delta: "", trend: "up" as const },
-    { label: "En attente",     value: statsLoading ? "-" : preventifStats.pending, delta: "", trend: "up" as const },
-    { label: "Validés",        value: statsLoading ? "-" : preventifStats.validated, delta: "", trend: "up" as const },
-    { label: "Note moyenne",   value: statsLoading ? "-" : (preventifStats.avg_rating ? `${preventifStats.avg_rating}/5` : "—"), delta: "", trend: "up" as const },
+    { label: "En attente", value: statsLoading ? "-" : preventifStats.pending, delta: "", trend: "up" as const },
+    { label: "Validés", value: statsLoading ? "-" : preventifStats.validated, delta: "", trend: "up" as const },
+    { label: "Note moyenne", value: statsLoading ? "-" : (preventifStats.avg_rating ? `${preventifStats.avg_rating}/5` : "—"), delta: "", trend: "up" as const },
   ];
 
   const actions = [
@@ -860,26 +859,26 @@ export default function ProviderEntretienPage() {
         <span className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
           <CalendarDays size={12} className="text-slate-400" />
           {formatDate(row.ticket?.planned_at || row.created_at)}
-        </span> 
+        </span>
       ),
     },
     {
       header: "Statut", key: "status",
       render: (_: any, row: any) => <StatusBadge status={row.status.toLowerCase()} />,
     },
-  
+
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => openPanel(row)}
+          {/* <button onClick={() => openPanel(row)}
             className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600 hover:text-slate-900">
             <Eye size={16} />
-          </button>
+          </button> */}
           <button
             onClick={() => router.push(`/provider/entretien/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition">
-            <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
+            <Eye size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
           </button>
         </div>
       ),
@@ -985,10 +984,10 @@ export default function ProviderEntretienPage() {
           const success = await createReport({
             ticket_id: 0, // sera ignoré côté backend pour les entretiens préventifs
             intervention_type: "preventif",
-            result: values.result as "ras" | "anomalie" | "resolu",
+            result: values.result as "RAS" | "anomalie",
             start_date: values.start_date as string,
             end_date: values.end_date as string || undefined,
-            description: values.description as string || undefined,
+            action_taken: values.action_taken as string || undefined,
             findings: values.findings as string || undefined,
           });
           if (success) setIsNewReportOpen(false);

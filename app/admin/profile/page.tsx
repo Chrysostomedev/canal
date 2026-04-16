@@ -41,6 +41,7 @@ export default function AdminProfilePage() {
     try {
       const res  = await axiosInstance.get("/admin/me");
       const data = res.data?.data ?? res.data;
+      console.log("[AdminProfile] données reçues :", data);
       setProfile(data);
       setFormData({
         first_name: data.first_name ?? "",
@@ -48,11 +49,12 @@ export default function AdminProfilePage() {
         email:      data.email      ?? "",
         phone:      data.phone_number ?? data.phone ?? "",
       });
-      // Mettre à jour la photo dans localStorage pour la Navbar
       if (data.url) {
         localStorage.setItem("profile_picture_url", data.url);
+        window.dispatchEvent(new StorageEvent("storage", { key: "profile_picture_url", newValue: data.url }));
       }
-    } catch {
+    } catch (e: any) {
+      console.error("[AdminProfile] erreur fetch :", e?.response?.data ?? e);
       showFlash("error", "Impossible de charger le profil.");
     } finally {
       setLoading(false);
@@ -72,11 +74,14 @@ export default function AdminProfilePage() {
       if (formData.phone) fd.append("phone", formData.phone);
       if (fileInputRef.current?.files?.[0]) {
         fd.append("avatar", fileInputRef.current.files[0]);
+        console.log("[AdminProfile] upload avatar :", fileInputRef.current.files[0].name);
       }
+      console.log("[AdminProfile] POST /admin/profile →", Object.fromEntries(fd.entries()));
       const res  = await axiosInstance.post("/admin/profile", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       const data = res.data?.data ?? res.data;
+      console.log("[AdminProfile] réponse update :", data);
       if (data?.url) {
         localStorage.setItem("profile_picture_url", data.url);
         window.dispatchEvent(new StorageEvent("storage", { key: "profile_picture_url", newValue: data.url }));
@@ -84,6 +89,7 @@ export default function AdminProfilePage() {
       showFlash("success", "Profil mis à jour avec succès.");
       fetchProfile();
     } catch (e: any) {
+      console.error("[AdminProfile] erreur update :", e?.response?.data ?? e);
       showFlash("error", e.response?.data?.message || "Erreur lors de la mise à jour.");
     } finally {
       setSaving(false);

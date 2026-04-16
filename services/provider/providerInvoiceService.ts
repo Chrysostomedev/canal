@@ -1,4 +1,5 @@
 import axiosInstance from "../../core/axios";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ─── Types — miroir exact du modèle Laravel Invoice ──────────────────────────
 // Relations chargées par le backend : interventionReport, quote, provider, site, attachments
@@ -176,12 +177,9 @@ export function formatDateLong(iso?: string | null): string {
   });
 }
 
-/** URL publique du PDF : storage/<path> */
+
 export function getPdfUrl(path: string): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "")
-    .replace("/api/V1", "")
-    .replace("/api", "");
-  return `${base}/storage/${path}`;
+  return resolveStorageUrl(path);
 }
 
 export function getProviderName(p?: InvoiceProvider | null): string {
@@ -248,26 +246,41 @@ export const providerInvoiceService = {
    * Si un devis approuvé existe sur le rapport → montants repris du devis automatiquement
    * Si pas de devis → on envoie amount_ht / tax_amount / amount_ttc manuellement
    * Le champ pdf_file → stocké via pdf_path
-   * Le champ attachments[] → invoices/attachments/ via saveAttachments()
    */
   createInvoice: async (payload: CreateInvoicePayload): Promise<Invoice> => {
     const form = new FormData();
     form.append("report_id", String(payload.report_id));
-
-    if (payload.amount_ht  != null) form.append("amount_ht",  String(payload.amount_ht));
+    if (payload.amount_ht != null)  form.append("amount_ht",  String(payload.amount_ht));
     if (payload.tax_amount != null) form.append("tax_amount", String(payload.tax_amount));
     if (payload.amount_ttc != null) form.append("amount_ttc", String(payload.amount_ttc));
-    if (payload.comment)            form.append("comment",    payload.comment);
+    if (payload.comment)           form.append("comment",    payload.comment);
+    if (payload.invoice_date)      form.append("invoice_date", payload.invoice_date);
+    if (payload.due_date)          form.append("due_date",     payload.due_date);
 
-    // PDF principal → pdf_path dans la BD
-    if (payload.pdf_file) form.append("pdf_file", payload.pdf_file);
-
-    // Justificatifs multiples → invoices/attachments/
+    if (payload.pdf_file) {
+      form.append("pdf_file", payload.pdf_file);
+    }
     if (payload.attachments?.length) {
-      payload.attachments.forEach((f) => form.append("attachments[]", f));
+      payload.attachments.forEach(p => form.append("attachments[]", p));
     }
 
     const res = await axiosInstance.post(BASE, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data?.data ?? res.data;
+  },
+
+  updateInvoice: async (id: number, payload: Partial<CreateInvoicePayload>): Promise<Invoice> => {
+    const form = new FormData();
+    form.append("_method", "PUT");
+    if (payload.report_id)  form.append("report_id", String(payload.report_id));
+    if (payload.amount_ht != null)  form.append("amount_ht",  String(payload.amount_ht));
+    if (payload.tax_amount != null) form.append("tax_amount", String(payload.tax_amount));
+    if (payload.amount_ttc != null) form.append("amount_ttc", String(payload.amount_ttc));
+    if (payload.comment)            form.append("comment",    payload.comment);
+    if (payload.pdf_file)           form.append("pdf_file",   payload.pdf_file);
+
+    const res = await axiosInstance.post(`${BASE}/${id}`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data?.data ?? res.data;

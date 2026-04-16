@@ -86,7 +86,7 @@ function ReportSidePanel({ report, onClose }: { report: InterventionReport | nul
         </div>
         <div className="px-6 pt-4 pb-5 shrink-0">
           <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-2xl font-black text-slate-900">Rapport #{report.id}</h2>
+            <h2 className="text-2xl font-black text-slate-900">Rapport {report.reference}</h2>
             <StatusBadge status={report.status} />
           </div>
           <p className="text-slate-400 text-xs">{ticketSubject}</p>

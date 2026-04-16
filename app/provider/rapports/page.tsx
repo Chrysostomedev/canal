@@ -18,6 +18,7 @@ import {
   FileText, CheckCircle2, XCircle, Clock,
   AlertCircle, PlusCircle, Edit2, Star,
 } from "lucide-react";
+import AttachmentViewer from "@/components/AttachmentViewer";
 
 import { useProviderReports, ReportFilterState } from "../../../hooks/provider/useProviderReports";
 import {
@@ -172,10 +173,6 @@ function FilterDropdown({
 function ReportSidePanel({
   report, onClose, onEdit,
 }: { report: InterventionReport; onClose: () => void; onEdit: (r: InterventionReport) => void }) {
-  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
-
-  const pdfs = (report.attachments ?? []).filter(a => a.file_type === "document");
-  const photos = (report.attachments ?? []).filter(a => a.file_type === "photo");
   const editable = isEditable(report);
 
   return (
@@ -262,61 +259,23 @@ function ReportSidePanel({
           )}
 
           {/* PDFs */}
-          {pdfs.length > 0 && (
-            <div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Documents ({pdfs.length})</p>
-              <div className="space-y-2">
-                {pdfs.map(att => {
-                  const url = getAttachmentUrl(att.file_path);
-                  const name = att.file_path.split("/").pop() ?? "document.pdf";
-                  return (
-                    <div key={att.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white">
-                      <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-                        <FileText size={16} className="text-red-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
-                        <p className="text-[10px] text-slate-400">PDF</p>
-                      </div>
-                      <button onClick={() => setPdfPreview({ url, name })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition shrink-0">
-                        <Eye size={13} /> Aperçu
-                      </button>
-                      <a href={url} download target="_blank" rel="noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition shrink-0">
-                        <Download size={13} />
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <AttachmentViewer attachments={report.attachments ?? []} title="Pièces jointes" />
 
-          {/* Photos */}
-          {photos.length > 0 && (
-            <div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Photos ({photos.length})</p>
-              <div className="grid grid-cols-3 gap-2">
-                {photos.map(att => {
-                  const url = getAttachmentUrl(att.file_path);
-                  return (
-                    <a key={att.id} href={url} target="_blank" rel="noreferrer"
-                      className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition">
-                      <img src={url} alt="photo" className="w-full h-full object-cover" />
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {!pdfs.length && !photos.length && (
-            <div className="border border-dashed border-slate-200 rounded-2xl px-5 py-5 flex items-center gap-3 text-slate-400">
-              <FileText size={18} className="shrink-0" />
-              <p className="text-sm font-medium">Aucune pièce jointe</p>
-            </div>
-          )}
+          {/* CTAs */}
+          <div className="space-y-2 pt-1">
+            {report.ticket_id && (
+              <a href={`/provider/tickets/${report.ticket_id}`}
+                className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition group">
+                <span className="text-xs font-bold text-slate-700">Voir le ticket lié</span>
+                <ArrowUpRight size={14} className="text-slate-400 group-hover:text-slate-900 transition" />
+              </a>
+            )}
+            <a href={`/provider/rapports/${report.id}`}
+              className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-900 bg-slate-900 hover:bg-black transition group">
+              <span className="text-xs font-bold text-white">Voir le détail complet</span>
+              <ArrowUpRight size={14} className="text-white/70 group-hover:text-white transition" />
+            </a>
+          </div>
         </div>
 
         {/* Footer modifier */}
@@ -344,7 +303,7 @@ const baseFields: FieldConfig[] = [
   {
     name: "result", label: "Résultat de l'intervention", type: "select", required: false,
     options: [
-   
+
       { label: "RAS - Rien à signaler", value: "RAS" },
       { label: "Anomalie détectée", value: "anomalie" },
     ], gridSpan: 2
@@ -408,7 +367,7 @@ export default function ProviderRapportsPage() {
     setFilters({
       ...filters,
       date_from: range?.from ? range.from.toISOString().split("T")[0] : undefined,
-      date_to:   range?.to   ? range.to.toISOString().split("T")[0]   : undefined,
+      date_to: range?.to ? range.to.toISOString().split("T")[0] : undefined,
     });
     setCurrentPage(1);
   };
@@ -442,9 +401,9 @@ export default function ProviderRapportsPage() {
   // Stats calculées depuis les rapports curatifs filtrés (pas les stats globales de l'API)
   const curatifReports = filteredReports; // déjà filtrés sur type=curatif
   const curatifStats = {
-    total:     curatifReports.length,
+    total: curatifReports.length,
     validated: curatifReports.filter(r => r.status === "validated").length,
-    pending:   curatifReports.filter(r => r.status === "submitted" || r.status === "pending").length,
+    pending: curatifReports.filter(r => r.status === "submitted" || r.status === "pending").length,
     avg_rating: (() => {
       const rated = curatifReports.filter(r => r.rating);
       if (!rated.length) return null;
@@ -453,10 +412,10 @@ export default function ProviderRapportsPage() {
   };
 
   const kpis = [
-    { label: "Total rapports",  value: loading ? "-" : curatifStats.total,     delta: "", trend: "up" as const },
-    { label: "Rapports validés",value: loading ? "-" : curatifStats.validated,  delta: "", trend: "up" as const },
-    { label: "En attente",      value: loading ? "-" : curatifStats.pending,    delta: "", trend: "up" as const },
-    { label: "Note moyenne",    value: loading ? "-" : (curatifStats.avg_rating ? `${curatifStats.avg_rating}/5` : "—"), delta: "", trend: "up" as const },
+    { label: "Total rapports", value: loading ? "-" : curatifStats.total, delta: "", trend: "up" as const },
+    { label: "Rapports validés", value: loading ? "-" : curatifStats.validated, delta: "", trend: "up" as const },
+    { label: "En attente", value: loading ? "-" : curatifStats.pending, delta: "", trend: "up" as const },
+    { label: "Note moyenne", value: loading ? "-" : (curatifStats.avg_rating ? `${curatifStats.avg_rating}/5` : "—"), delta: "", trend: "up" as const },
   ];
 
   const pageActions = [
@@ -465,13 +424,15 @@ export default function ProviderRapportsPage() {
   ];
 
   const columns: ColumnConfig<InterventionReport>[] = [
-    { header: "Ticket / Planning", key: "ticket", render: (_: any, row: InterventionReport) => (
-      <span className="text-xs text-slate-600 font-medium">
-        {row.intervention_type === "preventif"
-          ? (row.planning?.codification ?? `Planning #${row.planning_id ?? "—"}`)
-          : (row.ticket?.subject ?? `Ticket #${row.ticket_id ?? "—"}`)}
-      </span>
-    )},
+    {
+      header: "Ticket / Planning", key: "ticket", render: (_: any, row: InterventionReport) => (
+        <span className="text-xs text-slate-600 font-medium">
+          {row.intervention_type === "preventif"
+            ? (row.planning?.codification ?? `Planning #${row.planning_id ?? "—"}`)
+            : (row.ticket?.subject ?? `Ticket #${row.ticket_id ?? "—"}`)}
+        </span>
+      )
+    },
     { header: "Site", key: "site", render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600">{getSiteName(row.site)}</span> },
     { header: "Type", key: "intervention_type", render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
     { header: "Résultat", key: "result", render: (_: any, row: InterventionReport) => <ResultBadge result={row.result} /> },
@@ -482,15 +443,15 @@ export default function ProviderRapportsPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: InterventionReport) => (
         <div className="flex items-center gap-3">
-          <button onClick={() => openPanel(row)} title="Aperçu"
+          {/* <button onClick={() => openPanel(row)} title="Aperçu"
             className="text-slate-800 hover:text-gray-500 transition">
             <Eye size={18} />
-          </button>
+          </button> */}
           <button
             onClick={() => router.push(`/provider/rapports/${row.id}`)}
             className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center"
             title="Voir les détails">
-            <ArrowUpRight size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
+            <Eye size={15} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
           </button>
         </div>
       ),
@@ -618,7 +579,7 @@ export default function ProviderRapportsPage() {
         <ReusableForm
           isOpen={isEditOpen}
           onClose={closeEdit}
-          title={`Modifier le rapport #${selectedReport.id}`}
+          title={`Modifier le rapport ${selectedReport.id}`}
           subtitle="Les modifications sont impossibles après validation par le gestionnaire."
           fields={baseFields}
           initialValues={{
@@ -628,6 +589,7 @@ export default function ProviderRapportsPage() {
             end_date: selectedReport.end_date ?? "",
             description: selectedReport.description ?? "",
             findings: selectedReport.findings ?? "",
+            attachments: selectedReport.attachments ?? [],
           }}
           onSubmit={handleUpdate}
           isSubmitting={submitting}

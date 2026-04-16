@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Sidebar      from "@/components/Sidebar";
-import Navbar       from "@/components/Navbar";
-import StatsCard    from "@/components/StatsCard";
+import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/Navbar";
+import StatsCard from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
 import type { FieldConfig } from "@/components/ReusableForm";
 
 import {
   ChevronLeft, CheckCircle2, Clock, FileText,
   Eye, Download, X, Star, AlertCircle,
-  MapPin, Wrench, Edit2, AlertTriangle,
+  MapPin, Wrench, Edit2, AlertTriangle, ArrowUpRight,
 } from "lucide-react";
+
+import AttachmentViewer from "@/components/AttachmentViewer";
 
 import {
   providerReportService, InterventionReport,
@@ -98,12 +100,12 @@ function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; on
 
 // ─── Timeline ─────────────────────────────────────────────────────────────────
 interface TimelineEvent {
-  label:     string;
+  label: string;
   sublabel?: string;
-  date?:     string;
-  icon:      React.ReactNode;
-  dotColor:  string;
-  bgColor:   string;
+  date?: string;
+  icon: React.ReactNode;
+  dotColor: string;
+  bgColor: string;
   borderColor: string;
 }
 
@@ -111,27 +113,27 @@ function buildTimeline(report: InterventionReport): TimelineEvent[] {
   const events: TimelineEvent[] = [];
 
   events.push({
-    label:     "Rapport soumis",
-    sublabel:  report.ticket?.subject
-               ? `Ticket : "${report.ticket.subject}"`
-               : `Ticket #${report.ticket_id}`,
-    date:      report.created_at,
-    icon:      <FileText size={14} />,
-    dotColor:  "text-blue-500",
-    bgColor:   "bg-blue-50",
+    label: "Rapport soumis",
+    sublabel: report.ticket?.subject
+      ? `Ticket : "${report.ticket.subject}"`
+      : `Ticket #${report.ticket_id}`,
+    date: report.created_at,
+    icon: <FileText size={14} />,
+    dotColor: "text-blue-500",
+    bgColor: "bg-blue-50",
     borderColor: "border-blue-200",
   });
 
   if (report.start_date) {
     events.push({
-      label:     `Intervention ${TYPE_LABELS[report.intervention_type ?? ""]}`,
-      sublabel:  report.end_date
-                 ? `Du ${formatDate(report.start_date)} au ${formatDate(report.end_date)}`
-                 : `Le ${formatDate(report.start_date)}`,
-      date:      report.start_date,
-      icon:      <Wrench size={14} />,
-      dotColor:  "text-purple-500",
-      bgColor:   "bg-purple-50",
+      label: `Intervention ${TYPE_LABELS[report.intervention_type ?? ""]}`,
+      sublabel: report.end_date
+        ? `Du ${formatDate(report.start_date)} au ${formatDate(report.end_date)}`
+        : `Le ${formatDate(report.start_date)}`,
+      date: report.start_date,
+      icon: <Wrench size={14} />,
+      dotColor: "text-purple-500",
+      bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
     });
   }
@@ -139,43 +141,43 @@ function buildTimeline(report: InterventionReport): TimelineEvent[] {
   if (report.result) {
     const isAnomal = report.result === "anomalie";
     events.push({
-      label:     `Résultat : ${RESULT_LABELS[report.result]}`,
-      sublabel:  report.findings
-                 ? `"${report.findings.slice(0, 80)}${report.findings.length > 80 ? "…" : ""}"`
-                 : undefined,
-      date:      report.updated_at ?? report.created_at,
-      icon:      isAnomal ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />,
-      dotColor:  isAnomal ? "text-red-500" : "text-green-500",
-      bgColor:   isAnomal ? "bg-red-50"    : "bg-green-50",
+      label: `Résultat : ${RESULT_LABELS[report.result]}`,
+      sublabel: report.findings
+        ? `"${report.findings.slice(0, 80)}${report.findings.length > 80 ? "…" : ""}"`
+        : undefined,
+      date: report.updated_at ?? report.created_at,
+      icon: isAnomal ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />,
+      dotColor: isAnomal ? "text-red-500" : "text-green-500",
+      bgColor: isAnomal ? "bg-red-50" : "bg-green-50",
       borderColor: isAnomal ? "border-red-200" : "border-green-200",
     });
   }
 
   const count = report.attachments?.length ?? 0;
   if (count > 0) {
-    const pdfsN   = (report.attachments ?? []).filter(a => a.file_type === "document").length;
+    const pdfsN = (report.attachments ?? []).filter(a => a.file_type === "document").length;
     const photosN = (report.attachments ?? []).filter(a => a.file_type === "photo").length;
     events.push({
-      label:     `${count} pièce${count > 1 ? "s" : ""} jointe${count > 1 ? "s" : ""} déposée${count > 1 ? "s" : ""}`,
-      sublabel:  `${pdfsN} document${pdfsN > 1 ? "s" : ""} · ${photosN} photo${photosN > 1 ? "s" : ""}`,
-      date:      report.created_at,
-      icon:      <FileText size={14} />,
-      dotColor:  "text-slate-500",
-      bgColor:   "bg-slate-50",
+      label: `${count} pièce${count > 1 ? "s" : ""} jointe${count > 1 ? "s" : ""} déposée${count > 1 ? "s" : ""}`,
+      sublabel: `${pdfsN} document${pdfsN > 1 ? "s" : ""} · ${photosN} photo${photosN > 1 ? "s" : ""}`,
+      date: report.created_at,
+      icon: <FileText size={14} />,
+      dotColor: "text-slate-500",
+      bgColor: "bg-slate-50",
       borderColor: "border-slate-200",
     });
   }
 
   if (report.status === "validated") {
     events.push({
-      label:     "Rapport validé le gestionnaire",
-      sublabel:  report.manager_comment
-                 ? `Commentaire : "${report.manager_comment.slice(0, 80)}${report.manager_comment.length > 80 ? "…" : ""}"`
-                 : report.rating ? `Note attribuée : ${report.rating}/5` : undefined,
-      date:      report.validated_at,
-      icon:      <CheckCircle2 size={14} />,
-      dotColor:  "text-emerald-500",
-      bgColor:   "bg-emerald-50",
+      label: "Rapport validé le gestionnaire",
+      sublabel: report.manager_comment
+        ? `Commentaire : "${report.manager_comment.slice(0, 80)}${report.manager_comment.length > 80 ? "…" : ""}"`
+        : report.rating ? `Note attribuée : ${report.rating}/5` : undefined,
+      date: report.validated_at,
+      icon: <CheckCircle2 size={14} />,
+      dotColor: "text-emerald-500",
+      bgColor: "bg-emerald-50",
       borderColor: "border-emerald-200",
     });
   }
@@ -210,22 +212,21 @@ const editFields: FieldConfig[] = [
   {
     name: "intervention_type", label: "Type d'intervention", type: "select",
     options: [
-      { label: "Curatif",        value: "curatif" },
-      { label: "Préventif",      value: "preventif" },
+      { label: "Curatif", value: "curatif" },
+      { label: "Préventif", value: "preventif" },
     ],
   },
   {
     name: "result", label: "Résultat de l'intervention", type: "select",
     options: [
-      { label: "RAS",               value: "ras" },
+      { label: "RAS", value: "RAS" },
       { label: "Anomalie détectée", value: "anomalie" },
-      { label: "Résolu",            value: "resolu" },
     ],
   },
-  { name: "start_date",  label: "Date de début",                  type: "date" },
-  { name: "end_date",    label: "Date de fin",                    type: "date" },
-  { name: "description", label: "Description",                    type: "textarea" },
-  { name: "findings",    label: "Observations / Constatations",   type: "textarea" },
+  { name: "start_date", label: "Date de début", type: "date" },
+  { name: "end_date", label: "Date de fin", type: "date" },
+  { name: "description", label: "Description", type: "textarea" },
+  { name: "findings", label: "Observations / Constatations", type: "textarea" },
   {
     name: "attachments", label: "Ajouter des pièces jointes",
     type: "pdf-upload", maxPDFs: 10, gridSpan: 2
@@ -233,16 +234,16 @@ const editFields: FieldConfig[] = [
 ];
 
 export default function ProviderEntretienDetailPage() {
-  const params   = useParams();
-  const router   = useRouter();
+  const params = useParams();
+  const router = useRouter();
   const reportId = Number(params?.id);
 
-  const [report,     setReport]     = useState<InterventionReport | null>(null);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState("");
+  const [report, setReport] = useState<InterventionReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [flash,      setFlash]      = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [flash, setFlash] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   const { updateReport, submitting } = useProviderReports();
 
@@ -259,7 +260,7 @@ export default function ProviderEntretienDetailPage() {
       } catch (e: any) {
         setError(
           e.response?.data?.message ??
-          e.response?.data?.error   ??
+          e.response?.data?.error ??
           "Impossible de charger ce rapport."
         );
       } finally { setLoading(false); }
@@ -271,12 +272,12 @@ export default function ProviderEntretienDetailPage() {
     if (!report) return;
     const ok = await updateReport(report.id, {
       intervention_type: formData.intervention_type || undefined,
-      result:            formData.result            || undefined,
-      start_date:        formData.start_date        || undefined,
-      end_date:          formData.end_date          || undefined,
-      description:       formData.description       || undefined,
-      findings:          formData.findings          || undefined,
-      attachments:       formData.attachments?.length ? formData.attachments : undefined,
+      result: formData.result || undefined,
+      start_date: formData.start_date || undefined,
+      end_date: formData.end_date || undefined,
+      description: formData.description || undefined,
+      findings: formData.findings || undefined,
+      attachments: formData.attachments?.length ? formData.attachments : undefined,
     });
     if (ok) {
       setIsEditOpen(false);
@@ -289,23 +290,23 @@ export default function ProviderEntretienDetailPage() {
     }
   };
 
-  const pdfs       = (report?.attachments ?? []).filter(a => a.file_type === "document");
-  const photos     = (report?.attachments ?? []).filter(a => a.file_type === "photo");
-  const timeline   = report ? buildTimeline(report) : [];
-  const editable   = report ? isEditable(report) : false;
+  const pdfs = (report?.attachments ?? []).filter(a => a.file_type === "document");
+  const photos = (report?.attachments ?? []).filter(a => a.file_type === "photo");
+  const timeline = report ? buildTimeline(report) : [];
+  const editable = report ? isEditable(report) : false;
 
   const kpis = [
-    { label: "Prestataire",    value: getProviderName(report?.provider), delta: "", trend: "up" as const },
-    { label: "Site",           value: getSiteName(report?.site),         delta: "", trend: "up" as const },
-    { label: "Pièces jointes", value: report?.attachments?.length ?? 0,    delta: "", trend: "up" as const },
-    { label: "Note",           value: report?.rating ? `${report.rating}/5` : "N/A", delta: "", trend: "up" as const },
+    { label: "Prestataire", value: getProviderName(report?.provider), delta: "", trend: "up" as const },
+    { label: "Site", value: getSiteName(report?.site), delta: "", trend: "up" as const },
+    { label: "Pièces jointes", value: report?.attachments?.length ?? 0, delta: "", trend: "up" as const },
+    { label: "Note", value: report?.rating ? `${report.rating}/5` : "N/A", delta: "", trend: "up" as const },
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <main className="ml-64 mt-20 p-8 space-y-8">
+        <main className="mt-4 p-8 space-y-8">
 
           <button onClick={() => router.back()}
             className="flex items-center gap-2 text-slate-500 hover:text-black transition
@@ -347,7 +348,7 @@ export default function ProviderEntretienDetailPage() {
                       Entretien #{reportId}
                     </h1>
                     <StatusBadge status={report.status} />
-                    <TypeBadge   type={report.intervention_type} />
+                    <TypeBadge type={report.intervention_type} />
                   </div>
                   <div className="flex items-center gap-2 text-slate-400">
                     <MapPin size={16} />
@@ -365,14 +366,14 @@ export default function ProviderEntretienDetailPage() {
                 <div className="flex flex-col gap-4 min-w-[270px]">
                   <div className="bg-slate-50/50 p-5 rounded-[24px] border border-slate-100 space-y-2.5">
                     {[
-                      { label: "Créé le",   value: formatDate(report.created_at),   show: true },
-                      { label: "Début",     value: formatDate(report.start_date),   show: true },
-                      { label: "Fin",       value: formatDate(report.end_date),     show: !!report.end_date },
+                      { label: "Créé le", value: formatDate(report.created_at), show: true },
+                      { label: "Début", value: formatDate(report.start_date), show: true },
+                      { label: "Fin", value: formatDate(report.end_date), show: !!report.end_date },
                       { label: "Validé le", value: formatDate(report.validated_at), show: !!report.validated_at, green: true },
                     ].filter(r => r.show).map((r, i) => (
                       <div key={i} className="flex justify-between items-center text-sm">
                         <span className="text-slate-400 font-medium">{r.label}</span>
-                        <span className={`font-bold ${ (r as any).green ? "text-emerald-700" : "text-slate-900"}`}>{r.value}</span>
+                        <span className={`font-bold ${(r as any).green ? "text-emerald-700" : "text-slate-900"}`}>{r.value}</span>
                       </div>
                     ))}
                     {report.status === "validated" && report.rating && (
@@ -399,7 +400,7 @@ export default function ProviderEntretienDetailPage() {
                   <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Description</h3>
                     {report.description
-                      ? <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: report.description }}/>
+                      ? <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: report.description }} />
                       : <p className="text-slate-400 text-sm italic">Aucune description renseignée.</p>
                     }
                   </div>
@@ -426,20 +427,7 @@ export default function ProviderEntretienDetailPage() {
 
                   {photos.length > 0 && (
                     <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-                        Photos ({photos.length})
-                      </h3>
-                      <div className="grid grid-cols-3 gap-3">
-                        {photos.map(att => {
-                          const url = getAttachmentUrl(att.file_path);
-                          return (
-                            <a key={att.id} href={url} target="_blank" rel="noreferrer"
-                              className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition">
-                              <img src={url} alt="photo" className="w-full h-full object-cover" />
-                            </a>
-                          );
-                        })}
-                      </div>
+                      <AttachmentViewer attachments={report.attachments ?? []} title="Pièces jointes" />
                     </div>
                   )}
 
@@ -466,7 +454,7 @@ export default function ProviderEntretienDetailPage() {
                     {pdfs.length > 0 ? (
                       <div className="space-y-3">
                         {pdfs.map(att => {
-                          const url  = getAttachmentUrl(att.file_path);
+                          const url = getAttachmentUrl(att.file_path);
                           const name = att.file_path.split("/").pop() ?? "document.pdf";
                           return (
                             <div key={att.id} className="flex flex-col gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50">
@@ -508,7 +496,7 @@ export default function ProviderEntretienDetailPage() {
                         style={{ backgroundColor: `${STATUS_DOT[report.status] ?? "#94a3b8"}18` }}>
                         {report.status === "validated"
                           ? <CheckCircle2 size={18} className="text-green-500" />
-                          : <Clock        size={18} className="text-amber-500" />}
+                          : <Clock size={18} className="text-amber-500" />}
                       </div>
                       <div>
                         <p className="text-sm font-black text-slate-900">
@@ -540,9 +528,9 @@ export default function ProviderEntretienDetailPage() {
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Ticket lié</h3>
                       <div className="space-y-2.5">
                         {[
-                          { label: "ID",     value: `#${report.ticket.id}` },
-                          { label: "Sujet",  value: report.ticket.subject ?? "-" },
-                          { label: "Type",   value: report.ticket.type === "curatif" ? "Curatif" : "Préventif" },
+                          { label: "ID", value: `#${report.ticket.id}` },
+                          { label: "Sujet", value: report.ticket.subject ?? "-" },
+                          { label: "Type", value: report.ticket.type === "curatif" ? "Curatif" : "Préventif" },
                           { label: "Statut", value: report.ticket.status ?? "-" },
                         ].map((f, i) => (
                           <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
@@ -559,8 +547,8 @@ export default function ProviderEntretienDetailPage() {
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Prestataire</h3>
                       <div className="space-y-2.5">
                         {[
-                          { label: "Nom",       value: getProviderName(report.provider) },
-                          { label: "Email",     value: report.provider.email ?? "-" },
+                          { label: "Nom", value: getProviderName(report.provider) },
+                          { label: "Email", value: report.provider.email ?? "-" },
                           { label: "Téléphone", value: report.provider.phone ?? "-" },
                         ].map((f, i) => (
                           <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
@@ -586,16 +574,16 @@ export default function ProviderEntretienDetailPage() {
         <ReusableForm
           isOpen={isEditOpen}
           onClose={() => setIsEditOpen(false)}
-          title={`Modifier le rapport #${report.id}`}
+          title={`Modifier le rapport ${report.id}`}
           subtitle="Impossible de modifier un rapport déjà validé par le gestionnaire."
           fields={editFields}
           initialValues={{
             intervention_type: report.intervention_type ?? "",
-            result:            report.result ?? "",
-            start_date:        report.start_date ?? "",
-            end_date:          report.end_date ?? "",
-            description:       report.description ?? "",
-            findings:          report.findings ?? "",
+            result: report.result ?? "",
+            start_date: report.start_date ?? "",
+            end_date: report.end_date ?? "",
+            description: report.description ?? "",
+            findings: report.findings ?? "",
           }}
           onSubmit={handleUpdate}
           submitLabel={submitting ? "Mise à jour..." : "Mettre à jour"}

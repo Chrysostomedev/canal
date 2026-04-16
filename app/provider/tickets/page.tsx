@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
@@ -176,6 +177,17 @@ export default function ProviderTicketsPage() {
     setReportTicketId(null);
   };
 
+  // Démarrer l'intervention puis ouvrir directement la modale rapport
+  const handleStartAndReport = async (ticketId: number) => {
+    try {
+      await startIntervention(ticketId);
+      // Après démarrage réussi, ouvrir directement la modale rapport
+      handleOpenReportModal(ticketId);
+    } catch {
+      // L'erreur est déjà gérée dans startIntervention via toast
+    }
+  };
+
   const handleCreateReport = async (formData: any) => {
     if (!reportTicketId) return;
     await createReport({
@@ -268,22 +280,19 @@ export default function ProviderTicketsPage() {
       key: "actions",
       render: (_: any, row: Ticket) => (
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => openTicket(row)}
-            className="flex items-center gap-1.5 text-sm font-bold text-slate-800 hover:text-blue-600 transition"
-            title="Aperçu du ticket"
-          >
-            <Eye size={16} />
-          </button>
-          {/* Démarrer l'intervention */}
+         
+          <Link href={`/provider/tickets/${row.id}`} className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition" title="Voir les détails">
+            <Eye size={16} /> Aperçu
+          </Link>
+          {/* Démarrer l'intervention → ouvre directement la modale rapport après succès */}
           {canStart(row) && (
             <button
-              onClick={() => startIntervention(row.id)}
+              onClick={() => handleStartAndReport(row.id)}
               disabled={updateLoading}
               className="flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-800 transition disabled:opacity-40"
-              title="Démarrer l'intervention"
+              title="Démarrer et soumettre un rapport"
             >
-              <RefreshCw size={14} className={updateLoading ? "animate-spin" : ""} />
+              {/* <RefreshCw size={14} className={updateLoading ? "animate-spin" : ""} /> */}
             </button>
           )}
           {/* Soumettre rapport — désactivé si déjà rapporté */}
@@ -456,7 +465,7 @@ export default function ProviderTicketsPage() {
         <TicketDetailPanel
           ticket={selectedTicket}
           onClose={closeTicket}
-          onStart={() => startIntervention(selectedTicket.id)}
+          onStart={() => handleStartAndReport(selectedTicket.id)}
           onDevis={() => requestDevis(selectedTicket.id)}
           onReport={() => handleOpenReportModal(selectedTicket.id)}
           updateLoading={updateLoading}

@@ -14,6 +14,7 @@ import type {
   InvoiceStats,
   InvoiceFilters,
 } from "../../types/manager.types";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ── Récupère les tickets avec leur cout pour les stats ────────────────────────
 async function fetchTicketsForStats(): Promise<any[]> {
@@ -135,11 +136,10 @@ export const InvoiceService = {
     return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   },
 
+  /**
+   * Construit l'URL publique d'une facture.
+   */
   getPdfUrl(pdfPath: string): string {
-    const base =
-      process.env.NEXT_PUBLIC_STORAGE_URL ??
-      process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ??
-      "";
-    return `${base}/storage/${pdfPath}`;
+    return resolveStorageUrl(pdfPath);
   },
 };

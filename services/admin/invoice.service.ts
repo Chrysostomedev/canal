@@ -1,5 +1,6 @@
 // services/invoice.service.ts
 import axiosInstance from "../../core/axios";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTERFACES — Calquées sur le modèle Laravel Invoice
@@ -149,8 +150,8 @@ export const InvoiceService = {
    * GET /admin/invoice
    * ⚠️ CORRECTION : Backend retourne { data: { items: [...], meta: {...} } }
    */
-  async getInvoices(): Promise<Invoice[]> {
-    const res = await axiosInstance.get("/admin/invoice");
+  async getInvoices(params?: any): Promise<Invoice[]> {
+    const res = await axiosInstance.get("/admin/invoice", { params });
     const responseData = res.data.data;
     
     // ✅ Si structure paginée
@@ -219,8 +220,10 @@ export const InvoiceService = {
     return [];
   },
 
+  /**
+   * Construit l'URL publique d'un PDF de facture
+   */
   getPdfUrl(pdfPath: string): string {
-    const base = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ?? "";
-    return `${base}/storage/${pdfPath}`;
+    return resolveStorageUrl(pdfPath);
   },
 };

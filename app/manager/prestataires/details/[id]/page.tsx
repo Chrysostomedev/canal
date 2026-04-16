@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronLeft, MapPin, Phone, Mail, Star, Eye, Filter,
 } from "lucide-react";
-
-import Navbar          from "@/components/Navbar";
-import Paginate        from "@/components/Paginate";
-import StatsCard       from "@/components/StatsCard";
-import DataTable       from "@/components/DataTable";
+import Navbar from "@/components/Navbar";
+import Paginate from "@/components/Paginate";
+import StatsCard from "@/components/StatsCard";
+import DataTable from "@/components/DataTable";
 import SideDetailsPanel from "@/components/SideDetailsPanel";
 
 import { ProviderService } from "../../../../../services/manager/provider.service";
@@ -35,17 +34,18 @@ const STATUS_STYLES: Record<string, string> = {
 
 /* ── Page ────────────────────────────────────────────────────────────────── */
 export default function ProviderDetailsPage() {
-  const params     = useParams();
+  const params = useParams();
   const providerId = Number(params.id);
+  const router = useRouter();
 
-  const [provider,      setProvider]      = useState<Provider | null>(null);
+  const [provider, setProvider] = useState<Provider | null>(null);
   const [providerStats, setProviderStats] = useState<ProviderStats | null>(null);
-  const [tickets,       setTickets]       = useState<any[]>([]);
-  const [ticketMeta,    setTicketMeta]    = useState({ current_page: 1, last_page: 1, total: 0 });
-  const [ticketPage,    setTicketPage]    = useState(1);
-  const [isLoading,     setIsLoading]     = useState(true);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [ticketMeta, setTicketMeta] = useState({ current_page: 1, last_page: 1, total: 0 });
+  const [ticketPage, setTicketPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
-  const [isDetailsOpen,  setIsDetailsOpen]  = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   /* ── Fetch provider depuis les tickets du site ─────────────────────────── */
   const fetchProvider = useCallback(async () => {
@@ -75,14 +75,14 @@ export default function ProviderDetailsPage() {
   }, [providerId, ticketPage]);
 
   useEffect(() => { fetchProvider(); }, [fetchProvider]);
-  useEffect(() => { fetchTickets();  }, [fetchTickets]);
+  useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
   /* ── KPIs ──────────────────────────────────────────────────────────────── */
   const kpis = [
-    { label: "Total tickets",    value: providerStats?.total_tickets       ?? 0, delta: "", trend: "up"   as const },
-    { label: "Tickets en cours", value: providerStats?.in_progress_tickets ?? 0, delta: "", trend: "up"   as const },
-    { label: "Tickets clôturés", value: providerStats?.closed_tickets      ?? 0, delta: "", trend: "up"   as const },
-    { label: "Note",             value: providerStats?.rating ? `${providerStats.rating}/5` : "N/A", delta: "", trend: "up" as const },
+    { label: "Total tickets", value: providerStats?.total_tickets ?? 0, delta: "", trend: "up" as const },
+    { label: "Tickets en cours", value: providerStats?.in_progress_tickets ?? 0, delta: "", trend: "up" as const },
+    { label: "Tickets clôturés", value: providerStats?.closed_tickets ?? 0, delta: "", trend: "up" as const },
+    { label: "Note", value: providerStats?.rating ? `${providerStats.rating}/5` : "N/A", delta: "", trend: "up" as const },
   ];
 
   /* ── SidePanel ticket ──────────────────────────────────────────────────── */
@@ -90,16 +90,16 @@ export default function ProviderDetailsPage() {
     const s = (ticket.status || "").toUpperCase();
     const statusColor = s === "CLOS" ? "#000" : s === "EN_COURS" ? "#f97316" : "#64748b";
     setSelectedTicket({
-      title:       ticket.subject ?? `Ticket #${ticket.id}`,
-      reference:   `#${ticket.id}`,
+      title: ticket.subject ?? `Ticket #${ticket.id}`,
+      reference: `#${ticket.id}`,
       description: ticket.description ?? "",
       fields: [
-        { label: "Type",          value: ticket.type === "curatif" ? "Curatif" : "Préventif" },
-        { label: "Site",          value: ticket.site?.nom ?? "-" },
-        { label: "Patrimoine",    value: ticket.asset?.designation ?? "-" },
-        { label: "Date planifiée",value: ticket.planned_at ? new Date(ticket.planned_at).toLocaleString("fr-FR") : "-" },
-        { label: "Date limite",   value: ticket.due_at    ? new Date(ticket.due_at).toLocaleString("fr-FR")    : "-" },
-        { label: "Statut",        value: STATUS_LABELS[ticket.status] ?? ticket.status, isStatus: true, statusColor },
+        { label: "Type", value: ticket.type === "curatif" ? "Curatif" : "Préventif" },
+        { label: "Site", value: ticket.site?.nom ?? "-" },
+        { label: "Patrimoine", value: ticket.asset?.designation ?? "-" },
+        { label: "Date planifiée", value: ticket.planned_at ? new Date(ticket.planned_at).toLocaleString("fr-FR") : "-" },
+        { label: "Date limite", value: ticket.due_at ? new Date(ticket.due_at).toLocaleString("fr-FR") : "-" },
+        { label: "Statut", value: STATUS_LABELS[ticket.status] ?? ticket.status, isStatus: true, statusColor },
       ],
     });
     setIsDetailsOpen(true);
@@ -107,11 +107,11 @@ export default function ProviderDetailsPage() {
 
   /* ── Colonnes ──────────────────────────────────────────────────────────── */
   const columns = [
-    { header: "ID",         key: "id",      render: (_: any, row: any) => `#${row.id}` },
-    { header: "Sujet",      key: "subject", render: (_: any, row: any) => <span className="font-medium text-sm">{row.subject ?? "-"}</span> },
-    { header: "Site",       key: "site",    render: (_: any, row: any) => row.site?.nom ?? "-" },
-    { header: "Patrimoine", key: "asset",   render: (_: any, row: any) => row.asset?.designation ?? "-" },
-    { header: "Type",       key: "type",    render: (_: any, row: any) => row.type === "curatif" ? "Curatif" : "Préventif" },
+    { header: "Code", key: "code_ticket", render: (_: any, row: any) => `${row.code_ticket}` },
+    { header: "Sujet", key: "subject", render: (_: any, row: any) => <span className="font-medium text-sm">{row.subject ?? "-"}</span> },
+    { header: "Site", key: "site", render: (_: any, row: any) => row.site?.nom ?? "-" },
+    { header: "Patrimoine", key: "asset", render: (_: any, row: any) => row.asset?.designation ?? "-" },
+    { header: "Type", key: "type", render: (_: any, row: any) => row.type === "curatif" ? "Curatif" : "Préventif" },
     {
       header: "Statut", key: "status",
       render: (_: any, row: any) => {
@@ -126,7 +126,11 @@ export default function ProviderDetailsPage() {
     {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
-        <button onClick={() => handleOpenDetails(row)} className="text-slate-800 hover:text-blue-600 transition">
+        <button
+          onClick={() => router.push(`/manager/tickets/details/${row.id}`)}
+          className="p-2 hover:bg-slate-900 hover:text-white border border-slate-100 rounded-xl transition text-slate-400"
+          title="Voir la fiche complète"
+        >
           <Eye size={18} />
         </button>
       ),

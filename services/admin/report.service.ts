@@ -1,5 +1,6 @@
 // services/report.service.ts
 import axiosInstance from "../../core/axios";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTERFACES — Calquées sur le modèle Laravel InterventionReport
@@ -389,12 +390,10 @@ export const ReportService = {
   },
 
   /**
-   * Construit l'URL publique d'une pièce jointe
-   * file_path = "reports/attachments/photo1.jpg" → APP_URL/storage/reports/attachments/photo1.jpg
+   * Construit l'URL publique d'une pièce jointe.
    */
   getAttachmentUrl(filePath: string): string {
-    const base = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ?? "";
-    return `${base}/storage/${filePath}`;
+    return resolveStorageUrl(filePath);
   },
 
   /**
