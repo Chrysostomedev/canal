@@ -13,6 +13,7 @@ import type {
   ReportFilters,
   ValidateReportPayload,
 } from "../../types/manager.types";
+import { resolveStorageUrl } from "../../lib/url";
 
 export const ReportService = {
   /**
@@ -99,10 +100,6 @@ export const ReportService = {
    * Construit l'URL publique d'une pièce jointe de rapport.
    */
   getAttachmentUrl(filePath: string): string {
-    const base =
-      process.env.NEXT_PUBLIC_STORAGE_URL ??
-      process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ??
-      "";
-    return `${base}/storage/${filePath}`;
+    return resolveStorageUrl(filePath);
   },
 };

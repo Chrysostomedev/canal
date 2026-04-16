@@ -1,4 +1,5 @@
 import axiosInstance from "../../core/axios";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ─── Types miroir exact du backend Laravel ────────────────────────────────────
 
@@ -127,9 +128,9 @@ export function formatDate(iso?: string | null): string {
   });
 }
 
+
 export function getPdfUrl(path: string): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace("/api/V1", "").replace("/api", "");
-  return `${base}/storage/${path}`;
+  return resolveStorageUrl(path);
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -170,15 +171,41 @@ export const providerQuoteService = {
     if (payload.description) form.append("description", payload.description);
     form.append("tax_rate", String(payload.tax_rate ?? 18));
 
-    payload.items.forEach((item, i) => {
-      form.append(`items[${i}][designation]`, item.designation);
-      form.append(`items[${i}][quantity]`,    String(item.quantity));
-      form.append(`items[${i}][unit_price]`,  String(item.unit_price));
-    });
+    if (payload.items) {
+      payload.items.forEach((item, i) => {
+        form.append(`items[${i}][designation]`, item.designation);
+        form.append(`items[${i}][quantity]`,    String(item.quantity));
+        form.append(`items[${i}][unit_price]`,  String(item.unit_price));
+      });
+    }
 
     if (payload.pdf_file) form.append("quote_pdf", payload.pdf_file);
 
     const res = await axiosInstance.post(BASE, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data?.data ?? res.data;
+  },
+
+  updateQuote: async (id: number, payload: CreateQuotePayload): Promise<Quote> => {
+    const form = new FormData();
+    // Use _method=PUT for Laravel with FormData
+    form.append("_method", "PUT");
+    form.append("ticket_id", String(payload.ticket_id));
+    if (payload.description) form.append("description", payload.description);
+    form.append("tax_rate", String(payload.tax_rate ?? 18));
+
+    if (payload.items) {
+      payload.items.forEach((item, i) => {
+        form.append(`items[${i}][designation]`, item.designation);
+        form.append(`items[${i}][quantity]`,    String(item.quantity));
+        form.append(`items[${i}][unit_price]`,  String(item.unit_price));
+      });
+    }
+
+    if (payload.pdf_file) form.append("quote_pdf", payload.pdf_file);
+
+    const res = await axiosInstance.post(`${BASE}/${id}`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data?.data ?? res.data;

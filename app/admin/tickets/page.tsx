@@ -1151,17 +1151,16 @@ export default function TicketsPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: Ticket) => (
          <div className="flex items-center gap-1">
-        <button
+        {/* <button
           onClick={() => handleOpenDetails(row)}
           className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition"
         >
           <Eye size={18} /> Aperçu
-        </button>
+        </button> */}
 
          
-          <span className="w-px h-4 bg-slate-200 mx-0.5" />
           <Link href={`/admin/tickets/${row.id}`} className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition" title="Voir les détails">
-            <ChevronRight size={16} />
+            <Eye size={16} /> 
           </Link>
 </div>
       ),

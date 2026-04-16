@@ -7,8 +7,8 @@ import {
   Building2, Ticket, TrendingUp, Layers,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import Navbar    from "@/components/Navbar";
-import Paginate  from "@/components/Paginate";
+import Navbar from "@/components/Navbar";
+import Paginate from "@/components/Paginate";
 import StatsCard from "@/components/StatsCard";
 import DataTable, { ColumnConfig } from "@/components/DataTable";
 
@@ -20,7 +20,7 @@ import { Asset, ManagerSite } from "../../../types/manager.types";
 const fmtMontant = (v?: number | null) => {
   if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v} FCFA`;
 };
 const fmtDate = (iso?: string | null) => {
@@ -59,10 +59,9 @@ function ManagerSiteCard({ site }: { site: ManagerSite }) {
               <span className="truncate">{(site as any).adresse ?? (site as any).localisation ?? (site as any).ville ?? "—"}</span>
             </div>
           </div>
-          <span className={`shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-            (site as any).status === "active" || (site as any).status === "actif"
-              ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
-          }`}>
+          <span className={`shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${(site as any).status === "active" || (site as any).status === "actif"
+            ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
+            }`}>
             {(site as any).status === "active" || (site as any).status === "actif" ? "Actif" : "Inactif"}
           </span>
         </div>
@@ -114,11 +113,9 @@ export default function SitesPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: any) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => setSelectedAsset(row)} className="font-bold text-slate-800 hover:text-blue-600 transition">
-            <Eye size={16} />
-          </button>
+
           <Link href={`/manager/patrimoines/${row.id}`} className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center">
-            <ChevronRight size={14} className="text-slate-600 group-hover:text-white transition-all" />
+            <Eye size={14} className="text-slate-600 group-hover:text-white transition-all" />
           </Link>
         </div>
       ),
@@ -126,10 +123,10 @@ export default function SitesPage() {
   ];
 
   const kpis = [
-    { label: "Sites assignés",    value: siteStats?.nombre_sites_assignes ?? siteStats?.nombre_total_sites ?? sites.length, delta: "", trend: "up" as const },
-    { label: "Sites actifs",      value: siteStats?.nombre_sites_actifs   ?? sites.filter(s => (s as any).status === "active" || (s as any).status === "actif").length, delta: "", trend: "up" as const },
+    { label: "Sites assignés", value: siteStats?.nombre_sites_assignes ?? siteStats?.nombre_total_sites ?? sites.length, delta: "", trend: "up" as const },
+    { label: "Sites actifs", value: siteStats?.nombre_sites_actifs ?? sites.filter(s => (s as any).status === "active" || (s as any).status === "actif").length, delta: "", trend: "up" as const },
     { label: "Total patrimoines", value: assetStats?.total ?? 0, delta: "", trend: "up" as const },
-    { label: "Loyer moyen/site",  value: siteStats?.cout_loyer_moyen_par_site ? fmtMontant(siteStats.cout_loyer_moyen_par_site) : "-", delta: "", trend: "up" as const },
+    { label: "Loyer moyen/site", value: siteStats?.cout_loyer_moyen_par_site ? fmtMontant(siteStats.cout_loyer_moyen_par_site) : "-", delta: "", trend: "up" as const },
   ];
 
   return (
@@ -153,27 +150,27 @@ export default function SitesPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-   <PageHeader title="Sites" subtitle="Suivi et gestion de tous les sites" />
+                <PageHeader title="Sites" subtitle="Suivi et gestion de tous les sites" />
                 <p className="text-slate-400 text-sm mt-1">{sites.length} site{sites.length > 1 ? "s" : ""} assigné{sites.length > 1 ? "s" : ""}</p>
               </div>
             </div>
 
             {/* KPIs */}
-              <button
-                onClick={async () => {
-                  try {
-                    const { default: api } = await import("../../../core/axios");
-                    const res = await api.get("/manager/asset/export", { responseType: "blob" });
-                    const url = URL.createObjectURL(new Blob([res.data]));
-                    const a = document.createElement("a"); a.href = url;
-                    a.download = `patrimoines_${new Date().toISOString().slice(0, 10)}.xlsx`;
-                    a.click(); URL.revokeObjectURL(url);
-                  } catch { alert("Erreur lors de l'export."); }
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
-              >
-                <Download size={16} /> Exporter
-              </button>
+            <button
+              onClick={async () => {
+                try {
+                  const { default: api } = await import("../../../core/axios");
+                  const res = await api.get("/manager/asset/export", { responseType: "blob" });
+                  const url = URL.createObjectURL(new Blob([res.data]));
+                  const a = document.createElement("a"); a.href = url;
+                  a.download = `patrimoines_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                  a.click(); URL.revokeObjectURL(url);
+                } catch { alert("Erreur lors de l'export."); }
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition"
+            >
+              <Download size={16} /> Exporter
+            </button>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
               {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
             </div>
@@ -192,7 +189,7 @@ export default function SitesPage() {
             <div>
               <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Tous les patrimoines</h2>
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <DataTable columns={columns} data={assets} title="Patrimoines" onViewAll={() => {}} />
+                <DataTable columns={columns} data={assets} title="Patrimoines" onViewAll={() => { }} />
                 {meta && (
                   <div className="p-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
                     <p className="text-xs text-slate-400">Page {meta.current_page} sur {meta.last_page} · {meta.total} éléments</p>
@@ -220,11 +217,11 @@ export default function SitesPage() {
             <div className="flex-1 overflow-y-auto p-6 space-y-3 text-sm text-slate-700">
               {[
                 { label: "Codification", value: selectedAsset.codification ?? selectedAsset.code ?? "-" },
-                { label: "Type",         value: selectedAsset.type?.name ?? selectedAsset.typeAsset?.name ?? "-" },
-                { label: "Sous-type",    value: selectedAsset.sub_type?.name ?? selectedAsset.subTypeAsset?.name ?? "-" },
-                { label: "Site",         value: selectedAsset.site?.nom ?? "-" },
-                { label: "Date entrée",  value: fmtDate(selectedAsset.date_entree ?? selectedAsset.acquisition_date) },
-                { label: "Valeur",       value: fmtMontant(selectedAsset.valeur_entree ?? selectedAsset.acquisition_value) },
+                { label: "Type", value: selectedAsset.type?.name ?? selectedAsset.typeAsset?.name ?? "-" },
+                { label: "Sous-type", value: selectedAsset.sub_type?.name ?? selectedAsset.subTypeAsset?.name ?? "-" },
+                { label: "Site", value: selectedAsset.site?.nom ?? "-" },
+                { label: "Date entrée", value: fmtDate(selectedAsset.date_entree ?? selectedAsset.acquisition_date) },
+                { label: "Valeur", value: fmtMontant(selectedAsset.valeur_entree ?? selectedAsset.acquisition_value) },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between border-b border-slate-50 pb-2">
                   <span className="text-slate-400 font-medium">{label}</span>

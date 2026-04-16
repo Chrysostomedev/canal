@@ -97,39 +97,52 @@ export const AssetService = {
   },
 
   // ── Créer un asset
-  // Note: product_type_code est géré côté back (valeur par défaut '00' si absent)
-  //       codification est GÉNÉRÉE AUTOMATIQUEMENT par le back — ne pas l'envoyer
-  async createAsset(payload: {
-    type_company_asset_id:     number;
-    sub_type_company_asset_id: number;
-    site_id:                   number;
-    designation:               string;
-    status:    "actif" | "inactif" | "hors_usage";
-    criticite?: "critique" | "non_critique";
-    date_entree:   string;
-    valeur_entree: number;
-    description?:  string;
-  }): Promise<CompanyAsset> {
-    // product_type_code par défaut '00' si non fourni (back l'accepte)
-    const body = { product_type_code: "00", ...payload };
-    const response = await axios.post("/admin/asset", body);
+  async createAsset(payload: Record<string, any>): Promise<CompanyAsset> {
+    const formData = new FormData();
+    formData.append("product_type_code", "00");
+    
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key === "images") {
+        if (Array.isArray(value)) {
+          value.forEach(file => {
+            if (file instanceof File) {
+              formData.append("images[]", file);
+            }
+          });
+        }
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    const response = await axios.post("/admin/asset", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
     return response.data.data;
   },
 
   // ── Modifier un asset
-  async updateAsset(id: number, payload: Partial<{
-    type_company_asset_id:     number;
-    sub_type_company_asset_id: number;
-    site_id:      number;
-    designation:  string;
-    codification: string;
-    status:    "actif" | "inactif" | "hors_usage";
-    criticite: "critique" | "non_critique";
-    date_entree:   string;
-    valeur_entree: number;
-    description:   string;
-  }>): Promise<CompanyAsset> {
-    const response = await axios.put(`/admin/asset/${id}`, payload);
+  async updateAsset(id: number, payload: Record<string, any>): Promise<CompanyAsset> {
+    const formData = new FormData();
+    formData.append("_method", "PUT"); // Spécifier PUT à Laravel via POST
+    
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key === "images") {
+        if (Array.isArray(value)) {
+          value.forEach(file => {
+            if (file instanceof File) {
+              formData.append("images[]", file);
+            }
+          });
+        }
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    const response = await axios.post(`/admin/asset/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
     return response.data.data;
   },
 

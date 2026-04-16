@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
-import { Download, FileText, CheckCircle2, Clock, XCircle, AlertCircle, Eye, X, Copy } from "lucide-react";
+import { Download, FileText, CheckCircle2, Clock, XCircle, AlertCircle, Eye, X, Copy, Info } from "lucide-react";
 import type { ColumnConfig } from "@/components/DataTable";
 
 import { useQuotes } from "../../../hooks/manager/useQuotes";
@@ -16,13 +17,13 @@ import type { Quote } from "../../../types/manager.types";
 /* -------------------------------------------------------------------------- */
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  approved:    { label: "Approuvé",    color: "green",  icon: CheckCircle2 },
-  pending:     { label: "En attente",  color: "orange", icon: Clock },
-  rejected:    { label: "Rejeté",      color: "red",    icon: XCircle },
-  validated:   { label: "Validé",      color: "blue",   icon: CheckCircle2 },
-  invalidated: { label: "Invalidé",    color: "rose",   icon: AlertCircle },
-  revision:    { label: "À réviser",   color: "amber",  icon: Clock },
-  "en attente":{ label: "En attente",  color: "orange", icon: Clock },
+  approved: { label: "Approuvé", color: "green", icon: CheckCircle2 },
+  pending: { label: "En attente", color: "orange", icon: Clock },
+  rejected: { label: "Rejeté", color: "red", icon: XCircle },
+  validated: { label: "Validé", color: "blue", icon: CheckCircle2 },
+  invalidated: { label: "Invalidé", color: "rose", icon: AlertCircle },
+  revision: { label: "À réviser", color: "amber", icon: Clock },
+  "en attente": { label: "En attente", color: "orange", icon: Clock },
 };
 
 /* -------------------------------------------------------------------------- */
@@ -41,6 +42,7 @@ export default function DevisPage() {
 
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const router = useRouter();
 
   const handleTabChange = (status: string) => {
     setActiveTab(status);
@@ -87,12 +89,12 @@ export default function DevisPage() {
       header: "Prestataire",
       key: "provider",
       render: (_, row) => (
-         <div className="flex flex-col">
-            <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || "-"}</span>
-         </div>
+        <div className="flex flex-col">
+          <span className="font-bold text-slate-700">{row.provider?.company_name || row.provider?.name || "-"}</span>
+        </div>
       )
     },
-   
+
     {
       header: "Date",
       key: "created_at",
@@ -118,8 +120,8 @@ export default function DevisPage() {
           <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider
             ${s === "approved" || s === "validated" ? "bg-green-50 text-green-600" :
               s === "pending" || s === "en attente" || s === "revision" ? "bg-orange-50 text-orange-600" :
-              s === "rejected" || s === "invalidated" ? "bg-red-50 text-red-600" :
-              "bg-slate-50 text-slate-600"}`}
+                s === "rejected" || s === "invalidated" ? "bg-red-50 text-red-600" :
+                  "bg-slate-50 text-slate-600"}`}
           >
             <Icon size={12} />
             {cfg.label}
@@ -131,13 +133,16 @@ export default function DevisPage() {
       header: "Actions",
       key: "id",
       render: (_, row) => (
-        <button
-          onClick={() => setSelectedQuote(row)}
-          className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600 hover:text-slate-900"
-          title="Voir les détails"
-        >
-          <Eye size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+
+          <button
+            onClick={() => router.push(`/manager/devis/details/${row.id}`)}
+            className="p-2 hover:bg-slate-900 hover:text-white border border-slate-100 rounded-xl transition text-slate-400"
+            title="Voir la fiche complète"
+          >
+            <Eye size={18} />
+          </button>
+        </div>
       )
     }
   ];
@@ -194,12 +199,12 @@ export default function DevisPage() {
             </div>
 
             <div className="p-8 space-y-6">
-             
-               <DataTable
-                 columns={columns}
-                 data={quotes}
-                 title="Liste des devis"
-               />
+
+              <DataTable
+                columns={columns}
+                data={quotes}
+                title="Liste des devis"
+              />
             </div>
           </div>
         </main>
@@ -221,11 +226,11 @@ export default function DevisPage() {
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-0">
               {[
-                { label: "Référence",   value: selectedQuote.reference },
+                { label: "Référence", value: selectedQuote.reference },
                 { label: "Prestataire", value: selectedQuote.provider?.company_name ?? selectedQuote.provider?.name ?? "-" },
-                { label: "Site",        value: selectedQuote.site?.nom ?? selectedQuote.site?.name ?? "-" },
-                { label: "Date",        value: selectedQuote.created_at ? new Date(selectedQuote.created_at).toLocaleDateString("fr-FR") : "-" },
-                { label: "Montant HT",  value: `${(selectedQuote.amount_ht ?? 0).toLocaleString()} FCFA` },
+                { label: "Site", value: selectedQuote.site?.nom ?? selectedQuote.site?.name ?? "-" },
+                { label: "Date", value: selectedQuote.created_at ? new Date(selectedQuote.created_at).toLocaleDateString("fr-FR") : "-" },
+                { label: "Montant HT", value: `${(selectedQuote.amount_ht ?? 0).toLocaleString()} FCFA` },
                 { label: "Montant TTC", value: `${(selectedQuote.amount_ttc ?? selectedQuote.total_amount_ttc ?? 0).toLocaleString()} FCFA` },
               ].map((f, i) => (
                 <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
@@ -240,11 +245,10 @@ export default function DevisPage() {
                   const cfg = STATUS_CONFIG[s] ?? STATUS_CONFIG.pending;
                   const Icon = cfg.icon;
                   return (
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase ${
-                      s === "approved" || s === "validated" ? "bg-green-50 text-green-600" :
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase ${s === "approved" || s === "validated" ? "bg-green-50 text-green-600" :
                       s === "pending" || s === "en attente" ? "bg-orange-50 text-orange-600" :
-                      s === "rejected" ? "bg-red-50 text-red-600" : "bg-slate-50 text-slate-600"
-                    }`}>
+                        s === "rejected" ? "bg-red-50 text-red-600" : "bg-slate-50 text-slate-600"
+                      }`}>
                       <Icon size={12} />{cfg.label}
                     </div>
                   );

@@ -14,6 +14,7 @@
 
 import api from "../../core/axios";
 import type { ApiResponse, PaginatedResponse, BaseFilters } from "../../types/manager.types";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -206,11 +207,7 @@ export const ProviderService = {
    * Construit l'URL publique du logo stocké sur le serveur Laravel.
    */
   getLogoUrl(logoPath: string): string {
-    const base =
-      process.env.NEXT_PUBLIC_STORAGE_URL ??
-      process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ??
-      "";
-    return `${base}/storage/${logoPath}`;
+    return resolveStorageUrl(logoPath);
   },
 
   // Exposé pour les hooks

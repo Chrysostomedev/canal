@@ -1,4 +1,5 @@
 import axiosInstance from "../../core/axios";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -151,11 +152,8 @@ export const formatDateTime = (iso?: string | null): string => {
   });
 };
 
-export const getAttachmentUrl = (path: string): string => {
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "")
-    .replace("/api/V1", "").replace("/api", "");
-  return `${base}/storage/${path}`;
-};
+
+export const getAttachmentUrl = (path: string): string => resolveStorageUrl(path);
 
 export const getProviderName = (p?: ReportProvider | null) =>
   p?.company_name ?? p?.name ?? "—";

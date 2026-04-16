@@ -11,6 +11,7 @@ import {
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
+import { resolveUrl } from "@/components/AttachmentViewer";
 
 import { InvoiceService, Invoice } from "../../../../../services/admin/invoice.service";
 
@@ -69,9 +70,8 @@ function StatusBadge({ status }: { status: string }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm font-bold ${
-        styles[status] ?? "border-slate-200 bg-slate-50 text-slate-500"
-      }`}
+      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm font-bold ${styles[status] ?? "border-slate-200 bg-slate-50 text-slate-500"
+        }`}
     >
       {icons[status]}
       {labels[status] ?? status}
@@ -142,11 +142,10 @@ function RelatedInvoicesList({ invoices, currentInvoiceId }: RelatedInvoicesList
             <Link
               key={inv.id}
               href={`/admin/factures/details/${inv.id}`}
-              className={`block p-4 rounded-xl border transition-all ${
-                isCurrent
+              className={`block p-4 rounded-xl border transition-all ${isCurrent
                   ? "border-slate-900 bg-slate-900 text-white"
                   : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
@@ -258,10 +257,10 @@ export default function FactureDetailsPage() {
 
   const providerName = invoice?.provider?.name ?? invoice?.provider?.company_name ?? "-";
   const siteName = invoice?.site?.nom ?? invoice?.site?.name ?? "-";
-  const reportRef = invoice?.interventionReport?.reference ?? `Rapport #${invoice?.report_id}`;
+  const reportRef = invoice?.interventionReport?.reference ?? `Rapport ${invoice?.report_id}`;
   const quoteRef = invoice?.quote?.reference ?? "-";
 
-  const pdfUrl = invoice?.pdf_path ? InvoiceService.getPdfUrl(invoice.pdf_path) : null;
+  const pdfUrl = invoice?.pdf_path ? resolveUrl(invoice.pdf_path) : null;
   const pdfName = invoice?.pdf_path?.split("/").pop() ?? "facture.pdf";
 
   // KPIs
@@ -292,11 +291,10 @@ export default function FactureDetailsPage() {
           {/* Flash */}
           {flash && (
             <div
-              className={`px-6 py-4 rounded-2xl text-sm font-semibold ${
-                flash.type === "success"
+              className={`px-6 py-4 rounded-2xl text-sm font-semibold ${flash.type === "success"
                   ? "bg-green-50 text-green-700 border border-green-200"
                   : "bg-red-50 text-red-700 border border-red-200"
-              }`}
+                }`}
             >
               {flash.message}
             </div>

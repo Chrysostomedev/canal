@@ -117,8 +117,8 @@ export default function Dashboard() {
 
     setSelectedTicket({
       id: ticket.id,          // ✅ conservé pour construire le redirectHref
-      title: ticket.subject ?? `Ticket #${ticket.id}`,
-      reference: `#${ticket.id}`,
+      title: ticket.subject ?? `Ticket ${ticket.code_ticket}`,
+      code: `${ticket.code_ticket}`,
       description: "Ticket récent visualisé depuis le tableau de bord.",
       fields: [
         { label: "Type", value: ticket.type === "curatif" ? "Curatif" : "Préventif" },
@@ -151,9 +151,9 @@ export default function Dashboard() {
 
   const columns: ColumnConfig<DashboardTicket>[] = [
     {
-      header: "ID ticket",
+      header: "Ticket",
       key: "id",
-      render: (_: any, row: any) => `#${row.id}`,
+      render: (_: any, row: any) => `${row.code_ticket}`,
     },
     {
       header: "Nom",
@@ -285,7 +285,7 @@ export default function Dashboard() {
         → 1 seul bouton "Voir le ticket" qui redirige + ferme le panel
         → labels "Annuler" / "Modifier" supprimés de cette vue
       */}
-      {/* <SideDetailsPanel
+      <SideDetailsPanel
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         title={selectedTicket?.title ?? ""}
@@ -296,9 +296,9 @@ export default function Dashboard() {
           selectedTicket?.id ? `/admin/tickets/${selectedTicket.id}` : undefined
         }
         redirectLabel="Voir le ticket"
-      /> */}
+      />
 
-      <SideDetailsPanel
+      {/* <SideDetailsPanel
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         title={selectedTicket?.title ?? ""}
@@ -307,7 +307,7 @@ export default function Dashboard() {
         descriptionContent={selectedTicket?.description}
         redirectHref="/admin/tickets"
         redirectLabel="Voir le ticket"
-      />
+      /> */}
 
     </div>
   );

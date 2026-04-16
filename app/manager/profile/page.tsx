@@ -10,6 +10,7 @@ import Image from "next/image";
 import axiosInstance from "../../../core/axios";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
+import { resolveStorageUrl } from "../../../lib/url";
 
 export default function ManagerProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -41,19 +42,22 @@ export default function ManagerProfilePage() {
     try {
       const res = await axiosInstance.get("/manager/me");
       const data = res.data?.data ?? res.data;
+      console.log("[ManagerProfile] données reçues :", data);
       setProfile(data);
-      setFormData({ 
-        first_name: data.first_name || "", 
-        last_name: data.last_name || "", 
-        email: data.email || "",
-        phone: data.phone || "" 
+      setFormData({
+        first_name: data.first_name || "",
+        last_name:  data.last_name  || "",
+        email:      data.email      || "",
+        phone:      data.phone      || "",
       });
-    } catch (e) {
-      console.error("Profile fetch error", e);
+      if (data.url) {
+        localStorage.setItem("profile_picture_url", data.url);
+        window.dispatchEvent(new StorageEvent("storage", { key: "profile_picture_url", newValue: data.url }));
+      }
+    } catch (e: any) {
+      console.error("[ManagerProfile] erreur fetch :", e?.response?.data ?? e);
       showFlash("error", "Impossible de charger le profil.");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { 
@@ -67,16 +71,29 @@ export default function ManagerProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      // Le backend exige email dans le payload (required|email)
-      await axiosInstance.put("/manager/profile", {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email || profile?.email,
-        phone: formData.phone,
+      const fd = new FormData();
+      fd.append("first_name", formData.first_name);
+      fd.append("last_name",  formData.last_name);
+      fd.append("email",      formData.email || profile?.email);
+      if (formData.phone) fd.append("phone", formData.phone);
+      if (fileInputRef.current?.files?.[0]) {
+        fd.append("avatar", fileInputRef.current.files[0]);
+        console.log("[ManagerProfile] upload avatar :", fileInputRef.current.files[0].name);
+      }
+      console.log("[ManagerProfile] POST /manager/profile →", Object.fromEntries(fd.entries()));
+      const res  = await axiosInstance.post("/manager/profile", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+      const data = res.data?.data ?? res.data;
+      console.log("[ManagerProfile] réponse update :", data);
+      if (data?.url) {
+        localStorage.setItem("profile_picture_url", data.url);
+        window.dispatchEvent(new StorageEvent("storage", { key: "profile_picture_url", newValue: data.url }));
+      }
       showFlash("success", "Profil mis à jour avec succès.");
       fetchProfile();
     } catch (e: any) {
+      console.error("[ManagerProfile] erreur update :", e?.response?.data ?? e);
       const errors = e.response?.data?.errors;
       const msg = errors ? Object.values(errors).flat().join(" ") : (e.response?.data?.message || "Une erreur est survenue.");
       showFlash("error", msg);
@@ -104,20 +121,27 @@ export default function ManagerProfilePage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    console.log("[ManagerProfile] fichier sélectionné :", file.name, file.size, "bytes");
     const formDataObj = new FormData();
     formDataObj.append("avatar", file);
     setSaving(true);
     try {
-      const res = await axiosInstance.post("/manager/profile/avatar", formDataObj, { 
-        headers: { "Content-Type": "multipart/form-data" } 
+      const res = await axiosInstance.post("/manager/profile/avatar", formDataObj, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
-      // Stocker l'URL de la photo dans localStorage pour la Navbar
-      const avatarUrl = res.data?.data?.url || res.data?.url;
-      if (avatarUrl) localStorage.setItem("profile_picture_url", avatarUrl);
+      const data = res.data?.data ?? res.data;
+      console.log("[ManagerProfile] réponse avatar :", data);
+      const avatarUrl = data?.url;
+      if (avatarUrl) {
+        localStorage.setItem("profile_picture_url", avatarUrl);
+        window.dispatchEvent(new StorageEvent("storage", { key: "profile_picture_url", newValue: avatarUrl }));
+      }
       showFlash("success", "Photo de profil mise à jour.");
       fetchProfile();
-    } catch (e) { showFlash("error", "Erreur lors de l'envoi de la photo."); }
-    finally { setSaving(false); }
+    } catch (e: any) {
+      console.error("[ManagerProfile] erreur avatar :", e?.response?.data ?? e);
+      showFlash("error", "Erreur lors de l'envoi de la photo.");
+    } finally { setSaving(false); }
   };
 
   const getInitials = () => {
@@ -155,7 +179,7 @@ export default function ManagerProfilePage() {
                     <div className="w-full h-full rounded-[2rem] bg-slate-100 overflow-hidden border border-slate-50 flex items-center justify-center">
                       {profile?.profile_picture_path ? (
                         <Image 
-                          src={profile.url || `${process.env.NEXT_PUBLIC_API_URL}/storage/${profile.profile_picture_path}`} 
+                          src={profile.url || resolveStorageUrl(profile.profile_picture_path)} 
                           alt="Profil" 
                           width={128} 
                           height={128} 
@@ -261,10 +285,14 @@ export default function ManagerProfilePage() {
                        />
                     </div>
                     <div className="space-y-2.5">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Email (Lecture seule)</label>
-                       <div className="w-full px-6 py-4 rounded-2xl bg-slate-100 border border-slate-200 text-sm font-bold text-slate-400 flex items-center gap-3">
-                         <Lock size={14} /> {profile?.email}
-                       </div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Email</label>
+                       <input
+                         type="email"
+                         value={formData.email}
+                         onChange={e => setFormData({...formData, email: e.target.value})}
+                         className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                         placeholder="email@exemple.com"
+                       />
                     </div>
                     <div className="space-y-2.5">
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">N° Téléphone</label>

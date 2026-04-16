@@ -29,7 +29,7 @@ const formatMontant = (v: number | string): string => {
   const num = typeof v === "string" ? parseFloat(v) : v;
   if (!num && num !== 0) return "0 FCFA";
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M FCFA`;
-  if (num >= 1_000)     return `${Math.round(num / 1_000)}K FCFA`;
+  if (num >= 1_000) return `${Math.round(num / 1_000)}K FCFA`;
   return `${num.toLocaleString("fr-FR")} FCFA`;
 };
 
@@ -46,16 +46,16 @@ const formatDate = (iso: string): string => {
 // ══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
-  paid:      "border-emerald-200 bg-emerald-50 text-emerald-600",
-  pending:   "border-amber-200 bg-amber-50 text-amber-600",
-  overdue:   "border-rose-200 bg-rose-50 text-rose-600",
+  paid: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  pending: "border-amber-200 bg-amber-50 text-amber-600",
+  overdue: "border-rose-200 bg-rose-50 text-rose-600",
   cancelled: "border-slate-200 bg-slate-50 text-slate-500",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  paid:      "Payée",
-  pending:   "En attente",
-  overdue:   "En retard",
+  paid: "Payée",
+  pending: "En attente",
+  overdue: "En retard",
   cancelled: "Annulée",
 };
 
@@ -63,9 +63,8 @@ const STATUS_LABELS: Record<string, string> = {
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${
-        STATUS_STYLES[status] ?? ""
-      }`}
+      className={`inline-flex items-center justify-center min-w-[90px] px-3 py-1.5 rounded-xl border text-xs font-bold ${STATUS_STYLES[status] ?? ""
+        }`}
     >
       {STATUS_LABELS[status] ?? status}
     </span>
@@ -130,11 +129,11 @@ function FilterDropdown({
   if (!isOpen) return null;
 
   const options = [
-    { val: "",          label: "Toutes"     },
-    { val: "pending",   label: "En attente" },
-    { val: "paid",      label: "Payée"      },
-    { val: "overdue",   label: "En retard"  },
-    { val: "cancelled", label: "Annulée"    },
+    { val: "", label: "Toutes" },
+    { val: "pending", label: "En attente" },
+    { val: "paid", label: "Payée" },
+    { val: "overdue", label: "En retard" },
+    { val: "cancelled", label: "Annulée" },
   ];
 
   return (
@@ -155,11 +154,10 @@ function FilterDropdown({
             <button
               key={val}
               onClick={() => setLocal({ ...local, status: val || undefined })}
-              className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
-                (local.status ?? "") === val
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-              }`}
+              className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${(local.status ?? "") === val
+                ? "bg-slate-900 text-white"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                }`}
             >
               {label}
             </button>
@@ -210,14 +208,14 @@ function InvoiceSidePanel({
 
   // Accès correct via les relations imbriquées
   const providerName = invoice.provider?.company_name ?? "-";
-  const siteName     = invoice.site?.nom ?? "-";
+  const siteName = invoice.site?.nom ?? "-";
 
   const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
 
   // Normalisation des montants (peuvent arriver en string depuis l'API)
-  const amountHT  = typeof invoice.amount_ht  === "string" ? parseFloat(invoice.amount_ht)  : invoice.amount_ht;
-  const taxAmount = typeof invoice.tax_amount  === "string" ? parseFloat(invoice.tax_amount)  : invoice.tax_amount;
-  const amountTTC = typeof invoice.amount_ttc  === "string" ? parseFloat(invoice.amount_ttc)  : invoice.amount_ttc;
+  const amountHT = typeof invoice.amount_ht === "string" ? parseFloat(invoice.amount_ht) : invoice.amount_ht;
+  const taxAmount = typeof invoice.tax_amount === "string" ? parseFloat(invoice.tax_amount) : invoice.tax_amount;
+  const amountTTC = typeof invoice.amount_ttc === "string" ? parseFloat(invoice.amount_ttc) : invoice.amount_ttc;
 
   return (
     <>
@@ -262,9 +260,9 @@ function InvoiceSidePanel({
                 ),
               },
               { label: "Prestataire", value: providerName },
-              { label: "Date",        value: formatDate(invoice.invoice_date) },
-              { label: "Site",        value: siteName },
-              { label: "Montant HT",  value: formatMontant(amountHT) },
+              { label: "Date", value: formatDate(invoice.invoice_date) },
+              { label: "Site", value: siteName },
+              { label: "Montant HT", value: formatMontant(amountHT) },
             ].map((f, i) => (
               <div
                 key={i}
@@ -401,12 +399,12 @@ export default function FacturesPage() {
 
   // États UI
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [isDetailsOpen,   setIsDetailsOpen]   = useState(false);
-  const [filtersOpen,     setFiltersOpen]     = useState(false);
-  const [filters,         setFilters]         = useState<{ status?: string }>({});
-  const [currentPage,     setCurrentPage]     = useState(1);
-  const [flashMessage,    setFlashMessage]    = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [exportLoading,   setExportLoading]   = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<{ status?: string }>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [flashMessage, setFlashMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const PER_PAGE = 10;
 
@@ -446,9 +444,9 @@ export default function FacturesPage() {
 
   // ── Données filtrées & paginées ──
 
-  const filtered   = invoices.filter(inv => !filters.status || inv.payment_status === filters.status);
+  const filtered = invoices.filter(inv => !filters.status || inv.payment_status === filters.status);
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated  = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
   const activeCount = Object.values(filters).filter(Boolean).length;
 
   // ── Handler : marquer payée ──
@@ -471,26 +469,26 @@ export default function FacturesPage() {
     try {
       const dataToExport = filtered.length > 0 ? filtered : invoices;
       const rows = dataToExport.map(inv => ({
-        reference:      inv.reference,
-        prestataire:    inv.provider?.company_name ?? "-",
-        site:           inv.site?.nom ?? "-",
-        date:           inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString("fr-FR") : "-",
-        montant_ht:     typeof inv.amount_ht  === "string" ? parseFloat(inv.amount_ht)  : (inv.amount_ht  ?? 0),
-        tva:            typeof inv.tax_amount === "string" ? parseFloat(inv.tax_amount) : (inv.tax_amount ?? 0),
-        montant_ttc:    typeof inv.amount_ttc === "string" ? parseFloat(inv.amount_ttc) : (inv.amount_ttc ?? 0),
-        statut:         { paid: "Payée", pending: "En attente", overdue: "En retard", cancelled: "Annulée" }[inv.payment_status] ?? inv.payment_status,
-        date_paiement:  inv.payment_date ? new Date(inv.payment_date).toLocaleDateString("fr-FR") : "-",
+        reference: inv.reference,
+        prestataire: inv.provider?.company_name ?? "-",
+        site: inv.site?.nom ?? "-",
+        date: inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString("fr-FR") : "-",
+        montant_ht: typeof inv.amount_ht === "string" ? parseFloat(inv.amount_ht) : (inv.amount_ht ?? 0),
+        tva: typeof inv.tax_amount === "string" ? parseFloat(inv.tax_amount) : (inv.tax_amount ?? 0),
+        montant_ttc: typeof inv.amount_ttc === "string" ? parseFloat(inv.amount_ttc) : (inv.amount_ttc ?? 0),
+        statut: { paid: "Payée", pending: "En attente", overdue: "En retard", cancelled: "Annulée" }[inv.payment_status] ?? inv.payment_status,
+        date_paiement: inv.payment_date ? new Date(inv.payment_date).toLocaleDateString("fr-FR") : "-",
       }));
       exportToXlsx(rows, [
-        { header: "Référence",       key: "reference",     width: 18 },
-        { header: "Prestataire",     key: "prestataire",   width: 24 },
-        { header: "Site",            key: "site",          width: 20 },
-        { header: "Date",            key: "date",          width: 14 },
-        { header: "Montant HT",      key: "montant_ht",    width: 16 },
-        { header: "TVA",             key: "tva",           width: 14 },
-        { header: "Montant TTC",     key: "montant_ttc",   width: 16 },
-        { header: "Statut",          key: "statut",        width: 14 },
-        { header: "Date paiement",   key: "date_paiement", width: 16 },
+        { header: "Référence", key: "reference", width: 18 },
+        { header: "Prestataire", key: "prestataire", width: 24 },
+        { header: "Site", key: "site", width: 20 },
+        { header: "Date", key: "date", width: 14 },
+        { header: "Montant HT", key: "montant_ht", width: 16 },
+        { header: "TVA", key: "tva", width: 14 },
+        { header: "Montant TTC", key: "montant_ttc", width: 16 },
+        { header: "Statut", key: "statut", width: 14 },
+        { header: "Date paiement", key: "date_paiement", width: 16 },
       ], { filename: "factures", sheetName: "Factures", title: "Export Factures - CANAL+" });
       showFlash("success", "Export téléchargé avec succès.");
     } catch {
@@ -503,15 +501,15 @@ export default function FacturesPage() {
   // ── KPIs ──
 
   // Normalisation des montants stats (peuvent arriver en string)
-  const totalAmount   = stats?.total_amount  ?? 0;
+  const totalAmount = stats?.total_amount ?? 0;
   const totalInvoices = stats?.total_invoices ?? 0;
-  const avgCost       = totalInvoices > 0 ? Math.round(totalAmount / totalInvoices) : 0;
+  const avgCost = totalInvoices > 0 ? Math.round(totalAmount / totalInvoices) : 0;
 
   const kpis = [
-    { label: "Coût moyen par facture",  value: avgCost,                   delta: "+3%",      trend: "up" as const, isCurrency: true },
-    { label: "Nombre total de factures", value: totalInvoices,             delta: "+3%",      trend: "up" as const },
-    { label: "Factures en attente",      value: stats?.total_unpaid ?? 0,  delta: "+0%",      trend: "up" as const },
-    { label: "Factures payées",          value: stats?.total_paid   ?? 0,  delta: "+15,03%",  trend: "up" as const },
+    { label: "Coût moyen par facture", value: avgCost, delta: "+3%", trend: "up" as const, isCurrency: true },
+    { label: "Nombre total de factures", value: totalInvoices, delta: "+3%", trend: "up" as const },
+    { label: "Factures en attente", value: stats?.total_unpaid ?? 0, delta: "+0%", trend: "up" as const },
+    { label: "Factures payées", value: stats?.total_paid ?? 0, delta: "+15,03%", trend: "up" as const },
   ];
 
   // ── Colonnes DataTable ──
@@ -556,21 +554,21 @@ export default function FacturesPage() {
       key: "actions",
       render: (_: any, row: Invoice) => (
         <div className="flex items-center gap-3">
-          {/* Ouvre le side panel */}
-          <button
+
+          {/* <button
             onClick={() => { setSelectedInvoice(row); setIsDetailsOpen(true); }}
             className="font-bold text-slate-800 hover:text-gray-500 transition"
             aria-label={`Voir détail facture ${row.reference}`}
           >
             <Eye size={18} />
-          </button>
+          </button> */}
           {/* Lien vers la page détail */}
           <Link
             href={`/admin/factures/details/${row.id}`}
-            className="group p-2 rounded-xl bg-white hover:bg-black transition flex items-center justify-center"
+            className="group p-2 rounded-xl bg-white hover:bg-gray-50 transition flex items-center justify-center"
             aria-label={`Aller au détail facture ${row.reference}`}
           >
-            <ArrowUpRight size={16} className="group-hover:rotate-45 transition-transform" />
+            <Eye size={16} className="group-hover:rotate-45 transition-transform" />
           </Link>
         </div>
       ),
@@ -597,11 +595,10 @@ export default function FacturesPage() {
           {/* Flash message (succès / erreur) */}
           {flashMessage && (
             <div
-              className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
-                flashMessage.type === "success"
-                  ? "text-green-700 bg-green-50 border-green-200"
-                  : "text-red-600 bg-red-100 border-red-300"
-              }`}
+              className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${flashMessage.type === "success"
+                ? "text-green-700 bg-green-50 border-green-200"
+                : "text-red-600 bg-red-100 border-red-300"
+                }`}
             >
               {flashMessage.message}
             </div>
@@ -617,11 +614,10 @@ export default function FacturesPage() {
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setFiltersOpen(!filtersOpen)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
-                  filtersOpen || activeCount > 0
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${filtersOpen || activeCount > 0
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
               >
                 <Filter size={16} /> Filtrer par
                 {activeCount > 0 && (
@@ -669,7 +665,7 @@ export default function FacturesPage() {
               title="Liste des factures"
               columns={columns}
               data={isLoading ? [] : paginated}
-              onViewAll={() => {}}
+              onViewAll={() => { }}
             />
             <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
               <Paginate

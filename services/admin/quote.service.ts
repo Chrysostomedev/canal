@@ -1,5 +1,6 @@
 // services/quote.service.ts
 import axiosInstance from "../../core/axios";
+import { resolveStorageUrl } from "../../lib/url";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTERFACES — Calquées sur le modèle Laravel Quote
@@ -316,10 +317,8 @@ export const QuoteService = {
 
   /**
    * Construit l'URL publique d'un PDF de devis
-   * pdf_path = "quotes/Q-2025-0001.pdf" → APP_URL/storage/quotes/Q-2025-0001.pdf
    */
   getPdfUrl(pdfPath: string): string {
-    const base = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ?? "";
-    return `${base}/storage/${pdfPath}`;
+    return resolveStorageUrl(pdfPath);
   },
 };

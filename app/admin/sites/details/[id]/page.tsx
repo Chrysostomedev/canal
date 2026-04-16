@@ -582,7 +582,7 @@ export default function SiteDetailsPage() {
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="mt-20 p-8 space-y-8">
+        <main className="mt-4 p-8 space-y-8">
 
           {flashMessage && (
             <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${

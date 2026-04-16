@@ -213,7 +213,7 @@ export default function ProviderDashboard() {
       key: "actions",
       render: (_: any, row: any) => (
         <button
-          onClick={() => handleOpenDetails(row)}
+          onClick={() => router.push(`/provider/tickets/${row.id}`)}
           className="font-bold text-slate-800 hover:text-blue-600 transition"
           aria-label={`Voir détail ticket #${row.id}`}
         >

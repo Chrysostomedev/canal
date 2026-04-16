@@ -814,14 +814,34 @@ export default function PatrimoinesPage() {
         await AssetService.updateAsset(editingData.id, formData);
         setFlash({ type: "success", msg: "Patrimoine mis à jour." });
       } else {
-        await AssetService.createAsset({ product_type_code: "00", ...formData });
+        await AssetService.createAsset(formData);
         setFlash({ type: "success", msg: "Patrimoine créé avec succès." });
       }
       fetchAssets();
       setIsModalOpen(false);
       setEditingData(null);
     } catch (err: any) {
-      setFlash({ type: "error", msg: err?.response?.data?.message ?? "Erreur serveur." });
+      let errorMessage = "Une erreur serveur est survenue.";
+      
+      if (err?.response?.status === 422 && err.response.data?.errors) {
+        const validationErrors = Object.values(err.response.data.errors).flat() as string[];
+        const translatedErrors = validationErrors.map(msg => {
+          const str = String(msg).toLowerCase();
+          if (str.includes("unique") && str.includes("codification")) return "Le code de codification est déjà utilisé par un autre patrimoine.";
+          if (str.includes("file") && str.includes("images")) return "Certaines images fournies ne sont pas valides (formats: jpeg, png, jpg, gif).";
+          if (str.includes("required")) return "Certains champs obligatoires n'ont pas été remplis.";
+          return String(msg);
+        });
+        errorMessage = `Invalide : ${translatedErrors[0] || "Vérifiez vos données."}`;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+        const lowerMsg = errorMessage.toLowerCase();
+        if (lowerMsg.includes("unique") && lowerMsg.includes("codification")) {
+            errorMessage = "La codification générée doit être unique.";
+        }
+      }
+
+      setFlash({ type: "error", msg: errorMessage });
     }
   };
 
@@ -964,12 +984,12 @@ export default function PatrimoinesPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: CompanyAsset) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => setPanelAsset(row)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+          {/* <button onClick={() => setPanelAsset(row)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
             <Eye size={14} /> Aperçu
-          </button>
-          <span className="w-px h-4 bg-slate-200 mx-0.5" />
+          </button> */}
+          {/* <span className="w-px h-4 bg-slate-200 mx-0.5" /> */}
           <Link href={`/admin/patrimoines/${row.id}`} className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition" title="Voir les détails">
-            <ChevronRight size={16} />
+            <Eye size={16} />Aperçu
           </Link>
         </div>
       ),
@@ -1120,6 +1140,7 @@ export default function PatrimoinesPage() {
           date_entree: fmtDateForInput(editingData.date_entree),
           valeur_entree: editingData.valeur_entree ?? "",
           description: editingData.description ?? "",
+          images: editingData.images ?? [],
         } : {}}
         onFieldChange={(name, value) => {
           if (name === "type_company_asset_id") {

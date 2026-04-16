@@ -130,22 +130,45 @@ export const DateRangeInput = ({ name, required, disabled, disablePastDates, def
 // ─── IMAGE UPLOAD ──────────────────────────────────────────────────────────────
 interface ImageFile {
   id: string;
-  file: File;
+  file?: File;
   preview: string;
+  isExisting?: boolean;
+  name?: string;
 }
+
+import { resolveUrl } from "@/components/AttachmentViewer";
 
 export const ImageUpload = ({
   name,
   maxImages = 3,
   accept = "image/*",
+  defaultValue,
+  onChange,
 }: {
   name?: string;
   maxImages?: number;
   accept?: string;
+  defaultValue?: any;
+  onChange?: (files: File[]) => void;
 }) => {
-  const [images, setImages] = useState<ImageFile[]>([]);
+  const [images, setImages] = useState<ImageFile[]>(() => {
+    if (Array.isArray(defaultValue)) {
+      return defaultValue.map((att: any) => ({
+        id: att.id || Math.random().toString(36).slice(2),
+        preview: resolveUrl(att),
+        isExisting: true,
+        name: att.name || "Image existante",
+      }));
+    }
+    return [];
+  });
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const newFiles = images.filter((img) => !img.isExisting && img.file).map((img) => img.file as File);
+    onChange?.(newFiles);
+  }, [images]);
 
   const addFiles = useCallback(
     (files: FileList | null) => {
@@ -155,6 +178,7 @@ export const ImageUpload = ({
         id: Math.random().toString(36).slice(2),
         file,
         preview: URL.createObjectURL(file),
+        name: file.name,
       }));
       setImages((prev) => [...prev, ...newImages].slice(0, maxImages));
     },
@@ -164,7 +188,7 @@ export const ImageUpload = ({
   const remove = (id: string) => {
     setImages((prev) => {
       const img = prev.find((i) => i.id === id);
-      if (img) URL.revokeObjectURL(img.preview);
+      if (img && !img.isExisting) URL.revokeObjectURL(img.preview);
       return prev.filter((i) => i.id !== id);
     });
   };
@@ -239,7 +263,7 @@ export const ImageUpload = ({
               {/* Image */}
               <img
                 src={img.preview}
-                alt={img.file.name}
+                alt={img.name || img.file?.name || "Image"}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
 
@@ -249,7 +273,7 @@ export const ImageUpload = ({
               {/* File name chip */}
               <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-200">
                 <p className="text-[10px] font-semibold text-white truncate bg-slate-900/60 backdrop-blur-sm rounded-xl px-2 py-1">
-                  {img.file.name}
+                  {img.name || img.file?.name || "Image"}
                 </p>
               </div>
 
@@ -564,20 +588,39 @@ export const RichTextEditor = ({ label, placeholder, name, defaultValue }: any) 
 // ─── PDF UPLOAD ────────────────────────────────────────────────────────────────
 interface PdfFile {
   id: string;
-  file: File;
+  file?: File;
   name: string;
+  isExisting?: boolean;
 }
 
 export const PdfUpload = ({
   name,
   maxPDFs = 1,
+  defaultValue,
+  onChange,
 }: {
   name?: string;
   maxPDFs?: number;
+  defaultValue?: any;
+  onChange?: (files: File[]) => void;
 }) => {
-  const [pdfs, setPdfs] = useState<PdfFile[]>([]);
+  const [pdfs, setPdfs] = useState<PdfFile[]>(() => {
+    if (Array.isArray(defaultValue)) {
+       return defaultValue.map((att: any) => ({
+         id: att.id || Math.random().toString(36).slice(2),
+         name: att.name || "Document existant",
+         isExisting: true
+       }));
+    }
+    return [];
+  });
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const newFiles = pdfs.filter(i => !i.isExisting && i.file).map(i => i.file as File);
+    onChange?.(newFiles);
+  }, [pdfs]);
 
   const addFiles = useCallback(
     (files: FileList | null) => {

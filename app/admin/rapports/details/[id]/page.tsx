@@ -5,13 +5,16 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronLeft, CheckCircle2, Clock, FileText,
-  Eye, Download, Star, X, MapPin, Wrench,
+  Eye, Download, Star, X, MapPin, Wrench, ArrowUpRight,
 } from "lucide-react";
+
+import AttachmentViewer from "@/components/AttachmentViewer";
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 
 import { ReportService, InterventionReport, ValidateReportPayload } from "../../../../../services/admin/report.service";
+import { resolveUrl } from "@/components/AttachmentViewer";
 
 // ═══════════════════════════════════════════════
 // HELPERS
@@ -29,9 +32,8 @@ const formatDate = (iso?: string | null): string => {
 function StatusBadge({ status }: { status?: string }) {
   const isValidated = status === "validated";
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${
-      isValidated ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-amber-200 bg-amber-50 text-amber-600"
-    }`}>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${isValidated ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-amber-200 bg-amber-50 text-amber-600"
+      }`}>
       {isValidated ? <CheckCircle2 size={11} /> : <Clock size={11} />}
       {isValidated ? "Validé" : "En attente"}
     </span>
@@ -41,9 +43,8 @@ function StatusBadge({ status }: { status?: string }) {
 function TypeBadge({ type }: { type?: string }) {
   const isCuratif = type === "curatif";
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold ${
-      isCuratif ? "bg-orange-50 text-orange-600 border border-orange-200" : "bg-blue-50 text-blue-600 border border-blue-200"
-    }`}>
+    <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold ${isCuratif ? "bg-orange-50 text-orange-600 border border-orange-200" : "bg-blue-50 text-blue-600 border border-blue-200"
+      }`}>
       {isCuratif ? "Curatif" : "Préventif"}
     </span>
   );
@@ -105,8 +106,8 @@ function ValidateModal({
   onClose: () => void;
   onConfirm: (payload: ValidateReportPayload) => Promise<void>;
 }) {
-  const [result,  setResult]  = useState<"RAS" | "ANOMALIE">("RAS");
-  const [rating,  setRating]  = useState<number>(0);
+  const [result, setResult] = useState<"RAS" | "ANOMALIE">("RAS");
+  const [rating, setRating] = useState<number>(0);
   const [hovered, setHovered] = useState<number>(0);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -118,9 +119,9 @@ function ValidateModal({
     }
     setLoading(true);
     try {
-      await onConfirm({ 
+      await onConfirm({
         result,
-        rating:  rating || null, 
+        rating: rating || null,
         comment: comment.trim(),
       });
       onClose();
@@ -136,7 +137,7 @@ function ValidateModal({
         <div className="flex items-center justify-between px-7 py-6 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-black text-slate-900">Valider le rapport</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Rapport #{report.id}</p>
+            <p className="text-xs text-slate-400 mt-0.5">Rapport {report.id}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition">
             <X size={18} className="text-slate-500" />
@@ -148,13 +149,13 @@ function ValidateModal({
               Résultat de l'intervention
             </label>
             <div className="flex gap-3 p-1 bg-slate-100 rounded-2xl border border-slate-200">
-              <button 
+              <button
                 onClick={() => setResult("RAS")}
                 className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${result === "RAS" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
               >
                 RAS
               </button>
-              <button 
+              <button
                 onClick={() => setResult("ANOMALIE")}
                 className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${result === "ANOMALIE" ? "bg-white text-red-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
               >
@@ -221,14 +222,14 @@ function ValidateModal({
 // ═══════════════════════════════════════════════
 
 export default function ReportDetailPage() {
-  const params    = useParams();
-  const reportId  = Number(params.id);
+  const params = useParams();
+  const reportId = Number(params.id);
 
-  const [report,        setReport]        = useState<InterventionReport | null>(null);
-  const [isLoading,     setIsLoading]     = useState(false);
-  const [pdfPreview,    setPdfPreview]    = useState<{ url: string; name: string } | null>(null);
-  const [showValidate,  setShowValidate]  = useState(false);
-  const [flash,         setFlash]         = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [report, setReport] = useState<InterventionReport | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
+  const [showValidate, setShowValidate] = useState(false);
+  const [flash, setFlash] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const showFlash = (type: "success" | "error", message: string) => {
     setFlash({ type, message });
@@ -259,18 +260,18 @@ export default function ReportDetailPage() {
     }
   };
 
-  const isValidated  = report?.status === "validated";
-  const pdfs         = (report?.attachments ?? []).filter(a => a.file_type === "document");
-  const photos       = (report?.attachments ?? []).filter(a => a.file_type === "photo");
+  const isValidated = report?.status === "validated";
+  const pdfs = (report?.attachments ?? []).filter(a => a.file_type === "document");
+  const photos = (report?.attachments ?? []).filter(a => a.file_type === "photo");
   const providerName = report?.provider?.company_name ?? report?.provider?.name ?? "-";
-  const siteName     = report?.site?.nom ?? report?.site?.name ?? "-";
+  const siteName = report?.site?.nom ?? report?.site?.name ?? "-";
 
   // KPIs dynamiques depuis le rapport
   const kpis = [
-    { label: "Prestataire",   value: providerName,                                    delta: "", trend: "up" as const },
-    { label: "Site",          value: siteName,                                        delta: "", trend: "up" as const },
-    { label: "Pièces jointes",value: (report?.attachments?.length ?? 0),              delta: "", trend: "up" as const },
-    { label: "Note",          value: report?.rating ? `${report.rating}/5` : "N/A",  delta: "", trend: "up" as const },
+    { label: "Prestataire", value: providerName, delta: "", trend: "up" as const },
+    { label: "Site", value: siteName, delta: "", trend: "up" as const },
+    { label: "Pièces jointes", value: (report?.attachments?.length ?? 0), delta: "", trend: "up" as const },
+    { label: "Note", value: report?.rating ? `${report.rating}/5` : "N/A", delta: "", trend: "up" as const },
   ];
 
   return (
@@ -280,11 +281,10 @@ export default function ReportDetailPage() {
         <main className="mt-20 p-8 space-y-8">
 
           {flash && (
-            <div className={`px-6 py-4 rounded-2xl text-sm font-semibold ${
-              flash.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}>{flash.message}</div>
+            <div className={`px-6 py-4 rounded-2xl text-sm font-semibold ${flash.type === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+              }`}>{flash.message}</div>
           )}
 
           {/* ── Header ── */}
@@ -299,7 +299,7 @@ export default function ReportDetailPage() {
               <div>
                 <div className="flex items-center gap-4 mb-1">
                   <h1 className="text-5xl font-black text-slate-900 tracking-tighter uppercase">
-                    {isLoading ? "Chargement..." : `Rapport #${reportId}`}
+                    {isLoading ? "Chargement..." : `Rapport ${reportId}`}
                   </h1>
                   {report && <StatusBadge status={report.status} />}
                   {report && <TypeBadge type={report.intervention_type} />}
@@ -396,7 +396,7 @@ export default function ReportDetailPage() {
                   </h3>
                   <div className="grid grid-cols-3 gap-3">
                     {photos.map(att => {
-                      const url = ReportService.getAttachmentUrl(att.file_path);
+                      const url = resolveUrl(att.file_path);
                       return (
                         <a key={att.id} href={url} target="_blank" rel="noreferrer"
                           className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition">
@@ -420,7 +420,7 @@ export default function ReportDetailPage() {
                 {pdfs.length > 0 ? (
                   <div className="space-y-3">
                     {pdfs.map(att => {
-                      const url  = ReportService.getAttachmentUrl(att.file_path);
+                      const url = resolveUrl(att.file_path);
                       const name = att.file_path.split("/").pop() ?? "document.pdf";
                       return (
                         <div key={att.id} className="flex flex-col gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50">
@@ -463,10 +463,10 @@ export default function ReportDetailPage() {
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Ticket lié</h3>
                   <div className="space-y-2.5">
                     {[
-                      { label: "ID",      value: `#${report.ticket.id}` },
-                      { label: "Sujet",   value: report.ticket.subject ?? "-" },
-                      { label: "Type",    value: report.ticket.type === "curatif" ? "Curatif" : "Préventif" },
-                      { label: "Statut",  value: report.ticket.status ?? "-" },
+                      { label: "ID", value: `#${report.ticket.id}` },
+                      { label: "Sujet", value: report.ticket.subject ?? "-" },
+                      { label: "Type", value: report.ticket.type === "curatif" ? "Curatif" : "Préventif" },
+                      { label: "Statut", value: report.ticket.status ?? "-" },
                     ].map((f, i) => (
                       <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
                         <span className="text-xs text-slate-400 font-medium">{f.label}</span>
