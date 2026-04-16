@@ -143,8 +143,8 @@ export default function RapportsPage() {
   ];
 
   const columns: ColumnConfig<InterventionReport>[] = [
-    { header: "ID", key: "id", render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">#{row.id}</span> },
-    { header: "Ticket", key: "ticket" as any, render: (_: any, row: InterventionReport) => row.ticket?.subject ?? `#${row.ticket_id}` },
+    { header: "Reference", key: "reference", render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
+    { header: "Ticket", key: "ticket" as any, render: (_: any, row: InterventionReport) => row.ticket?.code_ticket ?? `${row.ticket_code_ticket}` },
     { header: "Prestataire", key: "provider" as any, render: (_: any, row: InterventionReport) => row.provider?.company_name ?? row.provider?.name ?? "-" },
     { header: "Type", key: "intervention_type" as any, render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
     { header: "Date", key: "created_at", render: (_: any, row: InterventionReport) => formatDate(row.created_at) },
@@ -152,11 +152,9 @@ export default function RapportsPage() {
     {
       header: "Actions", key: "actions" as any, render: (_: any, row: InterventionReport) => (
         <div className="flex items-center gap-3">
-          <button onClick={() => { setSelectedReport(row); setIsDetailsOpen(true); }} className="p-2 hover:bg-slate-100 rounded-xl transition">
-            <Eye size={18} className="text-slate-600" />
-          </button>
+
           <Link href={`/manager/rapports/details/${row.id}`} className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 transition flex items-center justify-center">
-            <ArrowUpRight size={16} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
+            <Eye size={16} className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all" />
           </Link>
         </div>
       )

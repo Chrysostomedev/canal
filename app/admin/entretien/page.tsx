@@ -241,7 +241,7 @@ function ValidationModal({
                         </div>
 
                         {/* Toggle Valider / Rejeter */}
-                        <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
+                        {/* <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
                             <button
                                 type="button"
                                 onClick={() => setMode("review")}
@@ -258,7 +258,7 @@ function ValidationModal({
                             >
                                 <ThumbsDown size={15} /> Rejeter
                             </button>
-                        </div>
+                        </div> */}
 
                         {/* Mode VALIDER */}
                         {mode === "review" && (
@@ -304,7 +304,7 @@ function ValidationModal({
                                     {submitting
                                         ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                         : <CheckCircle2 size={16} />}
-                                    {submitting ? "Validation en cours…" : "Valider et envoyer à l'Admin"}
+                                    {submitting ? "Validation en cours…" : "Valider et envoyer "}
                                 </button>
 
                                 {!canValidate && (
@@ -315,7 +315,7 @@ function ValidationModal({
                             </div>
                         )}
 
-                        {/* Mode REJETER */}
+                        {/* Mode REJETER
                         {mode === "reject" && (
                             <div className="space-y-4">
                                 <div className="flex flex-col gap-2">
@@ -349,7 +349,7 @@ function ValidationModal({
                                     {submitting ? "Rejet en cours…" : "Rejeter le rapport"}
                                 </button>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
             </div>
@@ -390,7 +390,7 @@ function MaintenancePreviewPanel({
 
                 <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
 
-            
+
 
                     {/* Champs */}
                     <div className="space-y-0">
@@ -460,7 +460,7 @@ function MaintenancePreviewPanel({
                 hover:bg-black transition flex items-center justify-center gap-2"
                         >
                             <ShieldCheck size={16} />
-                            Valider / Rejeter le rapport
+                            Valider le rapport
                         </button>
                     )}
 
@@ -639,7 +639,7 @@ export default function ManagerEntretienPage() {
                             <ShieldCheck size={13} /> Valider
                         </button>
                     )}
-                   
+
                 </div>
             ),
         },
