@@ -369,10 +369,14 @@ export default function PatrimoinesPage() {
           }}
           isLoading={isTicketSubmitting}
           onSubmit={(values) => {
+            // Récupération de l'image du formulaire (déjà un tableau File[] via ImageUpload)
+            const attachments = (values as any).image || undefined;
+            
             createTicket({ 
               ...values, 
               company_asset_id: selectedAsset.id,
-              site_id: selectedAsset.site_id 
+              site_id: selectedAsset.site_id,
+              attachments
             } as any);
           }}
           submitLabel="Envoyer le ticket"

@@ -24,6 +24,7 @@ export function useTicketActions(options?: UseTicketActionsOptions) {
     description?: string;
     subject?: string;
     site_id?: number | string | null;
+    attachments?: File[];
   }) => {
     setIsSubmitting(true);
     setError(null);
@@ -53,6 +54,9 @@ export function useTicketActions(options?: UseTicketActionsOptions) {
       if (payload.service_id)  clean.service_id  = Number(payload.service_id);
       if (payload.subject)     clean.subject      = payload.subject;
       if (payload.description) clean.description  = payload.description;
+
+      // Ajout des pièces jointes (photos)
+      if (payload.attachments) clean.attachments = payload.attachments;
 
       const newTicket = await TicketService.createTicket(clean);
       setSuccess("Le ticket a été créé avec succès.");

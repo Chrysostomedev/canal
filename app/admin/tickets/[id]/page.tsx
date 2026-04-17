@@ -528,10 +528,9 @@ export default function AdminTicketDetailPage() {
                     </div>
                   )}
 
-                  {/* Photos */}
                   {photos.length > 0 && (
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Photos ({photos.length})</h3>
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Photos de l'intervention ({photos.length})</h3>
                       <div className="grid grid-cols-3 gap-3">
                         {photos.map((att: any, i: number) => {
                           const url = getUrl(att);
@@ -544,6 +543,30 @@ export default function AdminTicketDetailPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Photos de l'équipement (Asset) */}
+                  {(() => {
+                    const assetImages = (ticket.asset as any)?.images ?? [];
+                    if (assetImages.length === 0) return null;
+                    return (
+                      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Photos de l'équipement ({assetImages.length})</h3>
+                          <Link href={`/admin/patrimoines/${ticket.asset.id}`} className="text-[10px] font-bold text-blue-600 hover:underline">Voir l'actif</Link>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                          {assetImages.map((img: any, i: number) => {
+                            const url = getUrl(img);
+                            return (
+                              <a key={i} href={url} target="_blank" rel="noreferrer" className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition bg-slate-50">
+                                <img src={url} alt="photo asset" className="w-full h-full object-cover" />
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Timeline */}
                   <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">

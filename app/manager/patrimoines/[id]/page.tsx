@@ -15,8 +15,10 @@ import { useTicketActions } from "../../../../hooks/manager/useTicketActions";
 import {
   Tag as TagIcon, ChevronLeft, Building2, MapPin, Calendar,
   DollarSign, Wrench, AlertTriangle, Download, CheckCircle2, CalendarDays, Clock,
-  Tag
+  Tag, Eye
 } from "lucide-react";
+import { resolveUrl } from "@/components/AttachmentViewer";
+import AttachmentViewer from "@/components/AttachmentViewer";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (v?: number | null) => {
@@ -314,6 +316,41 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
               <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-100 italic">
                 "{asset.description}"
               </p>
+            </div>
+          )}
+          
+          {/* Photos */}
+          {asset.images && asset.images.length > 0 && (
+            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Photos de l'équipement ({asset.images.length})</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {asset.images.map((img, idx) => {
+                  const url = resolveUrl(img);
+                  return (
+                    <div key={idx} className="aspect-square rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 group relative">
+                      <img 
+                        src={url} 
+                        alt={`Photo ${idx + 1}`} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/images/placeholder-asset.png"; }}
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                         <a href={url} target="_blank" rel="noreferrer" className="p-2 bg-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 hover:bg-slate-50">
+                            <Eye size={16} className="text-slate-900" />
+                         </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Utilisation du composant Viewer pour un affichage plein écran au clic si nécessaire (optionnel car on a déjà les liens) */}
+              <div className="mt-4 pt-4 border-t border-slate-50">
+                <AttachmentViewer attachments={asset.images} title="Gallerie complète" />
+              </div>
             </div>
           )}
 

@@ -400,7 +400,7 @@ export default function PatrimoineDetailsPage() {
 
                   {/* Photos - si le patrimoine possède des images */}
                   {(() => {
-                    const assetImages = asset.images ?? (asset as any).attachments ?? (asset as any).media ?? [];
+                    const assetImages = asset.images ?? [];
                     if (!assetImages || assetImages.length === 0) return null;
                     return (
                       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-4">
@@ -445,7 +445,7 @@ export default function PatrimoineDetailsPage() {
                     <div className="p-6 border-b border-slate-50 flex items-center justify-between">
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Photo du patrimoine</h3>
                       {(() => {
-                        const assetImages = asset.images ?? (asset as any).attachments ?? (asset as any).media ?? [];
+                        const assetImages = asset.images ?? [];
                         return assetImages.length > 0 && (
                           <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
                             {assetImages.length} photo{assetImages.length > 1 ? 's' : ''}
@@ -455,7 +455,7 @@ export default function PatrimoineDetailsPage() {
                     </div>
                     <div className="h-64 sm:h-80 w-full bg-slate-50 relative group">
                       {(() => {
-                        const assetImages = asset.images ?? (asset as any).attachments ?? (asset as any).media ?? [];
+                        const assetImages = asset.images ?? [];
                         if (assetImages.length > 0) {
                           const firstImg = assetImages[0];
                           const url = resolveUrl(firstImg);

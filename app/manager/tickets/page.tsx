@@ -373,7 +373,7 @@ export default function TicketsPage() {
                 className="w-full pl-12 pr-6 py-4 rounded-[1.5rem] bg-white border border-slate-100 shadow-sm text-sm font-medium focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all placeholder:text-slate-400"
               />
             </div> */}
-  t
+            t
             <div className="flex items-end gap-4 w-full md:w-auto">
               <button
                 onClick={exportTickets}
@@ -510,11 +510,15 @@ export default function TicketsPage() {
           }
         }}
         onSubmit={(values: Record<string, any>) => {
-          // Injecte site_id depuis l'actif sélectionné
+          // Injection site_id depuis l'actif sélectionné
           const siteId = selectedAssetSiteId
             ?? assets.find(a => String(a.id) === String(values.company_asset_id))?.site_id
             ?? null;
-          createTicket({ ...values, site_id: siteId } as any);
+          
+          // Récupération de l'image du formulaire (déjà un tableau File[] via ImageUpload)
+          const attachments = values.image || undefined;
+          
+          createTicket({ ...values, site_id: siteId, attachments } as any);
         }}
         submitLabel="Envoyer le ticket"
       />

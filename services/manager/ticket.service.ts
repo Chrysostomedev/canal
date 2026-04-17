@@ -42,10 +42,30 @@ export const TicketService = {
     due_at: string;
     description?: string;
     subject?: string;
+    site_id?: number;
+    attachments?: File[];
   }): Promise<Ticket> {
+    const formData = new FormData();
+    
+    // Ajout des champs textuels
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key !== 'attachments' && value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    // Ajout des fichiers (photos du ticket)
+    if (payload.attachments && payload.attachments.length > 0) {
+      payload.attachments.forEach((file) => {
+        formData.append("attachments[]", file);
+      });
+    }
+
     // Le back absorbe le 500 notify() — on l'intercepte silencieusement
     try {
-      const response = await axios.post("/manager/ticket", payload);
+      const response = await axios.post("/manager/ticket", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       return response.data.data;
     } catch (err: any) {
       const status = err?.response?.status;
