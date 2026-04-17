@@ -54,9 +54,10 @@ export const QuoteService = {
   /**
    * Statistiques des devis du site.
    */
-  async getStats(): Promise<QuoteStats> {
+  async getStats(filters: QuoteFilters = {}): Promise<QuoteStats> {
     const { data } = await api.get<ApiResponse<QuoteStats>>(
-      "/manager/quote/stats"
+      "/manager/quote/stats",
+      { params: filters }
     );
     return data.data;
   },

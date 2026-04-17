@@ -154,6 +154,35 @@ export interface ImportQuotePayload {
 // SERVICE QUOTE — Toutes les routes Laravel exposées
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════════
+// NORMALIZATION — Map backend French statuses to frontend English constants
+// ═══════════════════════════════════════════════════════════════════════════
+
+function normalizeQuote(q: any): Quote {
+  const statusMap: Record<string, string> = {
+    "en attente": "pending",
+    "approuvé": "approved",
+    "rejeté": "rejected",
+    "en révision": "revision",
+  };
+
+  return {
+    ...q,
+    status: statusMap[q.status] ?? q.status,
+  };
+}
+
+// ✅ Structure paginée retournée par Laravel
+interface PaginatedResponse<T> {
+  items: T[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
 export const QuoteService = {
 
   /**
@@ -161,9 +190,23 @@ export const QuoteService = {
    * Liste tous les devis avec relations (ticket, provider, site, items, history)
    * Retourne un tableau trié par date décroissante côté Laravel (latest())
    */
-  async getQuotes(): Promise<Quote[]> {
-    const res = await axiosInstance.get("/admin/quote");
-    return res.data.data;
+  async getQuotes(params?: any): Promise<Quote[]> {
+    const res = await axiosInstance.get("/admin/quote", { params });
+    const responseData = res.data.data;
+
+    // ✅ Si structure paginée
+    if (responseData && typeof responseData === "object" && "items" in responseData) {
+      const paginated = responseData as PaginatedResponse<Quote>;
+      return paginated.items.map(normalizeQuote);
+    }
+
+    // ✅ Si directement tableau (fallback)
+    if (Array.isArray(responseData)) {
+      return responseData.map(normalizeQuote);
+    }
+
+    console.error("❌ Structure inattendue getQuotes:", responseData);
+    return [];
   },
 
   /**
@@ -177,7 +220,7 @@ export const QuoteService = {
    */
   async getQuote(id: number): Promise<Quote> {
     const res = await axiosInstance.get(`/admin/quote/${id}`);
-    return res.data.data;
+    return normalizeQuote(res.data.data);
   },
 
   /**
@@ -206,7 +249,7 @@ export const QuoteService = {
    */
   async createQuote(payload: CreateQuotePayload): Promise<Quote> {
     const res = await axiosInstance.post("/admin/quote", payload);
-    return res.data.data;
+    return normalizeQuote(res.data.data);
   },
 
   /**
@@ -219,7 +262,7 @@ export const QuoteService = {
    */
   async updateQuote(id: number, payload: UpdateQuotePayload): Promise<Quote> {
     const res = await axiosInstance.put(`/admin/quote/${id}`, payload);
-    return res.data.data;
+    return normalizeQuote(res.data.data);
   },
 
   /**
@@ -257,7 +300,7 @@ export const QuoteService = {
    */
   async approveQuote(id: number): Promise<Quote> {
     const res = await axiosInstance.post(`/admin/quote/${id}/approve`);
-    return res.data.data;
+    return normalizeQuote(res.data.data);
   },
 
   /**
@@ -272,7 +315,7 @@ export const QuoteService = {
    */
   async rejectQuote(id: number, reason: string): Promise<Quote> {
     const res = await axiosInstance.post(`/admin/quote/${id}/reject`, { reason });
-    return res.data.data;
+    return normalizeQuote(res.data.data);
   },
 
   /**
@@ -287,7 +330,7 @@ export const QuoteService = {
    */
   async requestRevision(id: number, reason?: string): Promise<Quote> {
     const res = await axiosInstance.post(`/admin/quote/${id}/revision`, { reason });
-    return res.data.data;
+    return normalizeQuote(res.data.data);
   },
 
   /**
@@ -312,7 +355,19 @@ export const QuoteService = {
     const res = await axiosInstance.get("/admin/quote", {
       params: { ticket_id: ticketId },
     });
-    return res.data.data;
+    const responseData = res.data.data;
+
+    // ✅ Si structure paginée
+    if (responseData && typeof responseData === "object" && "items" in responseData) {
+      return (responseData as PaginatedResponse<Quote>).items.map(normalizeQuote);
+    }
+
+    // ✅ Si directement tableau (fallback)
+    if (Array.isArray(responseData)) {
+      return responseData.map(normalizeQuote);
+    }
+
+    return [];
   },
 
   /**

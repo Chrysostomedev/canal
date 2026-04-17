@@ -356,7 +356,8 @@ export default function ManagerTicketDetailPage() {
                                 <p className="text-xs font-bold text-slate-900 truncate flex-1">{name}</p>
                               </div>
                               <div className="flex gap-2">
-                                <button onClick={() => setPdfPreview({ url, name })} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-white transition"><Eye size={13} /> Aperçu</button>
+                                <button onClick={() => setPdfPreview({ url, name })} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-white transition">
+                                  <Eye size={13} /> Aperçu</button>
                                 <a href={url} download target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition"><Download size={13} /> Télécharger</a>
                               </div>
                             </div>

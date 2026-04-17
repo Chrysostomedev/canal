@@ -221,6 +221,24 @@ export const InvoiceService = {
   },
 
   /**
+   * Récupère toutes les factures liées à un ticket via ses rapports
+   */
+  async getInvoicesByTicket(ticketId: number): Promise<Invoice[]> {
+    const res = await axiosInstance.get("/admin/invoice", {
+      params: { ticket_id: ticketId },
+    });
+    const responseData = res.data.data;
+    
+    if (responseData && typeof responseData === "object" && "items" in responseData) {
+      return (responseData as PaginatedResponse<Invoice>).items.map(normalizeInvoice);
+    }
+    if (Array.isArray(responseData)) {
+      return responseData.map(normalizeInvoice);
+    }
+    return [];
+  },
+
+  /**
    * Construit l'URL publique d'un PDF de facture
    */
   getPdfUrl(pdfPath: string): string {

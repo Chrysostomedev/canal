@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
   Eye, Filter, Download, X,
   Wrench, User, Tag, AlertTriangle, CheckCircle2,
@@ -120,7 +121,7 @@ function TicketSidePanel({
           <div className="space-y-3">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Description du problème</h3>
             <div className="bg-slate-50/50 rounded-[2rem] p-6 border border-slate-100 text-sm text-slate-700 leading-relaxed font-medium">
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: ticket.description || "Aucune description fournie" }}/>
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: ticket.description || "Aucune description fournie" }} />
             </div>
           </div>
 
@@ -175,7 +176,7 @@ export default function TicketsPage() {
     tickets, stats, meta, filters, isLoading, setFilters, refresh, exportTickets
   } = useTickets();
 
-  const { createTicket, rateTicket, isSubmitting } = useTicketActions({
+  const { createTicket, rateTicket, isSubmitting, error, success } = useTicketActions({
     onSuccess: () => {
       setIsModalOpen(false);
       setIsRateOpen(false);
@@ -269,30 +270,30 @@ export default function TicketsPage() {
       required: true,
       icon: <CalendarDays size={18} />
     },
-   {
-    // ici ca doit etre automatiquement preremmpli et affiché système 3 j pour curatif et 7jours préventif
-  name: "due_at",
-  label: "Échéance",
-  type: "date",
-  required: true,
-  disablePastDates: true,
-  icon: <Clock size={18} />,
-},
-{
-  name: "description",
-  label: "Détails supplémentaires",
-  type: "rich-text",
-  placeholder: "Décrivez précisément le problème constaté...",
-  required: true,
-  gridSpan: 2,   // ← pleine largeur ✓
-},
-{
-  name: "image",
-  label: "Photo justificative",
-  type: "image-upload",
-  required: false,
-gridSpan: 2,
-},
+    {
+      // ici ca doit etre automatiquement preremmpli et affiché système 3 j pour curatif et 7jours préventif
+      name: "due_at",
+      label: "Échéance",
+      type: "date",
+      required: true,
+      disablePastDates: true,
+      icon: <Clock size={18} />,
+    },
+    {
+      name: "description",
+      label: "Détails supplémentaires",
+      type: "rich-text",
+      placeholder: "Décrivez précisément le problème constaté...",
+      required: true,
+      gridSpan: 2,   // ← pleine largeur ✓
+    },
+    {
+      name: "image",
+      label: "Photo justificative",
+      type: "image-upload",
+      required: false,
+      gridSpan: 2,
+    },
 
   ];
 
@@ -338,13 +339,13 @@ gridSpan: 2,
       header: "Actions",
       key: "actions",
       render: (_: any, row: Ticket) => (
-        <button
-          onClick={() => { setSelectedTicket(row); setIsDetailsOpen(true); }}
-          className="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-all group"
-        >
-          <Eye size={18} className="transition-transform group-hover:scale-110" />
-          <span className="text-[10px] font-black uppercase tracking-widest">Voir</span>
-        </button>
+
+        <div className="flex items-center gap-2">
+
+          <Link href={`/manager/tickets/${row.id}`} className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 hover:border-black transition flex items-center justify-center">
+            <Eye size={14} className="text-slate-600 group-hover:text-white transition-all" />
+          </Link>
+        </div>
       )
     },
   ];
@@ -499,6 +500,9 @@ gridSpan: 2,
         subtitle="Détaillez le dysfonctionnement pour une intervention rapide"
         fields={ticketFields}
         initialValues={{ type: 'curatif', priority: 'moyenne' }}
+        isSubmitting={isSubmitting}
+        error={error}
+        success={success}
         onFieldChange={(name, value) => {
           if (name === "company_asset_id" && value) {
             const asset = assets.find(a => String(a.id) === String(value));

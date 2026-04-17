@@ -2,23 +2,27 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ChevronLeft, Building2, MapPin, Calendar,
-  DollarSign, Tag, AlertTriangle, Download, Wrench
-} from "lucide-react";
 
-import Navbar   from "@/components/Navbar";
+
+import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 
 import { AssetService } from "../../../../services/manager/asset.service";
 import { TicketService } from "../../../../services/manager/ticket.service";
 import type { Asset, Ticket } from "../../../../types/manager.types";
+import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
+import { useTicketActions } from "../../../../hooks/manager/useTicketActions";
+import {
+  Tag as TagIcon, ChevronLeft, Building2, MapPin, Calendar,
+  DollarSign, Wrench, AlertTriangle, Download, CheckCircle2, CalendarDays, Clock,
+  Tag
+} from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (v?: number | null) => {
   if (!v && v !== 0) return "-";
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000)     return `${(v / 1_000).toFixed(1)}K FCFA`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K FCFA`;
   return `${v.toLocaleString("fr-FR")} FCFA`;
 };
 
@@ -29,36 +33,111 @@ const fmtDate = (iso?: string | null) => {
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  active:         "border-green-500 bg-green-50 text-green-700",
+  active: "border-green-500 bg-green-50 text-green-700",
   in_maintenance: "border-amber-400 bg-amber-50 text-amber-700",
   out_of_service: "border-red-400 bg-red-50 text-red-600",
-  disposed:       "border-slate-400 bg-slate-100 text-slate-700",
+  disposed: "border-slate-400 bg-slate-100 text-slate-700",
 };
 const STATUS_LABEL: Record<string, string> = {
-  active:         "Actif",
+  active: "Actif",
   in_maintenance: "En maintenance",
   out_of_service: "Hors service",
-  disposed:       "Réformé",
+  disposed: "Réformé",
 };
 
 const TICKET_STATUS_STYLE: Record<string, string> = {
-  SIGNALÉ:      "border-slate-300 bg-slate-100 text-slate-700",
-  ASSIGNÉ:      "border-violet-400 bg-violet-50 text-violet-700",
-  EN_COURS:     "border-orange-400 bg-orange-50 text-orange-600",
-  EN_TRAITEMENT:"border-orange-400 bg-orange-50 text-orange-600",
-  RAPPORTÉ:     "border-amber-400 bg-amber-50 text-amber-700",
-  ÉVALUÉ:       "border-green-500 bg-green-50 text-green-700",
-  CLOS:         "border-black bg-black text-white",
+  SIGNALÉ: "border-slate-300 bg-slate-100 text-slate-700",
+  ASSIGNÉ: "border-violet-400 bg-violet-50 text-violet-700",
+  EN_COURS: "border-orange-400 bg-orange-50 text-orange-600",
+  EN_TRAITEMENT: "border-orange-400 bg-orange-50 text-orange-600",
+  RAPPORTÉ: "border-amber-400 bg-amber-50 text-amber-700",
+  ÉVALUÉ: "border-green-500 bg-green-50 text-green-700",
+  CLOS: "border-black bg-black text-white",
 };
 
 export default function AssetDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const assetId = parseInt(id);
 
-  const [asset,   setAsset]   = useState<Asset | null>(null);
+  const [asset, setAsset] = useState<Asset | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState<string | null>(null);
+  const [assetError, setAssetError] = useState<string | null>(null);
+
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+
+  // Hook pour les actions de tickets
+  const { createTicket, isSubmitting, error, success } = useTicketActions({
+    onSuccess: () => {
+      setIsTicketModalOpen(false);
+    }
+  });
+
+  const ticketFields: FieldConfig[] = [
+    {
+      name: "subject",
+      label: "Sujet du ticket",
+      type: "text",
+      placeholder: "Ex: Panne constatée sur l'équipement",
+      required: true,
+      icon: <TagIcon size={18} />
+    },
+    {
+      name: "type",
+      label: "Type",
+      type: "select",
+      options: [
+        { label: "Curatif", value: "curatif" },
+        { label: "Préventif", value: "preventif" },
+      ],
+      required: true,
+      icon: <Wrench size={18} />
+    },
+    {
+      name: "priority",
+      label: "Priorité",
+      type: "select",
+      options: [
+        { label: "Faible", value: "faible" },
+        { label: "Moyenne", value: "moyenne" },
+        { label: "Haute", value: "haute" },
+        { label: "Critique", value: "critique" },
+      ],
+      required: true,
+      icon: <AlertTriangle size={18} />
+    },
+    {
+      name: "planned_at",
+      label: "Début souhaité",
+      type: "date",
+      disablePastDates: true,
+      required: true,
+      icon: <CalendarDays size={18} />
+    },
+    {
+      name: "due_at",
+      label: "Échéance",
+      type: "date",
+      required: true,
+      disablePastDates: true,
+      icon: <Clock size={18} />,
+    },
+    {
+      name: "description",
+      label: "Détails supplémentaires",
+      type: "rich-text",
+      placeholder: "Décrivez précisément le problème constaté...",
+      required: true,
+      gridSpan: 2,
+    },
+    {
+      name: "image",
+      label: "Photo justificative",
+      type: "image-upload",
+      required: false,
+      gridSpan: 2,
+    },
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -72,7 +151,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
         // Filtrer les tickets liés à cet asset
         setTickets(t.items.filter(tk => tk.asset_id === assetId || (tk.asset as any)?.id === assetId));
       } catch (e: any) {
-        setError(e?.response?.data?.message ?? "Impossible de charger l'actif.");
+        setAssetError(e?.response?.data?.message ?? "Impossible de charger l'actif.");
       } finally {
         setLoading(false);
       }
@@ -90,13 +169,13 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     </div>
   );
 
-  if (error || !asset) return (
+  if (assetError || !asset) return (
     <div className="flex min-h-screen bg-gray-50">
       <div className="flex flex-col flex-1"><Navbar />
         <div className="mt-20 flex items-center justify-center h-64">
           <div className="text-center space-y-3">
             <AlertTriangle size={40} className="text-red-400 mx-auto" />
-            <p className="text-red-600 font-bold">{error ?? "Actif introuvable"}</p>
+            <p className="text-red-600 font-bold">{assetError ?? "Actif introuvable"}</p>
             <Link href="/manager/site" className="text-sm text-slate-500 underline">Retour aux sites</Link>
           </div>
         </div>
@@ -106,9 +185,9 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
   const kpis = [
     { label: "Valeur d'acquisition", value: fmt(asset.acquisition_value), trend: "up" as const },
-    { label: "Date d'entrée",        value: fmtDate(asset.acquisition_date), trend: "up" as const },
-    { label: "Tickets liés",         value: tickets.length, trend: "up" as const },
-    { label: "Statut",               value: STATUS_LABEL[asset.status] ?? asset.status, trend: "up" as const },
+    { label: "Date d'entrée", value: fmtDate(asset.acquisition_date), trend: "up" as const },
+    { label: "Tickets liés", value: tickets.length, trend: "up" as const },
+    { label: "Statut", value: STATUS_LABEL[asset.status] ?? asset.status, trend: "up" as const },
   ];
 
   return (
@@ -159,12 +238,12 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                 )}
               </div>
             </div>
-            <Link
-              href={`/manager/tickets?asset_id=${asset.id}`}
+            <button
+              onClick={() => setIsTicketModalOpen(true)}
               className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-900 text-white text-sm font-black hover:bg-black transition"
             >
               <Wrench size={16} /> Signaler une anomalie
-            </Link>
+            </button>
           </div>
 
           {/* KPIs */}
@@ -178,13 +257,13 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Spécifications</h3>
               <div className="space-y-0">
                 {[
-                  { label: "Type",              value: asset.typeAsset?.name },
-                  { label: "Sous-type",         value: asset.subTypeAsset?.name },
-                  { label: "N° Série",          value: asset.serial_number },
-                  { label: "Codification",      value: asset.code },
-                  { label: "Date d'acquisition",value: fmtDate(asset.acquisition_date) },
-                  { label: "Valeur d'entrée",   value: fmt(asset.acquisition_value) },
-                  { label: "Site",              value: asset.site?.nom },
+                  { label: "Type", value: asset.typeAsset?.name },
+                  { label: "Sous-type", value: asset.subTypeAsset?.name },
+                  { label: "N° Série", value: asset.serial_number },
+                  { label: "Codification", value: asset.code },
+                  { label: "Date d'acquisition", value: fmtDate(asset.acquisition_date) },
+                  { label: "Valeur d'entrée", value: fmt(asset.acquisition_value) },
+                  { label: "Site", value: asset.site?.nom },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                     <p className="text-xs text-slate-400 font-medium">{label}</p>
@@ -240,6 +319,33 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
         </main>
       </div>
+
+      {/* Modale de création de ticket */}
+      {asset && (
+        <ReusableForm
+          isOpen={isTicketModalOpen}
+          onClose={() => setIsTicketModalOpen(false)}
+          title="Signaler un Problème"
+          subtitle={`Équipement : ${asset.designation}`}
+          fields={ticketFields}
+          initialValues={{
+            type: 'curatif',
+            priority: 'moyenne',
+            company_asset_id: asset.id
+          }}
+          isSubmitting={isSubmitting}
+          error={error}
+          success={success}
+          onSubmit={(values) => {
+            createTicket({
+              ...values,
+              company_asset_id: asset.id,
+              site_id: asset.site_id
+            } as any);
+          }}
+          submitLabel="Envoyer le ticket"
+        />
+      )}
     </div>
   );
 }

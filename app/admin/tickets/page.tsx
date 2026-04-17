@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { Check, Copy, Eye, Filter, Download, Upload, TicketPlus, X,
+import {
+  Check, Copy, Eye, Filter, Download, Upload, TicketPlus, X,
   CalendarCheck, CalendarDays, Clock, MapPin, ArrowUpRight,
   Wrench, User, Tag, AlertTriangle, CheckCircle2, Plus,
   FileSpreadsheet, ChevronLeft, ChevronRight, Loader2, ShieldCheck, AlertCircle,
@@ -128,9 +129,8 @@ function FilterDropdown({
   const Pill = ({ val, current, onClick, label }: { val: string; current?: string; onClick: () => void; label: string }) => (
     <button
       onClick={onClick}
-      className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
-        (current ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-      }`}
+      className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${(current ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+        }`}
     >
       {label}
     </button>
@@ -151,14 +151,14 @@ function FilterDropdown({
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
           <div className="flex flex-col gap-1.5">
             {[
-              { val: "",         label: "Tous les statuts" },
-              { val: "SIGNALÉ",  label: "Signalé"  },
-              { val: "VALIDÉ",   label: "Validé"   },
-              { val: "ASSIGNÉ",  label: "Assigné"  },
+              { val: "", label: "Tous les statuts" },
+              { val: "SIGNALÉ", label: "Signalé" },
+              { val: "VALIDÉ", label: "Validé" },
+              { val: "ASSIGNÉ", label: "Assigné" },
               { val: "EN_COURS", label: "En cours" },
               { val: "RAPPORTÉ", label: "Rapporté" },
-              { val: "ÉVALUÉ",   label: "Évalué"   },
-              { val: "CLOS",     label: "Clôturé"  },
+              { val: "ÉVALUÉ", label: "Évalué" },
+              { val: "CLOS", label: "Clôturé" },
             ].map(o => (
               <Pill key={o.val} val={o.val} current={local.status ?? ""} label={o.label}
                 onClick={() => setLocal({ ...local, status: o.val || undefined })} />
@@ -171,9 +171,9 @@ function FilterDropdown({
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Type</p>
           <div className="flex flex-col gap-1.5">
             {[
-              { val: "",          label: "Tous les types" },
-              { val: "curatif",   label: "Curatif"       },
-              { val: "preventif", label: "Préventif"     },
+              { val: "", label: "Tous les types" },
+              { val: "curatif", label: "Curatif" },
+              { val: "preventif", label: "Préventif" },
             ].map(o => (
               <Pill key={o.val} val={o.val} current={local.type ?? ""} label={o.label}
                 onClick={() => setLocal({ ...local, type: o.val || undefined })} />
@@ -186,10 +186,10 @@ function FilterDropdown({
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Priorité</p>
           <div className="flex flex-col gap-1.5">
             {[
-              { val: "",         label: "Toutes"   },
-              { val: "faible",   label: "Faible"   },
-              { val: "moyenne",  label: "Moyenne"  },
-              { val: "haute",    label: "Haute"    },
+              { val: "", label: "Toutes" },
+              { val: "faible", label: "Faible" },
+              { val: "moyenne", label: "Moyenne" },
+              { val: "haute", label: "Haute" },
               { val: "critique", label: "Critique" },
             ].map(o => (
               <Pill key={o.val} val={o.val} current={local.priority ?? ""} label={o.label}
@@ -223,8 +223,8 @@ function FilterDropdown({
 
 type ValidationStatus = "ok" | "warning" | "error";
 interface CellValidation { status: ValidationStatus; message?: string; }
-interface RowValidation  { rowIndex: number; cells: Record<string, CellValidation>; status: ValidationStatus; }
-interface ParsedPreview  {
+interface RowValidation { rowIndex: number; cells: Record<string, CellValidation>; status: ValidationStatus; }
+interface ParsedPreview {
   headers: string[];
   rows: Record<string, any>[];
   validations: RowValidation[];
@@ -242,8 +242,8 @@ const TICKET_REQUIRED_COLS = ["sujet", "site"];
 const TICKET_PRIORITY_COLS = ["sujet", "site", "type", "priorite", "statut", "equipement", "service", "prestataire", "date_de_creation", "date_decheance"];
 
 const TICKET_RULES: Record<string, ColumnRule> = {
-  sujet:   { required: true },
-  site:    { required: true },
+  sujet: { required: true },
+  site: { required: true },
   type: {
     validators: [(v) => {
       if (!v) return null;
@@ -288,19 +288,19 @@ const TICKET_RULES: Record<string, ColumnRule> = {
 };
 
 const CELL_STYLE_T: Record<ValidationStatus, string> = {
-  ok:      "bg-emerald-50 text-emerald-800 border-emerald-200",
+  ok: "bg-emerald-50 text-emerald-800 border-emerald-200",
   warning: "bg-amber-50   text-amber-800   border-amber-200",
-  error:   "bg-red-50     text-red-700     border-red-200",
+  error: "bg-red-50     text-red-700     border-red-200",
 };
 const ROW_BG_T: Record<ValidationStatus, string> = {
-  ok:      "hover:bg-emerald-50/30",
+  ok: "hover:bg-emerald-50/30",
   warning: "bg-amber-50/20  hover:bg-amber-50/40",
-  error:   "bg-red-50/20    hover:bg-red-50/40",
+  error: "bg-red-50/20    hover:bg-red-50/40",
 };
 const BADGE_T: Record<ValidationStatus, { bg: string; text: string; icon: React.ReactNode }> = {
-  ok:      { bg: "bg-emerald-100 text-emerald-700", text: "OK",        icon: <CheckCircle2 size={12} /> },
-  warning: { bg: "bg-amber-100  text-amber-700",    text: "Attention", icon: <AlertTriangle size={12} /> },
-  error:   { bg: "bg-red-100    text-red-600",       text: "Erreur",   icon: <AlertCircle size={12} /> },
+  ok: { bg: "bg-emerald-100 text-emerald-700", text: "OK", icon: <CheckCircle2 size={12} /> },
+  warning: { bg: "bg-amber-100  text-amber-700", text: "Attention", icon: <AlertTriangle size={12} /> },
+  error: { bg: "bg-red-100    text-red-600", text: "Erreur", icon: <AlertCircle size={12} /> },
 };
 
 function fmtCellT(v: any): string {
@@ -315,9 +315,9 @@ function parseTicketFile(file: File): Promise<ParsedPreview> {
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
-        const wb   = XLSX.read(data, { type: "array", cellDates: true });
-        const ws   = wb.Sheets[wb.SheetNames[0]];
-        const raw  = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
+        const wb = XLSX.read(data, { type: "array", cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const raw = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
         if (!raw.length) {
           resolve({ headers: [], rows: [], validations: [], summary: { total: 0, valid: 0, warnings: 0, errors: 0 } });
           return;
@@ -327,11 +327,11 @@ function parseTicketFile(file: File): Promise<ParsedPreview> {
         );
         const fileKeys = Object.keys(rows[0]);
         const missingRequired = TICKET_REQUIRED_COLS.filter(c => !fileKeys.includes(c));
-        const unknownCols     = fileKeys.filter(c => !TICKET_KNOWN_COLS.has(c));
-        const priority        = TICKET_PRIORITY_COLS.filter(c => fileKeys.includes(c));
-        const rest            = fileKeys.filter(c => !priority.includes(c));
-        const missingHeaders  = missingRequired.filter(c => !fileKeys.includes(c));
-        const headers         = [...missingHeaders, ...priority, ...rest];
+        const unknownCols = fileKeys.filter(c => !TICKET_KNOWN_COLS.has(c));
+        const priority = TICKET_PRIORITY_COLS.filter(c => fileKeys.includes(c));
+        const rest = fileKeys.filter(c => !priority.includes(c));
+        const missingHeaders = missingRequired.filter(c => !fileKeys.includes(c));
+        const headers = [...missingHeaders, ...priority, ...rest];
 
         const validations: RowValidation[] = rows.map((row, ri) => {
           const cells: Record<string, CellValidation> = {};
@@ -339,17 +339,17 @@ function parseTicketFile(file: File): Promise<ParsedPreview> {
           headers.forEach(col => {
             if (missingRequired.includes(col) && !fileKeys.includes(col)) {
               cells[col] = { status: "error", message: `Colonne "${col}" absente - obligatoire` };
-              rowStatus  = "error"; return;
+              rowStatus = "error"; return;
             }
             if (!TICKET_KNOWN_COLS.has(col)) {
               cells[col] = { status: "warning", message: "Colonne inconnue - ignorée" };
               if (rowStatus !== "error") rowStatus = "warning"; return;
             }
             const rule = TICKET_RULES[col];
-            const val  = row[col];
+            const val = row[col];
             if (rule?.required && (val === "" || val == null)) {
               cells[col] = { status: "error", message: "Champ obligatoire manquant" };
-              rowStatus  = "error"; return;
+              rowStatus = "error"; return;
             }
             if (rule?.validators) {
               for (const fn of rule.validators) {
@@ -368,10 +368,10 @@ function parseTicketFile(file: File): Promise<ParsedPreview> {
         });
 
         const summary = {
-          total:    rows.length,
-          valid:    validations.filter(v => v.status === "ok").length,
+          total: rows.length,
+          valid: validations.filter(v => v.status === "ok").length,
           warnings: validations.filter(v => v.status === "warning").length,
-          errors:   validations.filter(v => v.status === "error").length,
+          errors: validations.filter(v => v.status === "error").length,
         };
         resolve({ headers, rows, validations, summary });
       } catch (err) { reject(err); }
@@ -390,12 +390,12 @@ function TicketPreviewModal({
   onConfirmImport: (file: File) => Promise<void>;
   file: File | null;
 }) {
-  const [parsed,     setParsed]     = useState<ParsedPreview | null>(null);
-  const [parsing,    setParsing]    = useState(false);
-  const [parseErr,   setParseErr]   = useState<string | null>(null);
-  const [page,       setPage]       = useState(1);
+  const [parsed, setParsed] = useState<ParsedPreview | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [parseErr, setParseErr] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   const [confirming, setConfirming] = useState(false);
-  const [filter,     setFilter]     = useState<"all" | ValidationStatus>("all");
+  const [filter, setFilter] = useState<"all" | ValidationStatus>("all");
 
   useEffect(() => {
     if (!isOpen || !file) return;
@@ -411,20 +411,20 @@ function TicketPreviewModal({
 
   if (!isOpen) return null;
 
-  const allRows   = parsed?.rows       ?? [];
+  const allRows = parsed?.rows ?? [];
   const allValids = parsed?.validations ?? [];
   const filteredIdx = filter === "all"
     ? allValids.map((_, i) => i)
     : allValids.filter(v => v.status === filter).map(v => v.rowIndex);
-  const totalPages  = Math.max(1, Math.ceil(filteredIdx.length / PREVIEW_PAGE_T));
-  const pageIdxs    = filteredIdx.slice((page - 1) * PREVIEW_PAGE_T, page * PREVIEW_PAGE_T);
-  const hasErrors   = (parsed?.summary.errors   ?? 0) > 0;
-  const hasWarnings = (parsed?.summary.warnings  ?? 0) > 0;
+  const totalPages = Math.max(1, Math.ceil(filteredIdx.length / PREVIEW_PAGE_T));
+  const pageIdxs = filteredIdx.slice((page - 1) * PREVIEW_PAGE_T, page * PREVIEW_PAGE_T);
+  const hasErrors = (parsed?.summary.errors ?? 0) > 0;
+  const hasWarnings = (parsed?.summary.warnings ?? 0) > 0;
 
-  const fileKeys        = parsed && parsed.rows.length > 0 ? Object.keys(parsed.rows[0]) : [];
+  const fileKeys = parsed && parsed.rows.length > 0 ? Object.keys(parsed.rows[0]) : [];
   const missingRequired = TICKET_REQUIRED_COLS.filter(c => !fileKeys.includes(c));
-  const unknownCols     = fileKeys.filter(c => !TICKET_KNOWN_COLS.has(c));
-  const knownInFile     = fileKeys.filter(c => TICKET_KNOWN_COLS.has(c));
+  const unknownCols = fileKeys.filter(c => !TICKET_KNOWN_COLS.has(c));
+  const knownInFile = fileKeys.filter(c => TICKET_KNOWN_COLS.has(c));
   const totallyIncompat = parsed ? (knownInFile.length === 0 || missingRequired.length === TICKET_REQUIRED_COLS.length) : false;
 
   return (
@@ -478,10 +478,10 @@ function TicketPreviewModal({
                       {parsed.summary.total} ligne{parsed.summary.total > 1 ? "s" : ""}
                     </span>
                     {[
-                      { key: "all",     label: "Toutes",         count: parsed.summary.total,    color: "bg-slate-100 text-slate-700 hover:bg-slate-200" },
-                      { key: "ok",      label: "Valides",        count: parsed.summary.valid,    color: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" },
+                      { key: "all", label: "Toutes", count: parsed.summary.total, color: "bg-slate-100 text-slate-700 hover:bg-slate-200" },
+                      { key: "ok", label: "Valides", count: parsed.summary.valid, color: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" },
                       { key: "warning", label: "Avertissements", count: parsed.summary.warnings, color: "bg-amber-50 text-amber-700 hover:bg-amber-100" },
-                      { key: "error",   label: "Erreurs",        count: parsed.summary.errors,   color: "bg-red-50 text-red-600 hover:bg-red-100" },
+                      { key: "error", label: "Erreurs", count: parsed.summary.errors, color: "bg-red-50 text-red-600 hover:bg-red-100" },
                     ].map(f => (f.count > 0 || f.key === "all") ? (
                       <button key={f.key}
                         onClick={() => { setFilter(f.key as any); setPage(1); }}
@@ -540,13 +540,13 @@ function TicketPreviewModal({
                           </td>
                           {parsed.headers.map(col => {
                             const cell = vld.cells[col];
-                            const val  = row[col];
-                            const cSt  = cell?.status ?? "ok";
+                            const val = row[col];
+                            const cSt = cell?.status ?? "ok";
                             return (
                               <td key={col} className="px-2 py-2">
                                 <div className="relative group">
                                   <div className={`inline-flex items-center px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold max-w-[180px] truncate ${CELL_STYLE_T[cSt]}`} title={fmtCellT(val)}>
-                                    {cSt === "error"   && <AlertCircle   size={10} className="text-red-500   mr-1.5 shrink-0" />}
+                                    {cSt === "error" && <AlertCircle size={10} className="text-red-500   mr-1.5 shrink-0" />}
                                     {cSt === "warning" && <AlertTriangle size={10} className="text-amber-500 mr-1.5 shrink-0" />}
                                     {cSt === "ok" && val !== "" && val != null && <CheckCircle2 size={10} className="text-emerald-500 mr-1.5 shrink-0" />}
                                     <span className="truncate">{fmtCellT(val)}</span>
@@ -616,12 +616,43 @@ function TicketPreviewModal({
 // TICKET SIDE PANEL
 // ══════════════════════════════════════════════
 
+import { QuoteService, Quote } from "../../../services/admin/quote.service";
+import { InvoiceService, Invoice } from "../../../services/admin/invoice.service";
+
 function TicketSidePanel({
   ticket, onClose, onEdit, onWorkflowAction,
 }: {
   ticket: Ticket | null; onClose: () => void; onEdit: () => void;
   onWorkflowAction?: (action: string, ticket: Ticket) => void;
 }) {
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loadingLinked, setLoadingLinked] = useState(false);
+
+  useEffect(() => {
+    if (ticket) {
+      setQuotes([]);
+      setInvoices([]);
+      setLoadingLinked(true);
+      
+      const loadLinked = async () => {
+        try {
+          const [q, i] = await Promise.all([
+            QuoteService.getQuotesByTicket(ticket.id),
+            InvoiceService.getInvoicesByTicket(ticket.id)
+          ]);
+          setQuotes(q);
+          setInvoices(i);
+        } catch (err) {
+          console.error("Error loading linked data", err);
+        } finally {
+          setLoadingLinked(false);
+        }
+      };
+      loadLinked();
+    }
+  }, [ticket]);
+
   if (!ticket) return null;
 
   const statusColor = STATUS_DOT_COLORS[ticket.status] ?? "#94a3b8";
@@ -637,12 +668,12 @@ function TicketSidePanel({
 
   const providerName =
     (ticket as any).provider?.company_name ??
-    (ticket as any).provider?.user?.name   ??
-    (ticket as any).provider?.name         ??
+    (ticket as any).provider?.user?.name ??
+    (ticket as any).provider?.name ??
     (ticket.provider_id ? `Prestataire #${ticket.provider_id}` : "");
 
-  const siteName    = ticket.site?.nom ?? "";
-  const assetLabel  = ticket.asset
+  const siteName = ticket.site?.nom ?? "";
+  const assetLabel = ticket.asset
     ? `${ticket.asset.designation}${ticket.asset.codification ? ` · ${ticket.asset.codification}` : ""}`
     : "";
   const serviceName = ticket.service?.name ?? "";
@@ -656,11 +687,10 @@ function TicketSidePanel({
           <span className="text-sm font-black text-slate-900">#{ticket.id}</span>
           <button
             onClick={() => handleCopyId(ticket.id.toString())}
-            className={`p-1.5 rounded-lg border transition-all ${
-              copied
-                ? "bg-green-50 border-green-200 text-green-600"
-                : "bg-slate-50 border-slate-100 text-slate-400 opacity-0 group-hover/id:opacity-100 hover:text-slate-600 hover:border-slate-300"
-            }`}
+            className={`p-1.5 rounded-lg border transition-all ${copied
+              ? "bg-green-50 border-green-200 text-green-600"
+              : "bg-slate-50 border-slate-100 text-slate-400 opacity-0 group-hover/id:opacity-100 hover:text-slate-600 hover:border-slate-300"
+              }`}
             title="Copier l'identifiant"
           >
             {copied ? <Check size={12} /> : <Copy size={12} />}
@@ -668,16 +698,16 @@ function TicketSidePanel({
         </div>
       ),
     },
-    { Icon: MapPin,        label: "Site",            value: siteName },
-    { Icon: Wrench,        label: "Patrimoine",      value: assetLabel },
-    { Icon: CheckCircle2,  label: "Service",         value: serviceName },
-    { Icon: User,          label: "Prestataire",     value: providerName },
-    { Icon: AlertTriangle, label: "Priorité",        custom: <PriorityBadge priority={ticket.priority} /> },
-    { Icon: CalendarDays,  label: "Date planifiée",  value: formatDate(ticket.planned_at) },
-    { Icon: CalendarCheck, label: "Date limite",     value: formatDate(ticket.due_at) },
-    ...(ticket.resolved_at ? [{ Icon: CheckCircle2, label: "Résolu le",  value: formatDate(ticket.resolved_at) }] : []),
-    ...(ticket.closed_at   ? [{ Icon: Clock,        label: "Clôturé le", value: formatDate(ticket.closed_at)   }] : []),
-    ...(ticket.created_at  ? [{ Icon: Clock,        label: "Créé le",    value: formatDate(ticket.created_at)  }] : []),
+    { Icon: MapPin, label: "Site", value: siteName },
+    { Icon: Wrench, label: "Patrimoine", value: assetLabel },
+    { Icon: CheckCircle2, label: "Service", value: serviceName },
+    { Icon: User, label: "Prestataire", value: providerName },
+    { Icon: AlertTriangle, label: "Priorité", custom: <PriorityBadge priority={ticket.priority} /> },
+    { Icon: CalendarDays, label: "Date ", value: formatDate(ticket.planned_at) },
+    { Icon: CalendarCheck, label: "Date limite", value: formatDate(ticket.due_at) },
+    ...(ticket.resolved_at ? [{ Icon: CheckCircle2, label: "Résolu le", value: formatDate(ticket.resolved_at) }] : []),
+    ...(ticket.closed_at ? [{ Icon: Clock, label: "Clôturé le", value: formatDate(ticket.closed_at) }] : []),
+    ...(ticket.created_at ? [{ Icon: Clock, label: "Créé le", value: formatDate(ticket.created_at) }] : []),
   ];
 
   return (
@@ -696,11 +726,10 @@ function TicketSidePanel({
             {ticket.subject ?? `Ticket #${ticket.id}`}
           </h2>
           <div className="flex flex-wrap items-center gap-2 mt-2.5">
-            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-              ticket.type === "curatif"
-                ? "bg-orange-50 text-orange-700 border-orange-200"
-                : "bg-blue-50 text-blue-700 border-blue-200"
-            }`}>
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${ticket.type === "curatif"
+              ? "bg-orange-50 text-orange-700 border-orange-200"
+              : "bg-blue-50 text-blue-700 border-blue-200"
+              }`}>
               {ticket.type === "curatif" ? "Curatif" : "Préventif"}
             </span>
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border ${STATUS_STYLES[ticket.status] ?? ""}`}>
@@ -734,7 +763,7 @@ function TicketSidePanel({
             )}
           </div>
 
-          {ticket.description && (
+            {ticket.description && (
             <div>
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Description</p>
               <div
@@ -743,6 +772,76 @@ function TicketSidePanel({
               />
             </div>
           )}
+
+          {/* Devis liés */}
+          <div className="space-y-3 pt-2">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Devis liés</h3>
+            {loadingLinked ? (
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Loader2 size={12} className="animate-spin" /> Chargement...
+              </div>
+            ) : quotes.length === 0 ? (
+              <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-100">Aucun devis lié.</p>
+            ) : (
+              <div className="space-y-2">
+                {quotes.map(q => (
+                  <Link 
+                    key={q.id} 
+                    href={`/admin/devis/details/${q.id}`} 
+                    className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-white hover:border-slate-300 transition-all shadow-sm"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-slate-900">{q.reference}</span>
+                      <span className="text-[10px] text-slate-400">{new Date(q.created_at || "").toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900">{(q.amount_ttc || 0).toLocaleString()} FCFA</span>
+                      <ChevronRight size={14} className="text-slate-300" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Factures liées */}
+          <div className="space-y-3 pt-2">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Factures liées</h3>
+            {loadingLinked ? (
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Loader2 size={12} className="animate-spin" /> Chargement...
+              </div>
+            ) : invoices.length === 0 ? (
+              <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-100">Aucune facture liée.</p>
+            ) : (
+              <div className="space-y-2">
+                {invoices.map(inv => (
+                  <div 
+                    key={inv.id} 
+                    className="flex flex-col p-3 rounded-xl border border-slate-100 bg-white shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-slate-900">{inv.reference}</span>
+                        <span className="text-[10px] text-slate-400">{new Date(inv.invoice_date).toLocaleDateString()}</span>
+                      </div>
+                      <span className="text-xs font-bold text-slate-900">{(Number(inv.amount_ttc) || 0).toLocaleString()} FCFA</span>
+                    </div>
+                    {inv.pdf_path && (
+                      <a 
+                        href={InvoiceService.getPdfUrl(inv.pdf_path)} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider hover:bg-red-100 transition"
+                      >
+                        <Download size={10} /> Voir PDF
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="px-7 py-5 border-t border-slate-100 shrink-0 space-y-3">
@@ -806,30 +905,30 @@ export default function TicketsPage() {
   } = useTickets();
 
   const { providers } = useProviders();
-  const { services }  = useServices();
-  const { assets }    = useAssets();
+  const { services } = useServices();
+  const { assets } = useAssets();
   const { sites, fetchSites } = useSites();
 
   const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (sites.length === 0) fetchSites(); }, []);
 
-  const [isModalOpen,    setIsModalOpen]    = useState(false);
-  const [editingTicket,  setEditingTicket]  = useState<Ticket | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [isDetailsOpen,  setIsDetailsOpen]  = useState(false);
-  const [filtersOpen,    setFiltersOpen]    = useState(false);
-  const [flashMessage,   setFlashMessage]   = useState<{ type: "success"|"error"; message: string } | null>(null);
-  const [importLoading,  setImportLoading]  = useState(false);
-  const [exportLoading,  setExportLoading]  = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [flashMessage, setFlashMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
-  const [isAssignModalOpen,   setIsAssignModalOpen]   = useState(false);
-  const [isValidModalOpen,    setIsValidModalOpen]    = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isValidModalOpen, setIsValidModalOpen] = useState(false);
   const [workflowActionLoading, setWorkflowActionLoading] = useState(false);
-  const [previewFile,    setPreviewFile]    = useState<File | null>(null);
-  const [previewOpen,    setPreviewOpen]    = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null);
-  const [ticketFormType,    setTicketFormType]    = useState<string>("");
+  const [ticketFormType, setTicketFormType] = useState<string>("");
   const [ticketFormPlanned, setTicketFormPlanned] = useState<string>("");
 
   const computedDueAt = (() => {
@@ -880,13 +979,13 @@ export default function TicketsPage() {
         showFlash("success", "Ticket mis à jour avec succès.");
       } else {
         const payload: any = {
-          site_id:          Number(formData.site_id),
+          site_id: Number(formData.site_id),
           company_asset_id: Number(formData.company_asset_id),
-          type:             formData.type,
-          priority:         formData.priority,
-          planned_at:       formData.planned_at,
-          subject:          formData.subject || undefined,
-          description:      formData.description || undefined,
+          type: formData.type,
+          priority: formData.priority,
+          planned_at: formData.planned_at,
+          subject: formData.subject || undefined,
+          description: formData.description || undefined,
         };
 
         if (formData.service_id) payload.service_id = Number(formData.service_id);
@@ -1015,8 +1114,8 @@ export default function TicketsPage() {
     try {
       const response = await axiosInstance.get("/admin/ticket/export", {
         params: {
-          ...(filters.status   ? { status:   filters.status   } : {}),
-          ...(filters.type     ? { type:     filters.type     } : {}),
+          ...(filters.status ? { status: filters.status } : {}),
+          ...(filters.type ? { type: filters.type } : {}),
           ...(filters.priority ? { priority: filters.priority } : {}),
         },
         responseType: "blob",
@@ -1079,7 +1178,7 @@ export default function TicketsPage() {
     const dueMs = new Date(dueAt).getTime();
     if (isNaN(dueMs)) return "ok";
     const overdue = now - dueMs;
-    if (overdue <= 0)       return "ok";
+    if (overdue <= 0) return "ok";
     if (overdue < GRACE_MS) return "grace";
     return "expired";
   };
@@ -1098,9 +1197,8 @@ export default function TicketsPage() {
       render: (_: any, row: Ticket) => {
         const sla = getTicketSlaState(row);
         return (
-          <span className={`font-mono text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap inline-flex items-center gap-1 ${
-            sla === "grace" ? "bg-slate-100 text-slate-400 opacity-50" : "bg-slate-100 text-slate-700"
-          }`}>
+          <span className={`font-mono text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap inline-flex items-center gap-1 ${sla === "grace" ? "bg-slate-100 text-slate-400 opacity-50" : "bg-slate-100 text-slate-700"
+            }`}>
             {(row as any).asset?.codification ?? `#${row.id}`}
             {sla === "grace" && <span className="text-[9px] text-orange-500 font-black">SLA!</span>}
           </span>
@@ -1132,9 +1230,8 @@ export default function TicketsPage() {
     {
       header: "Type", key: "type",
       render: (_: any, row: Ticket) => (
-        <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-bold ${
-          row.type === "curatif" ? "bg-orange-50 text-orange-700" : "bg-blue-50 text-blue-700"
-        }`}>
+        <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-bold ${row.type === "curatif" ? "bg-orange-50 text-orange-700" : "bg-blue-50 text-blue-700"
+          }`}>
           {row.type === "curatif" ? "Curatif" : "Préventif"}
         </span>
       ),
@@ -1150,19 +1247,19 @@ export default function TicketsPage() {
     {
       header: "Actions", key: "actions",
       render: (_: any, row: Ticket) => (
-         <div className="flex items-center gap-1">
-        {/* <button
+        <div className="flex items-center gap-1">
+          {/* <button
           onClick={() => handleOpenDetails(row)}
           className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition"
         >
           <Eye size={18} /> Aperçu
         </button> */}
 
-         
+
           <Link href={`/admin/tickets/${row.id}`} className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition" title="Voir les détails">
-            <Eye size={16} /> 
+            <Eye size={16} />
           </Link>
-</div>
+        </div>
       ),
     },
   ];
@@ -1185,7 +1282,7 @@ export default function TicketsPage() {
     },
     {
       name: "provider_id", label: "Prestataire", type: "select", required: true,
-     
+
       options: providers.map((p: any) => ({
         label: p.company_name ?? p.user?.name ?? p.name ?? `Prestataire #${p.id}`,
         value: String(p.id),
@@ -1203,11 +1300,11 @@ export default function TicketsPage() {
       name: "priority", label: "Priorité", type: "select", required: true,
       options: [
         { label: "Faible", value: "faible" }, { label: "Moyenne", value: "moyenne" },
-        { label: "Haute", value: "haute" },   { label: "Critique", value: "critique" },
+        { label: "Haute", value: "haute" }, { label: "Critique", value: "critique" },
       ],
     },
-    { name: "subject",    label: "Sujet",          type: "text", placeholder: "Decrivez ce probleme rencontré", },
-    { name: "planned_at", label: "Date planifiée", type: "date", required: true, disablePastDates: true, icon: CalendarDays },
+    { name: "subject", label: "Sujet", type: "text", placeholder: "Decrivez ce probleme rencontré", },
+    { name: "planned_at", label: "Date", type: "date", required: true, disablePastDates: true, icon: CalendarDays },
 
     {
       name: "description", label: "Description", type: "rich-text", gridSpan: 2,
@@ -1226,11 +1323,11 @@ export default function TicketsPage() {
       name: "priority", label: "Priorité", type: "select",
       options: [
         { label: "Faible", value: "faible" }, { label: "Moyenne", value: "moyenne" },
-        { label: "Haute",  value: "haute"  }, { label: "Critique", value: "critique" },
+        { label: "Haute", value: "haute" }, { label: "Critique", value: "critique" },
       ],
     },
     { name: "description", label: "Commentaire", type: "rich-text", gridSpan: 2 },
-    { name: "images",      label: "Photos",      type: "image-upload", gridSpan: 2, maxImages: 3 },
+    { name: "images", label: "Photos", type: "image-upload", gridSpan: 2, maxImages: 3 },
   ];
 
   const planningFields: FieldConfig[] = [
@@ -1247,7 +1344,7 @@ export default function TicketsPage() {
       })),
     },
     { name: "date_debut", label: "Date de début", type: "date", required: true, disablePastDates: true },
-    { name: "date_fin",   label: "Date de fin",   type: "date", required: true, disablePastDates: true },
+    { name: "date_fin", label: "Date de fin", type: "date", required: true, disablePastDates: true },
     { name: "description", label: "Description", type: "rich-text", gridSpan: 2 },
   ];
 
@@ -1275,16 +1372,16 @@ export default function TicketsPage() {
   ];
 
   const kpis1 = [
-    { label: "Coût moyen / ticket", value: stats?.cout_moyen_par_ticket ?? 0,         isCurrency: true, delta: "+0%", trend: "up" as const },
-    { label: "Total tickets",       value: stats?.nombre_total_tickets ?? 0,           delta: "+0%",     trend: "up" as const },
-    { label: "Tickets en cours",    value: stats?.nombre_total_tickets_en_cours ?? 0,  delta: "+0%",     trend: "up" as const },
-    { label: "Tickets clôturés",    value: stats?.nombre_total_tickets_clotures ?? 0,  delta: "+0%",     trend: "up" as const },
+    { label: "Coût moyen / ticket", value: stats?.cout_moyen_par_ticket ?? 0, isCurrency: true, delta: "+0%", trend: "up" as const },
+    { label: "Total tickets", value: stats?.nombre_total_tickets ?? 0, delta: "+0%", trend: "up" as const },
+    { label: "Tickets en cours", value: stats?.nombre_total_tickets_en_cours ?? 0, delta: "+0%", trend: "up" as const },
+    { label: "Tickets clôturés", value: stats?.nombre_total_tickets_clotures ?? 0, delta: "+0%", trend: "up" as const },
   ];
   const kpis2 = [
-    { label: "Tickets ce mois", value: stats?.nombre_tickets_par_mois ?? 0,                  delta: "+0%", trend: "up" as const },
-    { label: "Délai moyen",     value: formatHeures(stats?.delais_moyen_traitement_heures),   delta: "+0%", trend: "up" as const },
-    { label: "Délai minimal",   value: formatHeures(stats?.delais_minimal_traitement_heures), delta: "+0%", trend: "up" as const },
-    { label: "Délai maximal",   value: formatHeures(stats?.delais_maximal_traitement_heures), delta: "+0%", trend: "up" as const },
+    { label: "Tickets ce mois", value: stats?.nombre_tickets_par_mois ?? 0, delta: "+0%", trend: "up" as const },
+    { label: "Délai moyen", value: formatHeures(stats?.delais_moyen_traitement_heures), delta: "+0%", trend: "up" as const },
+    { label: "Délai minimal", value: formatHeures(stats?.delais_minimal_traitement_heures), delta: "+0%", trend: "up" as const },
+    { label: "Délai maximal", value: formatHeures(stats?.delais_maximal_traitement_heures), delta: "+0%", trend: "up" as const },
   ];
 
   return (
@@ -1296,11 +1393,10 @@ export default function TicketsPage() {
           <PageHeader title="Tickets" subtitle="Suivez et gérez tous vos tickets d'intervention" />
 
           {flashMessage && (
-            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${
-              flashMessage.type === "success"
-                ? "text-green-700 bg-green-50 border-green-200"
-                : "text-red-600 bg-red-100 border-red-300"
-            }`}>
+            <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold border ${flashMessage.type === "success"
+              ? "text-green-700 bg-green-50 border-green-200"
+              : "text-red-600 bg-red-100 border-red-300"
+              }`}>
               {flashMessage.message}
             </div>
           )}
@@ -1363,11 +1459,10 @@ export default function TicketsPage() {
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
-                    filtersOpen || activeCount > 0
-                      ? "bg-slate-900 text-white border-slate-900"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${filtersOpen || activeCount > 0
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   <Filter size={16} />
                   Filtrer
@@ -1405,7 +1500,7 @@ export default function TicketsPage() {
                 Aucun ticket{activeCount > 0 ? " correspondant aux filtres" : ""}.
               </div>
             ) : (
-              <DataTable title="Liste des tickets" columns={columns} data={visibleTickets} onViewAll={() => {}} />
+              <DataTable title="Liste des tickets" columns={columns} data={visibleTickets} onViewAll={() => { }} />
             )}
             <div className="p-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
               <p className="text-xs text-slate-400">
@@ -1432,21 +1527,21 @@ export default function TicketsPage() {
           !editingTicket && computedDueAt
             ? `Date limite calculée automatiquement : ${computedDueAt} (${ticketFormType === "curatif" ? "SLA 72h" : "7 jours préventif"})`
             : editingTicket
-            ? "Modifiez le statut ou les informations du ticket"
-            : "Remplissez les informations pour créer un ticket"
+              ? "Modifiez le statut ou les informations du ticket"
+              : "Remplissez les informations pour créer un ticket"
         }
         fields={editingTicket ? editFields : ticketFields}
         initialValues={editingTicket ? {
-          status:      editingTicket.status,
-          priority:    editingTicket.priority,
+          status: editingTicket.status,
+          priority: editingTicket.priority,
           description: editingTicket.description ?? "",
         } : {
           due_at_display: computedDueAt || "",
         }}
         onSubmit={handleSubmit}
         onFieldChange={(name, value) => {
-          if (name === "site_id")    setSelectedSiteId(value ? Number(value) : null);
-          if (name === "type")       setTicketFormType(value ?? "");
+          if (name === "site_id") setSelectedSiteId(value ? Number(value) : null);
+          if (name === "type") setTicketFormType(value ?? "");
           if (name === "planned_at") setTicketFormPlanned(value ?? "");
         }}
         submitLabel={editingTicket ? "Mettre à jour" : "Créer le ticket"}

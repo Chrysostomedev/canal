@@ -35,8 +35,8 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_STYLES: Record<string, string> = {
   submitted: "border-blue-200   bg-blue-50   text-blue-700",
   validated: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  pending:   "border-amber-200  bg-amber-50  text-amber-700",
-  rejected:  "border-red-200    bg-red-50    text-red-700",
+  pending: "border-amber-200  bg-amber-50  text-amber-700",
+  rejected: "border-red-200    bg-red-50    text-red-700",
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -44,10 +44,10 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 const WORKFLOW_STEPS = [
-  { key: "submitted", icon: CalendarDays,  label: "Soumis"    },
-  { key: "pending",   icon: PlayCircle,    label: "En attente" },
-  { key: "validated", icon: ShieldCheck,   label: "Validé"    },
-  { key: "rejected",  icon: XCircle,       label: "Rejeté"    },
+  { key: "submitted", icon: CalendarDays, label: "Soumis" },
+  { key: "pending", icon: PlayCircle, label: "En attente" },
+  { key: "validated", icon: ShieldCheck, label: "Validé" },
+  { key: "rejected", icon: XCircle, label: "Rejeté" },
 ];
 
 const formatDate = (d?: string | null) =>
@@ -92,9 +92,9 @@ function WorkflowProgress({ status }: { status: string }) {
     <div className="flex items-start gap-0 w-full">
       {WORKFLOW_STEPS.map((step, i) => {
         const Icon = step.icon;
-        const done    = i < effectiveIdx;
+        const done = i < effectiveIdx;
         const current = i === effectiveIdx;
-        const future  = i > effectiveIdx;
+        const future = i > effectiveIdx;
         return (
           <div key={step.key} className="flex-1 flex flex-col items-center gap-1.5 relative">
             {i < WORKFLOW_STEPS.length - 1 && (
@@ -174,13 +174,13 @@ function ValidationModal({
   onReject: (reason: string) => void;
   submitting: boolean;
 }) {
-  const [mode, setMode]       = useState<"review" | "reject">("review");
-  const [rating, setRating]   = useState(0);
+  const [mode, setMode] = useState<"review" | "reject">("review");
+  const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [rejectReason, setRejectReason] = useState("");
 
   const canValidate = rating > 0;
-  const canReject   = rejectReason.trim().length > 10;
+  const canReject = rejectReason.trim().length > 10;
 
   return (
     <>
@@ -220,14 +220,14 @@ function ValidationModal({
               >
                 <ThumbsUp size={15} /> Valider
               </button>
-              <button
+              {/* <button
                 type="button"
                 onClick={() => setMode("reject")}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition
                   ${mode === "reject" ? "bg-white shadow-sm text-red-600" : "text-slate-500 hover:text-slate-700"}`}
               >
                 <ThumbsDown size={15} /> Rejeter
-              </button>
+              </button> */}
             </div>
 
             {/* Mode VALIDER */}
@@ -277,7 +277,7 @@ function ValidationModal({
               </div>
             )}
 
-            {/* Mode REJETER */}
+            {/* Mode REJETER
             {mode === "reject" && (
               <div className="space-y-4">
                 <div className="flex flex-col gap-2">
@@ -307,7 +307,7 @@ function ValidationModal({
                   {submitting ? "Rejet en cours…" : "Rejeter le rapport"}
                 </button>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
@@ -345,28 +345,28 @@ function MaintenancePreviewPanel({
           </div>
 
           <div className="space-y-0 text-sm">
-             {[
-               { label: "Référence", value: ticket.reference || `#${ticket.id}` },
-               { label: "Prestataire", value: ticket.provider?.name ?? "-" },
-               { label: "Site", value: ticket.site?.nom ?? "-" },
-               { label: "Date réalisation", value: formatDate(ticket.start_date) },
-             ].map((f, i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50">
-                   <span className="text-slate-400">{f.label}</span>
-                   <span className="font-bold text-slate-900">{f.value}</span>
-                </div>
-             ))}
-             <div className="flex items-center justify-between py-3 border-b border-slate-50">
-                <span className="text-slate-400">Statut</span>
-                <StatusBadge status={ticket.status} />
-             </div>
+            {[
+              { label: "Référence", value: ticket.reference || `#${ticket.id}` },
+              { label: "Prestataire", value: ticket.provider?.name ?? "-" },
+              { label: "Site", value: ticket.site?.nom ?? "-" },
+              { label: "Date réalisation", value: formatDate(ticket.start_date) },
+            ].map((f, i) => (
+              <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50">
+                <span className="text-slate-400">{f.label}</span>
+                <span className="font-bold text-slate-900">{f.value}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between py-3 border-b border-slate-50">
+              <span className="text-slate-400">Statut</span>
+              <StatusBadge status={ticket.status} />
+            </div>
           </div>
 
           {ticket.rating && (
             <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
-               <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Évaluation</p>
-               <StarRating value={ticket.rating} readonly />
-               {ticket.comment && <p className="text-xs text-amber-700 mt-2 leading-relaxed italic">"{ticket.comment}"</p>}
+              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Évaluation</p>
+              <StarRating value={ticket.rating} readonly />
+              {ticket.comment && <p className="text-xs text-amber-700 mt-2 leading-relaxed italic">"{ticket.comment}"</p>}
             </div>
           )}
 
@@ -389,26 +389,27 @@ function MaintenancePreviewPanel({
 export default function ManagerEntretienPage() {
   const router = useRouter();
 
-  const { 
-    reports: tickets, 
-    stats: apiStats, 
-    isLoading, 
-    error: apiError, 
-    setFilters, 
+  const {
+    reports: tickets,
+    stats: apiStats,
+    meta,
+    isLoading,
+    error: apiError,
+    setFilters,
     filters,
     refresh
   } = useReports({ intervention_type: "preventif" });
 
-  const [selectedTicket, setSelectedTicket]       = useState<InterventionReport | null>(null);
-  const [isPanelOpen, setIsPanelOpen]             = useState(false);
-  const [isValidationOpen, setIsValidationOpen]   = useState(false);
-  const [validationTarget, setValidationTarget]   = useState<InterventionReport | null>(null);
-  const [submitSuccess, setSubmitSuccess]         = useState<string | null>(null);
-  const [submitError, setSubmitError]             = useState<string | null>(null);
-  const [submitting, setSubmitting]               = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<InterventionReport | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isValidationOpen, setIsValidationOpen] = useState(false);
+  const [validationTarget, setValidationTarget] = useState<InterventionReport | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const openPanel      = (t: InterventionReport) => { setSelectedTicket(t); setIsPanelOpen(true); };
-  const closePanel     = () => setIsPanelOpen(false);
+  const openPanel = (t: InterventionReport) => { setSelectedTicket(t); setIsPanelOpen(true); };
+  const closePanel = () => setIsPanelOpen(false);
   const openValidation = (t: InterventionReport) => {
     setValidationTarget(t); setIsPanelOpen(false); setIsValidationOpen(true);
   };
@@ -458,10 +459,10 @@ export default function ManagerEntretienPage() {
   };
 
   const kpis = [
-    { label: "Total entretiens",   value: apiStats?.total ?? 0, trend: "up" as const },
-    { label: "À valider",          value: tickets?.filter(t => t.status === "submitted").length ?? 0, trend: "up" as const },
-    { label: "Validés",            value: apiStats?.validated ?? 0, trend: "up" as const },
-    { label: "Note moyenne",       value: apiStats?.average_rating ? `${apiStats.average_rating}/5` : "-", trend: "up" as const },
+    { label: "Total entretiens", value: meta?.total ?? apiStats?.total ?? 0, trend: "up" as const },
+    { label: "À valider", value: apiStats?.pending ?? tickets?.filter(t => t.status === "submitted").length ?? 0, trend: "up" as const },
+    { label: "Validés", value: apiStats?.validated ?? 0, trend: "up" as const },
+    { label: "Note moyenne", value: apiStats?.average_rating ? `${apiStats.average_rating}/5` : "-", trend: "up" as const },
   ];
 
   const columns: ColumnConfig<InterventionReport>[] = [
@@ -498,16 +499,14 @@ export default function ManagerEntretienPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: InterventionReport) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => openPanel(row)} className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600">
-             <Eye size={16} />
-          </button>
+
           {row.status === "submitted" && (
             <button onClick={() => openValidation(row)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition">
               <ShieldCheck size={13} /> Valider
             </button>
           )}
-          <button onClick={() => router.push(`/manager/rapports/details/${row.id}`)} className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 transition">
-            <ArrowUpRight size={15} className="group-hover:text-white group-hover:rotate-45 transition-all" />
+          <button onClick={() => router.push(`/manager/rapports/${row.id}`)} className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 transition">
+            <Eye size={15} className="group-hover:text-white group-hover:rotate-45 transition-all" />
           </button>
         </div>
       ),
@@ -533,26 +532,26 @@ export default function ManagerEntretienPage() {
 
           <div className="flex justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-               <Filter size={16} className="text-slate-400" />
-               <select 
-                 value={filters.status || ""} 
-                 onChange={e => setFilters({ status: e.target.value || undefined })}
-                 className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-700 shadow-sm"
-               >
-                 <option value="">Tous les statuts</option>
-                 {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
-               </select>
+              <Filter size={16} className="text-slate-400" />
+              <select
+                value={filters.status || ""}
+                onChange={e => setFilters({ status: e.target.value || undefined })}
+                className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-700 shadow-sm"
+              >
+                <option value="">Tous les statuts</option>
+                {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
+              </select>
             </div>
           </div>
 
           <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
-             {isLoading ? (
-                <div className="flex flex-col items-center justify-center p-20 gap-4">
-                   <div className="w-8 h-8 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin" />
-                </div>
-             ) : (
-                <DataTable columns={columns} data={tickets || []} title="Liste des entretiens" onViewAll={() => {}} />
-             )}
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center p-20 gap-4">
+                <div className="w-8 h-8 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin" />
+              </div>
+            ) : (
+              <DataTable columns={columns} data={tickets || []} title="Liste des entretiens" onViewAll={() => { }} />
+            )}
           </div>
         </main>
       </div>

@@ -45,6 +45,7 @@ interface MainCardProps {
   onEventAdd?: (date: Date) => void;
   onCustomAction?: () => void;
   customActionLabel?: string;
+  onCellClick?: (date: Date) => void;
 }
 
 // ─── Composant ────────────────────────────────────────────────────────────────
@@ -63,6 +64,7 @@ export default function MainCard({
   onEventAdd,
   onCustomAction,
   customActionLabel,
+  onCellClick,
 }: MainCardProps) {
   const [searchQuery, setSearchQuery]     = useState("");
   const [activeMonth, setActiveMonth]     = useState(new Date());
@@ -167,6 +169,7 @@ export default function MainCard({
                 onEventClick={onEventClick}
                 onEventDrop={onEventDrop}
                 onShowMore={handleShowMore}
+                onCellClick={onCellClick}
               />
             )}
           </div>

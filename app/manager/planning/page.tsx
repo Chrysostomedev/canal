@@ -6,12 +6,14 @@ import StatsCard from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
 import PageHeader from "@/components/PageHeader";
 import MainCard from "@/components/MainCard";
-import { Filter, CalendarClock, Plus, CheckCircle2, XCircle } from "lucide-react";
+import { Filter, CalendarClock, Plus, CheckCircle2, XCircle, Tag, Wrench, AlertTriangle, Clock, CalendarDays } from "lucide-react";
 import type { FieldConfig } from "@/components/ReusableForm";
 
 import { usePlannings } from "../../../hooks/manager/usePlannings";
+import { useTicketActions } from "../../../hooks/manager/useTicketActions";
+import { AssetService } from "../../../services/manager/asset.service";
 import { PlanningService } from "../../../services/manager/planning.service";
-import type { Planning } from "../../../types/manager.types";
+import type { Planning, Asset } from "../../../types/manager.types";
 
 /* -------------------------------------------------------------------------- */
 /*                                  TOAST                                     */
@@ -58,6 +60,90 @@ export default function PlanningPage() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [toast, setToast] = useState<ToastType>(null);
+
+  // Tickets integration
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [assets, setAssets] = useState<Asset[]>([]);
+
+  const { createTicket, isSubmitting: isTicketSubmitting } = useTicketActions({
+    onSuccess: () => {
+      setIsTicketModalOpen(false);
+      showToast("Ticket créé avec succès", "success");
+    }
+  });
+
+  // Charger les actifs pour la modale
+  useState(() => {
+    AssetService.getAssets({ per_page: 100 }).then(data => setAssets(data.items));
+  });
+
+  const ticketFields: FieldConfig[] = [
+    {
+      name: "subject",
+      label: "Sujet du ticket",
+      type: "text",
+      placeholder: "Ex: Panne constatée",
+      required: true,
+      icon: <Tag size={18} />
+    },
+    {
+      name: "type",
+      label: "Type",
+      type: "select",
+      options: [
+        { label: "Curatif", value: "curatif" },
+        { label: "Préventif", value: "preventif" },
+      ],
+      required: true,
+      icon: <Wrench size={18} />
+    },
+    {
+      name: "priority",
+      label: "Priorité",
+      type: "select",
+      options: [
+        { label: "Faible", value: "faible" },
+        { label: "Moyenne", value: "moyenne" },
+        { label: "Haute", value: "haute" },
+        { label: "Critique", value: "critique" },
+      ],
+      required: true,
+      icon: <AlertTriangle size={18} />
+    },
+    {
+      name: "company_asset_id",
+      label: "Patrimoine concerné",
+      type: "select",
+      options: assets.map(a => ({ label: `${a.designation} (${(a as any).codification || a.code || "N/A"})`, value: String(a.id) })),
+      required: true,
+      icon: <CheckCircle2 size={18} />
+    },
+    {
+      name: "planned_at",
+      label: "Début souhaité",
+      type: "date",
+      disablePastDates: true,
+      required: true,
+      icon: <CalendarDays size={18} />
+    },
+    {
+      name: "due_at",
+      label: "Échéance",
+      type: "date",
+      required: true,
+      disablePastDates: true,
+      icon: <Clock size={18} />,
+    },
+    {
+      name: "description",
+      label: "Détails supplémentaires",
+      type: "rich-text",
+      placeholder: "Décrivez précisément le problème constaté...",
+      required: true,
+      gridSpan: 2,
+    },
+  ];
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -169,11 +255,37 @@ export default function PlanningPage() {
               setIsPanelOpen(true);
             }}
             onPanelClose={() => setIsPanelOpen(false)}
-            onEditClick={() => { }}
-            onDeleteClick={() => { }}
+            onEditClick={undefined}
+            onDeleteClick={undefined}
+            onCellClick={(date) => {
+              setSelectedDate(date.toISOString().split('T')[0]);
+              setIsTicketModalOpen(true);
+            }}
           />
         </main>
       </div>
+
+      <ReusableForm
+        isOpen={isTicketModalOpen}
+        onClose={() => setIsTicketModalOpen(false)}
+        title="Signaler un Problème"
+        subtitle="Ouvrir un ticket d'intervention pour ce jour"
+        fields={ticketFields}
+        initialValues={{
+          type: 'curatif',
+          priority: 'moyenne',
+          planned_at: selectedDate || undefined
+        }}
+        isLoading={isTicketSubmitting}
+        onSubmit={(values) => {
+          const asset = assets.find(a => String(a.id) === String(values.company_asset_id));
+          createTicket({
+            ...values,
+            site_id: (asset as any)?.site_id
+          } as any);
+        }}
+        submitLabel="Envoyer le ticket"
+      />
 
       <Toast toast={toast} />
     </>

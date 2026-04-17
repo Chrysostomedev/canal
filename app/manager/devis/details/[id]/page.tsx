@@ -183,25 +183,6 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
               <ChevronLeft size={16} />
               Retour aux devis
             </Link>
-
-            {canAction && (
-              <div className="flex gap-3">
-                <button
-                  onClick={handleReject}
-                  disabled={actionLoading}
-                  className="px-6 py-3 rounded-2xl bg-white border border-red-100 text-red-600 text-sm font-black hover:bg-red-50 transition flex items-center gap-2 disabled:opacity-50"
-                >
-                  <ThumbsDown size={16} /> Rejeter
-                </button>
-                <button
-                  onClick={handleApprove}
-                  disabled={actionLoading}
-                  className="px-6 py-3 rounded-2xl bg-slate-900 text-white text-sm font-black hover:bg-black transition flex items-center gap-2 shadow-xl shadow-slate-200 disabled:opacity-50"
-                >
-                  <ThumbsUp size={16} /> Approuver le devis
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

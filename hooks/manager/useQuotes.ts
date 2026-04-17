@@ -20,7 +20,7 @@ export function useQuotes(initialFilters: QuoteFilters = {}) {
     try {
       const [paginatedData, statsData] = await Promise.all([
         QuoteService.getQuotes(filters),
-        QuoteService.getStats(),
+        QuoteService.getStats(filters),
       ]);
       setData(paginatedData.items);
       setMeta(paginatedData.meta);
