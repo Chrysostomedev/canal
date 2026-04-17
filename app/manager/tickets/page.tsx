@@ -176,7 +176,7 @@ export default function TicketsPage() {
     tickets, stats, meta, filters, isLoading, setFilters, refresh, exportTickets
   } = useTickets();
 
-  const { createTicket, rateTicket, isSubmitting } = useTicketActions({
+  const { createTicket, rateTicket, isSubmitting, error, success } = useTicketActions({
     onSuccess: () => {
       setIsModalOpen(false);
       setIsRateOpen(false);
@@ -500,6 +500,9 @@ export default function TicketsPage() {
         subtitle="Détaillez le dysfonctionnement pour une intervention rapide"
         fields={ticketFields}
         initialValues={{ type: 'curatif', priority: 'moyenne' }}
+        isSubmitting={isSubmitting}
+        error={error}
+        success={success}
         onFieldChange={(name, value) => {
           if (name === "company_asset_id" && value) {
             const asset = assets.find(a => String(a.id) === String(value));

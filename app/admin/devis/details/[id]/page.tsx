@@ -3,15 +3,137 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import StatsCard from "@/components/StatsCard";
+
 import {
   ChevronLeft, CheckCircle2, Clock, XCircle, FileText,
   Eye, Download, Star, X, MapPin, Briefcase, RefreshCw,
   Calendar, User, DollarSign, AlertCircle,
 } from "lucide-react";
 
-import Navbar from "@/components/Navbar";
-import StatsCard from "@/components/StatsCard";
-import { resolveUrl } from "@/components/AttachmentViewer";
+// ═══════════════════════════════════════════════════════════════════════════
+// ACTION MODAL (Inlined to avoid build errors)
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface ActionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  confirmVariant?: "primary" | "danger" | "warning";
+  placeholder?: string;
+  required?: boolean;
+}
+
+function ActionModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  description,
+  confirmLabel,
+  confirmVariant = "primary",
+  placeholder = "Saisissez un motif...",
+  required = true
+}: ActionModalProps) {
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleConfirm = () => {
+    if (required && !reason.trim()) {
+      setError(true);
+      return;
+    }
+    onConfirm(reason);
+    setReason("");
+    setError(false);
+  };
+
+  const variantStyles = {
+    primary: "bg-slate-900 text-white hover:bg-black shadow-slate-200",
+    danger: "bg-red-600 text-white hover:bg-red-700 shadow-red-100",
+    warning: "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-100",
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${confirmVariant === 'danger' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-900'}`}>
+                <MessageSquare size={20} />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{title}</h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-400 hover:text-slate-900"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line">
+              {description}
+            </p>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                {required ? "Motif obligatoire" : "Commentaire (Optionnel)"}
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => {
+                  setReason(e.target.value);
+                  if (error) setError(false);
+                }}
+                placeholder={placeholder}
+                rows={4}
+                className={`w-full px-5 py-4 bg-slate-50 border rounded-2xl text-sm transition focus:ring-4 focus:ring-slate-900/5 focus:outline-none resize-none
+                  ${error ? 'border-red-200 focus:border-red-500' : 'border-slate-100 focus:border-slate-900/20'}
+                `}
+              />
+              {error && (
+                <div className="flex items-center gap-1.5 text-red-600 text-[10px] font-bold uppercase tracking-wide px-1">
+                  <AlertCircle size={10} />
+                  Saisie requise pour continuer
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={onClose}
+                className="flex-1 py-4 px-6 rounded-2xl bg-white border border-slate-100 text-slate-600 text-sm font-black uppercase tracking-widest hover:bg-slate-50 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirm}
+                className={`flex-1 py-4 px-6 rounded-2xl text-sm font-black uppercase tracking-widest transition shadow-xl ${variantStyles[confirmVariant]}`}
+              >
+                {confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 
 import { QuoteService, Quote, QuoteHistory } from "../../../../../services/admin/quote.service";
 
@@ -72,9 +194,8 @@ function StatusBadge({ status }: { status: string }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm font-bold ${
-        styles[status] ?? "border-slate-200 bg-slate-50 text-slate-500"
-      }`}
+      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm font-bold ${styles[status] ?? "border-slate-200 bg-slate-50 text-slate-500"
+        }`}
     >
       {icons[status]}
       {labels[status] ?? status}
@@ -190,11 +311,10 @@ function RelatedQuotesList({ quotes, currentQuoteId }: RelatedQuotesListProps) {
             <Link
               key={quote.id}
               href={`/admin/devis/details/${quote.id}`}
-              className={`block p-4 rounded-xl border transition-all ${
-                isCurrent
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
-              }`}
+              className={`block p-4 rounded-xl border transition-all ${isCurrent
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
+                }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
@@ -268,8 +388,12 @@ export default function DevisDetailsPage() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [relatedQuotes, setRelatedQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
   const [flash, setFlash] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Modal actions
+  const [modalMode, setModalMode] = useState<"approve" | "reject" | "revision" | null>(null);
 
   const showFlash = (type: "success" | "error", message: string) => {
     setFlash({ type, message });
@@ -299,6 +423,45 @@ export default function DevisDetailsPage() {
   useEffect(() => {
     if (quoteId) fetchQuote();
   }, [quoteId]);
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  const handleApprove = async () => {
+    setModalMode("approve");
+  };
+
+  const handleApproveConfirm = async (comment: string) => {
+    setActionLoading(true);
+    try {
+      await QuoteService.approveQuote(quoteId);
+      showFlash("success", "Devis approuvé avec succès.");
+      setModalMode(null);
+      fetchQuote();
+    } catch (err: any) {
+      showFlash("error", err?.response?.data?.message || "Erreur lors de l'approbation.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleActionConfirm = async (reason: string) => {
+    if (!modalMode) return;
+    setActionLoading(true);
+    try {
+      if (modalMode === "reject") {
+        await QuoteService.rejectQuote(quoteId, reason);
+        showFlash("success", "Devis rejeté.");
+      } else {
+        await QuoteService.requestRevision(quoteId, reason);
+        showFlash("success", "Révision demandée au prestataire.");
+      }
+      setModalMode(null);
+      fetchQuote();
+    } catch (err: any) {
+      showFlash("error", err?.response?.data?.message || "Une erreur est survenue.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // ── Calculs dynamiques ──────────────────────────────────────────────────────
   const isPending = quote?.status === "pending";
@@ -339,11 +502,10 @@ export default function DevisDetailsPage() {
           {/* Flash message */}
           {flash && (
             <div
-              className={`px-6 py-4 rounded-2xl text-sm font-semibold ${
-                flash.type === "success"
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
-              }`}
+              className={`px-6 py-4 rounded-2xl text-sm font-semibold ${flash.type === "success"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+                }`}
             >
               {flash.message}
             </div>
@@ -407,6 +569,33 @@ export default function DevisDetailsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Actions Admin */}
+            {isPending && (
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setModalMode("reject")}
+                  disabled={actionLoading}
+                  className="px-6 py-3 rounded-2xl bg-white border border-red-100 text-red-600 text-sm font-black hover:bg-red-50 transition flex items-center gap-2 disabled:opacity-50"
+                >
+                  <ThumbsDown size={16} /> Rejeter
+                </button>
+                <button
+                  onClick={() => setModalMode("revision")}
+                  disabled={actionLoading}
+                  className="px-6 py-3 rounded-2xl bg-white border border-amber-100 text-amber-600 text-sm font-black hover:bg-amber-50 transition flex items-center gap-2 disabled:opacity-50"
+                >
+                  <RefreshCw size={16} /> Révision
+                </button>
+                <button
+                  onClick={handleApprove}
+                  disabled={actionLoading}
+                  className="px-6 py-3 rounded-2xl bg-slate-900 text-white text-sm font-black hover:bg-black transition flex items-center gap-2 shadow-xl shadow-slate-200 disabled:opacity-50"
+                >
+                  <ThumbsUp size={16} /> Valider le devis
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ── KPIs ──────────────────────────────────────────────────────── */}
@@ -610,6 +799,41 @@ export default function DevisDetailsPage() {
       {pdfPreview && (
         <PdfPreviewModal url={pdfPreview.url} name={pdfPreview.name} onClose={() => setPdfPreview(null)} />
       )}
+
+      {/* Action Modals */}
+      <ActionModal
+        isOpen={modalMode === "approve"}
+        onClose={() => setModalMode(null)}
+        onConfirm={handleApproveConfirm}
+        title="Approuver le devis"
+        description="Êtes-vous sûr de vouloir approuver ce devis ? Cette action déclenchera la suite du processus d'intervention."
+        confirmLabel="Approuver"
+        confirmVariant="primary"
+        placeholder="Ajouter un commentaire (optionnel)..."
+        required={false}
+      />
+
+      <ActionModal
+        isOpen={modalMode === "reject"}
+        onClose={() => setModalMode(null)}
+        onConfirm={handleActionConfirm}
+        title="Rejeter le devis"
+        description="Veuillez indiquer le motif du rejet. Le prestataire en sera notifié."
+        confirmLabel="Rejeter"
+        confirmVariant="danger"
+        required={true}
+      />
+
+      <ActionModal
+        isOpen={modalMode === "revision"}
+        onClose={() => setModalMode(null)}
+        onConfirm={handleActionConfirm}
+        title="Demander une révision"
+        description="Indiquez les modifications souhaitées sur ce devis."
+        confirmLabel="Demander la révision"
+        confirmVariant="warning"
+        required={true}
+      />
     </div>
   );
 }

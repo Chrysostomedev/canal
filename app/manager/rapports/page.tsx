@@ -190,7 +190,52 @@ export default function RapportsPage() {
               <Filter size={16} /> Filtrer les rapports
               {activeCount > 0 && <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center">{activeCount}</span>}
             </button>
-            {/* Dropdown simple omis pour la clarté, implémenter un composant Menu si besoin */}
+            
+            {filtersOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setFiltersOpen(false)} />
+                <div className="absolute top-full mt-2 left-0 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-20 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Statut</label>
+                      <select
+                        value={filters.status || ""}
+                        onChange={(e) => setFilters({ status: e.target.value || undefined })}
+                        className="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-slate-900/5 transition-all cursor-pointer"
+                      >
+                        <option value="">Tous les statuts</option>
+                        {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                          <option key={val} value={val}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Type d'intervention</label>
+                      <select
+                        value={filters.intervention_type || ""}
+                        onChange={(e) => setFilters({ intervention_type: e.target.value || undefined })}
+                        className="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-slate-900/5 transition-all cursor-pointer"
+                      >
+                        <option value="">Tous les types</option>
+                        <option value="curatif">Curatif</option>
+                        <option value="preventif">Préventif</option>
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setFilters({ page: 1 });
+                        setFiltersOpen(false);
+                      }}
+                      className="w-full py-3 rounded-2xl bg-rose-50 text-rose-600 text-xs font-black uppercase tracking-widest hover:bg-rose-100 transition-all"
+                    >
+                      Réinitialiser
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <button
             onClick={exportReports}

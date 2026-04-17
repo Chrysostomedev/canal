@@ -14,8 +14,11 @@ import Paginate from "@/components/Paginate";
 import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
+import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
+import { Tag, Wrench, AlertTriangle, CheckCircle2, CalendarDays, Clock } from "lucide-react";
 
 import { useAssets } from "../../../hooks/manager/useAssets";
+import { useTicketActions } from "../../../hooks/manager/useTicketActions";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatMontant = (v?: number | null) => {
@@ -81,6 +84,81 @@ export default function PatrimoinesPage() {
   } = useAssets({ per_page: 10 });
 
   const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+
+  // Hook pour les actions de tickets
+  const { createTicket, isSubmitting: isTicketSubmitting } = useTicketActions({
+    onSuccess: () => {
+      setIsTicketModalOpen(false);
+      setSelectedAsset(null);
+    }
+  });
+
+  const ticketFields: FieldConfig[] = [
+    {
+      name: "subject",
+      label: "Sujet du ticket",
+      type: "text",
+      placeholder: "Ex: Panne constatée sur l'équipement",
+      required: true,
+      icon: <Tag size={18} />
+    },
+    {
+      name: "type",
+      label: "Type",
+      type: "select",
+      options: [
+        { label: "Curatif", value: "curatif" },
+        { label: "Préventif", value: "preventif" },
+      ],
+      required: true,
+      icon: <Wrench size={18} />
+    },
+    {
+      name: "priority",
+      label: "Priorité",
+      type: "select",
+      options: [
+        { label: "Faible", value: "faible" },
+        { label: "Moyenne", value: "moyenne" },
+        { label: "Haute", value: "haute" },
+        { label: "Critique", value: "critique" },
+      ],
+      required: true,
+      icon: <AlertTriangle size={18} />
+    },
+    {
+      name: "planned_at",
+      label: "Début souhaité",
+      type: "date",
+      disablePastDates: true,
+      required: true,
+      icon: <CalendarDays size={18} />
+    },
+    {
+      name: "due_at",
+      label: "Échéance",
+      type: "date",
+      required: true,
+      disablePastDates: true,
+      icon: <Clock size={18} />,
+    },
+    {
+      name: "description",
+      label: "Détails supplémentaires",
+      type: "rich-text",
+      placeholder: "Décrivez précisément le problème constaté...",
+      required: true,
+      gridSpan: 2,
+    },
+    {
+      name: "image",
+      label: "Photo justificative",
+      type: "image-upload",
+      required: false,
+      gridSpan: 2,
+    },
+  ];
 
   // ── Colonnes table ──
   const columns: any[] = [
@@ -263,15 +341,43 @@ export default function PatrimoinesPage() {
               </div>
 
               <div className="p-8 border-t border-slate-50 shrink-0">
-                <Link href={`/manager/tickets?nouveau=1&asset_id=${selectedAsset.id}`} className="block w-full py-4 text-center rounded-2xl bg-slate-900 text-white font-black hover:bg-black transition shadow-xl shadow-slate-200">
+                <button
+                  onClick={() => setIsTicketModalOpen(true)}
+                  className="w-full py-4 text-center rounded-2xl bg-slate-900 text-white font-black hover:bg-black transition shadow-xl shadow-slate-200"
+                >
                   Signaler une anomalie
-                </Link>
+                </button>
               </div>
             </div>
           </>
         )}
 
       </main>
+
+      {/* Modale de création de ticket */}
+      {selectedAsset && (
+        <ReusableForm
+          isOpen={isTicketModalOpen}
+          onClose={() => setIsTicketModalOpen(false)}
+          title="Signaler un Problème"
+          subtitle={`Équipement : ${selectedAsset.designation}`}
+          fields={ticketFields}
+          initialValues={{ 
+            type: 'curatif', 
+            priority: 'moyenne',
+            company_asset_id: selectedAsset.id 
+          }}
+          isLoading={isTicketSubmitting}
+          onSubmit={(values) => {
+            createTicket({ 
+              ...values, 
+              company_asset_id: selectedAsset.id,
+              site_id: selectedAsset.site_id 
+            } as any);
+          }}
+          submitLabel="Envoyer le ticket"
+        />
+      )}
     </div>
   );
 }

@@ -86,16 +86,16 @@ export interface PlanningFilters {
 // Le back (PlanningServices.php) auto-remplit responsable_name depuis le site
 // et codification doit être nullable en base (ou généré via un observer)
 export interface CreatePlanningPayload {
-  codification?:      string;        // optionnel — généré côté back
-  date_debut:         string;
-  date_fin:           string;
-  description?:       string;
-  responsable_name?:  string;        // optionnel — auto-rempli depuis site.responsable_name
+  codification?: string;        // optionnel — généré côté back
+  date_debut: string;
+  // date_fin:           string;
+  description?: string;
+  responsable_name?: string;        // optionnel — auto-rempli depuis site.responsable_name
   responsable_phone?: string;
-  provider_id:        number;
-  site_id:            number;
-  company_asset_id?:  number;
-  status?:            PlanningStatus;
+  provider_id: number;
+  site_id: number;
+  company_asset_id?: number;
+  status?: PlanningStatus;
 }
 
 export type UpdatePlanningPayload = Partial<CreatePlanningPayload>;
@@ -107,7 +107,7 @@ function unwrap<T>(response: any): T {
 
 function cleanParams(filters: Record<string, any>): Record<string, any> {
   return Object.fromEntries(
-    Object.entries(filters).filter(([, v]) => v !== undefined && v !== null && v !== "")
+    Object.entries(filters).filter(([, v]) => v !== undefined)
   );
 }
 
@@ -150,24 +150,24 @@ export async function deletePlanning(id: number): Promise<void> {
 // ─── Helpers métier ───────────────────────────────────────────────────────────
 
 export const STATUS_COLORS: Record<PlanningStatus, string> = {
-  PLANIFIÉ:  "#64748b", // Gris (slate-500)
-  EN_COURS:  "#0ea5e9", // Sky (Bleu clair)
+  PLANIFIÉ: "#64748b", // Gris (slate-500)
+  EN_COURS: "#0ea5e9", // Sky (Bleu clair)
   EN_RETARD: "#ef4444", // Rouge
-  RÉALISÉ:   "#22c55e", // Vert
+  RÉALISÉ: "#22c55e", // Vert
 };
 
 export const STATUS_BG: Record<PlanningStatus, string> = {
-  PLANIFIÉ:  "#f1f5f9", // slate-100
-  EN_COURS:  "#e0f2fe",
+  PLANIFIÉ: "#f1f5f9", // slate-100
+  EN_COURS: "#e0f2fe",
   EN_RETARD: "#fef2f2",
-  RÉALISÉ:   "#f0fdf4",
+  RÉALISÉ: "#f0fdf4",
 };
 
 export const STATUS_LABELS: Record<PlanningStatus, string> = {
-  PLANIFIÉ:  "Planifié",
-  EN_COURS:  "En cours",
+  PLANIFIÉ: "Planifié",
+  EN_COURS: "En cours",
   EN_RETARD: "En retard",
-  RÉALISÉ:   "Réalisé",
+  RÉALISÉ: "Réalisé",
 };
 
 export function formatDate(iso: string): string {
@@ -196,8 +196,8 @@ export function getSiteName(site?: PlanningSite): string {
 
 export function isPlanningOnDate(planning: Planning, date: Date): boolean {
   const start = new Date(planning.date_debut);
-  const end   = new Date(planning.date_fin);
-  const d     = new Date(date.toDateString());
+  const end = new Date(planning.date_fin);
+  const d = new Date(date.toDateString());
   start.setHours(0, 0, 0, 0);
   end.setHours(23, 59, 59, 999);
   return d >= start && d <= end;

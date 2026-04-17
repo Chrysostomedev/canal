@@ -47,7 +47,7 @@ export function useReports(
     try {
       const [paginatedData, statsData] = await Promise.all([
         ReportService.getReports(filters),
-        ReportService.getStats(),
+        ReportService.getStats(filters),
       ]);
       setReports(paginatedData.items);
       setMeta(paginatedData.meta);

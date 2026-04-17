@@ -49,22 +49,28 @@ export default function DevisPage() {
     setFilters({ status: status === "all" ? undefined : status });
   };
 
+  // ─── Fallback stats if API returns 0 but list is not empty ────────────────
+  const fallbackTotalAmount = quotes.reduce((acc, q) => acc + (q.amount_ttc ?? q.total_amount_ttc ?? 0), 0);
+  const fallbackTotalQuotes = quotes.length;
+  const fallbackApproved = quotes.filter(q => q.status === "approved" || q.status === "validated").length;
+  const fallbackPending = quotes.filter(q => q.status === "pending" || q.status === "en attente").length;
+
   const kpis = [
     {
-      label: "Total Devis",
-      value: `${(stats?.total_amount ?? 0).toLocaleString()} FCFA`,
-      delta: `${stats?.total_quotes ?? 0} devis`,
+      label: "Total Approuvé",
+      value: `${(stats?.total_approved_amount || fallbackTotalAmount).toLocaleString()} FCFA`,
+      delta: `${stats?.total ?? fallbackTotalQuotes} devis total`,
       trend: "up" as const
     },
     {
       label: "Devis Approuvés",
-      value: `${(stats?.total_approved ?? 0)}`,
+      value: `${(stats?.approved || fallbackApproved)}`,
       delta: "Validés par manager",
       trend: "up" as const
     },
     {
       label: "En attente",
-      value: `${(stats?.total_pending ?? 0)}`,
+      value: `${(stats?.pending || fallbackPending)}`,
       delta: "Action requise",
       trend: "down" as const
     }

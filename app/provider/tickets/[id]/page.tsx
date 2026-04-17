@@ -38,10 +38,10 @@ const reportFields: FieldConfig[] = [
 ];
 
 const quoteFields: FieldConfig[] = [
-  { name: "amount_ht", label: "Montant HT (estimé)", type: "number", placeholder: "Ex: 25000", required: true },
+  { name: "amount_ht", label: "Montant HT ", type: "number", placeholder: "Ex: 25000", required: true },
   { name: "tax_rate", label: "TVA (%)", type: "number", placeholder: "18", required: true },
   { name: "description", label: "Description détaillée / Justification", type: "rich-text", required: true, gridSpan: 2 },
-  { name: "quote_pdf", label: "Devis PDF (optionnel)", type: "pdf-upload", maxPDFs: 1, gridSpan: 2 } as any,
+  { name: "quote_pdf", label: "Devis PDF ", type: "pdf-upload", maxPDFs: 1, gridSpan: 2 } as any,
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -188,9 +188,22 @@ export default function ProviderTicketDetailPage() {
     } finally { setQuoteSubmitting(false); }
   };
 
-  const attachments = ((ticket as any)?.attachments ?? []) as any[];
-  const photos = attachments.filter(a => a.file_type === "photo" || /\.(jpg|jpeg|png|gif|webp)$/i.test(a.path ?? a.file_path ?? ""));
-  const docs = attachments.filter(a => a.file_type === "document" || /\.pdf$/i.test(a.path ?? a.file_path ?? ""));
+  // ─── Attachments aggregation ───────────────────────────────────────────────
+  const ticketAttachments = ((ticket as any)?.attachments ?? []) as any[];
+  const reportAttachments = ((ticket as any)?.reports ?? []).flatMap((r: any) => r.attachments ?? []);
+  const allAttachments = [...ticketAttachments, ...reportAttachments];
+
+  const photos = allAttachments.filter(a =>
+    a?.file_type === "photo" ||
+    a?.type === "image" ||
+    /\.(jpg|jpeg|png|gif|webp)$/i.test(a?.path ?? a?.file_path ?? "")
+  );
+
+  const docs = allAttachments.filter(a =>
+    a?.file_type === "document" ||
+    a?.type === "pdf" ||
+    /\.pdf$/i.test(a?.path ?? a?.file_path ?? "")
+  );
   const reports = ((ticket as any)?.reports ?? []) as any[];
 
   // ── Calcul délai depuis planned_at ────────────────────────────────────────
@@ -215,7 +228,7 @@ export default function ProviderTicketDetailPage() {
   const kpis = [
     { label: "Priorité", value: PRIORITY_LABEL[ticket?.priority ?? ""] ?? ticket?.priority ?? "—", delta: "", trend: "up" as const },
     { label: "Site", value: ticket?.site?.nom ?? "—", delta: "", trend: "up" as const },
-    { label: "Pièces jointes", value: attachments.length, delta: "", trend: "up" as const },
+    { label: "Pièces jointes", value: allAttachments.length, delta: "", trend: "up" as const },
     { label: "Rapports", value: reports.length, delta: "", trend: "up" as const },
   ];
 

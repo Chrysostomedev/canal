@@ -53,9 +53,9 @@ export const ReportService = {
   /**
    * Statistiques des rapports du site.
    */
-  async getStats(): Promise<ReportStats> {
+  async getStats(filters: ReportFilters = {}): Promise<ReportStats> {
     try {
-      const { data } = await api.get("/manager/intervention-report/stats");
+      const { data } = await api.get("/manager/intervention-report/stats", { params: filters });
       const d = data?.data;
       return {
         total:          d?.total          ?? d?.total_reports    ?? 0,

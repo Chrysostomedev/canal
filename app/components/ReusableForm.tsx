@@ -4,6 +4,7 @@ import { useState } from "react";
 import SideModal from "@/components/form/SideModal";
 import FormButton from "@/components/form/FormButton";
 import { FormField, Input, Select, PasswordInput, DateInput, DateRangeInput, RichTextEditor, ImageUpload, PdfUpload, PhoneInput } from "@/components/form/FormInput";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 export interface FieldConfig {
   name: string;
@@ -17,7 +18,7 @@ export interface FieldConfig {
   maxImages?: number;
   maxPDFs?: number;
   disabled?: boolean;
-  defaultValue?: string;
+  defaultValue?: any;
   disablePastDates?: boolean;
 }
 
@@ -33,6 +34,8 @@ interface ReusableFormProps {
   initialValues?: Record<string, any>;
   onFieldChange?: (name: string, value: any) => void;
   isSubmitting?: boolean;
+  error?: string | null;
+  success?: string | null;
 }
 
 export default function ReusableForm({
@@ -47,6 +50,8 @@ export default function ReusableForm({
   initialValues = {},
   onFieldChange,
   isSubmitting = false,
+  error = null,
+  success = null,
 }: ReusableFormProps) {
   const [localSubmitting, setLocalSubmitting] = useState(false);
   const [customValues, setCustomValues] = useState<Record<string, any>>({});
@@ -95,6 +100,20 @@ export default function ReusableForm({
       <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100vh-180px)]">
 
         <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+          {/* Messages de retour API */}
+          {error && (
+            <div className="mb-6 flex items-start gap-3 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-700 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="shrink-0 mt-0.5" size={18} />
+              <div className="text-sm font-semibold leading-relaxed">{error}</div>
+            </div>
+          )}
+          {success && (
+            <div className="mb-6 flex items-start gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 animate-in fade-in slide-in-from-top-2">
+              <CheckCircle2 className="shrink-0 mt-0.5" size={18} />
+              <div className="text-sm font-semibold leading-relaxed">{success}</div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 pb-8">
             {fields.map((field) => (
               <div

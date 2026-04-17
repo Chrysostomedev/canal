@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import DataTable, { ColumnConfig } from "@/components/DataTable";
@@ -626,10 +627,15 @@ export default function ManagerEntretienPage() {
             header: "Actions", key: "actions",
             render: (_: any, row: InterventionReport) => (
                 <div className="flex items-center gap-2">
-                    <button onClick={() => openPanel(row)}
-                        className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600 hover:text-slate-900">
-                        <Eye size={16} />
-                    </button>
+                    <Link
+                        href={`/admin/entretien/${row.id}`}
+                        className="group p-2 rounded-xl bg-white hover:bg-gray-50 transition flex items-center justify-center"
+                        aria-label={`Aller au détail de l'entretien`}
+                    >
+                        <Eye size={16} className="group-hover:rotate-45 transition-transform" />
+                    </Link>
+
+
                     {(row.status === "submitted" || row.status === "pending") && (
                         <button
                             onClick={() => openValidation(row)}

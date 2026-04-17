@@ -151,8 +151,11 @@ export default function SitesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <PageHeader title="Sites" subtitle="Suivi et gestion de tous les sites" />
-                <p className="text-slate-400 text-sm mt-1">{sites.length} site{sites.length > 1 ? "s" : ""} assigné{sites.length > 1 ? "s" : ""}</p>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+              {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
             </div>
 
             {/* KPIs */}
@@ -171,14 +174,11 @@ export default function SitesPage() {
             >
               <Download size={16} /> Exporter
             </button>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-              {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
-            </div>
-
             {/* Grille des sites */}
             {sites.length > 0 && (
               <div>
                 <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Mes sites</h2>
+                <p className="text-slate-400 text-sm mt-1">{sites.length} site{sites.length > 1 ? "s" : ""} assigné{sites.length > 1 ? "s" : ""}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {sites.map(s => <ManagerSiteCard key={s.id} site={s} />)}
                 </div>

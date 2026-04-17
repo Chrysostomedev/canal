@@ -20,13 +20,14 @@ interface DayCellProps {
   onDrop?: (planningId: number) => void;
   /** Appelé quand on clique sur "+N autres" — reçoit tous les events du jour */
   onShowMore?: (events: CalendarEvent[], date: Date) => void;
+  onCellClick?: (date: Date) => void;
 }
 
 import { Plus } from "lucide-react";
 
 export function DayCell({
   day, currentMonth = true, events, onClick, onAddClick, onDrop, date,
-  canAddEvent = false, onShowMore,
+  canAddEvent = false, onShowMore, onCellClick,
 }: DayCellProps) {
   const isToday = Boolean(date && currentMonth && date.toDateString() === new Date().toDateString());
   const hasEvents = events.length > 0;
@@ -43,6 +44,12 @@ export function DayCell({
           e.preventDefault();
           const planningId = e.dataTransfer.getData("planningId");
           if (planningId && onDrop) onDrop(Number(planningId));
+        }
+      }}
+      onClick={(e) => {
+        // Uniquement si on clique sur le fond de la cellule, pas sur un event
+        if (e.target === e.currentTarget && onCellClick && date && currentMonth) {
+          onCellClick(date);
         }
       }}
       className={`

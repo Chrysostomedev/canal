@@ -392,6 +392,7 @@ export default function ManagerEntretienPage() {
   const {
     reports: tickets,
     stats: apiStats,
+    meta,
     isLoading,
     error: apiError,
     setFilters,
@@ -458,8 +459,8 @@ export default function ManagerEntretienPage() {
   };
 
   const kpis = [
-    { label: "Total entretiens", value: apiStats?.total ?? 0, trend: "up" as const },
-    { label: "À valider", value: tickets?.filter(t => t.status === "submitted").length ?? 0, trend: "up" as const },
+    { label: "Total entretiens", value: meta?.total ?? apiStats?.total ?? 0, trend: "up" as const },
+    { label: "À valider", value: apiStats?.pending ?? tickets?.filter(t => t.status === "submitted").length ?? 0, trend: "up" as const },
     { label: "Validés", value: apiStats?.validated ?? 0, trend: "up" as const },
     { label: "Note moyenne", value: apiStats?.average_rating ? `${apiStats.average_rating}/5` : "-", trend: "up" as const },
   ];
@@ -498,16 +499,14 @@ export default function ManagerEntretienPage() {
       header: "Actions", key: "actions",
       render: (_: any, row: InterventionReport) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => openPanel(row)} className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600">
-            <Eye size={16} />
-          </button>
+
           {row.status === "submitted" && (
             <button onClick={() => openValidation(row)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition">
               <ShieldCheck size={13} /> Valider
             </button>
           )}
-          <button onClick={() => router.push(`/manager/rapports/details/${row.id}`)} className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 transition">
-            <ArrowUpRight size={15} className="group-hover:text-white group-hover:rotate-45 transition-all" />
+          <button onClick={() => router.push(`/manager/rapports/${row.id}`)} className="group p-2 rounded-xl bg-white hover:bg-black border border-slate-200 transition">
+            <Eye size={15} className="group-hover:text-white group-hover:rotate-45 transition-all" />
           </button>
         </div>
       ),

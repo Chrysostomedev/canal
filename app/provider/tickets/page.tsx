@@ -33,7 +33,7 @@ const reportFields: FieldConfig[] = [
   },
   {
     name: "action_taken", label: "Actions menées / Travaux effectués", type: "rich-text",
-    required: false, gridSpan: 2
+    required: true, gridSpan: 2
   },
   {
     name: "attachments", label: "Photos & Documents justificatifs (PDF, images)",
@@ -59,19 +59,19 @@ const formatDate = (iso?: string | null): string => {
 
 const STATUS_LABELS: Record<string, string> = {
   // Majuscules (back v3)
-  "SIGNALÉ":          "Signalé",
-  "VALIDÉ":           "Validé",
-  "ASSIGNÉ":          "Assigné",
-  "PLANIFIÉ":         "Planifié",
-  "EN_COURS":         "En cours",
-  "EN_TRAITEMENT":    "En traitement",
+  "SIGNALÉ": "Signalé",
+  "VALIDÉ": "Validé",
+  "ASSIGNÉ": "Assigné",
+  "PLANIFIÉ": "Planifié",
+  "EN_COURS": "En cours",
+  "EN_TRAITEMENT": "En traitement",
   "DEVIS_EN_ATTENTE": "Devis en attente",
-  "DEVIS_APPROUVÉ":   "Devis approuvé",
-  "RAPPORTÉ":         "Rapporté",
-  "ÉVALUÉ":           "Évalué",
-  "CLOS":             "Clôturé",
-  "EN_RETARD":        "En retard",
-  "RÉSOLU":           "Résolu",
+  "DEVIS_APPROUVÉ": "Devis approuvé",
+  "RAPPORTÉ": "Rapporté",
+  "ÉVALUÉ": "Évalué",
+  "CLOS": "Clôturé",
+  "EN_RETARD": "En retard",
+  "RÉSOLU": "Résolu",
   // Minuscules legacy
   signalez: "Signalé", validé: "Validé", assigné: "Assigné",
   en_cours: "En cours", rapporté: "Rapporté", évalué: "Évalué", clos: "Clôturé",
@@ -79,19 +79,19 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, string> = {
   // Majuscules (back v3)
-  "SIGNALÉ":          "border-slate-300 bg-slate-100 text-slate-700",
-  "VALIDÉ":           "border-blue-400 bg-blue-50 text-blue-700",
-  "ASSIGNÉ":          "border-violet-400 bg-violet-50 text-violet-700",
-  "PLANIFIÉ":         "border-sky-400 bg-sky-50 text-sky-700",
-  "EN_COURS":         "border-orange-400 bg-orange-50 text-orange-600",
-  "EN_TRAITEMENT":    "border-orange-400 bg-orange-50 text-orange-600",
+  "SIGNALÉ": "border-slate-300 bg-slate-100 text-slate-700",
+  "VALIDÉ": "border-blue-400 bg-blue-50 text-blue-700",
+  "ASSIGNÉ": "border-violet-400 bg-violet-50 text-violet-700",
+  "PLANIFIÉ": "border-sky-400 bg-sky-50 text-sky-700",
+  "EN_COURS": "border-orange-400 bg-orange-50 text-orange-600",
+  "EN_TRAITEMENT": "border-orange-400 bg-orange-50 text-orange-600",
   "DEVIS_EN_ATTENTE": "border-yellow-400 bg-yellow-50 text-yellow-700",
-  "DEVIS_APPROUVÉ":   "border-teal-400 bg-teal-50 text-teal-700",
-  "RAPPORTÉ":         "border-amber-400 bg-amber-50 text-amber-700",
-  "ÉVALUÉ":           "border-emerald-500 bg-emerald-50 text-emerald-700",
-  "CLOS":             "border-black bg-black text-white",
-  "EN_RETARD":        "border-red-400 bg-red-50 text-red-700",
-  "RÉSOLU":           "border-green-400 bg-green-50 text-green-700",
+  "DEVIS_APPROUVÉ": "border-teal-400 bg-teal-50 text-teal-700",
+  "RAPPORTÉ": "border-amber-400 bg-amber-50 text-amber-700",
+  "ÉVALUÉ": "border-emerald-500 bg-emerald-50 text-emerald-700",
+  "CLOS": "border-black bg-black text-white",
+  "EN_RETARD": "border-red-400 bg-red-50 text-red-700",
+  "RÉSOLU": "border-green-400 bg-green-50 text-green-700",
   // Minuscules legacy
   signalez: "border-slate-300 bg-slate-100 text-slate-700",
   validé: "border-blue-400 bg-blue-50 text-blue-700",
@@ -162,7 +162,7 @@ export default function ProviderTicketsPage() {
   const { createReport, submitting, submitSuccess, submitError } = useProviderReports();
 
   useEffect(() => { if (submitSuccess) toast.success(submitSuccess); }, [submitSuccess]);
-  useEffect(() => { if (submitError)   toast.error(submitError);     }, [submitError]);
+  useEffect(() => { if (submitError) toast.error(submitError); }, [submitError]);
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportTicketId, setReportTicketId] = useState<number | null>(null);
@@ -280,7 +280,7 @@ export default function ProviderTicketsPage() {
       key: "actions",
       render: (_: any, row: Ticket) => (
         <div className="flex items-center gap-3">
-         
+
           <Link href={`/provider/tickets/${row.id}`} className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition" title="Voir les détails">
             <Eye size={16} /> Aperçu
           </Link>
@@ -609,23 +609,22 @@ function TicketDetailPanel({
 
           {/* ── Bouton Démarrer — prioritaire et visible ──────────────────── */}
           {canStart && (
-            <div className={`rounded-2xl border p-4 space-y-3 ${
-              ticket.delai_restant?.est_en_retard
-                ? "bg-red-50 border-red-200"
-                : ticket.delai_restant?.est_urgent
-                  ? "bg-orange-50 border-orange-200"
-                  : "bg-orange-50 border-orange-200"
-            }`}>
+            <div className={`rounded-2xl border p-4 space-y-3 ${ticket.delai_restant?.est_en_retard
+              ? "bg-red-50 border-red-200"
+              : ticket.delai_restant?.est_urgent
+                ? "bg-orange-50 border-orange-200"
+                : "bg-orange-50 border-orange-200"
+              }`}>
               {/* Délai */}
               {ticket.due_at && ticket.planned_at && (() => {
                 const start = new Date(ticket.planned_at!);
-                const due   = new Date(ticket.due_at!);
-                const now   = new Date();
-                const totalH  = Math.round((due.getTime() - start.getTime()) / 3_600_000);
+                const due = new Date(ticket.due_at!);
+                const now = new Date();
+                const totalH = Math.round((due.getTime() - start.getTime()) / 3_600_000);
                 const remainH = Math.round((due.getTime() - now.getTime()) / 3_600_000);
                 const remainD = Math.floor((due.getTime() - now.getTime()) / 86_400_000);
-                const isLate  = remainH < 0;
-                const pct     = Math.min(100, Math.max(0, ((now.getTime() - start.getTime()) / (due.getTime() - start.getTime())) * 100));
+                const isLate = remainH < 0;
+                const pct = Math.min(100, Math.max(0, ((now.getTime() - start.getTime()) / (due.getTime() - start.getTime())) * 100));
                 return (
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-[10px] font-medium">
@@ -650,15 +649,14 @@ function TicketDetailPanel({
               <button
                 onClick={onStart}
                 disabled={updateLoading}
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-black disabled:opacity-50 transition ${
-                  ticket.delai_restant?.est_en_retard
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-orange-500 hover:bg-orange-600"
-                }`}
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-black disabled:opacity-50 transition ${ticket.delai_restant?.est_en_retard
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-orange-500 hover:bg-orange-600"
+                  }`}
               >
                 {updateLoading
-                  ? <RefreshCw size={14} className="animate-spin"/>
-                  : <Wrench size={14}/>}
+                  ? <RefreshCw size={14} className="animate-spin" />
+                  : <Wrench size={14} />}
                 {ticket.delai_restant?.est_en_retard
                   ? "Démarrer maintenant — SLA dépassé"
                   : "Démarrer l'intervention"}
@@ -711,7 +709,7 @@ function TicketDetailPanel({
                 disabled={updateLoading}
                 className="w-full py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 disabled:opacity-50 transition flex items-center justify-center gap-2"
               >
-                {updateLoading ? <RefreshCw size={12} className="animate-spin" /> : <Tag size={12}/>}
+                {updateLoading ? <RefreshCw size={12} className="animate-spin" /> : <Tag size={12} />}
                 Demander un devis
               </button>
             </div>

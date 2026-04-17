@@ -440,25 +440,48 @@ export default function PatrimoineDetailsPage() {
                 {/* Colonne 1/3 - Image + Fiche technique + Timeline statuts */}
                 <div className="space-y-6">
 
-                  {/* IMAGE CARD (Pt card pour l'image) */}
-                  {(() => {
-                    const assetImages = asset.images ?? (asset as any).attachments ?? (asset as any).media ?? [];
-                    if (!assetImages || assetImages.length === 0) return null;
-                    return (
-                      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                        <div className="h-48 w-full bg-slate-100 relative group">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={resolveUrl(assetImages[0])}
-                            alt="Asset"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={(e) => console.error("Erreur image:", resolveUrl(assetImages[0]))}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {/* PHOTO PROÉMINENTE (Comme demandé) */}
+                  <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                    <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Photo du patrimoine</h3>
+                      {(() => {
+                        const assetImages = asset.images ?? (asset as any).attachments ?? (asset as any).media ?? [];
+                        return assetImages.length > 0 && (
+                          <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                            {assetImages.length} photo{assetImages.length > 1 ? 's' : ''}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <div className="h-64 sm:h-80 w-full bg-slate-50 relative group">
+                      {(() => {
+                        const assetImages = asset.images ?? (asset as any).attachments ?? (asset as any).media ?? [];
+                        if (assetImages.length > 0) {
+                          const firstImg = assetImages[0];
+                          const url = resolveUrl(firstImg);
+                          return (
+                            <>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={url}
+                                alt="Patrimoine"
+                                className="w-full h-full object-contain p-4 transition-all duration-500 group-hover:scale-105"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/images/placeholder-asset.png";
+                                }}
+                              />
+                            </>
+                          );
+                        }
+                        return (
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-300">
+                            <Eye size={48} strokeWidth={1} />
+                            <p className="text-xs font-medium">Aucune photo disponible</p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
 
                   {/* Fiche technique */}
                   <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-1">

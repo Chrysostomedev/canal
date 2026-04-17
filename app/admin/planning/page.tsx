@@ -41,7 +41,7 @@ function Toast({ toast }: { toast: ToastType }) {
     `}>
       {toast.type === "success"
         ? <CheckCircle2 size={20} className="text-green-500 shrink-0" />
-        : <XCircle      size={20} className="text-red-500 shrink-0" />
+        : <XCircle size={20} className="text-red-500 shrink-0" />
       }
       {toast.message}
     </div>
@@ -71,11 +71,10 @@ function PlanningFilterDropdown({
   }: { val: string; current?: string; onClick: () => void; label: string }) => (
     <button
       onClick={onClick}
-      className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
-        (current ?? "") === val
-          ? "bg-slate-900 text-white"
-          : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-      }`}
+      className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${(current ?? "") === val
+        ? "bg-slate-900 text-white"
+        : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+        }`}
     >
       {label}
     </button>
@@ -96,11 +95,11 @@ function PlanningFilterDropdown({
         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Statut</p>
         <div className="flex flex-col gap-1.5">
           {[
-            { val: "",            label: "Tous les plannings" },
-            { val: "PLANIFIE",    label: "Planifié"           },
-            { val: "EN_COURS",    label: "En cours"           },
-            { val: "EN_RETARD",   label: "En retard"          },
-            { val: "REALISE",     label: "Réalisé"            },
+            { val: "", label: "Tous les plannings" },
+            { val: "PLANIFIÉ", label: "Planifié" },
+            { val: "EN_COURS", label: "En cours" },
+            { val: "EN_RETARD", label: "En retard" },
+            { val: "RÉALISÉ", label: "Réalisé" },
           ].map(o => (
             <Pill
               key={o.val}
@@ -138,8 +137,8 @@ function buildStatsCards(stats: any, isLoading: boolean) {
   if (isLoading || !stats) {
     return [
       { label: "Nombre total de plannings", value: "-", delta: "", trend: "up" as const },
-      { label: "Plannings en cours",        value: "-", delta: "", trend: "up" as const },
-      { label: "Plannings en retard",       value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en cours", value: "-", delta: "", trend: "up" as const },
+      { label: "Plannings en retard", value: "-", delta: "", trend: "up" as const },
     ];
   }
   return [
@@ -173,10 +172,15 @@ export default function PlanningPage() {
     isCreateModalOpen, isEditModalOpen, isPanelOpen,
     handleCreate, handleUpdate, handleDelete,
     openCreateModal, closeCreateModal,
-    openEditModal, closeEditModal,
+    openEditModal: baseOpenEditModal, closeEditModal,
     openPanel, closePanel,
     setFilters,
   } = usePlanning();
+
+  const openEditModal = (p: any) => {
+    baseOpenEditModal(p);
+    if (p.site_id) loadAssetsBySite(Number(p.site_id));
+  };
 
   // ── Toast ──────────────────────────────────────────────────────────────────
   const [toast, setToast] = useState<ToastType>(null);
@@ -187,7 +191,7 @@ export default function PlanningPage() {
 
   // ── Filter dropdown state (pattern SitesPage) ──────────────────────────────
   const [planningFilters, setPlanningFilters] = useState<PlanningFiltersState>({});
-  const [filtersOpen,     setFiltersOpen]     = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
   // Ferme dropdown au clic extérieur
@@ -209,15 +213,15 @@ export default function PlanningPage() {
 
   // ── Providers et Sites dynamiques ─────────────────────────────────────────
   const [providers, setProviders] = useState<{ label: string; value: number }[]>([]);
-  const [sites, setSites]         = useState<Site[]>([]);
-  const [assets, setAssets]       = useState<{ label: string; value: number }[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [assets, setAssets] = useState<{ label: string; value: number }[]>([]);
   const [formInitialValues, setFormInitialValues] = useState<Record<string, any>>({});
 
   useEffect(() => {
     import("../../../core/axios").then(({ default: api }) => {
 
       api.get("/admin/providers", { params: { per_page: 1000 } }).then(({ data }) => {
-        const raw   = data?.data ?? data ?? {};
+        const raw = data?.data ?? data ?? {};
         const items: any[] = Array.isArray(raw) ? raw : (raw.items ?? raw.data ?? []);
         setProviders(
           items.map((p: any) => ({
@@ -228,7 +232,7 @@ export default function PlanningPage() {
       }).catch(() => setProviders([]));
 
       api.get("/admin/site", { params: { per_page: 1000 } }).then(({ data }) => {
-        const raw   = data?.data ?? data ?? {};
+        const raw = data?.data ?? data ?? {};
         const items: any[] = Array.isArray(raw) ? raw : (raw.items ?? raw.data ?? []);
         setSites(items);
       }).catch(() => setSites([]));
@@ -240,7 +244,7 @@ export default function PlanningPage() {
   const loadAssetsBySite = (siteId: number) => {
     import("../../../core/axios").then(({ default: api }) => {
       api.get("/admin/asset", { params: { site_id: siteId, per_page: 200 } }).then(({ data }) => {
-        const raw   = data?.data ?? data ?? {};
+        const raw = data?.data ?? data ?? {};
         const items: any[] = Array.isArray(raw) ? raw : (raw.items ?? raw.data ?? []);
         setAssets(
           items.map((a: any) => ({
@@ -258,9 +262,14 @@ export default function PlanningPage() {
       type: "select", required: true,
       options: sites.map(s => ({ label: s.nom, value: s.id })),
     },
-    { name: "date_debut",        label: "Date de début",            type: "date", required: true, disablePastDates: true, icon: CalendarClock },
-    { name: "date_fin",          label: "Date de fin",              type: "date", required: true, disablePastDates: true, icon: CalendarClock },
-    { name: "responsable_name",  label: "Nom du responsable",       type: "text", required: false, disabled: true },
+    { name: "date_debut", label: "Date de début", type: "date", required: true, disablePastDates: true, icon: CalendarClock },
+    { name: "date_fin", label: "Date de fin", type: "date", required: false, disablePastDates: true, icon: CalendarClock },
+    {
+      name: "company_asset_id", label: "Patrimoine / Équipement",
+      type: "select", required: true,
+      options: assets,
+    },
+    { name: "responsable_name", label: "Nom du responsable", type: "text", required: false, disabled: true },
     { name: "responsable_phone", label: "Téléphone du responsable", type: "text", required: false, disabled: true },
     {
       name: "provider_id", label: "Prestataire assigné",
@@ -284,6 +293,7 @@ export default function PlanningPage() {
           responsable_name: resolveManagerName(site),
           responsable_phone: resolveManagerPhone(site),
         }));
+        loadAssetsBySite(Number(value)); // ✅ Charger les assets du site
       }
     }
   };
@@ -293,26 +303,26 @@ export default function PlanningPage() {
     if (!p) return;
 
     const start = new Date(p.date_debut);
-    const end   = new Date(p.date_fin);
-    const diff  = end.getTime() - start.getTime();
+    const end = new Date(p.date_fin);
+    const diff = end.getTime() - start.getTime();
 
     const nextStart = new Date(newDate);
     nextStart.setHours(start.getHours(), start.getMinutes());
-    const nextEnd   = new Date(nextStart.getTime() + diff);
+    const nextEnd = new Date(nextStart.getTime() + diff);
 
     // Formatage local pour éviter le décalage UTC
     const toLocalISO = (d: Date) => {
-      const y  = d.getFullYear();
+      const y = d.getFullYear();
       const mo = String(d.getMonth() + 1).padStart(2, "0");
       const da = String(d.getDate()).padStart(2, "0");
-      const h  = String(d.getHours()).padStart(2, "0");
+      const h = String(d.getHours()).padStart(2, "0");
       const mi = String(d.getMinutes()).padStart(2, "0");
       return `${y}-${mo}-${da}T${h}:${mi}:00`;
     };
 
     const ok = await handleUpdate(planningId, {
       date_debut: toLocalISO(nextStart),
-      date_fin:   toLocalISO(nextEnd),
+      date_fin: toLocalISO(nextEnd),
     });
 
     showToast(
@@ -338,22 +348,15 @@ export default function PlanningPage() {
 
   // ── Submit création ────────────────────────────────────────────────────────
   const handleCreateSubmit = async (formData: Record<string, any>) => {
-    // Génération d'un codification unique : PLN-YYYYMMDD-XXXXXXXX (timestamp hex)
-    // Garanti unique car basé sur Date.now() en base 36 + aléatoire
-    const unique = Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const codification = `PLN-${dateStr}-${unique}`;
-
     const payload: CreatePlanningPayload = {
-      codification,
-      date_debut:  formData.date_debut,
-      date_fin:    formData.date_fin,
+      date_debut: formData.date_debut,
+      date_fin: formData.date_fin || null,
       provider_id: Number(formData.provider_id),
-      site_id:     Number(formData.site_id),
-      status:      (formData.status as any) || "PLANIFIE",
-      ...(formData.responsable_name  ? { responsable_name:  formData.responsable_name  } : {}),
+      site_id: Number(formData.site_id),
+      company_asset_id: Number(formData.company_asset_id),
+      ...(formData.responsable_name ? { responsable_name: formData.responsable_name } : {}),
       ...(formData.responsable_phone ? { responsable_phone: formData.responsable_phone } : {}),
-      ...(formData.description       ? { description:       formData.description       } : {}),
+      ...(formData.description ? { description: formData.description } : {}),
     };
     const ok = await handleCreate(payload);
     showToast(
@@ -366,14 +369,15 @@ export default function PlanningPage() {
   const handleEditSubmit = async (formData: Record<string, any>) => {
     if (!selectedPlanning) return;
     const payload: UpdatePlanningPayload = {
-      date_debut:  formData.date_debut,
-      date_fin:    formData.date_fin,
+      date_debut: formData.date_debut,
+      date_fin: formData.date_fin || null,
       provider_id: formData.provider_id ? Number(formData.provider_id) : undefined,
-      site_id:     formData.site_id     ? Number(formData.site_id)     : undefined,
-      status:      (formData.status as any) || undefined,
-      ...(formData.responsable_name  ? { responsable_name:  formData.responsable_name  } : {}),
+      site_id: formData.site_id ? Number(formData.site_id) : undefined,
+      company_asset_id: formData.company_asset_id ? Number(formData.company_asset_id) : undefined,
+      status: (formData.status as any) || undefined,
+      ...(formData.responsable_name ? { responsable_name: formData.responsable_name } : {}),
       ...(formData.responsable_phone ? { responsable_phone: formData.responsable_phone } : {}),
-      ...(formData.description       ? { description:       formData.description       } : {}),
+      ...(formData.description ? { description: formData.description } : {}),
     };
     const ok = await handleUpdate(selectedPlanning.id, payload);
     showToast(
@@ -386,45 +390,46 @@ export default function PlanningPage() {
   // ── initialValues édition ──────────────────────────────────────────────────
   const editInitialValues = selectedPlanning
     ? {
-        codification:      selectedPlanning.codification,
-        date_debut:        selectedPlanning.date_debut?.split("T")[0] ?? "",
-        date_fin:          selectedPlanning.date_fin?.split("T")[0] ?? "",
-        responsable_name:  selectedPlanning.responsable_name,
-        responsable_phone: selectedPlanning.responsable_phone ?? "",
-        status:            selectedPlanning.status,
-        provider_id:       String(selectedPlanning.provider_id),
-        site_id:           String(selectedPlanning.site_id),
-        description:       selectedPlanning.description ?? "",
-      }
+      codification: selectedPlanning.codification,
+      date_debut: selectedPlanning.date_debut?.split("T")[0] ?? "",
+      date_fin: selectedPlanning.date_fin?.split("T")[0] ?? "",
+      responsable_name: selectedPlanning.responsable_name,
+      responsable_phone: selectedPlanning.responsable_phone ?? "",
+      status: selectedPlanning.status,
+      provider_id: String(selectedPlanning.provider_id),
+      site_id: String(selectedPlanning.site_id),
+      company_asset_id: selectedPlanning.company_asset_id ? String(selectedPlanning.company_asset_id) : "",
+      description: selectedPlanning.description ?? "",
+    }
     : {};
 
   // ── Format SideDetailsPanel ────────────────────────────────────────────────
   const formattedSelectedEvent = selectedPlanning
     ? {
-        title:       selectedPlanning.codification,
-        reference:   `#${String(selectedPlanning.id).padStart(7, "0")}`,
-        description: selectedPlanning.description ?? "Aucune description disponible.",
-        fields: [
-          { label: "Site",        value: getSiteName(selectedPlanning.site)         },
-          { label: "Prestataire", value: getProviderName(selectedPlanning.provider) },
-          { label: "Responsable", value: selectedPlanning.responsable_name          },
-          { label: "Téléphone",   value: selectedPlanning.responsable_phone ?? "-"  },
-          {
-            label: "Date de début",
-            value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
-          },
-          {
-            label: "Date de fin",
-            value: `${formatDate(selectedPlanning.date_fin)} à ${formatTime(selectedPlanning.date_fin)}`,
-          },
-          {
-            label:       "Statut",
-            value:       STATUS_LABELS[selectedPlanning.status],
-            isStatus:    true,
-            statusColor: STATUS_COLORS[selectedPlanning.status],
-          },
-        ],
-      }
+      title: selectedPlanning.codification,
+      reference: `#${String(selectedPlanning.id).padStart(7, "0")}`,
+      description: selectedPlanning.description ?? "Aucune description disponible.",
+      fields: [
+        { label: "Site", value: getSiteName(selectedPlanning.site) },
+        { label: "Prestataire", value: getProviderName(selectedPlanning.provider) },
+        { label: "Responsable", value: selectedPlanning.responsable_name },
+        { label: "Téléphone", value: selectedPlanning.responsable_phone ?? "-" },
+        {
+          label: "Date de début",
+          value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
+        },
+        {
+          label: "Date de fin",
+          value: `${formatDate(selectedPlanning.date_fin)} à ${formatTime(selectedPlanning.date_fin)}`,
+        },
+        {
+          label: "Statut",
+          value: STATUS_LABELS[selectedPlanning.status],
+          isStatus: true,
+          statusColor: STATUS_COLORS[selectedPlanning.status],
+        },
+      ],
+    }
     : null;
 
   const cpis = buildStatsCards(stats, isLoadingStats);
@@ -444,8 +449,8 @@ export default function PlanningPage() {
             </div>
           )}
 
-{/* Toast feedback */}
-<Toast toast={toast} />
+          {/* Toast feedback */}
+          <Toast toast={toast} />
 
           <div className="flex justify-between items-start">
             <PageHeader
@@ -487,11 +492,10 @@ export default function PlanningPage() {
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
-                    filtersOpen || activeCount > 0
-                      ? "bg-slate-900 text-white border-slate-900"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${filtersOpen || activeCount > 0
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   <Filter size={16} />
                   Filtrer
