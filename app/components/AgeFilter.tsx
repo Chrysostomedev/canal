@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { format, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DayPicker, DateRange } from "react-day-picker";
-import { CalendarDays, X, ChevronRight } from "lucide-react";
+import { CalendarDays, X, ChevronRight, ChevronLeft } from "lucide-react";
 import "react-day-picker/dist/style.css";
 
 export interface DateRangePickerProps {
@@ -152,28 +152,32 @@ export function DateRangePicker({
               locale={fr}
               pagedNavigation
               disabled={disablePastDates ? { before: today } : undefined}
+              components={{
+                IconLeft: () => <ChevronLeft size={16} strokeWidth={3} />,
+                IconRight: () => <ChevronRight size={16} strokeWidth={3} />,
+              }}
               classNames={{
-                months: "flex flex-col sm:flex-row gap-5",
-                month: "space-y-4",
-                caption: "flex justify-center pt-2 relative items-center",
-                caption_label: "text-sm font-black text-slate-900 capitalize",
-                nav: "space-x-1 flex items-center",
-                nav_button: "h-8 w-8 bg-blue-50 border border-blue-100 flex items-center justify-center rounded-xl hover:bg-blue-100 transition text-blue-600 shadow-sm",
-                nav_button_previous: "absolute left-1",
-                nav_button_next: "absolute right-1",
-                table: "w-full border-collapse space-y-1",
-                head_row: "flex",
-                head_cell: "text-slate-400 w-9 font-bold text-[11px] uppercase text-center",
-                row: "flex w-full mt-1",
-                cell: "relative p-0 text-center text-sm [&:has([aria-selected])]:bg-slate-50 first:[&:has([aria-selected])]:rounded-l-full last:[&:has([aria-selected])]:rounded-r-full [&:has([aria-selected].day-range-end)]:rounded-r-full [&:has([aria-selected].day-range-start)]:rounded-l-full",
-                day: "h-9 w-9 p-0 font-black rounded-full hover:bg-slate-100 hover:text-slate-900 transition text-slate-900 text-sm",
-                day_range_start: "bg-slate-900 !text-white hover:bg-slate-900 hover:!text-white rounded-full",
-                day_range_end: "bg-slate-900 !text-white hover:bg-slate-900 hover:!text-white rounded-full",
-                day_selected: "bg-slate-900 !text-white hover:bg-slate-900 hover:!text-white",
-                day_today: "bg-slate-100 text-slate-900 font-black ring-1 ring-slate-300",
+                months: "flex flex-col sm:flex-row gap-8 justify-center",
+                month: "space-y-6",
+                caption: "flex justify-center pt-2 relative items-center mb-4",
+                caption_label: "text-sm font-black text-slate-900 capitalize tracking-tight",
+                nav: "flex items-center",
+                nav_button: "h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 shadow-sm border border-blue-100 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-blue-200 active:scale-90",
+                nav_button_previous: "absolute left-0 z-10",
+                nav_button_next: "absolute right-0 z-10",
+                table: "w-full border-collapse",
+                head_row: "flex mb-2",
+                head_cell: "text-slate-400 w-9 font-black text-[10px] uppercase text-center tracking-widest",
+                row: "flex w-full mt-1.5",
+                cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-slate-50 first:[&:has([aria-selected])]:rounded-l-2xl last:[&:has([aria-selected])]:rounded-r-2xl",
+                day: "h-9 w-9 p-0 font-bold rounded-2xl transition-all duration-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900",
+                day_range_start: "bg-blue-600 !text-white hover:bg-blue-700 rounded-2xl shadow-lg shadow-blue-200",
+                day_range_end: "bg-blue-600 !text-white hover:bg-blue-700 rounded-2xl shadow-lg shadow-blue-200",
+                day_selected: "bg-blue-600 !text-white hover:bg-blue-700",
+                day_today: "bg-slate-50 text-blue-600 font-black ring-2 ring-inset ring-blue-100",
                 day_outside: "text-slate-300 opacity-40",
-                day_disabled: "text-slate-200 opacity-30 cursor-not-allowed hover:bg-transparent",
-                day_range_middle: "aria-selected:bg-slate-50 aria-selected:text-slate-900 rounded-none",
+                day_disabled: "text-slate-200 opacity-20 cursor-not-allowed hover:bg-transparent",
+                day_range_middle: "aria-selected:bg-blue-50/50 aria-selected:text-blue-900 rounded-none",
                 day_hidden: "invisible",
               }}
             />

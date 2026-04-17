@@ -121,6 +121,9 @@ export interface Asset {
   };
   created_at: string;
   updated_at?: string;
+  images?: any[];
+  reports?: any[];
+  attachments?: any[];
 }
 
 export interface AssetStats {
@@ -446,6 +449,8 @@ export interface Ticket {
   asset?: { id: number; designation: string; codification?: string; code?: string };
   service?: { id: number; name: string };
   provider?: { id: number; name?: string; company_name?: string };
+  attachments?: any[];
+  reports?: any[];
 }
 
 export interface TicketStats {

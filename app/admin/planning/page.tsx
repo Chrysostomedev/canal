@@ -263,7 +263,7 @@ export default function PlanningPage() {
       options: sites.map(s => ({ label: s.nom, value: s.id })),
     },
     { name: "date_debut", label: "Date de début", type: "date", required: true, disablePastDates: true, icon: CalendarClock },
-    { name: "date_fin", label: "Date de fin", type: "date", required: false, disablePastDates: true, icon: CalendarClock },
+    // { name: "date_fin", label: "Date de fin", type: "date", required: false, disablePastDates: true, icon: CalendarClock },
     {
       name: "company_asset_id", label: "Patrimoine / Équipement",
       type: "select", required: true,

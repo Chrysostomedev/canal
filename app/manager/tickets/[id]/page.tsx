@@ -303,21 +303,42 @@ export default function ManagerTicketDetailPage() {
                     </div>
                   )}
 
-                  {photos.length > 0 && (
-                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Photos ({photos.length})</h3>
-                      <div className="grid grid-cols-3 gap-3">
-                        {photos.map((att: any, i: number) => {
-                          const url = getUrl(att);
-                          return (
-                            <a key={i} href={url} target="_blank" rel="noreferrer" className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition">
-                              <img src={url} alt="photo" className="w-full h-full object-cover" onError={() => console.error("[Photo] erreur:", url)} />
-                            </a>
-                          );
-                        })}
-                      </div>
+                  <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Photos de l'anomalie ({photos.length})</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      {photos.map((att: any, i: number) => {
+                        const url = getUrl(att);
+                        return (
+                          <a key={i} href={url} target="_blank" rel="noreferrer" className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition">
+                            <img src={url} alt="photo" className="w-full h-full object-cover" onError={() => console.error("[Photo] erreur:", url)} />
+                          </a>
+                        );
+                      })}
                     </div>
-                  )}
+                  </div>
+
+                  {/* Photos de l'équipement (Asset) */}
+                  {(() => {
+                    const assetImages = (ticket.asset as any)?.images ?? [];
+                    if (assetImages.length === 0) return null;
+                    return (
+                      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Photos de l'équipement ({assetImages.length})</h3>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                          {assetImages.map((img: any, i: number) => {
+                            const url = getUrl(img);
+                            return (
+                              <a key={i} href={url} target="_blank" rel="noreferrer" className="aspect-square rounded-xl overflow-hidden border border-slate-100 hover:opacity-80 transition bg-slate-50">
+                                <img src={url} alt="photo asset" className="w-full h-full object-cover" />
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-6">
@@ -342,7 +363,7 @@ export default function ManagerTicketDetailPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                  {/* <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Documents ({docs.length})</h3>
                     {docs.length > 0 ? (
                       <div className="space-y-3">
@@ -370,7 +391,7 @@ export default function ManagerTicketDetailPage() {
                         <p className="text-sm font-medium">Aucun document</p>
                       </div>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </>

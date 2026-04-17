@@ -123,7 +123,7 @@ export default function ProviderPlanningPage() {
       name: "action_taken",
       label: "Actions menées / Travaux effectués",
       type: "rich-text",
-      required: false,
+      required: true,
       gridSpan: 2,
     },
     {
