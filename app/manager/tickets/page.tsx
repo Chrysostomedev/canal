@@ -365,16 +365,16 @@ export default function TicketsPage() {
           </div>
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-2 border-b border-slate-200/60">
-            <div className="relative w-full md:w-96 group">
+            {/* <div className="relative w-full md:w-96 group">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
               <input
                 type="text"
                 placeholder="Rechercher un ticket..."
                 className="w-full pl-12 pr-6 py-4 rounded-[1.5rem] bg-white border border-slate-100 shadow-sm text-sm font-medium focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all placeholder:text-slate-400"
               />
-            </div>
-
-            <div className="flex items-center gap-4 w-full md:w-auto">
+            </div> */}
+  t
+            <div className="flex items-end gap-4 w-full md:w-auto">
               <button
                 onClick={exportTickets}
                 className="flex items-center justify-center gap-3 px-6 py-4 rounded-[1.5rem] bg-white border border-slate-100 text-slate-700 text-sm font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm group"
