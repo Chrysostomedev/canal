@@ -8,7 +8,7 @@ import StatsCard from "@/components/StatsCard";
 import {
   ChevronLeft, MapPin, Wrench, Tag, Clock, CheckCircle2,
   AlertTriangle, FileText, Eye, Download, X, Star,
-  User, Calendar, Shield, AlertCircle,
+  User, Calendar, Shield, AlertCircle, Pencil, CalendarDays, TicketPlus,
 } from "lucide-react";
 import { TicketService, Ticket } from "../../../../services/admin/ticket.service";
 import { useTickets } from "../../../../hooks/admin/useTickets";
@@ -18,7 +18,6 @@ import { useAssets } from "../../../../hooks/admin/useAssets";
 import { useSites } from "../../../../hooks/admin/useSites";
 import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import * as PlanningService from "../../../../services/admin/planningService";
-import { CalendarDays, TicketPlus, Pencil } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (iso?: string | null) => {
@@ -143,20 +142,35 @@ export default function AdminTicketDetailPage() {
     setTimeout(() => setFlashMessage(null), 5000);
   };
 
-  const loadTicketData = () => {
+  const loadTicketData = async () => {
     if (!ticketId) return;
     setLoading(true); setError("");
 
-    TicketService.getTicket(ticketId)
-      .then(t => setTicket(t))
-      .catch(e => {
-        console.error("[AdminTicketDetail] erreur:", e?.response?.data ?? e);
-        setError(e?.response?.data?.message ?? "Impossible de charger ce ticket.");
-      })
-      .finally(() => setLoading(false));
+    try {
+      const data = await TicketService.getTicketInfo(ticketId);
+      console.log("[AdminTicketDetail] unified data:", data);
 
-    QuoteService.getQuotesByTicket(ticketId).then(setQuotes).catch(console.error);
-    InvoiceService.getInvoices({ ticket_id: ticketId }).then(setInvoices).catch(console.error);
+      setTicket(data.ticket);
+
+      // Adaptation aux états existants (tableaux)
+      if (data.devis) {
+        setQuotes([data.devis]);
+        if (data.devis.invoice) {
+          setInvoices([data.devis.invoice]);
+        } else {
+          setInvoices([]);
+        }
+      } else {
+        setQuotes([]);
+        setInvoices([]);
+      }
+
+    } catch (e: any) {
+      console.error("[AdminTicketDetail] erreur:", e?.response?.data ?? e);
+      setError(e?.response?.data?.message ?? "Impossible de charger les infos de ce ticket.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -291,16 +305,19 @@ export default function AdminTicketDetailPage() {
     { name: "description", label: "Commentaire/Description", type: "rich-text", gridSpan: 2 },
   ];
 
-  const attachments = (ticket?.attachments ?? []) as any[];
-  const photos = attachments.filter(a => a.file_type === "photo" || /\.(jpg|jpeg|png|gif|webp)$/i.test(a.path ?? a.file_path ?? ""));
-  const docs = attachments.filter(a => a.file_type === "document" || /\.pdf$/i.test(a.path ?? a.file_path ?? ""));
   const reports = (ticket?.reports ?? []) as any[];
+  const ticketAttachments = (ticket?.attachments ?? []) as any[];
+  const reportsAttachments = reports.flatMap(r => r.attachments ?? []);
+  const allAttachments = [...ticketAttachments, ...reportsAttachments];
+
+  const photos = allAttachments.filter(a => a.file_type === "photo" || /\.(jpg|jpeg|png|gif|webp)$/i.test(a.path ?? a.file_path ?? ""));
+  const docs = allAttachments.filter(a => a.file_type === "document" || /\.pdf$/i.test(a.path ?? a.file_path ?? ""));
   const timeline = ticket ? buildTimeline(ticket) : [];
 
   const kpis = [
     { label: "Priorité", value: PRIORITY_LABEL[ticket?.priority ?? ""] ?? ticket?.priority ?? "—", delta: "", trend: "up" as const },
     { label: "Prestataire", value: (ticket?.provider as any)?.company_name ?? (ticket?.provider as any)?.name ?? "—", delta: "", trend: "up" as const },
-    { label: "Pièces jointes", value: attachments.length, delta: "", trend: "up" as const },
+    { label: "Pièces jointes", value: allAttachments.length, delta: "", trend: "up" as const },
     { label: "Rapports", value: reports.length, delta: "", trend: "up" as const },
   ];
 
@@ -408,28 +425,7 @@ export default function AdminTicketDetailPage() {
 
               {/* Asset Snapshot & KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div className="md:col-span-1">
-                  {(() => {
-                    const asset = ticket.asset;
-                    const images = (asset as any)?.images ?? (asset as any)?.attachments ?? (asset as any)?.media ?? [];
-                    const url = images.length > 0 ? getUrl(images[0]) : null;
-                    return (
-                      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-full min-h-[140px] flex items-center justify-center relative bg-slate-50">
-                        {url ? (
-                          <img src={url} alt="Patrimoine" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="flex flex-col items-center gap-2 text-slate-300">
-                            <Wrench size={40} strokeWidth={1} />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Pas d'image</span>
-                          </div>
-                        )}
-                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg border border-slate-100 text-[10px] font-black uppercase text-slate-600 shadow-sm">
-                          Patrimoine
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
+
                 <div className="md:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-5">
                   {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
                 </div>

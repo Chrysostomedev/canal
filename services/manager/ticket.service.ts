@@ -129,6 +129,11 @@ export const TicketService = {
    */
   async rateTicket(id: number, payload: { rating: number; comment?: string }): Promise<any> {
     const response = await axios.post(`/manager/ticket/${id}/rate`, payload);
-    return response.data;
-  }
+    return response.data.data;
+  },
+
+  async getTicketInfo(id: number): Promise<any> {
+    const response = await axios.get(`/manager/ticket/info/${id}`);
+    return response.data.data;
+  },
 };

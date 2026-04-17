@@ -214,4 +214,9 @@ export const providerTicketService = {
     const response = await axiosInstance.put(`${BASE}/${id}`, { status });
     return response.data?.data ?? response.data;
   },
+
+  getTicketInfo: async (id: number): Promise<any> => {
+    const response = await axiosInstance.get(`${BASE}/info/${id}`);
+    return response.data?.data ?? response.data;
+  },
 };

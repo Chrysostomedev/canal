@@ -171,4 +171,9 @@ export const TicketService = {
     const response = await axios.post(`/admin/ticket/${id}/rate`, payload);
     return response.data.data;
   },
+
+  async getTicketInfo(id: number): Promise<any> {
+    const response = await axios.get(`/admin/ticket/info/${id}`);
+    return response.data.data;
+  },
 };

@@ -100,7 +100,7 @@ export default function AdminReportDetailPage() {
             >
               <ArrowLeft size={16} /> Retour aux entretiens
             </button>
-            
+
             <div className="flex items-center gap-3">
               <span className={`px-4 py-2 rounded-2xl border text-xs font-black uppercase tracking-widest ${STATUS_STYLES[report.status || "pending"] || "bg-slate-50 text-slate-600"}`}>
                 {STATUS_LABELS[report.status || "pending"] || report.status}
@@ -156,7 +156,7 @@ export default function AdminReportDetailPage() {
                 <PenSquare size={18} className="text-slate-300 hover:text-slate-900 cursor-pointer transition" />
               </div>
               <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium">
-                <div dangerouslySetInnerHTML={{ __html: report.description || "Aucune observation rédigée." }} />
+                <div dangerouslySetInnerHTML={{ __html: report.findings || "Aucune observation rédigée." }} />
               </div>
             </div>
 
