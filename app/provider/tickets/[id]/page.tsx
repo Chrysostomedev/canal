@@ -118,11 +118,16 @@ export default function ProviderTicketDetailPage() {
     if (!ticketId) return;
     setLoading(true); setError("");
     try {
-      const t = await providerTicketService.getTicketById(ticketId);
-      console.log("[ProviderTicketDetail] ticket:", t);
-      console.log("[ProviderTicketDetail] attachments:", (t as any)?.attachments);
-      console.log("[ProviderTicketDetail] reports:", (t as any)?.reports);
-      setTicket(t);
+      const data = await providerTicketService.getTicketInfo(ticketId);
+      console.log("[ProviderTicketDetail] unified data:", data);
+      
+      const fullyLoadedTicket = {
+        ...(data.ticket ?? {}),
+        attachments: data.ticket_attachments ?? [],
+        reports: data.rapport ? [{ ...(data.rapport ?? {}), attachments: data.rapport_attachments ?? [] }] : []
+      };
+
+      setTicket(fullyLoadedTicket as any);
     } catch (e: any) {
       console.error("[ProviderTicketDetail] erreur:", e?.response?.data ?? e);
       setError(e?.response?.data?.message ?? "Impossible de charger ce ticket.");
