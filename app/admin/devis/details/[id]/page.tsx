@@ -477,11 +477,16 @@ export default function DevisDetailsPage() {
   const siteName = quote?.site?.nom ?? quote?.site?.name ?? "-";
   const ticketRef = quote?.ticket?.reference ?? quote?.ticket?.title ?? `Ticket #${quote?.ticket_id}`;
 
-  // Pièces jointes PDF
-  const pdfFiles = (quote?.pdf_paths ?? []).map((path) => ({
-    name: path.split("/").pop() ?? "devis.pdf",
-    url: resolveUrl(path),
-  }));
+  // Pièces jointes PDF — priorité à attachments (avec url pré-construite), fallback sur pdf_paths
+  const pdfFiles = (quote?.attachments ?? []).length > 0
+    ? (quote!.attachments!).map((a) => ({
+        name: a.url.split("/").pop() ?? "document.pdf",
+        url: a.url,
+      }))
+    : (quote?.pdf_paths ?? []).map((path) => ({
+        name: path.split("/").pop() ?? "devis.pdf",
+        url: QuoteService.getPdfUrl(path),
+      }));
 
   // Historique
   const history = quote?.history ?? [];

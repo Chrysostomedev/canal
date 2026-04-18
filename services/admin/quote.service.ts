@@ -102,8 +102,9 @@ export interface Quote {
   site?: QuoteSite | null;
   history?: QuoteHistory[];     // Historique des actions
   
-  // PDF paths si disponibles
+  // Pièces jointes PDF (uploadées par le prestataire)
   pdf_paths?: string[];
+  attachments?: { id: number; file_path?: string; url: string; file_type?: string }[];
 }
 
 export interface QuoteStats {

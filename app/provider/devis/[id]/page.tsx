@@ -179,9 +179,9 @@ export default function ProviderQuoteDetailPage() {
   const totalHT   = quote?.amount_ht    ?? 0;
   const taxAmount = quote?.tax_amount   ?? 0;
   const totalTTC  = quote?.amount_ttc   ?? 0;
-  const pdfFiles  = (quote?.pdf_paths ?? []).map(p => ({
-    name: p.split("/").pop() ?? "devis.pdf",
-    url:  getPdfUrl(p),
+  const pdfFiles  = (quote?.attachments ?? []).map(a => ({
+    name: a.url.split("/").pop() ?? "document",
+    url:  a.url,
   }));
   const history = quote?.history ?? [];
 

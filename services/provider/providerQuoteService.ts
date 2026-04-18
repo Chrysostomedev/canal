@@ -49,6 +49,7 @@ export interface Quote {
   site?: { id: number; nom?: string; name?: string };
   site_id?: number;
   pdf_paths?: string[];
+  attachments?: { id: number; file_path?: string; url: string; file_type?: string }[];
   history?: QuoteHistory[];
   created_at?: string;
   updated_at?: string;
@@ -179,7 +180,7 @@ export const providerQuoteService = {
       });
     }
 
-    if (payload.pdf_file) form.append("quote_pdf", payload.pdf_file);
+    if (payload.pdf_file) form.append("attachments[0]", payload.pdf_file);
 
     const res = await axiosInstance.post(BASE, form, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -203,7 +204,7 @@ export const providerQuoteService = {
       });
     }
 
-    if (payload.pdf_file) form.append("quote_pdf", payload.pdf_file);
+    if (payload.pdf_file) form.append("attachments[0]", payload.pdf_file);
 
     const res = await axiosInstance.post(`${BASE}/${id}`, form, {
       headers: { "Content-Type": "multipart/form-data" },

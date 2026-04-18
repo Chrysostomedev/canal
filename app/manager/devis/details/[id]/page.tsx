@@ -13,7 +13,10 @@ import {
   AlertCircle,
   ThumbsUp,
   ThumbsDown,
-  Info
+  Info,
+  Eye,
+  Download,
+  X,
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
@@ -80,6 +83,7 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -300,6 +304,64 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="space-y-8">
+            {/* DOCUMENTS (pièces jointes PDF) */}
+            {(() => {
+              const pdfFiles = (quote.attachments ?? []).length > 0
+                ? quote.attachments!.map((a) => ({
+                  name: a.url.split("/").pop() ?? "document.pdf",
+                  url: a.url,
+                }))
+                : (quote.pdf_paths ?? []).map((path) => ({
+                  name: path.split("/").pop() ?? "devis.pdf",
+                  url: path,
+                }));
+
+              return (
+                <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">Documents</h3>
+                  {pdfFiles.length > 0 ? (
+                    <div className="space-y-3">
+                      {pdfFiles.map((file, i) => (
+                        <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                              <FileText size={16} className="text-red-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate">{file.name}</p>
+                              <p className="text-[10px] text-slate-400">PDF</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setPdfPreview({ url: file.url, name: file.name })}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-white transition"
+                            >
+                              <Eye size={13} /> Aperçu
+                            </button>
+                            <a
+                              href={file.url}
+                              download
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition"
+                            >
+                              <Download size={13} /> Télécharger
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-slate-200 rounded-xl px-4 py-5 flex items-center gap-3 text-slate-400">
+                      <FileText size={16} className="shrink-0" />
+                      <p className="text-sm font-medium">Aucun document attaché</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* HISTORIQUE */}
             <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">Historique de validation</h3>
@@ -340,6 +402,44 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </main>
+
+      {/* PDF fullscreen preview */}
+      {pdfPreview && (
+        <div className="fixed inset-0 z-[300] flex flex-col bg-black/95">
+          <div className="flex items-center justify-between px-6 py-4 bg-black border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center">
+                <FileText size={14} className="text-white" />
+              </div>
+              <p className="text-white font-bold text-sm">{pdfPreview.name}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <a
+                href={pdfPreview.url}
+                download
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition"
+              >
+                <Download size={14} /> Télécharger
+              </a>
+              <button
+                onClick={() => setPdfPreview(null)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+              >
+                <X size={18} className="text-white" />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1">
+            <iframe
+              src={`${pdfPreview.url}#toolbar=0`}
+              className="w-full h-full border-0"
+              title={pdfPreview.name}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

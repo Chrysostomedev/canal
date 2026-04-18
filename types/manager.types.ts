@@ -188,6 +188,8 @@ export interface Quote {
   };
   items: QuoteItem[];
   history?: QuoteHistory[];
+  pdf_paths?: string[];
+  attachments?: { id: number; file_path?: string; url: string; file_type?: string }[];
 }
 
 export interface CreateQuotePayload {

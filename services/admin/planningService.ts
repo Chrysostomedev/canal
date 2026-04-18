@@ -36,12 +36,12 @@ export interface PlanningSite {
 
 export interface Planning {
   id: number;
-  codification: string;
+  codification?: string;
   date_debut: string;
   date_fin: string;
   description: string | null;
-  responsable_name: string;
-  responsable_phone: string | null;
+  responsable_name?: string;
+  responsable_phone?: string | null;
   status: PlanningStatus;
   provider_id: number;
   site_id: number;
