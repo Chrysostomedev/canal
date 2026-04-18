@@ -261,11 +261,11 @@ export default function ManagerTicketDetailPage() {
                                             ))}
                                         </div>
                                         {/* Action manager : valider rapport si RAPPORTÉ */}
-                                        {pendingReport && (
+                                        {/*{pendingReport && (
                                             <button onClick={() => setValidateReportId(pendingReport.id)} className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition">
                                                 <CheckCircle2 size={14} /> Valider le rapport
                                             </button>
-                                        )}
+                                        )}*/}
                                     </div>
                                 </div>
                             </div>
@@ -416,8 +416,8 @@ export default function ManagerTicketDetailPage() {
                                                             <div className="flex items-center gap-3">
                                                                 <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0"><FileText size={16} className="text-red-500" /></div>
                                                                 <div className="min-w-0 flex-1">
-                                                                  <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
-                                                                  <p className="text-[10px] text-slate-400">PDF</p>
+                                                                    <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
+                                                                    <p className="text-[10px] text-slate-400">PDF</p>
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-2">
