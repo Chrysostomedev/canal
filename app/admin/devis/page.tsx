@@ -46,14 +46,14 @@ const formatDate = (iso?: string): string => {
 // ══════════════════════════════════════════════
 
 const STATUS_STYLES: Record<string, string> = {
-  pending:  "border-amber-200 bg-amber-50 text-amber-600",
+  pending: "border-amber-200 bg-amber-50 text-amber-600",
   approved: "border-emerald-200 bg-emerald-50 text-emerald-600",
   rejected: "border-rose-200 bg-rose-50 text-rose-600",
   revision: "border-sky-200 bg-sky-50 text-sky-600",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending:  "En attente",
+  pending: "En attente",
   approved: "Approuvé",
   rejected: "Rejeté",
   revision: "En révision",
@@ -118,11 +118,11 @@ function FilterDropdown({
   if (!isOpen) return null;
 
   const options = [
-    { val: "",         label: "Tous"         },
-    { val: "pending",  label: "En attente"   },
-    { val: "approved", label: "Approuvé"     },
-    { val: "rejected", label: "Rejeté"       },
-    { val: "revision", label: "En révision"  },
+    { val: "", label: "Tous" },
+    { val: "pending", label: "En attente" },
+    { val: "approved", label: "Approuvé" },
+    { val: "rejected", label: "Rejeté" },
+    { val: "revision", label: "En révision" },
   ];
 
   return (
@@ -140,11 +140,10 @@ function FilterDropdown({
             <button
               key={val}
               onClick={() => setLocal({ ...local, status: val || undefined })}
-              className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
-                (local.status ?? "") === val
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-              }`}
+              className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${(local.status ?? "") === val
+                ? "bg-slate-900 text-white"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                }`}
             >
               {label}
             </button>
@@ -178,11 +177,11 @@ function QuoteSidePanel({
   onApprove: (id: number) => void;
   onReject: (id: number, reason: string) => void;
 }) {
-  const [rejectMode,    setRejectMode]    = useState(false);
-  const [rejectReason,  setRejectReason]  = useState("");
-  const [pdfPreview,    setPdfPreview]    = useState<{ url: string; name: string } | null>(null);
-  const [approveModal,  setApproveModal]  = useState(false);
-  const [approving,     setApproving]     = useState(false);
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
+  const [approveModal, setApproveModal] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   useEffect(() => {
     setRejectMode(false);
@@ -193,21 +192,21 @@ function QuoteSidePanel({
 
   if (!quote) return null;
 
-  const isPending  = quote.status === "pending";
+  const isPending = quote.status === "pending";
   const isApproved = quote.status === "approved";
   const isRejected = quote.status === "rejected";
   const isRevision = quote.status === "revision";
 
-  const totalHT   = quote.amount_ht ?? quote.items?.reduce((s, i) => s + i.quantity * i.unit_price, 0) ?? 0;
+  const totalHT = quote.amount_ht ?? quote.items?.reduce((s, i) => s + i.quantity * i.unit_price, 0) ?? 0;
   const taxAmount = quote.tax_amount ?? totalHT * 0.18;
-  const totalTTC  = quote.amount_ttc ?? totalHT + taxAmount;
+  const totalTTC = quote.amount_ttc ?? totalHT + taxAmount;
 
   const providerName = quote.provider?.company_name ?? quote.provider?.name ?? "-";
-  const siteName     = quote.site?.nom ?? quote.site?.name ?? "-";
+  const siteName = quote.site?.nom ?? quote.site?.name ?? "-";
 
   // Manager du site
-  const siteManager  = quote.site?.manager;
-  const managerName  = siteManager
+  const siteManager = quote.site?.manager;
+  const managerName = siteManager
     ? `${siteManager.first_name ?? ""} ${siteManager.last_name ?? ""}`.trim() || "Manager"
     : null;
   const managerPhone = siteManager?.phone_number ?? siteManager?.phone ?? null;
@@ -223,7 +222,7 @@ function QuoteSidePanel({
   const pdfFiles: Array<{ name: string; url: string; size?: string }> =
     (quote as any).pdf_paths?.map((p: string) => ({
       name: p.split("/").pop() ?? "document.pdf",
-      url:  resolveStorageUrl(p),
+      url: resolveStorageUrl(p),
     })) ?? [];
 
   const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
@@ -267,11 +266,11 @@ function QuoteSidePanel({
                   </div>
                 ),
               },
-              { label: "Référence",   value: quote.reference },
+              { label: "Référence", value: quote.reference },
               { label: "Prestataire", value: providerName },
-              { label: "Date",        value: formatDate(quote.created_at) },
-              { label: "Site",        value: siteName },
-              { label: "Montant HT",  value: formatMontant(totalHT) },
+              { label: "Date", value: formatDate(quote.created_at) },
+              { label: "Site", value: siteName },
+              { label: "Montant HT", value: formatMontant(totalHT) },
             ].map((f, i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                 <p className="text-xs text-slate-400 font-medium">{f.label}</p>
@@ -364,7 +363,7 @@ function QuoteSidePanel({
           {/* Items du devis */}
           {quote.items && quote.items.length > 0 && (
             <div>
-              <p className="text-xs text-slate-400 font-medium mb-3">Articles ({quote.items.length})</p>
+              <p className="text-xs text-slate-400 font-medium mb-3">Factures ({quote.items.length})</p>
               <div className="border border-slate-100 rounded-2xl overflow-hidden">
                 <table className="w-full">
                   <thead>
@@ -575,14 +574,14 @@ export default function DevisPage() {
 
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [filtersOpen,   setFiltersOpen]   = useState(false);
-  const [filters,       setFilters]       = useState<{ status?: string }>({});
-  const [currentPage,   setCurrentPage]   = useState(1);
-  const [flashMessage,  setFlashMessage]  = useState<{ type: "success"|"error"; message: string } | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<{ status?: string }>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [flashMessage, setFlashMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
 
   // ── Données pour le formulaire de création ─────────────────────────────────
-  const [tickets,   setTickets]   = useState<{ label: string; value: string; site_id?: number; provider_id?: number }[]>([]);
+  const [tickets, setTickets] = useState<{ label: string; value: string; site_id?: number; provider_id?: number }[]>([]);
   const [providers, setProviders] = useState<{ label: string; value: string }[]>([]);
   const [formInitialValues, setFormInitialValues] = useState<Record<string, any>>({});
 
@@ -592,12 +591,12 @@ export default function DevisPage() {
       const d = res.data?.data ?? res.data;
       const items: any[] = d?.items ?? d?.data ?? (Array.isArray(d) ? d : []);
       setTickets(items.map((t: any) => ({
-        label:       `${t.code_ticket ?? `#${t.id}`} — ${t.subject ?? t.site?.nom ?? ""}`.trim(),
-        value:       String(t.id),
-        site_id:     t.site_id,
+        label: `${t.code_ticket ?? `#${t.id}`} — ${t.subject ?? t.site?.nom ?? ""}`.trim(),
+        value: String(t.id),
+        site_id: t.site_id,
         provider_id: t.provider_id,
       })));
-    }).catch(() => {});
+    }).catch(() => { });
 
     axiosInstance.get("/admin/providers", { params: { per_page: 200 } }).then(res => {
       const d = res.data?.data ?? res.data;
@@ -606,7 +605,7 @@ export default function DevisPage() {
         label: (p.company_name ?? `${p.user?.first_name ?? ""} ${p.user?.last_name ?? ""}`.trim()) || `Prestataire #${p.id}`,
         value: String(p.id),
       })));
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const PER_PAGE = 10;
@@ -628,13 +627,13 @@ export default function DevisPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const showFlash = (type: "success"|"error", message: string) => setFlashMessage({ type, message });
+  const showFlash = (type: "success" | "error", message: string) => setFlashMessage({ type, message });
 
   const applyFilters = (f: { status?: string }) => { setFilters(f); setCurrentPage(1); };
 
-  const filtered    = quotes.filter(q => !filters.status || q.status === filters.status);
-  const totalPages  = Math.ceil(filtered.length / PER_PAGE);
-  const paginated   = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const filtered = quotes.filter(q => !filters.status || q.status === filters.status);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
   const activeCount = Object.values(filters).filter(Boolean).length;
 
   const handleApprove = async (id: number) => {
@@ -683,24 +682,24 @@ export default function DevisPage() {
     try {
       const dataToExport = filtered.length > 0 ? filtered : quotes;
       const rows = dataToExport.map(q => ({
-        reference:   q.reference,
-        ticket:      q.ticket?.reference ?? q.ticket?.title ?? `#${q.ticket_id}`,
+        reference: q.reference,
+        ticket: q.ticket?.reference ?? q.ticket?.title ?? `#${q.ticket_id}`,
         prestataire: q.provider?.company_name ?? q.provider?.name ?? "-",
-        site:        q.site?.nom ?? q.site?.name ?? "-",
-        montant_ht:  q.amount_ht  ?? 0,
+        site: q.site?.nom ?? q.site?.name ?? "-",
+        montant_ht: q.amount_ht ?? 0,
         montant_ttc: q.amount_ttc ?? 0,
-        statut:      { pending: "En attente", approved: "Approuvé", rejected: "Rejeté", revision: "En révision" }[q.status] ?? q.status,
-        date:        q.created_at ? new Date(q.created_at).toLocaleDateString("fr-FR") : "-",
+        statut: { pending: "En attente", approved: "Approuvé", rejected: "Rejeté", revision: "En révision" }[q.status] ?? q.status,
+        date: q.created_at ? new Date(q.created_at).toLocaleDateString("fr-FR") : "-",
       }));
       exportToXlsx(rows, [
-        { header: "Référence",    key: "reference",   width: 18 },
-        { header: "Ticket",       key: "ticket",      width: 20 },
-        { header: "Prestataire",  key: "prestataire", width: 24 },
-        { header: "Site",         key: "site",        width: 20 },
-        { header: "Montant HT",   key: "montant_ht",  width: 16 },
-        { header: "Montant TTC",  key: "montant_ttc", width: 16 },
-        { header: "Statut",       key: "statut",      width: 14 },
-        { header: "Date",         key: "date",        width: 16 },
+        { header: "Référence", key: "reference", width: 18 },
+        { header: "Ticket", key: "ticket", width: 20 },
+        { header: "Prestataire", key: "prestataire", width: 24 },
+        { header: "Site", key: "site", width: 20 },
+        { header: "Montant HT", key: "montant_ht", width: 16 },
+        { header: "Montant TTC", key: "montant_ttc", width: 16 },
+        { header: "Statut", key: "statut", width: 14 },
+        { header: "Date", key: "date", width: 16 },
       ], { filename: "devis", sheetName: "Devis", title: "Export Devis - CANAL+" });
       showFlash("success", "Export téléchargé avec succès.");
     } catch {
@@ -711,10 +710,10 @@ export default function DevisPage() {
   };
 
   const kpis = [
-    { label: "Total des devis",   value: statsLoading ? 0 : (stats?.total ?? 0),    delta: "+3%",  trend: "up" as const },
-    { label: "Devis en attente",  value: statsLoading ? 0 : (stats?.pending ?? 0),  delta: "+0%",  trend: "up" as const },
-    { label: "Devis approuvés",   value: statsLoading ? 0 : (stats?.approved ?? 0), delta: "+15%", trend: "up" as const },
-    { label: "Montant approuvé",  value: statsLoading ? 0 : (stats?.total_approved_amount ?? 0), delta: "+20%", trend: "up" as const, isCurrency: true },
+    { label: "Total des devis", value: statsLoading ? 0 : (stats?.total ?? 0), delta: "+3%", trend: "up" as const },
+    { label: "Devis en attente", value: statsLoading ? 0 : (stats?.pending ?? 0), delta: "+0%", trend: "up" as const },
+    { label: "Devis approuvés", value: statsLoading ? 0 : (stats?.approved ?? 0), delta: "+15%", trend: "up" as const },
+    { label: "Montant approuvé", value: statsLoading ? 0 : (stats?.total_approved_amount ?? 0), delta: "+20%", trend: "up" as const, isCurrency: true },
   ];
 
   // ── Champs formulaire création ─────────────────────────────────────────────
@@ -736,12 +735,12 @@ export default function DevisPage() {
     {
       name: "site_id",
       label: "Site",
-      type: "text", 
+      type: "text",
       required: false,
       disabled: true,
       placeholder: "Sélectionnez un ticket",
     },
-    
+
     {
       name: "amount_ht",
       label: "Montant HT (FCFA)",
@@ -750,11 +749,11 @@ export default function DevisPage() {
       placeholder: "Ex: 150000",
     },
     {
-      name: "amount_ht",
-      label: "Montant TVA",
+      name: "tax_rate",
+      label: "Taux TVA (%)",
       type: "number",
       required: false,
-      placeholder: "Ex: 150000",
+      placeholder: "Défaut: 18",
     },
     {
       name: "description",
@@ -764,6 +763,13 @@ export default function DevisPage() {
       placeholder: "Décrivez les prestations à réaliser...",
       gridSpan: 2,
     },
+    {
+      name: "attachments",
+      label: "Pièces jointes (PDF & Photos)",
+      type: "pdf-upload",
+      required: false,
+      gridSpan: 2,
+    } as any,
   ];
 
   // Quand le ticket change → auto-remplir site et prestataire
@@ -773,8 +779,8 @@ export default function DevisPage() {
       if (ticket) {
         setFormInitialValues(prev => ({
           ...prev,
-          ticket_id:   value,
-          site_id:     ticket.site_id ? String(ticket.site_id) : "",
+          ticket_id: value,
+          site_id: ticket.site_id ? String(ticket.site_id) : "",
           provider_id: ticket.provider_id ? String(ticket.provider_id) : prev.provider_id ?? "",
         }));
       }
@@ -795,15 +801,17 @@ export default function DevisPage() {
       }
 
       await QuoteService.createQuote({
-        ticket_id:   Number(formData.ticket_id),
+        ticket_id: Number(formData.ticket_id),
         provider_id: Number(formData.provider_id),
-        site_id:     siteId,
+        site_id: siteId,
         description: formData.description,
+        tax_rate: formData.tax_rate ? Number(formData.tax_rate) : 18,
+        attachments: formData.attachments as File[] | undefined,
         items: [
           {
             designation: "Prestation générale",
-            quantity:    1,
-            unit_price:  Number(formData.amount_ht),
+            quantity: 1,
+            unit_price: Number(formData.amount_ht),
           },
         ],
       });
@@ -816,17 +824,17 @@ export default function DevisPage() {
     }
   };
 
-  
+
   const columns: ColumnConfig<Quote>[] = [
-    { header: "Référence",   key: "reference",  render: (_: any, row: Quote) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
+    { header: "Référence", key: "reference", render: (_: any, row: Quote) => <span className="font-black text-slate-900 text-sm">{row.reference}</span> },
     // { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `${row.ticket_code_ticket}` },
-    { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.company_name ?? row.provider?.name ?? "-" },
-    { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? "-" },
+    { header: "Prestataire", key: "provider", render: (_: any, row: Quote) => row.provider?.company_name ?? row.provider?.name ?? "-" },
+    { header: "Site", key: "site", render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? "-" },
     { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
-    { header: "Date",        key: "created_at", render: (_: any, row: Quote) => formatDate(row.created_at) },
-    { header: "Statut",      key: "status",     render: (_: any, row: Quote) => <StatusBadge status={row.status} /> },
-   
-    
+    { header: "Date", key: "created_at", render: (_: any, row: Quote) => formatDate(row.created_at) },
+    { header: "Statut", key: "status", render: (_: any, row: Quote) => <StatusBadge status={row.status} /> },
+
+
     // Colonne Actions APRÈS :
     {
       header: "Actions", key: "actions",
@@ -837,7 +845,7 @@ export default function DevisPage() {
             className="flex items-center gap-2 font-bold text-slate-800 hover:text-gray-500 transition">
             <Eye size={18} />
           </button> */}
-          
+
           {/* Redirection vers page détails */}
           <Link href={`/admin/devis/details/${row.id}`}
             className="group p-2 rounded-xl bg-white transition flex items-center justify-center">
@@ -860,14 +868,13 @@ export default function DevisPage() {
           </div>
 
           <div className="shrink-0 flex justify-end items-center gap-3">
-          
+
             {/* Filtrer */}
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setFiltersOpen(!filtersOpen)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${
-                  filtersOpen || activeCount > 0 ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold transition ${filtersOpen || activeCount > 0 ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
               >
                 <Filter size={16} /> Filtrer par
                 {activeCount > 0 && <span className="ml-1 bg-white text-slate-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">{activeCount}</span>}
@@ -875,7 +882,7 @@ export default function DevisPage() {
               <FilterDropdown isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} onApply={applyFilters} />
             </div>
 
-              {/* Importer
+            {/* Importer
               <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold cursor-pointer hover:bg-slate-50 transition">
               <Download size={16} /> Importer
               <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
@@ -892,15 +899,15 @@ export default function DevisPage() {
                 : <Upload size={16} />}
               Exporter
             </button>
-            
-  {/* ── Ajouter ──────────────────────────────────────────── */}
-  <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition-all"
-              >
-                <PlusCircle size={14} />
-                Ajouter
-              </button>
+
+            {/* ── Ajouter ──────────────────────────────────────────── */}
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition-all"
+            >
+              <PlusCircle size={14} />
+              Ajouter
+            </button>
           </div>
 
           {filters.status && (
@@ -914,13 +921,13 @@ export default function DevisPage() {
           )}
 
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <DataTable title="Liste des devis" columns={columns} data={isLoading ? [] : paginated} onViewAll={() => {}} />
+            <DataTable title="Liste des devis" columns={columns} data={isLoading ? [] : paginated} onViewAll={() => { }} />
             <div className="p-6 border-t border-slate-50 flex justify-end bg-slate-50/30">
               <Paginate currentPage={currentPage} totalPages={totalPages || 1} onPageChange={setCurrentPage} />
             </div>
           </div>
-  {/* ── Modal création ─────────────────────────────────────────── */}
-  <ReusableForm
+          {/* ── Modal création ─────────────────────────────────────────── */}
+          <ReusableForm
             isOpen={isCreateModalOpen}
             onClose={() => { setIsCreateModalOpen(false); setFormInitialValues({}); }}
             title="Ajouter un devis"
@@ -939,7 +946,7 @@ export default function DevisPage() {
             onReject={handleReject}
           />
 
-        
+
         </main>
       </div>
     </>

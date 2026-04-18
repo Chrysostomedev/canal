@@ -12,6 +12,8 @@ import {
   Calendar, User, DollarSign, AlertCircle,
 } from "lucide-react";
 
+import { resolveUrl } from "@/components/AttachmentViewer";
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ACTION MODAL (Inlined to avoid build errors)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -302,7 +304,7 @@ function RelatedQuotesList({ quotes, currentQuoteId }: RelatedQuotesListProps) {
   return (
     <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
       <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
-        Devis liés au ticket ({quotes.length})
+        Autres devis  ({quotes.length})
       </h3>
       <div className="space-y-3">
         {quotes.map((quote) => {
@@ -477,11 +479,28 @@ export default function DevisDetailsPage() {
   const siteName = quote?.site?.nom ?? quote?.site?.name ?? "-";
   const ticketRef = quote?.ticket?.reference ?? quote?.ticket?.title ?? `Ticket #${quote?.ticket_id}`;
 
-  // Pièces jointes PDF
-  const pdfFiles = (quote?.pdf_paths ?? []).map((path) => ({
-    name: path.split("/").pop() ?? "devis.pdf",
-    url: resolveUrl(path),
-  }));
+  // Pièces jointes
+  const allPdfAttachments = (quote?.attachments ?? [])
+    .filter(a => a.file_type === "document")
+    .map(a => ({
+      name: a.file_path.split("/").pop() ?? "document.pdf",
+      url: resolveUrl(a.file_path),
+    }));
+
+  const pdfFiles = [
+    ...(quote?.pdf_path ? [{
+      name: quote.pdf_path.split("/").pop() ?? "devis.pdf",
+      url: resolveUrl(quote.pdf_path),
+    }] : []),
+    ...allPdfAttachments
+  ];
+
+  const photoFiles = (quote?.attachments ?? [])
+    .filter(a => a.file_type === "photo")
+    .map(a => ({
+      name: a.file_path.split("/").pop() ?? "photo.jpg",
+      url: resolveUrl(a.file_path),
+    }));
 
   // Historique
   const history = quote?.history ?? [];
@@ -764,6 +783,33 @@ export default function DevisDetailsPage() {
                   </div>
                 )}
               </div>
+
+              {/* Photos */}
+              {photoFiles.length > 0 && (
+                <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Photos</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {photoFiles.map((photo, i) => (
+                      <a
+                        key={i}
+                        href={photo.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group relative aspect-square rounded-xl overflow-hidden border border-slate-100 bg-slate-50"
+                      >
+                        <img
+                          src={photo.url}
+                          alt={photo.name}
+                          className="w-full h-full object-cover transition duration-300 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                          <Eye className="text-white" size={20} />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Devis liés au ticket */}
               <RelatedQuotesList quotes={relatedQuotes} currentQuoteId={quoteId} />

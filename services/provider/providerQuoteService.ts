@@ -48,12 +48,22 @@ export interface Quote {
   provider_id?: number;
   site?: { id: number; nom?: string; name?: string };
   site_id?: number;
-  pdf_paths?: string[];
+  pdf_path?: string | null;
+  attachments?: QuoteAttachment[];
   history?: QuoteHistory[];
   created_at?: string;
   updated_at?: string;
   approved_at?: string;
   rejected_at?: string;
+}
+
+export interface QuoteAttachment {
+  id: number;
+  quote_id: number;
+  file_path: string;
+  file_type: "document" | "photo";
+  url?: string;
+  created_at?: string;
 }
 
 export interface QuoteStats {
@@ -81,7 +91,7 @@ export interface CreateQuotePayload {
   description?: string;
   tax_rate?: number;
   items: QuoteItem[];
-  pdf_file?: File;
+  attachments?: File[];
 }
 
 // ─── Statuts — valeurs EXACTES de la BD ──────────────────────────────────────
@@ -179,7 +189,11 @@ export const providerQuoteService = {
       });
     }
 
-    if (payload.pdf_file) form.append("quote_pdf", payload.pdf_file);
+    if (payload.attachments) {
+      payload.attachments.forEach((file) => {
+        form.append("attachments[]", file);
+      });
+    }
 
     const res = await axiosInstance.post(BASE, form, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -203,7 +217,11 @@ export const providerQuoteService = {
       });
     }
 
-    if (payload.pdf_file) form.append("quote_pdf", payload.pdf_file);
+    if (payload.attachments) {
+      payload.attachments.forEach((file) => {
+        form.append("attachments[]", file);
+      });
+    }
 
     const res = await axiosInstance.post(`${BASE}/${id}`, form, {
       headers: { "Content-Type": "multipart/form-data" },

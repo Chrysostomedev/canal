@@ -41,7 +41,7 @@ const quoteFields: FieldConfig[] = [
   { name: "amount_ht", label: "Montant HT ", type: "number", placeholder: "Ex: 25000", required: true },
   { name: "tax_rate", label: "TVA (%)", type: "number", placeholder: "18", required: true },
   { name: "description", label: "Description détaillée / Justification", type: "rich-text", required: true, gridSpan: 2 },
-  { name: "quote_pdf", label: "Devis PDF ", type: "pdf-upload", maxPDFs: 1, gridSpan: 2 } as any,
+  { name: "attachments", label: "Pièces jointes (PDF & Photos)", type: "pdf-upload", maxPDFs: 10, gridSpan: 2 } as any,
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ export default function ProviderTicketDetailPage() {
         amount_ht: parseFloat(formData.amount_ht),
         tax_rate: parseFloat(formData.tax_rate) || 18,
         description: formData.description,
-        pdf_file: formData.quote_pdf?.[0],
+        attachments: formData.attachments as File[] | undefined,
         items: [{ designation: "Prestation", quantity: 1, unit_price: parseFloat(formData.amount_ht) }],
       });
       setIsQuoteOpen(false);

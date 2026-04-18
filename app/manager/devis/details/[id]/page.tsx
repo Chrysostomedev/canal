@@ -13,8 +13,13 @@ import {
   AlertCircle,
   ThumbsUp,
   ThumbsDown,
-  Info
+  Info,
+  Eye,
+  Download,
+  X
 } from "lucide-react";
+
+import { resolveUrl } from "@/components/AttachmentViewer";
 
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
@@ -68,6 +73,42 @@ const formatDate = (iso?: string | null) => {
 };
 
 // ─────────────────────────────────────────
+// PDF PREVIEW MODAL
+// ─────────────────────────────────────────
+
+function PdfPreviewModal({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[300] flex flex-col bg-black/95">
+      <div className="flex items-center justify-between px-6 py-4 bg-black border-b border-white/10 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center">
+            <FileText size={14} className="text-white" />
+          </div>
+          <p className="text-white font-bold text-sm">{name}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <a
+            href={url}
+            download
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition"
+          >
+            <Download size={14} /> Télécharger
+          </a>
+          <button onClick={onClose} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
+            <X size={18} className="text-white" />
+          </button>
+        </div>
+      </div>
+      <div className="flex-1">
+        <iframe src={`${url}#toolbar=0`} className="w-full h-full border-0" title={name} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────
 
@@ -80,6 +121,7 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -166,6 +208,29 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
   ];
 
   const canAction = quote.status === "pending" || quote.status === "en attente";
+
+  // ─── Pièces jointes ────────────────────────────────────────────────────────
+  const allPdfAttachments = (quote?.attachments ?? [])
+    .filter(a => a.file_type === "document")
+    .map(a => ({
+      name: a.file_path.split("/").pop() ?? "document.pdf",
+      url: resolveUrl(a.file_path),
+    }));
+
+  const pdfFiles = [
+    ...(quote?.pdf_path ? [{
+      name: quote.pdf_path.split("/").pop() ?? "devis.pdf",
+      url: resolveUrl(quote.pdf_path),
+    }] : []),
+    ...allPdfAttachments
+  ];
+
+  const photoFiles = (quote?.attachments ?? [])
+    .filter(a => a.file_type === "photo")
+    .map(a => ({
+      name: a.file_path.split("/").pop() ?? "photo.jpg",
+      url: resolveUrl(a.file_path),
+    }));
 
   return (
     <div className="flex flex-col flex-1 min-h-screen bg-gray-50 font-sans tracking-tight">
@@ -300,6 +365,79 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="space-y-8">
+            {/* DOCUMENTS */}
+            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Documents</h3>
+              {pdfFiles.length > 0 ? (
+                <div className="space-y-3">
+                  {pdfFiles.map((file, i) => (
+                    <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                          <FileText size={16} className="text-red-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">{file.name}</p>
+                          <p className="text-[10px] text-slate-400 font-medium font-mono uppercase tracking-widest">Format PDF</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPdfPreview({ url: file.url, name: file.name })}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-white transition"
+                        >
+                          <Eye size={13} /> Aperçu
+                        </button>
+                        <a
+                          href={file.url}
+                          download
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition"
+                        >
+                          <Download size={13} /> Télécharger
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="border border-dashed border-slate-200 rounded-2xl px-4 py-8 flex flex-col items-center gap-3 text-slate-300">
+                  <FileText size={24} strokeWidth={1} />
+                  <p className="text-xs font-bold uppercase tracking-widest text-center leading-relaxed">
+                    Aucun document<br />PDF attaché
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* PHOTOS */}
+            {photoFiles.length > 0 && (
+              <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Photos</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {photoFiles.map((photo, i) => (
+                    <a
+                      key={i}
+                      href={photo.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group relative aspect-square rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm"
+                    >
+                      <img
+                        src={photo.url}
+                        alt={photo.name}
+                        className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Eye className="text-white" size={24} />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* HISTORIQUE */}
             <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">Historique de validation</h3>
@@ -340,6 +478,14 @@ export default function DevisDetailsPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </main>
+
+      {pdfPreview && (
+        <PdfPreviewModal 
+          url={pdfPreview.url} 
+          name={pdfPreview.name} 
+          onClose={() => setPdfPreview(null)} 
+        />
+      )}
     </div>
   );
 }

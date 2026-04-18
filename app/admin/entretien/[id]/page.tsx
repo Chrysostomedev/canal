@@ -6,8 +6,10 @@ import {
   ArrowLeft, CalendarDays, MapPin, User, ShieldCheck,
   Clock, FileText, CheckCircle2, AlertTriangle, Star,
   Download, Eye, Wrench, ArrowUpRight, CheckSquare,
-  FileSearch, Activity, PenSquare
+  FileSearch, Activity, PenSquare, ThumbsUp, ThumbsDown
 } from "lucide-react";
+
+import { useToast } from "@/contexts/ToastContext";
 
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
@@ -32,28 +34,151 @@ const STATUS_STYLES: Record<string, string> = {
   rejected: "bg-red-50 text-red-700 border-red-100",
 };
 
+// ─────────────────────────────────────────
+// VALIDATION MODAL
+// ─────────────────────────────────────────
+
+function ValidationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (data: { result: "RAS" | "ANOMALIE"; rating: number; comment: string }) => void;
+  loading: boolean;
+}) {
+  const [result, setResult] = useState<"RAS" | "ANOMALIE">("RAS");
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="p-10 space-y-8">
+          <div className="space-y-2 text-center">
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Validation de l'entretien</h3>
+            <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Évaluation de la prestation fournie</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setResult("RAS")}
+              className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${result === "RAS" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-100 bg-slate-50 text-slate-400"
+                }`}
+            >
+              <CheckCircle2 size={24} />
+              <span className="text-xs font-black uppercase tracking-widest">RAS / Conforme</span>
+            </button>
+            <button
+              onClick={() => setResult("ANOMALIE")}
+              className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${result === "ANOMALIE" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-100 bg-slate-50 text-slate-400"
+                }`}
+            >
+              <AlertTriangle size={24} />
+              <span className="text-xs font-black uppercase tracking-widest">Anomalies</span>
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Note de satisfaction</p>
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setRating(s)}
+                  className={`p-2 transition-transform hover:scale-125 ${s <= rating ? "text-amber-400" : "text-slate-100"}`}
+                >
+                  <Star size={32} fill={s <= rating ? "currentColor" : "none"} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">Commentaires / Observations finales</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Ex: Prestation impeccable, site libéré propre..."
+              rows={3}
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-3xl text-sm focus:ring-4 focus:ring-slate-900/5 focus:outline-none focus:border-slate-900/20 transition resize-none"
+            />
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 py-5 rounded-[2rem] bg-slate-50 text-slate-400 text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={() => onConfirm({ result, rating, comment })}
+              disabled={loading}
+              className="flex-[2] py-5 rounded-[2rem] bg-indigo-600 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <ShieldCheck size={18} />
+                  Confirmer la Validation
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminReportDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [report, setReport] = useState<InterventionReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  const loadData = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const data = await ReportService.getReport(Number(id));
+      setReport(data);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Erreur lors du chargement du rapport");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function load() {
-      if (!id) return;
-      try {
-        setLoading(true);
-        const data = await ReportService.getReport(Number(id));
-        setReport(data);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || "Erreur lors du chargement du rapport");
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    loadData();
   }, [id]);
+
+  const handleValidation = async (payload: { result: "RAS" | "ANOMALIE"; rating: number; comment: string }) => {
+    setActionLoading(true);
+    try {
+      await ReportService.validateReport(Number(id), payload);
+      toast.success("Rapport validé avec succès");
+      setIsModalOpen(false);
+      loadData();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Erreur lors de la validation");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -89,24 +214,36 @@ export default function AdminReportDetailPage() {
         <div className="space-y-4">
 
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <PageHeader
-              title={`Rapport Maintenance #${report.reference || report.id}`}
-              subtitle={`Visite préventive effectuée le ${formatDate(report.start_date)}`}
-            />
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition font-bold text-sm"
-            >
-              <ArrowLeft size={16} /> Retour aux entretiens
-            </button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col gap-6">
+              <Link
+                href="/admin/entretien"
+                className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 w-fit text-xs font-black uppercase tracking-widest"
+              >
+                <ChevronLeft size={16} /> Retour
+              </Link>
+              <PageHeader
+                title={`Maintenance #${report.reference || report.id}`}
+                subtitle={`Effectuée le ${formatDate(report.start_date)}`}
+              />
+            </div>
 
-            <div className="flex items-center gap-3">
-              <span className={`px-4 py-2 rounded-2xl border text-xs font-black uppercase tracking-widest ${STATUS_STYLES[report.status || "pending"] || "bg-slate-50 text-slate-600"}`}>
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className={`px-5 py-2.5 rounded-2xl border text-xs font-black uppercase tracking-widest ${STATUS_STYLES[report.status || "pending"] || "bg-slate-50 text-slate-600"}`}>
                 {STATUS_LABELS[report.status || "pending"] || report.status}
               </span>
-              <button className="p-3 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition shadow-sm">
-                <Download size={18} />
+
+              {report.status === "submitted" && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-6 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition flex items-center gap-2"
+                >
+                  <ThumbsUp size={16} /> Valider l'entretien
+                </button>
+              )}
+
+              <button className="p-3.5 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition">
+                <Download size={20} />
               </button>
             </div>
           </div>
@@ -132,11 +269,13 @@ export default function AdminReportDetailPage() {
                   <FileSearch size={16} className="text-blue-500" />
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-2">
+               <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-2">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Résultat</p>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-black text-emerald-600">CONFORME</p>
-                  <CheckCircle2 size={16} className="text-emerald-500" />
+                  <p className={`text-sm font-black uppercase ${report.result === 'ras' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {report.result || 'EN ATTENTE'}
+                  </p>
+                  <CheckCircle2 size={16} className={report.result === 'ras' ? 'text-emerald-500' : 'text-slate-300'} />
                 </div>
               </div>
             </div>
@@ -156,7 +295,7 @@ export default function AdminReportDetailPage() {
                 <PenSquare size={18} className="text-slate-300 hover:text-slate-900 cursor-pointer transition" />
               </div>
               <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium">
-                <div dangerouslySetInnerHTML={{ __html: report.findings || "Aucune observation rédigée." }} />
+                <div dangerouslySetInnerHTML={{ __html: report.findings || report.description || "Aucune observation rédigée." }} />
               </div>
             </div>
 
@@ -272,6 +411,13 @@ export default function AdminReportDetailPage() {
           </div>
         </div>
       </main>
+
+      <ValidationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        loading={actionLoading}
+        onConfirm={handleValidation}
+      />
     </div>
   );
 }

@@ -187,7 +187,16 @@ export interface Quote {
     status?: string;
   };
   items: QuoteItem[];
+  pdf_path?: string | null;
+  attachments?: QuoteAttachment[];
   history?: QuoteHistory[];
+}
+
+export interface QuoteAttachment {
+  id: number;
+  quote_id: number;
+  file_path: string;
+  file_type: string;
 }
 
 export interface CreateQuotePayload {

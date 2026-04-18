@@ -64,18 +64,18 @@ export interface Quote {
   provider_id: number;
   site_id: number;
   description?: string | null;
-  
+
   // Workflow statuses
   status: "pending" | "approved" | "rejected" | "revision";
-  
+
   // Approbation
   approved_by?: number | null;
   approved_at?: string | null;
-  
+
   // Rejet
   rejection_reason?: string | null;
   rejected_at?: string | null;
-  
+
   // Révision
   revision_requested_at?: string | null;
   revision_reason?: string | null;
@@ -101,9 +101,22 @@ export interface Quote {
   provider?: QuoteProvider | null;
   site?: QuoteSite | null;
   history?: QuoteHistory[];     // Historique des actions
-  
-  // PDF paths si disponibles
-  pdf_paths?: string[];
+
+  // PDF path si disponible (legacy)
+  pdf_path?: string | null;
+
+  // Nouvelle relation multi-fichiers
+  attachments?: QuoteAttachment[];
+}
+
+export interface QuoteAttachment {
+  id: number;
+  quote_id: number;
+  file_path: string;
+  file_type: "document" | "photo";
+  created_at?: string;
+  updated_at?: string;
+  url?: string;
 }
 
 export interface QuoteStats {
@@ -125,11 +138,13 @@ export interface CreateQuotePayload {
   provider_id: number;
   site_id: number;
   description?: string;
+  tax_rate?: number;
   items: Array<{
     designation: string;
     quantity: number;
     unit_price: number;
   }>;
+  attachments?: File[];           // <--- Add this
   created_by?: number;          // ID de l'utilisateur connecté (admin/super-admin)
   created_from?: "admin" | "super-admin";
 }
@@ -248,7 +263,28 @@ export const QuoteService = {
    * Seuls les admins peuvent créer des devis manuellement
    */
   async createQuote(payload: CreateQuotePayload): Promise<Quote> {
-    const res = await axiosInstance.post("/admin/quote", payload);
+    const form = new FormData();
+    form.append("ticket_id", String(payload.ticket_id));
+    form.append("provider_id", String(payload.provider_id));
+    form.append("site_id", String(payload.site_id));
+    if (payload.description) form.append("description", payload.description);
+    if (payload.tax_rate) form.append("tax_rate", String(payload.tax_rate));
+
+    payload.items.forEach((item, i) => {
+      form.append(`items[${i}][designation]`, item.designation);
+      form.append(`items[${i}][quantity]`, String(item.quantity));
+      form.append(`items[${i}][unit_price]`, String(item.unit_price));
+    });
+
+    if (payload.attachments) {
+      payload.attachments.forEach((file) => {
+        form.append("attachments[]", file);
+      });
+    }
+
+    const res = await axiosInstance.post("/admin/quote", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return normalizeQuote(res.data.data);
   },
 
