@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
@@ -113,6 +114,7 @@ export default function ProviderTicketDetailPage() {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
+  const [quotes, setQuotes] = useState<any[]>([]);
 
   const reload = async () => {
     if (!ticketId) return;
@@ -123,11 +125,20 @@ export default function ProviderTicketDetailPage() {
       
       const fullyLoadedTicket = {
         ...(data.ticket ?? {}),
-        attachments: data.ticket_attachments ?? [],
-        reports: data.rapport ? [{ ...(data.rapport ?? {}), attachments: data.rapport_attachments ?? [] }] : []
+        reports: data.reports || (data.rapport ? [{ ...(data.rapport ?? {}), attachments: data.rapport_attachments ?? [] }] : []),
+        attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
       };
 
       setTicket(fullyLoadedTicket as any);
+
+      // Gestion des devis (conversion d'un seul objet en tableau si nécessaire)
+      if (data.devis) {
+        setQuotes([data.devis]);
+      } else if (data.quotes) {
+        setQuotes(data.quotes);
+      } else {
+        setQuotes([]);
+      }
     } catch (e: any) {
       console.error("[ProviderTicketDetail] erreur:", e?.response?.data ?? e);
       setError(e?.response?.data?.message ?? "Impossible de charger ce ticket.");
@@ -402,18 +413,46 @@ export default function ProviderTicketDetailPage() {
                               <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${r.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
                                 {r.status === "validated" ? "Validé" : "En attente"}
                               </span>
-                              <a
+                              <Link
                                 href={`/provider/rapports/${r.id}`}
                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition"
                               >
                                 <Eye size={12} /> Voir
-                              </a>
+                              </Link>
                             </div>
                           </div>
                         ))}
-                        <a href="/provider/rapports" className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-slate-200 text-slate-500 text-xs font-bold hover:bg-slate-50 transition mt-1">
+                        <Link href="/provider/rapports" className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-slate-200 text-slate-500 text-xs font-bold hover:bg-slate-50 transition mt-1">
                           Voir tous mes rapports
-                        </a>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Devis associés */}
+                  {quotes.length > 0 && (
+                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Mes devis associés ({quotes.length})</h3>
+                      <div className="space-y-3">
+                        {quotes.map((q: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{q.reference ?? `Devis #${q.id}`}</p>
+                              <p className="text-xs text-slate-500 font-medium">{q.total_amount_ttc ? `${q.total_amount_ttc.toLocaleString("fr-FR")} FCFA` : q.amount_ht ? `${q.amount_ht.toLocaleString("fr-FR")} FCFA` : "—"}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${q.status === "approved" || q.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
+                                q.status === "rejected" || q.status === "invalidated" ? "bg-red-50 border-red-200 text-red-700" :
+                                  "bg-amber-50 border-amber-200 text-amber-700"
+                                }`}>
+                                {q.status === "approved" || q.status === "validated" ? "Approuvé" : q.status === "rejected" || q.status === "invalidated" ? "Rejeté" : "En attente"}
+                              </span>
+                              <Link href={`/provider/devis/${q.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
+                                <Eye size={14} />
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

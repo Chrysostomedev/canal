@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import {
@@ -171,7 +172,14 @@ export default function ManagerTicketDetailPage() {
         try {
             const data = await TicketService.getTicketInfo(ticketId);
             console.log("[ManagerTicketDetail] unified data:", data);
-            setTicket(data.ticket);
+
+            const ticketWithData = {
+                ...(data.ticket ?? {}),
+                reports: data.reports || (data.rapport ? [data.rapport] : []),
+                attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
+            };
+
+            setTicket(ticketWithData);
             setDevis(data.devis);
             setRapport(data.rapport);
         } catch (e: any) {
@@ -285,48 +293,51 @@ export default function ManagerTicketDetailPage() {
                                                 {reports.map((r: any, i: number) => (
                                                     <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
                                                         <div>
-                                                            <p className="text-sm font-bold text-slate-900">{r.reference ?? `Rapport ${r.reference}`}</p>
+                                                            <p className="text-sm font-bold text-slate-900">{r.reference ?? `Rapport ${r.id}`}</p>
                                                             <p className="text-xs text-slate-400 mt-0.5">{r.intervention_type === "preventif" ? "Préventif" : "Curatif"} · {fmtDate(r.created_at)}</p>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${r.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : r.status === "rejected" ? "bg-red-50 border-red-200 text-red-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
                                                                 {r.status === "validated" ? "Validé" : r.status === "rejected" ? "Rejeté" : "En attente"}
                                                             </span>
-                                                            {(r.status === "submitted" || r.status === "pending") && (
-                                                                <button onClick={() => setValidateReportId(r.id)} className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition">
-                                                                    Valider
-                                                                </button>
-                                                            )}
+                                                            <Link href={`/manager/rapports/details/${r.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
+                                                                <Eye size={14} />
+                                                            </Link>
                                                         </div>
                                                     </div>
                                                 ))}
+                                            </div>
+                                        </div>
+                                    )}
 
-                                                {/* Affichage du dernier devis si présent */}
-                                                {devis && (
-                                                    <div className="mt-6 border-t border-slate-100 pt-6">
-                                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Devis & Facturation</h3>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-center justify-between">
-                                                                <div>
-                                                                    <p className="text-sm font-bold text-slate-900">Devis #{devis.reference}</p>
-                                                                    <p className="text-xs text-slate-400 mt-0.5">{devis.total_ht?.toLocaleString()} FG HT · {fmtDate(devis.created_at)}</p>
-                                                                </div>
-                                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-600 uppercase`}>
-                                                                    {devis.status}
-                                                                </span>
-                                                            </div>
-                                                            {devis.invoice && (
-                                                                <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-center justify-between">
-                                                                    <div>
-                                                                        <p className="text-sm font-bold text-slate-900">Facture #{devis.invoice.reference}</p>
-                                                                        <p className="text-xs text-slate-400 mt-0.5">{devis.invoice.total_ttc?.toLocaleString()} FG TTC · {fmtDate(devis.invoice.created_at)}</p>
-                                                                    </div>
-                                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded border border-emerald-200 bg-emerald-50 text-emerald-600 uppercase`}>
-                                                                        {devis.invoice.status}
-                                                                    </span>
-                                                                </div>
-                                                            )}
+                                    {/* Devis & Facturation */}
+                                    {devis && (
+                                        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Devis & Facturation</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">Devis #{devis.reference}</p>
+                                                        <p className="text-xs text-slate-400 mt-0.5">{devis.total_ht?.toLocaleString()} FG HT · {fmtDate(devis.created_at)}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-600 uppercase`}>
+                                                            {devis.status}
+                                                        </span>
+                                                        <Link href={`/manager/devis/details/${devis.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
+                                                            <Eye size={14} />
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                                {devis.invoice && (
+                                                    <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-900">Facture #{devis.invoice.reference}</p>
+                                                            <p className="text-xs text-slate-400 mt-0.5">{devis.invoice.total_ttc?.toLocaleString()} FG TTC · {fmtDate(devis.invoice.created_at)}</p>
                                                         </div>
+                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded border border-emerald-200 bg-emerald-50 text-emerald-600 uppercase`}>
+                                                            {devis.invoice.status}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>
@@ -393,35 +404,38 @@ export default function ManagerTicketDetailPage() {
                                         </div>
                                     </div>
 
-                                    {/* <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Documents ({docs.length})</h3>
-                    {docs.length > 0 ? (
-                      <div className="space-y-3">
-                        {docs.map((att: any, i: number) => {
-                          const url = getUrl(att);
-                          const name = (att.path ?? att.file_path ?? "").split("/").pop() ?? "document.pdf";
-                          return (
-                            <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50">
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0"><FileText size={16} className="text-red-500" /></div>
-                                <p className="text-xs font-bold text-slate-900 truncate flex-1">{name}</p>
-                              </div>
-                              <div className="flex gap-2">
-                                <button onClick={() => setPdfPreview({ url, name })} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-white transition">
-                                  <Eye size={13} /> Aperçu</button>
-                                <a href={url} download target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition"><Download size={13} /> Télécharger</a>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="border border-dashed border-slate-200 rounded-xl px-4 py-5 flex items-center gap-3 text-slate-400">
-                        <FileText size={16} className="shrink-0" />
-                        <p className="text-sm font-medium">Aucun document</p>
-                      </div>
-                    )}
-                  </div> */}
+                                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Documents ({docs.length})</h3>
+                                        {docs.length > 0 ? (
+                                            <div className="space-y-3">
+                                                {docs.map((att: any, i: number) => {
+                                                    const url = getUrl(att);
+                                                    const name = (att.path ?? att.file_path ?? "").split("/").pop() ?? "document.pdf";
+                                                    return (
+                                                        <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0"><FileText size={16} className="text-red-500" /></div>
+                                                                <div className="min-w-0 flex-1">
+                                                                  <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
+                                                                  <p className="text-[10px] text-slate-400">PDF</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <button onClick={() => setPdfPreview({ url, name })} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-white transition">
+                                                                    <Eye size={13} /> Aperçu</button>
+                                                                <a href={url} download target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-black transition"><Download size={13} /> Télécharger</a>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="border border-dashed border-slate-200 rounded-xl px-4 py-5 flex items-center gap-3 text-slate-400">
+                                                <FileText size={16} className="shrink-0" />
+                                                <p className="text-sm font-medium">Aucun document</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </>

@@ -150,7 +150,13 @@ export default function AdminTicketDetailPage() {
       const data = await TicketService.getTicketInfo(ticketId);
       console.log("[AdminTicketDetail] unified data:", data);
 
-      setTicket(data.ticket);
+      const ticketWithData = {
+        ...(data.ticket ?? {}),
+        reports: data.reports || (data.rapport ? [data.rapport] : []),
+        attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
+      };
+
+      setTicket(ticketWithData);
 
       // Adaptation aux états existants (tableaux)
       if (data.devis) {
@@ -443,6 +449,31 @@ export default function AdminTicketDetailPage() {
                       : <p className="text-slate-400 text-sm italic">Aucune description.</p>}
                   </div>
 
+                  {/* Rapports liés */}
+                  {reports.length > 0 && (
+                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Rapports d'intervention ({reports.length})</h3>
+                      <div className="space-y-3">
+                        {reports.map((r: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{r.reference ?? `Rapport ${r.id}`}</p>
+                              <p className="text-xs text-slate-400 mt-0.5">{r.intervention_type === "preventif" ? "Préventif" : "Curatif"} · {fmtDate(r.created_at)}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${r.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
+                                {r.status === "validated" ? "Validé" : r.status === "rejected" ? "Rejeté" : "En attente"}
+                              </span>
+                              <Link href={`/admin/rapports/details/${r.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
+                                <Eye size={14} />
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Devis liés */}
                   {quotes.length > 0 && (
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
@@ -462,59 +493,6 @@ export default function AdminTicketDetailPage() {
                                 {q.status === "approved" ? "Approuvé" : q.status === "rejected" ? "Rejeté" : "En attente"}
                               </span>
                               <Link href={`/admin/devis/details/${q.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
-                                <Eye size={14} />
-                              </Link>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Factures liées */}
-                  {invoices.length > 0 && (
-                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Factures associées ({invoices.length})</h3>
-                      <div className="space-y-3">
-                        {invoices.map((inv: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
-                            <div>
-                              <p className="text-sm font-bold text-slate-900">{inv.reference ?? `Facture #${inv.id}`}</p>
-                              <p className="text-xs text-slate-500 font-medium shrink-0 mt-0.5">{inv.total_amount ? `${inv.total_amount.toLocaleString("fr-FR")} FCFA` : "—"}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${inv.status === "paid" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-                                inv.status === "overdue" ? "bg-red-50 border-red-200 text-red-700" :
-                                  "bg-slate-100 border-slate-300 text-slate-700"
-                                }`}>
-                                {inv.status === "paid" ? "Payée" : inv.status === "overdue" ? "En retard" : "En attente"}
-                              </span>
-                              <Link href={`/admin/factures/details/${inv.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
-                                <Eye size={14} />
-                              </Link>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Rapports liés */}
-                  {reports.length > 0 && (
-                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Rapports d'intervention ({reports.length})</h3>
-                      <div className="space-y-3">
-                        {reports.map((r: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
-                            <div>
-                              <p className="text-sm font-bold text-slate-900">{r.reference ?? `Rapport ${r.id}`}</p>
-                              <p className="text-xs text-slate-400 mt-0.5">{r.intervention_type === "preventif" ? "Préventif" : "Curatif"} · {fmtDate(r.created_at)}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${r.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
-                                {r.status === "validated" ? "Validé" : r.status === "rejected" ? "Rejeté" : "En attente"}
-                              </span>
-                              <Link href={`/admin/rapports/details/${r.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
                                 <Eye size={14} />
                               </Link>
                             </div>
