@@ -1,11 +1,20 @@
 "use client";  
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { authService, getDashboardRoute } from "../services/AuthService";
 
 export default function Home() {
   const router = useRouter();
+
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      const role = authService.getRole();
+      router.replace(getDashboardRoute(role));
+    }
+  }, [router]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-black text-white">

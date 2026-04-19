@@ -77,6 +77,13 @@ export default function LoginPage() {
   const [currentYear, setCurrentYear] = useState<number | string>("--");
 
   useEffect(() => {
+    if (authService.isAuthenticated()) {
+      const role = authService.getRole() as UserRole;
+      router.replace(getDashboardRoute(role));
+    }
+  }, [router]);
+
+  useEffect(() => {
     setCurrentYear(new Date().getFullYear());
   }, []);
   // ──────────────────────────────────────────────────
