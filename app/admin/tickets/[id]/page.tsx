@@ -11,6 +11,8 @@ import {
   User, Calendar, Shield, AlertCircle, Pencil, CalendarDays, TicketPlus,
 } from "lucide-react";
 import { TicketService, Ticket } from "../../../../services/admin/ticket.service";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
 import { useTickets } from "../../../../hooks/admin/useTickets";
 import { useProviders } from "../../../../hooks/admin/useProviders";
 import { useServices } from "../../../../hooks/admin/useServices";
@@ -20,16 +22,8 @@ import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import * as PlanningService from "../../../../services/admin/planningService";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmtDate = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-};
-const fmtDateTime = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-};
+// local formatters removed - using @/lib/utils
+
 import { resolveUrl } from "@/components/AttachmentViewer";
 const getUrl = resolveUrl;
 
@@ -147,25 +141,40 @@ export default function AdminTicketDetailPage() {
     setLoading(true); setError("");
 
     try {
-      const data = await TicketService.getTicketInfo(ticketId);
-      console.log("[AdminTicketDetail] unified data:", data);
+      // Pour pallier les manques du backend, on fait deux appels :
+      // 1. getTicket(id) : contient les relations site, companyAsset, provider, service
+      // 2. getTicketInfo(id) : contient les rapports et devis
+      const [ticketCore, additionalInfo] = await Promise.all([
+        TicketService.getTicket(ticketId),
+        TicketService.getTicketInfo(ticketId)
+      ]);
+
+      console.log("[AdminTicketDetail] Core data:", ticketCore);
+      console.log("[AdminTicketDetail] Additional info:", additionalInfo);
 
       const ticketWithData = {
-        ...(data.ticket ?? {}),
-        reports: data.reports || (data.rapport ? [data.rapport] : []),
-        attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
+        ...ticketCore,
+        site: ticketCore.site ?? additionalInfo?.site,
+        asset: ticketCore.company_asset ?? ticketCore.companyAsset ?? ticketCore.asset ?? additionalInfo?.company_asset ?? additionalInfo?.companyAsset ?? additionalInfo?.asset,
+        provider: ticketCore.provider ?? additionalInfo?.provider,
+        reports: additionalInfo?.reports || (additionalInfo?.rapport ? [additionalInfo.rapport] : ticketCore.reports || []),
+        attachments: additionalInfo?.ticket_attachments ?? ticketCore.attachments ?? []
       };
 
+      console.log("[AdminTicketDetail] merged ticket:", ticketWithData);
       setTicket(ticketWithData);
 
       // Adaptation aux états existants (tableaux)
-      if (data.devis) {
-        setQuotes([data.devis]);
-        if (data.devis.invoice) {
-          setInvoices([data.devis.invoice]);
+      if (additionalInfo?.devis) {
+        setQuotes([additionalInfo.devis]);
+        if (additionalInfo.devis.invoice) {
+          setInvoices([additionalInfo.devis.invoice]);
         } else {
           setInvoices([]);
         }
+      } else if (additionalInfo?.quotes) {
+        setQuotes(additionalInfo.quotes);
+        setInvoices([]);
       } else {
         setQuotes([]);
         setInvoices([]);
@@ -410,11 +419,12 @@ export default function AdminTicketDetailPage() {
                   </div>
                   <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-2.5 min-w-[240px]">
                     {[
-                      { l: "Planifié le", v: fmtDateTime(ticket.planned_at) },
-                      { l: "Échéance", v: fmtDateTime(ticket.due_at) },
-                      { l: "Résolu le", v: fmtDate(ticket.resolved_at), show: !!ticket.resolved_at },
-                      { l: "Clôturé le", v: fmtDate(ticket.closed_at), show: !!ticket.closed_at },
+                      { l: "Signalé le", v: formatDate(ticket.planned_at) },
+                      { l: "Échéance", v: formatDate(ticket.due_at) },
+                      { l: "Résolu le", v: formatDate(ticket.resolved_at), show: !!ticket.resolved_at },
+                      { l: "Clôturé le", v: formatDate(ticket.closed_at), show: !!ticket.closed_at },
                     ].filter(r => r.show !== false).map((r, i) => (
+
                       <div key={i} className="flex justify-between text-sm">
                         <span className="text-slate-400 font-medium">{r.l}</span>
                         <span className="font-bold text-slate-900">{r.v}</span>
@@ -458,8 +468,9 @@ export default function AdminTicketDetailPage() {
                           <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
                             <div>
                               <p className="text-sm font-bold text-slate-900">{r.reference ?? `Rapport ${r.id}`}</p>
-                              <p className="text-xs text-slate-400 mt-0.5">{r.intervention_type === "preventif" ? "Préventif" : "Curatif"} · {fmtDate(r.created_at)}</p>
+                              <p className="text-xs text-slate-400 mt-0.5">{r.intervention_type === "preventif" ? "Préventif" : "Curatif"} · {formatDate(r.created_at)}</p>
                             </div>
+
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${r.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
                                 {r.status === "validated" ? "Validé" : r.status === "rejected" ? "Rejeté" : "En attente"}
@@ -483,8 +494,9 @@ export default function AdminTicketDetailPage() {
                           <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
                             <div>
                               <p className="text-sm font-bold text-slate-900">{q.reference ?? `Devis #${q.id}`}</p>
-                              <p className="text-xs text-slate-500 font-medium">{q.total_price ? `${q.total_price.toLocaleString("fr-FR")} FCFA` : "—"}</p>
+                              <p className="text-xs text-slate-500 font-medium">{q.total_price ? formatCurrency(q.total_price) : "—"}</p>
                             </div>
+
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${q.status === "approved" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
                                 q.status === "rejected" ? "bg-red-50 border-red-200 text-red-700" :
@@ -557,8 +569,9 @@ export default function AdminTicketDetailPage() {
                           <div className="flex-1 pb-6">
                             <div className="flex items-start justify-between gap-3 mb-0.5">
                               <h4 className="text-sm font-bold text-slate-900">{ev.label}</h4>
-                              <span className="text-[10px] text-slate-400 shrink-0 mt-0.5">{fmtDateTime(ev.date)}</span>
+                              <span className="text-[10px] text-slate-400 shrink-0 mt-0.5">{formatDate(ev.date)}</span>
                             </div>
+
                             {ev.sub && <p className="text-xs text-slate-500 mt-1">{ev.sub}</p>}
                           </div>
                         </div>
@@ -577,13 +590,16 @@ export default function AdminTicketDetailPage() {
                         { l: "Type", v: ticket.type === "curatif" ? "Curatif" : "Préventif" },
                         { l: "Priorité", v: PRIORITY_LABEL[ticket.priority] ?? ticket.priority },
                         { l: "Statut", v: STATUS_LABEL[ticket.status] ?? ticket.status },
-                        { l: "Site", v: ticket.site?.nom ?? "—" },
-                        { l: "Patrimoine", v: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "—" },
-                        { l: "Service", v: ticket.service?.name ?? "—" },
-                        { l: "Prestataire", v: (ticket.provider as any)?.company_name ?? (ticket.provider as any)?.name ?? "—" },
-                        { l: "Coût", v: ticket.cout ? `${ticket.cout.toLocaleString("fr-FR")} FCFA` : "—" },
-                        { l: "Créé le", v: fmtDate(ticket.created_at) },
+                        { l: "Site", v: ticket.site?.nom ?? ticket.site?.name ?? "—" },
+                        { l: "Patrimoine", v: ticket.asset ? `${(ticket.asset as any).designation ?? (ticket.asset as any).nom ?? ""} (${(ticket.asset as any).codification ?? ""})` : "—" },
+                        { l: "Type Actif", v: (ticket.asset as any)?.type?.name ?? (ticket.asset as any)?.type?.nom ?? (ticket.asset as any)?.type ?? "—" },
+                        { l: "Sous-type", v: (ticket.asset as any)?.sub_type?.name ?? (ticket.asset as any)?.sub_type?.nom ?? (ticket.asset as any)?.sub_type ?? "—" },
+                        { l: "Service", v: ticket.service?.name ?? ticket.service?.nom ?? "—" },
+                        { l: "Prestataire", v: (ticket.provider as any)?.company_name ?? (ticket.provider as any)?.name ?? (ticket.provider as any)?.nom ?? "—" },
+                        { l: "Coût", v: ticket.cout ? formatCurrency(ticket.cout) : "—" },
+                        { l: "Créé le", v: formatDate(ticket.created_at) },
                       ].map((r, i) => (
+
                         <div key={i} className="flex items-center justify-between py-3">
                           <p className="text-xs text-slate-400 font-medium">{r.l}</p>
                           <p className="text-sm font-bold text-slate-900 text-right max-w-[55%] truncate">{r.v}</p>

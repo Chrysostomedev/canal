@@ -9,6 +9,7 @@ import {
 import axiosInstance from "../../../core/axios";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
+import { formatDate } from "@/lib/utils";
 
 export default function ProviderProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -200,7 +201,7 @@ export default function ProviderProfilePage() {
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar size={16} className="text-slate-400 shrink-0" />
                   <span className="text-slate-600 font-medium">
-                    Depuis {profile?.created_at ? new Date(profile.created_at).toLocaleDateString("fr-FR") : "-"}
+                    Depuis {formatDate(profile?.created_at)}
                   </span>
                 </div>
               </div>

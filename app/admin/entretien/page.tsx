@@ -18,6 +18,8 @@ import {
 import { useState, useEffect } from "react";
 import { useReports } from "../../../hooks/admin/useReports";
 import { ReportService, InterventionReport } from "../../../services/admin/report.service";
+import { formatDate } from "@/lib/utils";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,8 +71,8 @@ const WORKFLOW_STEPS = [
     { key: "clos", icon: CheckSquare, label: "Clôturé" },
 ];
 
-const formatDate = (d?: string | null) =>
-    d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+// local formatDate removed - using global formatDate from @/lib/utils
+
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -715,7 +717,6 @@ export default function ManagerEntretienPage() {
 
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-                            <h3 className="text-sm font-bold text-slate-800">Entretiens préventifs</h3>
                             <span className="text-xs text-slate-400">{filtered.length} entretien{filtered.length > 1 ? "s" : ""}</span>
                         </div>
                         {isLoading ? (
@@ -724,7 +725,7 @@ export default function ManagerEntretienPage() {
                             </div>
                         ) : (
                             <div className="px-6 py-4">
-                                <DataTable title="Historique Maintenance" columns={columns} data={filtered} onViewAll={() => { }} />
+                                <DataTable title="Rapports des visites préventives" columns={columns} data={filtered} onViewAll={() => { }} />
                             </div>
                         )}
                     </div>

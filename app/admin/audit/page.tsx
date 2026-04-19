@@ -10,6 +10,7 @@ import axiosInstance from "../../../core/axios";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 import Paginate from "@/components/Paginate";
+import { formatDate } from "@/lib/utils";
 
 const ACTION_STYLES: Record<string, string> = {
   created:  "bg-emerald-50 text-emerald-700",
@@ -182,10 +183,7 @@ export default function AuditPage() {
                     {/* Date + lien détail */}
                     <div className="text-right shrink-0 flex flex-col items-end gap-1">
                       <p className="text-xs font-bold text-slate-700">
-                        {new Date(log.created_at).toLocaleDateString("fr-FR")}
-                      </p>
-                      <p className="text-[10px] text-slate-400">
-                        {new Date(log.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                        {formatDate(log.created_at)}
                       </p>
                       {log.user_id && (
                         <button

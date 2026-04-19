@@ -37,9 +37,9 @@ import {
   transfertService,
   TransferRecord,
   TransferStatus,
-  formatTransferDate,
   getActorName,
 } from "../../../services/admin/transfertService";
+import { formatDate } from "@/lib/utils";
 import { useTransferts } from "../../../hooks/admin/useTransferts";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -172,7 +172,7 @@ function TransferCard({
       <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium pt-1 border-t border-slate-50">
         <div className="flex items-center gap-1.5">
           <Calendar size={11} />
-          {formatTransferDate(record.transfer_date)}
+          {formatDate(record.transfer_date)}
         </div>
         <div className="flex items-center gap-1.5">
           <User size={11} />

@@ -461,14 +461,14 @@ export default function ManagerEntretienPage() {
   const kpis = [
     { label: "Total entretiens", value: meta?.total ?? apiStats?.total ?? 0, trend: "up" as const },
     { label: "À valider", value: apiStats?.pending ?? tickets?.filter(t => t.status === "submitted").length ?? 0, trend: "up" as const },
-    { label: "Validés", value: apiStats?.validated ?? 0, trend: "up" as const },
+    // { label: "Validés", value: apiStats?.validated ?? 0, trend: "up" as const },
     { label: "Note moyenne", value: apiStats?.average_rating ? `${apiStats.average_rating}/5` : "-", trend: "up" as const },
   ];
 
   const columns: ColumnConfig<InterventionReport>[] = [
     {
       header: "Référence", key: "reference",
-      render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">{row.reference || `#${row.id}`}</span>,
+      render: (_: any, row: InterventionReport) => <span className="font-black text-slate-900 text-sm">{row.reference || `${row.id}`}</span>,
     },
     {
       header: "Prestataire", key: "provider",
@@ -526,11 +526,11 @@ export default function ManagerEntretienPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {kpis.map((k, i) => <StatsCard key={i} {...k} />)}
           </div>
 
-          <div className="flex justify-between items-center gap-4">
+          <div className="flex justify-between items-center gap-4"> 
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-slate-400" />
               <select

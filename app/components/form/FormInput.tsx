@@ -1,10 +1,11 @@
 "use client";
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   Eye, EyeOff, Calendar,
   Bold, Italic, Underline, List, Strikethrough,
   Palette, Highlighter, AlignLeft, AlignCenter, AlignRight,
-  CornerDownLeft, Plus, Minus, ImagePlus, X, Upload, FileText, ChevronDown
+  CornerDownLeft, Plus, Minus, ImagePlus, X, Upload, FileText, ChevronDown,
+  Image as ImageIcon, FileSpreadsheet, FileBox, FileArchive
 } from "lucide-react";
 import { DateRangePicker } from "@/components/AgeFilter";
 import { DateRange } from "react-day-picker";
@@ -67,6 +68,27 @@ export const PasswordInput = ({ disabled, ...props }: any) => {
     </div>
   );
 };
+
+// Champ Checkbox
+export const Checkbox = ({ name, label, required, defaultChecked, onChange, disabled }: any) => (
+  <label className={`flex items-center gap-3 cursor-pointer group ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
+    <div className="relative flex items-center justify-center">
+      <input
+        type="checkbox"
+        name={name}
+        required={required}
+        disabled={disabled}
+        defaultChecked={defaultChecked}
+        className="peer appearance-none w-6 h-6 rounded-lg border-2 border-slate-200 checked:bg-slate-900 checked:border-slate-900 transition-all cursor-pointer disabled:cursor-not-allowed"
+        onChange={(e) => onChange?.(e.target.checked)}
+      />
+      <div className="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+    </div>
+    {label && <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">{label}</span>}
+  </label>
+);
 
 // Champ Date — style booking, single date, avec option grisage passé
 export const DateInput = ({ name, required, disabled, disablePastDates, defaultValue, icon }: any) => {
@@ -598,11 +620,15 @@ export const PdfUpload = ({
   maxPDFs = 1,
   defaultValue,
   onChange,
+  accept = "application/pdf",
+  placeholder,
 }: {
   name?: string;
   maxPDFs?: number;
   defaultValue?: any;
   onChange?: (files: File[]) => void;
+  accept?: string;
+  placeholder?: string;
 }) => {
   const [pdfs, setPdfs] = useState<PdfFile[]>(() => {
     if (Array.isArray(defaultValue)) {
@@ -625,8 +651,17 @@ export const PdfUpload = ({
   const addFiles = useCallback(
     (files: FileList | null) => {
       if (!files) return;
+
+      // Créer une liste d'extensions acceptées si c'est une chaîne d'extensions (ex: .pdf,.doc)
+      const allowedExts = accept.split(",").map(s => s.trim().toLowerCase());
+      const isMimeMatch = (type: string, name: string) => {
+        if (accept.includes("*") && type.split("/")[0] === accept.split("/")[0]) return true;
+        if (accept.includes(type)) return true;
+        return allowedExts.some(ext => ext.startsWith(".") && name.toLowerCase().endsWith(ext));
+      };
+
       const incoming = Array.from(files)
-        .filter(f => f.type === "application/pdf")
+        .filter(f => isMimeMatch(f.type, f.name))
         .slice(0, maxPDFs - pdfs.length);
 
       const newPdfs: PdfFile[] = incoming.map((file) => ({
@@ -681,17 +716,17 @@ export const PdfUpload = ({
           </div>
           <div className="text-center">
             <p className={`text-sm font-semibold transition-colors duration-200 ${dragging ? "text-white" : "text-slate-700"}`}>
-              {dragging ? "Déposez ici" : "Cliquez pour uploader le PDF"}
+              {dragging ? "Déposez ici" : (placeholder || "Cliquez pour uploader le PDF")}
             </p>
             <p className={`text-xs mt-0.5 transition-colors duration-200 ${dragging ? "text-white/70" : "text-slate-400"}`}>
-              Format PDF uniquement · Max 10Mo
+              {accept.includes("image") ? "Images et documents acceptés" : "Documents acceptés"} · Max 10Mo
             </p>
           </div>
 
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/pdf"
+            accept={accept}
             multiple={maxPDFs > 1}
             className="hidden"
             onChange={(e) => addFiles(e.target.files)}
@@ -707,12 +742,27 @@ export const PdfUpload = ({
               key={p.id}
               className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-1"
             >
-              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                <FileText size={20} className="text-red-500" />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                p.name.toLowerCase().endsWith(".pdf") ? "bg-red-50" :
+                p.name.toLowerCase().match(/\.(doc|docx)$/) ? "bg-blue-50" :
+                p.name.toLowerCase().match(/\.(xls|xlsx|csv)$/) ? "bg-emerald-50" :
+                "bg-slate-50"
+              }`}>
+                {p.name.toLowerCase().endsWith(".pdf") ? <FileText size={20} className="text-red-500" /> :
+                 p.name.toLowerCase().match(/\.(doc|docx)$/) ? <FileText size={20} className="text-blue-500" /> :
+                 p.name.toLowerCase().match(/\.(xls|xlsx|csv)$/) ? <FileSpreadsheet size={20} className="text-emerald-500" /> :
+                 p.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/) ? <ImageIcon size={20} className="text-slate-500" /> :
+                 <FileBox size={20} className="text-slate-500" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
-                <p className="text-[10px] text-slate-400 uppercase font-black">Fichier PDF sélectionné</p>
+                <p className="text-[10px] text-slate-400 uppercase font-black">
+                  {p.name.toLowerCase().endsWith(".pdf") ? "Document PDF" :
+                   p.name.toLowerCase().match(/\.(doc|docx)$/) ? "Document Word" :
+                   p.name.toLowerCase().match(/\.(xls|xlsx|csv)$/) ? "Feuille de calcul" :
+                   p.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/) ? "Image" :
+                   "Fichier"} chargé
+                </p>
               </div>
               <button
                 type="button"

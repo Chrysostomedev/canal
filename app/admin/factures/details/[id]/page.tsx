@@ -14,35 +14,16 @@ import StatsCard from "@/components/StatsCard";
 import { resolveUrl } from "@/components/AttachmentViewer";
 
 import { InvoiceService, Invoice } from "../../../../../services/admin/invoice.service";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const formatMontant = (v?: number): string => {
-  if (!v && v !== 0) return "-";
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
-  return `${v.toLocaleString("fr-FR")} FCFA`;
-};
+// local formatters removed - using @/lib/utils
 
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
-const formatDateLong = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPOSANTS
@@ -127,50 +108,51 @@ interface RelatedInvoicesListProps {
   currentInvoiceId: number;
 }
 
-function RelatedInvoicesList({ invoices, currentInvoiceId }: RelatedInvoicesListProps) {
-  if (invoices.length <= 1) return null;
+// function RelatedInvoicesList({ invoices, currentInvoiceId }: RelatedInvoicesListProps) {
+//   if (invoices.length <= 1) return null;
 
-  return (
-    <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-      <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
-        Factures liées ({invoices.length})
-      </h3>
-      <div className="space-y-3">
-        {invoices.map((inv) => {
-          const isCurrent = inv.id === currentInvoiceId;
-          return (
-            <Link
-              key={inv.id}
-              href={`/admin/factures/details/${inv.id}`}
-              className={`block p-4 rounded-xl border transition-all ${isCurrent
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
-                }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-black">{inv.reference}</span>
-                  {isCurrent && (
-                    <span className="text-xs bg-white text-slate-900 px-2 py-0.5 rounded-full font-bold">
-                      Actuelle
-                    </span>
-                  )}
-                </div>
-                <StatusBadge status={inv.payment_status} />
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className={isCurrent ? "text-slate-300" : "text-slate-500"}>
-                  {formatDate(inv.invoice_date)}
-                </span>
-                <span className="font-bold">{formatMontant(Number(inv.amount_ttc))}</span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+//   return (
+//     <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
+//       <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
+//         Factures liées ({invoices.length})
+//       </h3>
+//       <div className="space-y-3">
+//         {invoices.map((inv) => {
+//           const isCurrent = inv.id === currentInvoiceId;
+//           return (
+//             <Link
+//               key={inv.id}
+//               href={`/admin/factures/details/${inv.id}`}
+//               className={`block p-4 rounded-xl border transition-all ${isCurrent
+//                   ? "border-slate-900 bg-slate-900 text-white"
+//                   : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
+//                 }`}
+//             >
+//               <div className="flex items-center justify-between mb-2">
+//                 <div className="flex items-center gap-3">
+//                   <span className="text-sm font-black">{inv.reference}</span>
+//                   {isCurrent && (
+//                     <span className="text-xs bg-white text-slate-900 px-2 py-0.5 rounded-full font-bold">
+//                       Actuelle
+//                     </span>
+//                   )}
+//                 </div>
+//                 <StatusBadge status={inv.payment_status} />
+//               </div>
+//               <div className="flex items-center justify-between text-xs">
+//                 <span className={isCurrent ? "text-slate-300" : "text-slate-500"}>
+//                   {formatDate(inv.invoice_date)}
+//                 </span>
+//                 <span className="font-bold">{formatCurrency(Number(inv.amount_ttc))}</span>
+
+//               </div>
+//             </Link>
+//           );
+//         })}
+//       </div>
+//     </div>
+//   );
+// }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PDF PREVIEW MODAL
@@ -292,8 +274,8 @@ export default function FactureDetailsPage() {
           {flash && (
             <div
               className={`px-6 py-4 rounded-2xl text-sm font-semibold ${flash.type === "success"
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
                 }`}
             >
               {flash.message}
@@ -398,22 +380,26 @@ export default function FactureDetailsPage() {
                   <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">Montant HT</span>
-                      <span className="font-bold text-slate-900">{formatMontant(Number(invoice?.amount_ht))}</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(invoice?.amount_ht)}</span>
+
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">TVA (18%)</span>
-                      <span className="font-bold text-slate-900">{formatMontant(Number(invoice?.tax_amount))}</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(invoice?.tax_amount)}</span>
+
                     </div>
                     <div className="flex justify-between text-base border-t border-slate-200 pt-2">
                       <span className="font-black text-slate-900">Total TTC</span>
-                      <span className="font-black text-slate-900">{formatMontant(Number(invoice?.amount_ttc))}</span>
+                      <span className="font-black text-slate-900">{formatCurrency(invoice?.amount_ttc)}</span>
+
                     </div>
                   </div>
                   {isPaid && (
                     <div className="px-4 py-3 bg-emerald-50 border-t border-emerald-100">
                       <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm mb-2">
                         <CheckCircle2 size={16} />
-                        Payée le {formatDateLong(invoice?.payment_date)}
+                        Payée le {formatDate(invoice?.payment_date, { day: "2-digit", month: "long", year: "numeric" })}
+
                       </div>
                       {invoice?.payment_method && (
                         <p className="text-xs text-emerald-600">Mode : {invoice.payment_method}</p>
@@ -434,7 +420,7 @@ export default function FactureDetailsPage() {
                 </div>
               </div>
 
-              {/* Rapport lié */}
+              {/* Rapport lié
               {invoice?.interventionReport?.description && (
                 <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
@@ -444,7 +430,7 @@ export default function FactureDetailsPage() {
                     {invoice.interventionReport.description}
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
 
             {/* Colonne droite : PDF + Factures liées + Infos */}
@@ -492,7 +478,7 @@ export default function FactureDetailsPage() {
               </div>
 
               {/* Factures liées */}
-              <RelatedInvoicesList invoices={relatedInvoices} currentInvoiceId={invoiceId} />
+              {/* <RelatedInvoicesList invoices={relatedInvoices} currentInvoiceId={invoiceId} /> */}
 
               {/* Infos prestataire */}
               {invoice?.provider && (

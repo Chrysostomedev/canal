@@ -1,5 +1,6 @@
 import axiosInstance from "../../core/axios";
 import { resolveStorageUrl } from "../../lib/url";
+import { formatDate } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,61 +97,50 @@ export interface CreateReportPayload {
   attachments?: File[];
 }
 
-export interface UpdateReportPayload extends Partial<Omit<CreateReportPayload, "ticket_id" | "planning_id">> {}
+export interface UpdateReportPayload extends Partial<Omit<CreateReportPayload, "ticket_id" | "planning_id">> { }
 
 // ─── Constantes UI ────────────────────────────────────────────────────────────
 
 export const STATUS_LABELS: Record<string, string> = {
-  pending:   "En attente",
+  pending: "En attente",
+  submitted: "Soumis",
   validated: "Validé",
 };
 
 export const STATUS_STYLES: Record<string, string> = {
-  validated: "border-emerald-200 bg-emerald-50 text-emerald-600",
-  pending:   "border-amber-200 bg-amber-50 text-amber-600",
+  validated: "border-green-200 bg-green-50 text-green-600",
+  submitted: "border-amber-200 bg-amber-50 text-amber-600",
+  pending:   "border-slate-200 bg-slate-50 text-slate-500",
 };
 
 export const STATUS_DOT: Record<string, string> = {
-  pending:   "#f59e0b",
+  pending: "#f59e0b",
   validated: "#22c55e",
 };
 
 export const TYPE_LABELS: Record<string, string> = {
-  curatif:   "Curatif",
+  curatif: "Curatif",
   preventif: "Préventif",
 };
 
 export const TYPE_STYLES: Record<string, string> = {
-  curatif:   "bg-orange-50 text-orange-600 border border-orange-200",
+  curatif: "bg-orange-50 text-orange-600 border border-orange-200",
   preventif: "bg-blue-50   text-blue-600   border border-blue-200",
 };
 
 export const RESULT_LABELS: Record<string, string> = {
-  RAS:      "RAS",
+  RAS: "RAS",
   anomalie: "Anomalie détectée",
 };
 
 export const RESULT_STYLES: Record<string, string> = {
-  RAS:      "bg-green-50   text-green-600   border border-green-200",
+  RAS: "bg-green-50   text-green-600   border border-green-200",
   anomalie: "bg-red-50     text-red-600     border border-red-200",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export const formatDate = (iso?: string | null): string => {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-};
-
-export const formatDateTime = (iso?: string | null): string => {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-};
+export { formatDate };
 
 
 export const getAttachmentUrl = (path: string): string => resolveStorageUrl(path);
@@ -188,10 +178,10 @@ export const providerReportService = {
     page?: number;
   }): Promise<InterventionReport[]> => {
     const res = await axiosInstance.get(BASE, { params });
-    const d   = res.data?.data ?? res.data;
-    if (Array.isArray(d?.items))     return d.items;
-    if (Array.isArray(d?.data))      return d.data;
-    if (Array.isArray(d))            return d;
+    const d = res.data?.data ?? res.data;
+    if (Array.isArray(d?.items)) return d.items;
+    if (Array.isArray(d?.data)) return d.data;
+    if (Array.isArray(d)) return d;
     return [];
   },
 
@@ -203,11 +193,11 @@ export const providerReportService = {
     const res = await axiosInstance.get(`${BASE}/stats`);
     const d = res.data?.data ?? res.data;
     return {
-      total_reports:     d?.total_reports     ?? d?.total     ?? 0,
+      total_reports: d?.total_reports ?? d?.total ?? 0,
       validated_reports: d?.validated_reports ?? d?.validated ?? 0,
-      pending_reports:   d?.pending_reports   ?? d?.pending   ?? 0,
-      average_rating:    d?.average_rating    ?? d?.rating    ?? 0,
-      reports_by_type:   d?.reports_by_type   ?? [],
+      pending_reports: d?.pending_reports ?? d?.pending ?? 0,
+      average_rating: d?.average_rating ?? d?.rating ?? 0,
+      reports_by_type: d?.reports_by_type ?? [],
     };
   },
 
@@ -245,17 +235,17 @@ export const providerReportService = {
     // Flux préventif depuis planning : pas de .start(), planning_id envoyé à la place
 
     const form = new FormData();
-    if (payload.ticket_id)        form.append("ticket_id",         String(payload.ticket_id));
-    if (payload.planning_id)      form.append("planning_id",        String(payload.planning_id));
+    if (payload.ticket_id) form.append("ticket_id", String(payload.ticket_id));
+    if (payload.planning_id) form.append("planning_id", String(payload.planning_id));
     if (payload.intervention_type) form.append("intervention_type", payload.intervention_type);
-    if (payload.result)           form.append("result",             payload.result);
-    if (payload.start_date)       form.append("start_date",         payload.start_date);
-    form.append("findings",       payload.findings ?? "");
-    if (payload.action_taken)     form.append("action_taken",       payload.action_taken);
+    if (payload.result) form.append("result", payload.result);
+    if (payload.start_date) form.append("start_date", payload.start_date);
+    form.append("findings", payload.findings ?? "");
+    if (payload.action_taken) form.append("action_taken", payload.action_taken);
     form.append("anomaly_detected", String(payload.anomaly_detected ?? false));
-    if (payload.end_date)             form.append("end_date",             payload.end_date);
-    if (payload.description)          form.append("description",          payload.description);
-    if (payload.anomaly_description)  form.append("anomaly_description",  payload.anomaly_description);
+    if (payload.end_date) form.append("end_date", payload.end_date);
+    if (payload.description) form.append("description", payload.description);
+    if (payload.anomaly_description) form.append("anomaly_description", payload.anomaly_description);
 
     if (payload.attachments?.length) {
       payload.attachments.forEach(f => form.append("attachments[]", f));
@@ -279,10 +269,12 @@ export const providerReportService = {
       form.append("intervention_type", payload.intervention_type);
     if (payload.result !== undefined)
       form.append("result", payload.result);
-    if (payload.start_date)  form.append("start_date",  payload.start_date);
-    if (payload.end_date)    form.append("end_date",    payload.end_date);
-    if (payload.description) form.append("description", payload.description);
-    if (payload.findings)    form.append("findings",    payload.findings);
+    if (payload.start_date) form.append("start_date", payload.start_date);
+    if (payload.end_date) form.append("end_date", payload.end_date);
+    if (payload.action_taken) form.append("action_taken", payload.action_taken);
+    if (payload.findings) form.append("findings", payload.findings);
+    if (payload.anomaly_detected !== undefined)
+      form.append("anomaly_detected", String(payload.anomaly_detected));
 
     if (payload.attachments?.length) {
       payload.attachments.forEach(f => form.append("attachments[]", f));
@@ -298,8 +290,8 @@ export const providerReportService = {
   exportXlsx: async (): Promise<void> => {
     const res = await axiosInstance.get(`${BASE}/export`, { responseType: "blob" });
     const url = URL.createObjectURL(new Blob([res.data]));
-    const a   = document.createElement("a");
-    a.href     = url;
+    const a = document.createElement("a");
+    a.href = url;
     a.download = `rapports_${new Date().toISOString().slice(0, 10)}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);

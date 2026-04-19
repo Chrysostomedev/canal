@@ -14,16 +14,17 @@ import {
   MapPin, Wrench, Edit2, AlertTriangle, ArrowUpRight,
 } from "lucide-react";
 
-import AttachmentViewer from "@/components/AttachmentViewer";
+import AttachmentViewer, { isImage, isPdf } from "@/components/AttachmentViewer";
 
 import {
   providerReportService, InterventionReport,
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
   TYPE_LABELS, TYPE_STYLES,
   RESULT_LABELS, RESULT_STYLES,
-  formatDate, formatDateTime, getAttachmentUrl,
+  getAttachmentUrl,
   getSiteName, getProviderName, isEditable,
 } from "../../../../services/provider/providerReportService";
+import { formatDate } from "@/lib/utils";
 import { useProviderReports } from "../../../../hooks/provider/useProviderReports";
 
 // ─── Badges ────────────────────────────────────────────────────────────────────
@@ -209,28 +210,17 @@ function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: boolean
 }
 
 const editFields: FieldConfig[] = [
+  // {
+  //   name: "anomaly_detected", label: "Anomalie détectée ?", type: "checkbox",
+  // },
+  { name: "action_taken", label: "Description / Travaux effectués", type: "rich-text", gridSpan: 2 },
+  { name: "findings", label: "Observations / Constatations", type: "rich-text", gridSpan: 2 },
   {
-    name: "intervention_type", label: "Type d'intervention", type: "select",
-    options: [
-      { label: "Curatif", value: "curatif" },
-      { label: "Préventif", value: "preventif" },
-    ],
+    name: "attachments", label: "Documents et Photos de l'intervention",
+    type: "pdf-upload", maxPDFs: 10, gridSpan: 2,
+    accept: ".pdf,.doc,.docx,.xls,.xlsx,image/*",
+    placeholder: "Cliquez pour ajouter des photos, PDF ou documents Office"
   },
-  {
-    name: "result", label: "Résultat de l'intervention", type: "select",
-    options: [
-      { label: "RAS", value: "RAS" },
-      { label: "Anomalie détectée", value: "anomalie" },
-    ],
-  },
-  { name: "start_date", label: "Date de début", type: "date" },
-  { name: "end_date", label: "Date de fin", type: "date" },
-  { name: "description", label: "Description", type: "textarea" },
-  { name: "findings", label: "Observations / Constatations", type: "textarea" },
-  {
-    name: "attachments", label: "Ajouter des pièces jointes",
-    type: "pdf-upload", maxPDFs: 10, gridSpan: 2
-  } as any,
 ];
 
 export default function ProviderEntretienDetailPage() {
@@ -272,10 +262,8 @@ export default function ProviderEntretienDetailPage() {
     if (!report) return;
     const ok = await updateReport(report.id, {
       intervention_type: formData.intervention_type || undefined,
-      result: formData.result || undefined,
-      start_date: formData.start_date || undefined,
-      end_date: formData.end_date || undefined,
-      description: formData.description || undefined,
+      anomaly_detected: formData.anomaly_detected !== undefined ? !!formData.anomaly_detected : undefined,
+      action_taken: formData.action_taken || undefined,
       findings: formData.findings || undefined,
       attachments: formData.attachments?.length ? formData.attachments : undefined,
     });
@@ -290,8 +278,8 @@ export default function ProviderEntretienDetailPage() {
     }
   };
 
-  const pdfs = (report?.attachments ?? []).filter(a => a.file_type === "document");
-  const photos = (report?.attachments ?? []).filter(a => a.file_type === "photo");
+  const pdfs = (report?.attachments ?? []).filter(a => isPdf(a) || (!isImage(a) && a.file_type === "document"));
+  const photos = (report?.attachments ?? []).filter(a => isImage(a));
   const timeline = report ? buildTimeline(report) : [];
   const editable = report ? isEditable(report) : false;
 
@@ -399,8 +387,8 @@ export default function ProviderEntretienDetailPage() {
                 <div className="lg:col-span-2 space-y-6">
                   <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Description</h3>
-                    {report.description
-                      ? <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: report.description }} />
+                    {report.action_taken
+                      ? <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: report.action_taken }} />
                       : <p className="text-slate-400 text-sm italic">Aucune description renseignée.</p>
                     }
                   </div>
@@ -447,7 +435,7 @@ export default function ProviderEntretienDetailPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
+                  {/* <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
                       Documents ({pdfs.length})
                     </h3>
@@ -487,7 +475,7 @@ export default function ProviderEntretienDetailPage() {
                         <p className="text-sm font-medium">Aucun document</p>
                       </div>
                     )}
-                  </div>
+                  </div> */}
 
                   <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Statut actuel</h3>
@@ -508,17 +496,17 @@ export default function ProviderEntretienDetailPage() {
 
                     {report.status === "pending" && (
                       <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 font-medium">
-                        ⏳ En attente de validation par le gestionnaire du site.
+                        En attente de validation par le gestionnaire du site.
                       </p>
                     )}
                     {report.status === "validated" && (
                       <p className="text-xs text-green-600 bg-green-50 border border-green-100 rounded-xl px-4 py-3 font-medium">
-                        ✅ Rapport validé le {formatDate(report.validated_at)}.
+                        Rapport validé le {formatDate(report.validated_at)}.
                       </p>
                     )}
                     {!editable && (
                       <p className="text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-medium mt-2">
-                        🔒 Ce rapport ne peut plus être modifié.
+                        Ce rapport ne peut plus être modifié.
                       </p>
                     )}
                   </div>
@@ -579,11 +567,10 @@ export default function ProviderEntretienDetailPage() {
           fields={editFields}
           initialValues={{
             intervention_type: report.intervention_type ?? "",
-            result: report.result ?? "",
-            start_date: report.start_date ?? "",
-            end_date: report.end_date ?? "",
-            description: report.description ?? "",
+            anomaly_detected: report.result === "anomalie" || !!report.anomaly_detected,
+            action_taken: report.action_taken ?? report.description ?? "",
             findings: report.findings ?? "",
+            attachments: report.attachments ?? [],
           }}
           onSubmit={handleUpdate}
           submitLabel={submitting ? "Mise à jour..." : "Mettre à jour"}

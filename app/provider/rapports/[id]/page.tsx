@@ -14,16 +14,17 @@ import {
   MapPin, Wrench, Edit2, AlertTriangle, ArrowUpRight,
 } from "lucide-react";
 
-import AttachmentViewer from "@/components/AttachmentViewer";
+import AttachmentViewer, { isImage, isPdf } from "@/components/AttachmentViewer";
 
 import {
   providerReportService, InterventionReport,
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
   TYPE_LABELS, TYPE_STYLES,
   RESULT_LABELS, RESULT_STYLES,
-  formatDate, formatDateTime, getAttachmentUrl,
+  getAttachmentUrl,
   getSiteName, getProviderName, isEditable,
 } from "../../../../services/provider/providerReportService";
+import { formatDate } from "@/lib/utils";
 import { useProviderReports } from "../../../../hooks/provider/useProviderReports";
 
 // ─── Badges ────────────────────────────────────────────────────────────────────
@@ -215,28 +216,18 @@ function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: boolean
 
 // ─── Champs édition (sans ticket_id - non modifiable) ─────────────────────────
 const editFields: FieldConfig[] = [
+
+  // {
+  //   name: "anomaly_detected" , label: "Anomalie détectée ?", type: "checkbox",
+  // },
+  { name: "action_taken", label: "Description", type: "rich-text", gridSpan: 2 },
+  { name: "findings", label: "Observations / Constatations", type: "rich-text", gridSpan: 2 },
   {
-    name: "intervention_type", label: "Type d'intervention", type: "select",
-    options: [
-      { label: "Curatif", value: "curatif" },
-      { label: "Préventif", value: "preventif" },
-    ],
+    name: "attachments", label: "Documents et Photos de l'intervention",
+    type: "pdf-upload", maxPDFs: 10, gridSpan: 2,
+    accept: ".pdf,.doc,.docx,.xls,.xlsx,image/*",
+    placeholder: "Cliquez pour ajouter des photos, PDF ou documents Office"
   },
-  {
-    name: "result", label: "Résultat de l'intervention", type: "select",
-    options: [
-      { label: "RAS", value: "RAS" },
-      { label: "Anomalie détectée", value: "anomalie" },
-    ],
-  },
-  { name: "start_date", label: "Date de début", type: "date", disablePastDates: true },
-  { name: "end_date", label: "Date de fin", type: "date", disablePastDates: true },
-  { name: "description", label: "Description", type: "textarea" },
-  { name: "findings", label: "Observations / Constatations", type: "textarea" },
-  {
-    name: "attachments", label: "Ajouter des pièces jointes",
-    type: "pdf-upload", maxPDFs: 10, gridSpan: 2
-  } as any,
 ];
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
@@ -281,10 +272,8 @@ export default function ProviderRapportsDetailPage() {
     if (!report) return;
     const ok = await updateReport(report.id, {
       intervention_type: formData.intervention_type || undefined,
-      result: formData.result || undefined,
-      start_date: formData.start_date || undefined,
-      end_date: formData.end_date || undefined,
-      description: formData.description || undefined,
+      anomaly_detected: formData.anomaly_detected !== undefined ? !!formData.anomaly_detected : undefined,
+      action_taken: formData.action_taken || undefined,
       findings: formData.findings || undefined,
       attachments: formData.attachments?.length ? formData.attachments : undefined,
     });
@@ -301,8 +290,8 @@ export default function ProviderRapportsDetailPage() {
   };
 
   // ── Données dérivées ───────────────────────────────────────────────────────
-  const pdfs = (report?.attachments ?? []).filter(a => a.file_type === "document");
-  const photos = (report?.attachments ?? []).filter(a => a.file_type === "photo");
+  const pdfs = (report?.attachments ?? []).filter(a => isPdf(a) || (!isImage(a) && a.file_type === "document"));
+  const photos = (report?.attachments ?? []).filter(a => isImage(a));
   const timeline = report ? buildTimeline(report) : [];
   const editable = report ? isEditable(report) : false;
 
@@ -358,10 +347,10 @@ export default function ProviderRapportsDetailPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-4 flex-wrap">
                     <h1 className="text-5xl font-black text-slate-900 tracking-tight uppercase">
-                      Rapport #{reportId}
+                      Rapport {reportId}
                     </h1>
                     <StatusBadge status={report.status} />
-                    <TypeBadge type={report.intervention_type} />
+                    {/* <TypeBadge type={report.intervention_type} /> */}
                   </div>
                   <div className="flex items-center gap-2 text-slate-400">
                     <MapPin size={16} />
@@ -419,8 +408,8 @@ export default function ProviderRapportsDetailPage() {
                   {/* Description */}
                   <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Description</h3>
-                    {report.description
-                      ? <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: report.description }} />
+                    {report.action_taken
+                      ? <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: report.action_taken }} />
                       : <p className="text-slate-400 text-sm italic">Aucune description renseignée.</p>
                     }
                   </div>
@@ -593,10 +582,8 @@ export default function ProviderRapportsDetailPage() {
           fields={editFields}
           initialValues={{
             intervention_type: report.intervention_type ?? "",
-            result: report.result ?? "",
-            start_date: report.start_date ?? "",
-            end_date: report.end_date ?? "",
-            description: report.description ?? "",
+            anomaly_detected: report.result === "anomalie" || !!report.anomaly_detected,
+            action_taken: report.action_taken ?? report.description ?? "",
             findings: report.findings ?? "",
             attachments: report.attachments ?? [],
           }}

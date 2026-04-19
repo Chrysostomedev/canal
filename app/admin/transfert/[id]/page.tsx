@@ -35,9 +35,9 @@ import Navbar from "@/components/Navbar";
 
 import { useTransferDetail } from "../../../../hooks/admin/useTransferts";
 import {
-  formatTransferDate,
   getActorName
 } from "../../../../services/admin/transfertService";
+import { formatDate } from "@/lib/utils";
 
 
 
@@ -445,12 +445,12 @@ export default function TransferDetailPage({
 
                   <div className="flex items-center gap-2">
                     <Calendar size={14} className="text-slate-400 shrink-0" />
-                    <span><span className="font-semibold text-slate-500">Date transfert :</span> {formatTransferDate(transfer.transfer_date)}</span>
+                    <span><span className="font-semibold text-slate-500">Date transfert :</span> {formatDate(transfer.transfer_date)}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Calendar size={14} className="text-slate-400 shrink-0" />
-                    <span><span className="font-semibold text-slate-500">Créé le :</span> {formatTransferDate(transfer.created_at)}</span>
+                    <span><span className="font-semibold text-slate-500">Créé le :</span> {formatDate(transfer.created_at)}</span>
                   </div>
 
                 </div>
@@ -500,7 +500,7 @@ export default function TransferDetailPage({
                   <TimelineStep
                     icon={<Calendar size={14} className="text-slate-600" />}
                     label="Création du transfert"
-                    sublabel={formatTransferDate(transfer.created_at)}
+                    sublabel={formatDate(transfer.created_at)}
                     done
                   />
 

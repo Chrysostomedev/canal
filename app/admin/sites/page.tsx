@@ -26,6 +26,7 @@ import {
     downloadSiteImportTemplate,
     resolveManagerName,
 } from "../../../services/admin/site.service";
+import { formatDate } from "@/lib/utils";
 
 // ══════════════════════════════════════════════
 // HELPERS
@@ -213,7 +214,7 @@ const BADGE: Record<ValidationStatus, { bg: string; text: string; icon: React.Re
 
 function fmtCell(v: any): string {
     if (v == null || v === "") return "-";
-    if (v instanceof Date) return v.toLocaleDateString("fr-FR");
+    if (v instanceof Date || (typeof v === "string" && !isNaN(Date.parse(v)))) return formatDate(v);
     return String(v);
 }
 
@@ -886,7 +887,7 @@ export default function SitesPage() {
     const kpis2 = [
         {
             label: "Coût moyen / site",
-            value: formatMontant(stats?.cout_loyer_moyen_par_site) + " FCFA",
+            value: formatCurrency(stats?.cout_loyer_moyen_par_site),
             delta: "+0%", trend: "up" as const,
         },
         { label: "Tickets en cours", value: ticketsEnCours, delta: "+0%", trend: "up" as const },

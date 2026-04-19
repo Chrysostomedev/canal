@@ -28,22 +28,14 @@ import { TicketService, Ticket } from "../../../services/admin/ticket.service";
 import { resolveManagerName, resolveManagerPhone } from "../../../services/admin/site.service";
 import * as PlanningService from "../../../services/admin/planningService";
 import axiosInstance from "../../../core/axios";
+import { formatDate, formatCurrency, formatHeures as sharedFormatHeures, formatNumber } from "../../../lib/utils";
+
+const formatHeures = sharedFormatHeures;
 
 // ══════════════════════════════════════════════
+
 // HELPERS
 // ══════════════════════════════════════════════
-
-const formatHeures = (h: number | null | undefined) =>
-  h !== null && h !== undefined ? `${h}h` : "";
-
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  return time === "00:00" ? date : `${date} à ${time}`;
-};
 
 // ══════════════════════════════════════════════
 // STATUTS
@@ -305,9 +297,10 @@ const BADGE_T: Record<ValidationStatus, { bg: string; text: string; icon: React.
 
 function fmtCellT(v: any): string {
   if (v == null || v === "") return "-";
-  if (v instanceof Date) return v.toLocaleDateString("fr-FR");
+  if (v instanceof Date) return formatDate(v);
   return String(v);
 }
+
 
 function parseTicketFile(file: File): Promise<ParsedPreview> {
   return new Promise((resolve, reject) => {
@@ -757,10 +750,11 @@ function TicketSidePanel({
               <div className="flex items-center justify-between py-3">
                 <p className="text-xs text-slate-400 font-medium">Coût</p>
                 <p className="text-sm font-bold text-slate-900">
-                  {ticket.cout.toLocaleString("fr-FR")} FCFA
+                  {formatCurrency(ticket.cout)}
                 </p>
               </div>
             )}
+
           </div>
 
             {ticket.description && (
@@ -792,12 +786,13 @@ function TicketSidePanel({
                   >
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-slate-900">{q.reference}</span>
-                      <span className="text-[10px] text-slate-400">{new Date(q.created_at || "").toLocaleDateString()}</span>
+                      <span className="text-[10px] text-slate-400">{formatDate(q.created_at)}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-900">{(q.amount_ttc || 0).toLocaleString()} FCFA</span>
+                      <span className="text-xs font-bold text-slate-900">{formatCurrency(q.amount_ttc)}</span>
                       <ChevronRight size={14} className="text-slate-300" />
                     </div>
+
                   </Link>
                 ))}
               </div>
@@ -823,9 +818,9 @@ function TicketSidePanel({
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex flex-col">
                         <span className="text-xs font-black text-slate-900">{inv.reference}</span>
-                        <span className="text-[10px] text-slate-400">{new Date(inv.invoice_date).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-slate-400">{formatDate(inv.invoice_date)}</span>
                       </div>
-                      <span className="text-xs font-bold text-slate-900">{(Number(inv.amount_ttc) || 0).toLocaleString()} FCFA</span>
+                      <span className="text-xs font-bold text-slate-900">{formatCurrency(inv.amount_ttc)}</span>
                     </div>
                     {inv.pdf_path && (
                       <a 
@@ -937,7 +932,7 @@ export default function TicketsPage() {
     if (isNaN(planned.getTime())) return "";
     const hours = ticketFormType === "curatif" ? 72 : 7 * 24;
     const due = new Date(planned.getTime() + hours * 60 * 60 * 1000);
-    return due.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return formatDate(due);
   })();
 
   useEffect(() => {

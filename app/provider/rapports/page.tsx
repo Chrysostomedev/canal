@@ -26,8 +26,9 @@ import {
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
   TYPE_LABELS, TYPE_STYLES,
   RESULT_LABELS, RESULT_STYLES,
-  formatDate, getAttachmentUrl, getSiteName, isEditable,
+  getAttachmentUrl, getSiteName, isEditable,
 } from "../../../services/provider/providerReportService";
+import { formatDate } from "@/lib/utils";
 
 // ─── Toast ─────────────────────────────────────────────────────────────────────
 // Remplacé par `Toast` global de `@/components/Toast`
@@ -141,19 +142,7 @@ function FilterDropdown({
             ))}
           </div>
         </div>
-        <div>
-          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Type</label>
-          <div className="flex flex-col gap-2 mt-2">
-            {typeOpts.map(({ val, label }) => (
-              <button key={val}
-                onClick={() => setLocal({ ...local, type: val || undefined })}
-                className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition
-                  ${(local.type ?? "") === val ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Type supprimé car implicite à la page */}
       </div>
       <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
         <button onClick={() => { setLocal({}); onApply({}); onClose(); }}
@@ -301,27 +290,21 @@ function ReportSidePanel({
 // Partagés création / édition
 const baseFields: FieldConfig[] = [
   {
-    name: "result", label: "Résultat de l'intervention", type: "select", required: false,
-    options: [
-
-      { label: "RAS - Rien à signaler", value: "RAS" },
-      { label: "Anomalie détectée", value: "anomalie" },
-    ], gridSpan: 2
+    name: "anomaly_detected", label: "Anomalie détectée ?", type: "checkbox",
   },
-  { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: false, gridSpan: 2, disablePastDates: true },
-  { name: "findings", label: "Observations / Constatations *", type: "rich-text", required: true, gridSpan: 2 as 2 },
-  { name: "action_taken", label: "Actions menées / Travaux effectués", type: "rich-text", required: false, gridSpan: 2 as 2 },
+  { name: "action_taken", label: "Description / Travaux effectués", type: "rich-text", gridSpan: 2 },
+  { name: "findings", label: "Observations / Constatations", type: "rich-text", gridSpan: 2 },
   {
-    name: "attachments", label: "Photos & Documents justificatifs (PDF, images)",
-    type: "pdf-upload", maxPDFs: 10, gridSpan: 2
-  } as any,
+    name: "attachments", label: "Documents et Photos de l'intervention",
+    type: "pdf-upload", maxPDFs: 10, gridSpan: 2,
+    accept: ".pdf,.doc,.docx,.xls,.xlsx,image/*",
+    placeholder: "Cliquez pour ajouter des photos, PDF ou documents Office"
+  },
 ];
 
 const createFields: FieldConfig[] = [
-
   ...baseFields,
-]
-  ;
+];
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function ProviderRapportsPage() {
@@ -335,17 +318,17 @@ export default function ProviderRapportsPage() {
   const {
     filteredReports, stats, selectedReport,
     loading, statsLoading, submitting,
-    error, submitSuccess, submitError,
+    error,
     isPanelOpen, isCreateOpen, isEditOpen, filters,
     openPanel, closePanel, openCreate, closeCreate, openEdit, closeEdit,
     setFilters, createReport, updateReport, exportXlsx,
-  } = useProviderReports();
+    submitSuccess, submitError // 👈 Réintroduction ici
+  } = useProviderReports({ type: "curatif" });
 
   useEffect(() => { if (submitSuccess) toast.success(submitSuccess); }, [submitSuccess]);
   useEffect(() => { if (submitError) toast.error(submitError); }, [submitError]);
 
-  // Forcer le filtre curatif au montage — cette page ne montre que les rapports curatifs
-  useEffect(() => { setFilters({ type: "curatif" }); }, []);
+  // Filtre curatif déjà passé en paramètre du hook ci-dessus
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -389,9 +372,7 @@ export default function ProviderRapportsPage() {
     if (!selectedReport) return;
     await updateReport(selectedReport.id, {
       intervention_type: formData.intervention_type || undefined,
-      result: formData.result || undefined,
-      start_date: formData.start_date || undefined,
-      end_date: formData.end_date || undefined,
+      anomaly_detected: formData.anomaly_detected !== undefined ? !!formData.anomaly_detected : undefined,
       findings: formData.findings || undefined,
       action_taken: formData.action_taken || undefined,
       attachments: formData.attachments?.length ? formData.attachments : undefined,
@@ -434,8 +415,6 @@ export default function ProviderRapportsPage() {
       )
     },
     { header: "Site", key: "site", render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-600">{getSiteName(row.site)}</span> },
-    { header: "Type", key: "intervention_type", render: (_: any, row: InterventionReport) => <TypeBadge type={row.intervention_type} /> },
-    { header: "Résultat", key: "result", render: (_: any, row: InterventionReport) => <ResultBadge result={row.result} /> },
     { header: "Date", key: "created_at", render: (_: any, row: InterventionReport) => <span className="text-xs text-slate-400">{formatDate(row.created_at)}</span> },
     { header: "Note", key: "rating", render: (_: any, row: InterventionReport) => <StarRow value={row.rating} /> },
     { header: "Statut", key: "status", render: (_: any, row: InterventionReport) => <StatusBadge status={row.status} /> },
@@ -517,12 +496,7 @@ export default function ProviderRapportsPage() {
                 <button onClick={() => applyFilters({ ...filters, status: undefined })} className="hover:opacity-70"><X size={11} /></button>
               </span>
             )}
-            {filters.type && (
-              <span className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">
-                {filters.type === "curatif" ? "Curatif" : "Préventif"}
-                <button onClick={() => applyFilters({ ...filters, type: undefined })} className="hover:opacity-70"><X size={11} /></button>
-              </span>
-            )}
+            {/* Chip type masqué car implicite */}
           </div>
         )}
 

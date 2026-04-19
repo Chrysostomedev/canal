@@ -52,9 +52,8 @@ export default function ManagerProfilPanel({
     <>
       {/* ── Overlay sombre ──────────────────────────────────────────────── */}
       <div
-        className={`fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40 transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         onClick={onClose}
       />
 
@@ -126,8 +125,6 @@ export default function ManagerProfilPanel({
                 Informations système
               </p>
 
-              <InfoRow icon={<Hash size={13} className="text-slate-400" />} label="ID Utilisateur" value={`#${manager.id}`} />
-              <InfoRow icon={<Hash size={13} className="text-slate-400" />} label="ID Manager" value={manager.manager?.id ? `#${manager.manager.id}` : "-"} />
               <InfoRow icon={<User size={13} className="text-slate-400" />} label="Rôle" value={manager.role?.name ?? "MANAGER"} />
 
               {/*
@@ -156,11 +153,10 @@ export default function ManagerProfilPanel({
             <button
               onClick={handleToggleStatus}
               disabled={toggling}
-              className={`w-full py-3 rounded-xl text-[13px] font-bold transition-colors disabled:opacity-50 ${
-                isActive
-                  ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-                  : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
-              }`}
+              className={`w-full py-3 rounded-xl text-[13px] font-bold transition-colors disabled:opacity-50 ${isActive
+                ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                }`}
             >
               {toggling ? "En cours..." : isActive ? "Désactiver le gestionnaire" : "Activer le gestionnaire"}
             </button>

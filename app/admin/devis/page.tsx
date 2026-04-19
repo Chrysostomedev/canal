@@ -20,26 +20,17 @@ import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import { useQuotes } from "../../../hooks/admin/useQuotes";
 import { Quote, QuoteService } from "../../../services/admin/quote.service";
 import { exportToXlsx } from "../../../core/export";
-import axiosInstance from "../../../core/axios";
 import { resolveStorageUrl } from "../../../lib/url";
+import { formatDate, formatCurrency } from "@/lib/utils";
+import axiosInstance from "../../../core/axios";
+
 
 // ══════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════
 
-const formatMontant = (v?: number): string => {
-  if (!v && v !== 0) return "-";
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
-  return `${v.toLocaleString("fr-FR")} FCFA`;
-};
+// local formatMontant and formatDate removed - using @/lib/utils
 
-const formatDate = (iso?: string): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-};
 
 // ══════════════════════════════════════════════
 // STATUTS
@@ -139,7 +130,7 @@ function FilterDropdown({
           {options.map(({ val, label }) => (
             <button
               key={val}
-              onClick={() => setLocal({ ...local, status: val || undefined })}
+              onClick={() => setLocal({ ...local, status: val || "non renseigné" })}
               className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition ${
                 (local.status ?? "") === val
                   ? "bg-slate-900 text-white"
@@ -269,9 +260,10 @@ function QuoteSidePanel({
               },
               { label: "Référence",   value: quote.reference },
               { label: "Prestataire", value: providerName },
-              { label: "Date",        value: formatDate(quote.created_at) },
+               { label: "Date",        value: formatDate(quote.created_at) },
               { label: "Site",        value: siteName },
-              { label: "Montant HT",  value: formatMontant(totalHT) },
+              { label: "Montant HT",  value: formatCurrency(totalHT) },
+
             ].map((f, i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
                 <p className="text-xs text-slate-400 font-medium">{f.label}</p>
@@ -380,25 +372,26 @@ function QuoteSidePanel({
                         <td className="px-4 py-3 text-xs font-medium text-slate-900">{item.designation}</td>
                         <td className="px-2 py-3 text-center text-xs text-slate-500">{item.quantity}</td>
                         <td className="px-4 py-3 text-right text-xs font-bold text-slate-900">
-                          {formatMontant(item.total_price ?? item.quantity * item.unit_price)}
+                          {formatCurrency(item.total_price ?? item.quantity * item.unit_price)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 <div className="bg-slate-50 border-t border-slate-100 px-4 py-3 space-y-1">
-                  <div className="flex justify-between text-xs">
+                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Total HT</span>
-                    <span className="font-bold text-slate-900">{formatMontant(totalHT)}</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(totalHT)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">TVA (18%)</span>
-                    <span className="font-bold text-slate-900">{formatMontant(taxAmount)}</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(taxAmount)}</span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-slate-200 pt-1.5">
                     <span className="font-black text-slate-900">Total TTC</span>
-                    <span className="font-black text-slate-900">{formatMontant(totalTTC)}</span>
+                    <span className="font-black text-slate-900">{formatCurrency(totalTTC)}</span>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -515,7 +508,7 @@ function QuoteSidePanel({
                 </div>
                 <div className="flex justify-between text-sm border-t border-slate-200 pt-2">
                   <span className="font-black text-slate-900">Montant TTC</span>
-                  <span className="font-black text-slate-900">{formatMontant(totalTTC)}</span>
+                  <span className="font-black text-slate-900">{formatCurrency(totalTTC)}</span>
                 </div>
               </div>
               {managerName ? (
@@ -690,7 +683,7 @@ export default function DevisPage() {
         montant_ht:  q.amount_ht  ?? 0,
         montant_ttc: q.amount_ttc ?? 0,
         statut:      { pending: "En attente", approved: "Approuvé", rejected: "Rejeté", revision: "En révision" }[q.status] ?? q.status,
-        date:        q.created_at ? new Date(q.created_at).toLocaleDateString("fr-FR") : "-",
+        date:        formatDate(q.created_at),
       }));
       exportToXlsx(rows, [
         { header: "Référence",    key: "reference",   width: 18 },
@@ -714,7 +707,7 @@ export default function DevisPage() {
     { label: "Total des devis",   value: statsLoading ? 0 : (stats?.total ?? 0),    delta: "+3%",  trend: "up" as const },
     { label: "Devis en attente",  value: statsLoading ? 0 : (stats?.pending ?? 0),  delta: "+0%",  trend: "up" as const },
     { label: "Devis approuvés",   value: statsLoading ? 0 : (stats?.approved ?? 0), delta: "+15%", trend: "up" as const },
-    { label: "Montant approuvé",  value: statsLoading ? 0 : (stats?.total_approved_amount ?? 0), delta: "+20%", trend: "up" as const, isCurrency: true },
+    { label: "Montant approuvé",  value: statsLoading ? 0 : formatCurrency(stats?.total_approved_amount ?? 0), delta: "+20%", trend: "up" as const, isCurrency: true },
   ];
 
   // ── Champs formulaire création ─────────────────────────────────────────────
@@ -822,7 +815,7 @@ export default function DevisPage() {
     // { header: "Ticket",      key: "ticket",     render: (_: any, row: Quote) => row.ticket?.reference ?? row.ticket?.title ?? `${row.ticket_code_ticket}` },
     { header: "Prestataire", key: "provider",   render: (_: any, row: Quote) => row.provider?.company_name ?? row.provider?.name ?? "-" },
     { header: "Site",        key: "site",       render: (_: any, row: Quote) => row.site?.nom ?? row.site?.name ?? "-" },
-    { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatMontant(row.amount_ttc)}</span> },
+    { header: "Montant TTC", key: "amount_ttc", render: (_: any, row: Quote) => <span className="font-bold">{formatCurrency(row.amount_ttc)}</span> },
     { header: "Date",        key: "created_at", render: (_: any, row: Quote) => formatDate(row.created_at) },
     { header: "Statut",      key: "status",     render: (_: any, row: Quote) => <StatusBadge status={row.status} /> },
    

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import ReusableForm from "@/components/ReusableForm";
@@ -251,8 +252,7 @@ export default function PlanningPage() {
             selectedEvent={formattedSelectedEvent}
             isPanelOpen={isPanelOpen}
             onEventClick={(event: any) => {
-              setSelectedPlanning(event);
-              setIsPanelOpen(true);
+              router.push(`/manager/planning/${event.id}`);
             }}
             onPanelClose={() => setIsPanelOpen(false)}
             onEditClick={undefined}

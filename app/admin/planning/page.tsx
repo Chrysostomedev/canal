@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ActionGroup from "@/components/ActionGroup";
 import StatsCard from "@/components/StatsCard";
@@ -15,12 +16,12 @@ import {
   UpdatePlanningPayload,
   STATUS_COLORS,
   STATUS_LABELS,
-  formatDate,
-  formatTime,
   getSiteName,
   getProviderName,
   PlanningStatus, // Ajouté
 } from "../../../services/admin/planningService";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
 import { Site, resolveManagerName, resolveManagerPhone } from "../../../services/admin/site.service"; // Ajouté
 import type { FieldConfig } from "@/components/ReusableForm";
 
@@ -173,9 +174,18 @@ export default function PlanningPage() {
     handleCreate, handleUpdate, handleDelete,
     openCreateModal, closeCreateModal,
     openEditModal: baseOpenEditModal, closeEditModal,
-    openPanel, closePanel,
+    openPanel: baseOpenPanel, closePanel,
     setFilters,
   } = usePlanning();
+
+  const router = useRouter();
+
+  /**
+   * Redirection vers la page de détails au lieu d'ouvrir le panneau latéral.
+   */
+  const openPanel = (p: any) => {
+    router.push(`/admin/planning/${p.id}`);
+  };
 
   const openEditModal = (p: any) => {
     baseOpenEditModal(p);
@@ -416,12 +426,13 @@ export default function PlanningPage() {
         { label: "Téléphone", value: selectedPlanning.responsable_phone ?? "-" },
         {
           label: "Date de début",
-          value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
+          value: formatDate(selectedPlanning.date_debut),
         },
         {
           label: "Date de fin",
-          value: `${formatDate(selectedPlanning.date_fin)} à ${formatTime(selectedPlanning.date_fin)}`,
+          value: formatDate(selectedPlanning.date_fin),
         },
+
         {
           label: "Statut",
           value: STATUS_LABELS[selectedPlanning.status],

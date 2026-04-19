@@ -23,29 +23,14 @@ import { Pencil } from "lucide-react";
 import { AssetService, CompanyAsset } from "../../../../services/admin/asset.service";
 import { TicketService, Ticket } from "../../../../services/admin/ticket.service";
 import { resolveUrl } from "@/components/AttachmentViewer";
+import { formatDate, formatCurrency } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────
 
-const fmtMontant = (v?: number | null) => {
-  if (v == null) return "-";
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K FCFA`;
-  return `${v} FCFA`;
-};
+// local fmt helpers removed - using @/lib/utils
 
-const fmtDate = (iso?: string | null) => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR");
-};
-
-const fmtDateLong = (iso?: string | null) => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-};
 
 // ─────────────────────────────────────────────────────────────
 // STATUTS
@@ -117,9 +102,9 @@ function AlerteBanner({ alerte, remaining, dateFin }: {
 }) {
   if (alerte === "ok") return null;
   const cfg = {
-    expire: { bg: "bg-red-50 border-red-200", icon: <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />, title: "Équipement amorti", msg: `Fin de vie dépassée depuis le ${fmtDate(dateFin.toISOString())}. Statut suggéré : HORS USAGE.`, text: "text-red-700" },
-    warning_3m: { bg: "bg-orange-50 border-orange-200", icon: <AlertTriangle size={16} className="text-orange-600 shrink-0 mt-0.5" />, title: `Rappel - ${remaining}j restants`, msg: `Fin de vie dans moins de 3 mois (${fmtDate(dateFin.toISOString())}). Prévoyez le remplacement.`, text: "text-orange-700" },
-    warning_6m: { bg: "bg-yellow-50 border-yellow-200", icon: <Clock size={16} className="text-yellow-600 shrink-0 mt-0.5" />, title: `Alerte - ${remaining}j restants`, msg: `Fin de vie estimée le ${fmtDate(dateFin.toISOString())}. Planifiez la maintenance.`, text: "text-yellow-700" },
+    expire: { bg: "bg-red-50 border-red-200", icon: <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />, title: "Équipement amorti", msg: `Fin de vie dépassée depuis le ${formatDate(dateFin.toISOString())}. Statut suggéré : HORS USAGE.`, text: "text-red-700" },
+    warning_3m: { bg: "bg-orange-50 border-orange-200", icon: <AlertTriangle size={16} className="text-orange-600 shrink-0 mt-0.5" />, title: `Rappel - ${remaining}j restants`, msg: `Fin de vie dans moins de 3 mois (${formatDate(dateFin.toISOString())}). Prévoyez le remplacement.`, text: "text-orange-700" },
+    warning_6m: { bg: "bg-yellow-50 border-yellow-200", icon: <Clock size={16} className="text-yellow-600 shrink-0 mt-0.5" />, title: `Alerte - ${remaining}j restants`, msg: `Fin de vie estimée le ${formatDate(dateFin.toISOString())}. Planifiez la maintenance.`, text: "text-yellow-700" },
   }[alerte];
   return (
     <div className={`flex items-start gap-3 p-4 rounded-2xl border ${cfg.bg}`}>
@@ -205,6 +190,8 @@ export default function PatrimoineDetailsPage() {
       options: sites.map((s: any) => ({ label: s.nom, value: String(s.id) })),
     },
     { name: "designation", label: "Désignation", type: "text", required: true },
+    { name: "serial_number", label: "N° de Série", type: "text", placeholder: "Ex: SN123456789" },
+    { name: "product_type_code", label: "Code Produit", type: "text", placeholder: "Ex: 03 (2 chiffres)", minLength: 2, maxLength: 2 },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: Object.entries(ST_LABEL).map(([v, l]) => ({ label: l, value: v })),
@@ -227,18 +214,18 @@ export default function PatrimoineDetailsPage() {
   const siteId = (asset?.site as any)?.id ?? null;
 
   const kpis = [
-    { label: "Valeur d'entrée", value: fmtMontant(asset?.valeur_entree), delta: "", trend: "up" as const },
-    { label: "Valeur résiduelle", value: fmtMontant(amort?.residual), delta: "", trend: "down" as const },
+    { label: "Valeur d'entrée", value: formatCurrency(asset?.valeur_entree), delta: "", trend: "up" as const },
+    { label: "Valeur résiduelle", value: formatCurrency(amort?.residual), delta: "", trend: "down" as const },
     { label: "Jours restants", value: amort ? Math.max(0, amort.remaining) : "-", delta: "", trend: (amort?.alerte !== "ok" ? "down" : "up") as const },
     { label: "Consommé", value: amort ? `${Math.round(amort.pct)}%` : "-", delta: "", trend: "up" as const },
   ];
 
   // Jalons timeline amortissement
   const jalons = amort ? [
-    { label: "Achat", date: fmtDate(asset?.date_entree), pct: 0, color: "bg-slate-400" },
-    { label: "Alerte 6 mois", date: (() => { const d = new Date(amort.dateEntree); d.setDate(d.getDate() + amort.elapsed + amort.remaining - 180); return fmtDate(d.toISOString()); })(), pct: Math.max(0, ((amort.elapsed + amort.remaining - 180) / (amort.elapsed + amort.remaining)) * 100), color: "bg-yellow-400" },
-    { label: "Rappel 3 mois", date: (() => { const d = new Date(amort.dateEntree); d.setDate(d.getDate() + amort.elapsed + amort.remaining - 90); return fmtDate(d.toISOString()); })(), pct: Math.max(0, ((amort.elapsed + amort.remaining - 90) / (amort.elapsed + amort.remaining)) * 100), color: "bg-orange-500" },
-    { label: "Fin de vie", date: fmtDate(amort.dateFin.toISOString()), pct: 100, color: "bg-red-500" },
+    { label: "Achat", date: formatDate(asset?.date_entree), pct: 0, color: "bg-slate-400" },
+    { label: "Alerte 6 mois", date: (() => { const d = new Date(amort.dateEntree); d.setDate(d.getDate() + amort.elapsed + amort.remaining - 180); return formatDate(d); })(), pct: Math.max(0, ((amort.elapsed + amort.remaining - 180) / (amort.elapsed + amort.remaining)) * 100), color: "bg-yellow-400" },
+    { label: "Rappel 3 mois", date: (() => { const d = new Date(amort.dateEntree); d.setDate(d.getDate() + amort.elapsed + amort.remaining - 90); return formatDate(d); })(), pct: Math.max(0, ((amort.elapsed + amort.remaining - 90) / (amort.elapsed + amort.remaining)) * 100), color: "bg-orange-500" },
+    { label: "Fin de vie", date: formatDate(amort.dateFin), pct: 100, color: "bg-red-500" },
   ] : [];
 
   return (
@@ -274,7 +261,6 @@ export default function PatrimoineDetailsPage() {
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
                 <div className="space-y-3 flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest font-mono">#{asset.id}</span>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border ${ST_STYLE[asset.status] ?? ""}`}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ST_DOT[asset.status] }} />
                       {ST_LABEL[asset.status] ?? asset.status}
@@ -304,15 +290,15 @@ export default function PatrimoineDetailsPage() {
                       <Eye size={14} /> Voir le site
                     </Link>
                   )}
-                    <button onClick={() => { setSelectedTypeId(String(asset.type_company_asset_id ?? "")); setIsEditModalOpen(true); }}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm">
-                      <Pencil size={14} /> Modifier le patrimoine
-                    </button>
-                    <Link href={`/admin/patrimoines/transfert`}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
-                      <ArrowRightLeft size={14} /> Transférer
-                    </Link>
-                  </div>
+                  <button onClick={() => { setSelectedTypeId(String(asset.type_company_asset_id ?? "")); setIsEditModalOpen(true); }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm">
+                    <Pencil size={14} /> Modifier le patrimoine
+                  </button>
+                  <Link href={`/admin/patrimoines/transfert`}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
+                    <ArrowRightLeft size={14} /> Transférer
+                  </Link>
+                </div>
               </div>
             ) : (
               <p className="text-slate-400 text-sm text-center py-6">Patrimoine introuvable.</p>
@@ -369,11 +355,11 @@ export default function PatrimoineDetailsPage() {
                     {/* Cards valeurs */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                       {[
-                        { l: "Valeur d'entrée", v: fmtMontant(asset.valeur_entree), bg: "bg-slate-50" },
-                        { l: "Valeur résiduelle", v: fmtMontant(amort.residual), bg: "bg-slate-50" },
-                        { l: "Date d'entrée", v: fmtDate(asset.date_entree), bg: "bg-slate-50" },
+                        { l: "Valeur d'entrée", v: formatCurrency(asset.valeur_entree), bg: "bg-slate-50" },
+                        { l: "Valeur résiduelle", v: formatCurrency(amort.residual), bg: "bg-slate-50" },
+                        { l: "Date d'entrée", v: formatDate(asset.date_entree), bg: "bg-slate-50" },
                         {
-                          l: "Fin de vie est.", v: fmtDate(amort.dateFin.toISOString()), bg:
+                          l: "Fin de vie est.", v: formatDate(amort.dateFin), bg:
                             amort.alerte === "expire" ? "bg-red-50" :
                               amort.alerte === "warning_3m" ? "bg-orange-50" :
                                 amort.alerte === "warning_6m" ? "bg-yellow-50" : "bg-emerald-50"
@@ -423,7 +409,7 @@ export default function PatrimoineDetailsPage() {
                           <div key={t.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
                             <div>
                               <p className="text-sm font-bold text-slate-900">{t.subject || t.code_ticket}</p>
-                              <p className="text-xs text-slate-400 mt-0.5">{t.type === "curatif" ? "Curatif" : "Préventif"} · {fmtDate(t.created_at)}</p>
+                              <p className="text-xs text-slate-400 mt-0.5">{t.type === "curatif" ? "Curatif" : "Préventif"} · {formatDate(t.created_at)}</p>
                             </div>
                             <Link href={`/admin/tickets/${t.id}`} className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-black hover:border-black hover:text-white transition">
                               <Eye size={14} />
@@ -492,11 +478,13 @@ export default function PatrimoineDetailsPage() {
                         { l: "Sous-type", v: subTypeName },
                         { l: "Site", v: siteName },
                         { l: "Codification", v: asset.codification },
+                        { l: "N° de Série", v: asset.serial_number ?? "-" },
+                        { l: "Code Produit", v: asset.product_type_code ?? "-" },
                         { l: "Statut", v: ST_LABEL[asset.status] ?? asset.status },
                         { l: "Criticité", v: asset.criticite === "critique" ? "Critique" : "Non critique" },
-                        { l: "Date d'entrée", v: fmtDateLong(asset.date_entree) },
-                        { l: "Valeur d'entrée", v: fmtMontant(asset.valeur_entree) },
-                        { l: "Créé le", v: fmtDate(asset.created_at) },
+                        { l: "Date d'entrée", v: formatDate(asset.date_entree) },
+                        { l: "Valeur d'entrée", v: formatCurrency(asset.valeur_entree) },
+                        { l: "Créé le", v: formatDate(asset.created_at) },
                       ].map((r, i) => (
                         <div key={i} className="flex items-center justify-between py-3">
                           <p className="text-xs text-slate-400 font-medium">{r.l}</p>
@@ -517,7 +505,7 @@ export default function PatrimoineDetailsPage() {
                           <div className="absolute -left-[calc(2.5rem-3px)] w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm">
                             <CheckCircle size={13} className="text-white" />
                           </div>
-                          <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest mb-0.5">{fmtDateLong(asset.created_at)}</p>
+                          <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest mb-0.5">{formatDate(asset.created_at)}</p>
                           <p className="text-xs font-black text-slate-900">Création de l'équipement</p>
                           <p className="text-xs text-slate-500 mt-0.5">Codification : {asset.codification}</p>
                         </div>
@@ -527,9 +515,9 @@ export default function PatrimoineDetailsPage() {
                             <div className="absolute -left-[calc(2.5rem-3px)] w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
                               <Calendar size={13} className="text-white" />
                             </div>
-                            <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest mb-0.5">{fmtDateLong(asset.date_entree)}</p>
+                            <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest mb-0.5">{formatDate(asset.date_entree)}</p>
                             <p className="text-xs font-black text-slate-900">Mise en service</p>
-                            <p className="text-xs text-slate-500 mt-0.5">Valeur : {fmtMontant(asset.valeur_entree)}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Valeur : {formatCurrency(asset.valeur_entree)}</p>
                           </div>
                         )}
                         {/* Fin de vie (futur) */}
@@ -538,7 +526,7 @@ export default function PatrimoineDetailsPage() {
                             <div className="absolute -left-[calc(2.5rem-3px)] w-7 h-7 rounded-full border-2 border-dashed border-slate-300 bg-white flex items-center justify-center">
                               <TrendingDown size={13} className="text-slate-400" />
                             </div>
-                            <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest mb-0.5">{fmtDateLong(amort.dateFin.toISOString())} (estimé)</p>
+                            <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest mb-0.5">{formatDate(amort.dateFin)} (estimé)</p>
                             <p className="text-xs font-black text-slate-500">Fin de vie estimée</p>
                           </div>
                         )}
@@ -571,6 +559,8 @@ export default function PatrimoineDetailsPage() {
             sub_type_company_asset_id: String(asset.sub_type_company_asset_id ?? ""),
             site_id: String(asset.site_id ?? (asset.site as any)?.id ?? ""),
             designation: asset.designation,
+            serial_number: asset.serial_number ?? "",
+            product_type_code: asset.product_type_code ?? "",
             status: asset.status,
             criticite: asset.criticite ?? "non_critique",
             date_entree: fmtDateForInput(asset.date_entree),

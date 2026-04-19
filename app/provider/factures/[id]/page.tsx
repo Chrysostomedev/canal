@@ -16,10 +16,10 @@ import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import {
   providerInvoiceService, Invoice,
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
-  formatMontant, formatDate, formatDateLong,
   getPdfUrl, getProviderName, getSiteName,
   getReport, toNum,
 } from "../../../../services/provider/providerInvoiceService";
+import { formatCurrency as formatMontant, formatDate } from "@/lib/utils";
 
 // ─── StatusBadge ──────────────────────────────────────────────────────────────
 
@@ -354,7 +354,7 @@ export default function ProviderFacturesDetailPage() {
                         <div className="px-4 py-3 bg-emerald-50 border-t border-emerald-100">
                           <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm mb-1">
                             <CheckCircle2 size={16} />
-                            Payée le {formatDateLong(invoice.payment_date)}
+                            Payée le {formatDate(invoice.payment_date, { day: "2-digit", month: "long", year: "numeric" })}
                           </div>
                           {invoice.payment_method && <p className="text-xs text-emerald-600">Mode : {invoice.payment_method}</p>}
                           {invoice.payment_reference && <p className="text-xs text-emerald-600 font-mono">Réf : {invoice.payment_reference}</p>}

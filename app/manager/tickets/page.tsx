@@ -24,17 +24,8 @@ import { Ticket, Asset } from "../../../types/manager.types";
 import { Service } from "@services/manager/service.service";
 
 // ── HELPERS ──
-const formatHeures = (h?: number | null) => h != null ? `${h}h` : "-";
-const formatDate = (iso?: string | null) => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-};
+import { formatDate, formatCurrency, formatHeures, formatNumber } from "@/lib/utils";
+
 
 // ── STATUTS & PRIORITÉS ──
 const STATUS_LABELS: Record<string, string> = {
@@ -174,7 +165,7 @@ function TicketSidePanel({
 export default function TicketsPage() {
   const {
     tickets, stats, meta, filters, isLoading, setFilters, refresh, exportTickets
-  } = useTickets();
+  } = useTickets({ type: "curatif" });
 
   const { createTicket, rateTicket, isSubmitting, error, success } = useTicketActions({
     onSuccess: () => {

@@ -21,18 +21,19 @@ import {
 import { providerReportService } from "../../../../services/provider/providerReportService";
 import { providerQuoteService } from "../../../../services/provider/providerQuoteService";
 import { useToast } from "../../../../contexts/ToastContext";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 // ─── Champs formulaire rapport curatif ───────────────────────────────────────
 const reportFields: FieldConfig[] = [
-  {
-    name: "result", label: "Résultat de l'intervention", type: "select", required: true,
-    options: [
-      { label: "Sélectionner…", value: "" },
-      { label: "RAS - Rien à signaler", value: "RAS" },
-      { label: "Anomalie détectée", value: "anomalie" },
-    ], gridSpan: 2,
-  },
-  { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: true, gridSpan: 2, disablePastDates: true },
+  // {
+  //   name: "result", label: "Résultat de l'intervention", type: "select", required: true,
+  //   options: [
+  //     { label: "Sélectionner…", value: "" },
+  //     { label: "RAS - Rien à signaler", value: "RAS" },
+  //     { label: "Anomalie détectée", value: "anomalie" },
+  //   ], gridSpan: 2,
+  // },
+  // { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: true, gridSpan: 2, disablePastDates: true },
   { name: "findings", label: "Observations / Constatations *", type: "rich-text", required: true, gridSpan: 2 },
   { name: "action_taken", label: "Actions menées / Travaux effectués", type: "rich-text", required: false, gridSpan: 2 },
   { name: "attachments", label: "Photos & Documents justificatifs", type: "pdf-upload", maxPDFs: 10, gridSpan: 2 } as any,
@@ -46,16 +47,8 @@ const quoteFields: FieldConfig[] = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmtDate = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-};
-const fmtDateTime = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-};
+const fmtDate = formatDate;
+const fmtDateTime = formatDate;
 import { resolveUrl } from "@/components/AttachmentViewer";
 const getUrl = resolveUrl;
 
@@ -120,22 +113,34 @@ export default function ProviderTicketDetailPage() {
     if (!ticketId) return;
     setLoading(true); setError("");
     try {
-      const data = await providerTicketService.getTicketInfo(ticketId);
-      console.log("[ProviderTicketDetail] unified data:", data);
-      
+      // Pour pallier les manques du backend, on fait deux appels :
+      // 1. getTicketById(id) : contient les relations site, companyAsset, provider, service
+      // 2. getTicketInfo(id) : contient les rapports et devis
+      const [ticketCore, additionalInfo] = await Promise.all([
+        providerTicketService.getTicketById(ticketId),
+        providerTicketService.getTicketInfo(ticketId)
+      ]);
+
+      console.log("[ProviderTicketDetail] Core data:", ticketCore);
+      console.log("[ProviderTicketDetail] Additional info:", additionalInfo);
+
       const fullyLoadedTicket = {
-        ...(data.ticket ?? {}),
-        reports: data.reports || (data.rapport ? [{ ...(data.rapport ?? {}), attachments: data.rapport_attachments ?? [] }] : []),
-        attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
+        ...ticketCore,
+        site: ticketCore.site ?? additionalInfo?.site,
+        asset: ticketCore.company_asset ?? ticketCore.companyAsset ?? ticketCore.asset ?? additionalInfo?.company_asset ?? additionalInfo?.companyAsset ?? additionalInfo?.asset,
+        provider: ticketCore.provider ?? additionalInfo?.provider,
+        reports: additionalInfo?.reports || (additionalInfo?.rapport ? [{ ...(additionalInfo.rapport ?? {}), attachments: additionalInfo.rapport_attachments ?? [] }] : ticketCore.reports || []),
+        attachments: additionalInfo?.ticket_attachments ?? ticketCore.attachments ?? []
       };
 
+      console.log("[ProviderTicketDetail] merged ticket:", fullyLoadedTicket);
       setTicket(fullyLoadedTicket as any);
 
       // Gestion des devis (conversion d'un seul objet en tableau si nécessaire)
-      if (data.devis) {
-        setQuotes([data.devis]);
-      } else if (data.quotes) {
-        setQuotes(data.quotes);
+      if (additionalInfo?.devis) {
+        setQuotes([additionalInfo.devis]);
+      } else if (additionalInfo?.quotes) {
+        setQuotes(additionalInfo.quotes);
       } else {
         setQuotes([]);
       }
@@ -314,7 +319,7 @@ export default function ProviderTicketDetailPage() {
                     </div>
                     <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-2.5 min-w-[240px]">
                       {[
-                        { l: "Planifié le", v: fmtDateTime(ticket.planned_at) },
+                        { l: "Signalé le", v: fmtDateTime(ticket.planned_at) },
                         { l: "Échéance", v: fmtDateTime(ticket.due_at) },
                       ].map((r, i) => (
                         <div key={i} className="flex justify-between text-sm">
@@ -438,7 +443,7 @@ export default function ProviderTicketDetailPage() {
                           <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
                             <div>
                               <p className="text-sm font-bold text-slate-900">{q.reference ?? `Devis #${q.id}`}</p>
-                              <p className="text-xs text-slate-500 font-medium">{q.total_amount_ttc ? `${q.total_amount_ttc.toLocaleString("fr-FR")} FCFA` : q.amount_ht ? `${q.amount_ht.toLocaleString("fr-FR")} FCFA` : "—"}</p>
+                              <p className="text-xs text-slate-500 font-medium">{q.total_amount_ttc ? formatCurrency(q.total_amount_ttc) : q.amount_ht ? formatCurrency(q.amount_ht) : "—"}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${q.status === "approved" || q.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
@@ -483,9 +488,12 @@ export default function ProviderTicketDetailPage() {
                         { l: "Type", v: ticket.type === "curatif" ? "Curatif" : "Préventif" },
                         { l: "Priorité", v: PRIORITY_LABEL[ticket.priority] ?? ticket.priority },
                         { l: "Statut", v: STATUS_LABEL[ticket.status] ?? ticket.status },
-                        { l: "Site", v: ticket.site?.nom ?? "—" },
-                        { l: "Patrimoine", v: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "—" },
-                        { l: "Service", v: ticket.service?.name ?? "—" },
+                        { l: "Site", v: ticket.site?.nom ?? ticket.site?.name ?? "—" },
+                        { l: "Patrimoine", v: ticket.asset ? `${(ticket.asset as any).designation ?? (ticket.asset as any).nom ?? ""} (${(ticket.asset as any).codification ?? ""})` : "—" },
+                        { l: "Type Actif", v: (ticket.asset as any)?.type?.name ?? (ticket.asset as any)?.type?.nom ?? (ticket.asset as any)?.type ?? "—" },
+                        { l: "Sous-type", v: (ticket.asset as any)?.sub_type?.name ?? (ticket.asset as any)?.sub_type?.nom ?? (ticket.asset as any)?.sub_type ?? "—" },
+                        { l: "Service", v: ticket.service?.name ?? ticket.service?.nom ?? "—" },
+                        { l: "Prestataire", v: (ticket.provider as any)?.company_name ?? (ticket.provider as any)?.name ?? (ticket.provider as any)?.nom ?? "—" },
                         { l: "Créé le", v: fmtDate(ticket.created_at) },
                       ].map((r, i) => (
                         <div key={i} className="flex items-center justify-between py-3">

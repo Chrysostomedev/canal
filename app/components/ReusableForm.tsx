@@ -3,13 +3,13 @@
 import { useState } from "react";
 import SideModal from "@/components/form/SideModal";
 import FormButton from "@/components/form/FormButton";
-import { FormField, Input, Select, PasswordInput, DateInput, DateRangeInput, RichTextEditor, ImageUpload, PdfUpload, PhoneInput } from "@/components/form/FormInput";
+import { FormField, Input, Select, PasswordInput, DateInput, DateRangeInput, RichTextEditor, ImageUpload, PdfUpload, PhoneInput, Checkbox } from "@/components/form/FormInput";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "password" | "date" | "date-range" | "select" | "email" | "number" | "rich-text" | "image-upload" | "pdf-upload" | "textarea" | "tel";
+  type: "text" | "password" | "date" | "date-range" | "select" | "email" | "number" | "rich-text" | "image-upload" | "pdf-upload" | "textarea" | "tel" | "checkbox";
   placeholder?: string;
   required?: boolean;
   gridSpan?: 1 | 2;
@@ -20,6 +20,7 @@ export interface FieldConfig {
   disabled?: boolean;
   defaultValue?: any;
   disablePastDates?: boolean;
+  accept?: string;
 }
 
 interface ReusableFormProps {
@@ -98,21 +99,26 @@ export default function ReusableForm({
   return (
     <SideModal isOpen={isOpen} onClose={onClose} title={title} subtitle={subtitle}>
       <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100vh-180px)]">
+        {/* Messages de retour API - Fixes en haut */}
+        {(error || success) && (
+          <div className="shrink-0 space-y-3 mb-4">
+            {error && (
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="shrink-0 mt-0.5" size={16} />
+                <div className="text-xs font-bold leading-relaxed">{error}</div>
+              </div>
+            )}
+            {success && (
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 animate-in fade-in slide-in-from-top-1">
+                <CheckCircle2 className="shrink-0 mt-0.5" size={16} />
+                <div className="text-xs font-bold leading-relaxed">{success}</div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-          {/* Messages de retour API */}
-          {error && (
-            <div className="mb-6 flex items-start gap-3 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-700 animate-in fade-in slide-in-from-top-2">
-              <AlertCircle className="shrink-0 mt-0.5" size={18} />
-              <div className="text-sm font-semibold leading-relaxed">{error}</div>
-            </div>
-          )}
-          {success && (
-            <div className="mb-6 flex items-start gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 animate-in fade-in slide-in-from-top-2">
-              <CheckCircle2 className="shrink-0 mt-0.5" size={18} />
-              <div className="text-sm font-semibold leading-relaxed">{success}</div>
-            </div>
-          )}
+
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 pb-8">
             {fields.map((field) => (
@@ -136,6 +142,8 @@ export default function ReusableForm({
                       maxPDFs={field.maxPDFs ?? 1}
                       defaultValue={getDefault(field)}
                       onChange={(files: File[]) => handleCustomChange(field.name, files)}
+                      accept={field.accept}
+                      placeholder={field.placeholder}
                     />
 
                   ) : field.type === "select" ? (
@@ -210,6 +218,16 @@ export default function ReusableForm({
                       disabled={field.disabled}
                       defaultValue={getDefault(field)} // ✅ CORRIGÉ
                       onChange={(val) => onFieldChange?.(field.name, val)}
+                    />
+
+                  ) : field.type === "checkbox" ? (
+                    <Checkbox
+                      name={field.name}
+                      label={field.label}
+                      required={field.required}
+                      disabled={field.disabled}
+                      defaultChecked={!!getDefault(field)}
+                      onChange={(checked: boolean) => handleCustomChange(field.name, checked)}
                     />
 
                   ) : (

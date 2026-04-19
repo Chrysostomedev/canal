@@ -14,6 +14,7 @@ import StatsCard from "@/components/StatsCard";
 import DataTable from "@/components/DataTable";
 import Paginate from "@/components/Paginate";
 import PageHeader from "@/components/PageHeader";
+import { formatDate } from "@/lib/utils";
 
 // ══════════════════════════════════════
 // DONNÉES STATIQUES
@@ -263,7 +264,7 @@ function AddAdminSidePanel({ open, onClose, onSuccess }: {
         role:   form.role_slug,
         site:   "",
         status: "active",
-        joined: new Date().toLocaleDateString("fr-FR"),
+        joined: formatDate(new Date()),
       });
       onClose();
     } catch (err: any) {
@@ -517,7 +518,7 @@ export default function RolesPage() {
           phone:  u.phone ?? u.user?.phone ?? "",
           email:  u.email ?? u.user?.email ?? "",
           status: u.is_active ? "active" : "inactive",
-          joined: u.created_at ? new Date(u.created_at).toLocaleDateString("fr-FR") : "-",
+          joined: formatDate(u.created_at),
         }));
 
       } else {
@@ -546,7 +547,7 @@ export default function RolesPage() {
             phone:  u.phone_number ?? u.phone ?? "",
             email:  u.email ?? "",
             status: (u.is_active === true || u.is_active === 1 || u.status === "active" || u.status === "actif") ? "active" : "inactive",
-            joined: u.created_at ? new Date(u.created_at).toLocaleDateString("fr-FR") : "-",
+            joined: formatDate(u.created_at),
           };
         });
       }
