@@ -19,27 +19,15 @@ import PageHeader from "@/components/PageHeader";
 import { useInvoices } from "../../../hooks/admin/useInvoices";
 import { Invoice, InvoiceService } from "../../../services/admin/invoice.service";
 import { exportToXlsx } from "../../../core/export";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
 
 // ══════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════
 
-/** Formate un montant numérique en FCFA lisible (K / M) */
-const formatMontant = (v: number | string): string => {
-  const num = typeof v === "string" ? parseFloat(v) : v;
-  if (!num && num !== 0) return "0 FCFA";
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M FCFA`;
-  if (num >= 1_000) return `${Math.round(num / 1_000)}K FCFA`;
-  return `${num.toLocaleString("fr-FR")} FCFA`;
-};
+// local formatMontant and formatDate removed - using @/lib/utils
 
-/** Formate une date ISO en dd/mm/yyyy */
-const formatDate = (iso: string): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-};
 
 // ══════════════════════════════════════════════
 // STATUTS
@@ -262,7 +250,8 @@ function InvoiceSidePanel({
               { label: "Prestataire", value: providerName },
               { label: "Date", value: formatDate(invoice.invoice_date) },
               { label: "Site", value: siteName },
-              { label: "Montant HT", value: formatMontant(amountHT) },
+              { label: "Montant HT", value: formatCurrency(amountHT) },
+
             ].map((f, i) => (
               <div
                 key={i}
@@ -299,15 +288,16 @@ function InvoiceSidePanel({
           <div className="bg-slate-50 rounded-2xl border border-slate-100 px-4 py-3 space-y-1.5">
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">Montant HT</span>
-              <span className="font-bold text-slate-900">{formatMontant(amountHT)}</span>
+              <span className="font-bold text-slate-900">{formatCurrency(amountHT)}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">TVA</span>
-              <span className="font-bold text-slate-900">{formatMontant(taxAmount)}</span>
+              <span className="font-bold text-slate-900">{formatCurrency(taxAmount)}</span>
             </div>
             <div className="flex justify-between text-sm border-t border-slate-200 pt-1.5">
               <span className="font-black text-slate-900">Montant TTC</span>
-              <span className="font-black text-slate-900">{formatMontant(amountTTC)}</span>
+              <span className="font-black text-slate-900">{formatCurrency(amountTTC)}</span>
+
             </div>
           </div>
 
@@ -472,12 +462,12 @@ export default function FacturesPage() {
         reference: inv.reference,
         prestataire: inv.provider?.company_name ?? "-",
         site: inv.site?.nom ?? "-",
-        date: inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString("fr-FR") : "-",
+        date: formatDate(inv.invoice_date),
         montant_ht: typeof inv.amount_ht === "string" ? parseFloat(inv.amount_ht) : (inv.amount_ht ?? 0),
         tva: typeof inv.tax_amount === "string" ? parseFloat(inv.tax_amount) : (inv.tax_amount ?? 0),
         montant_ttc: typeof inv.amount_ttc === "string" ? parseFloat(inv.amount_ttc) : (inv.amount_ttc ?? 0),
         statut: { paid: "Payée", pending: "En attente", overdue: "En retard", cancelled: "Annulée" }[inv.payment_status] ?? inv.payment_status,
-        date_paiement: inv.payment_date ? new Date(inv.payment_date).toLocaleDateString("fr-FR") : "-",
+        date_paiement: formatDate(inv.payment_date),
       }));
       exportToXlsx(rows, [
         { header: "Référence", key: "reference", width: 18 },
@@ -506,7 +496,8 @@ export default function FacturesPage() {
   const avgCost = totalInvoices > 0 ? Math.round(totalAmount / totalInvoices) : 0;
 
   const kpis = [
-    { label: "Coût moyen par facture", value: avgCost, delta: "+3%", trend: "up" as const, isCurrency: true },
+    { label: "Coût moyen par facture", value: formatCurrency(avgCost), delta: "+3%", trend: "up" as const },
+
     { label: "Nombre total de factures", value: totalInvoices, delta: "+3%", trend: "up" as const },
     { label: "Factures en attente", value: stats?.total_unpaid ?? 0, delta: "+0%", trend: "up" as const },
     { label: "Factures payées", value: stats?.total_paid ?? 0, delta: "+15,03%", trend: "up" as const },
@@ -541,8 +532,9 @@ export default function FacturesPage() {
       header: "Montant TTC",
       key: "amount_ttc",
       render: (_: any, row: Invoice) => (
-        <span className="font-bold">{formatMontant(row.amount_ttc)}</span>
+        <span className="font-bold">{formatCurrency(row.amount_ttc)}</span>
       ),
+
     },
     {
       header: "Statut",

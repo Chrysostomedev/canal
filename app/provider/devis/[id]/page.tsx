@@ -15,8 +15,9 @@ import ReusableForm, { FieldConfig } from "@/components/ReusableForm";
 import {
   providerQuoteService, Quote, QuoteHistory,
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
-  formatCurrency, formatDate, getPdfUrl,
+  getPdfUrl,
 } from "../../../../services/provider/providerQuoteService";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 // ─── StatusBadge ──────────────────────────────────────────────────────────────
 

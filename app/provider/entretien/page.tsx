@@ -18,8 +18,9 @@ import {
   RefreshCw
 } from "lucide-react";
 
-import type { FieldConfig } from "@/components/ReusableForm";
 import { useProviderReports } from "../../../hooks/provider/useProviderReports";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -134,8 +135,8 @@ const MOCK_TICKETS: MaintenanceTicket[] = [
   },
 ];
 
-const formatDate = (d: string) =>
-  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+// local formatDate removed - using @/lib/utils
+
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 // Remplacé par `Toast` global de `@/components/Toast`
@@ -279,10 +280,9 @@ function QuickDevisModal({
               <div className="flex items-center justify-between bg-slate-900 rounded-2xl px-4 py-3">
                 <span className="text-xs font-bold text-slate-400">Total TTC estimé</span>
                 <span className="text-sm font-black text-white">
-                  {new Intl.NumberFormat("fr-FR").format(
-                    parseFloat(form.amount_ht) * (1 + parseFloat(form.tax_rate || "0") / 100)
-                  )} FCFA
+                  {formatCurrency(parseFloat(form.amount_ht) * (1 + parseFloat(form.tax_rate || "0") / 100))}
                 </span>
+
               </div>
             )}
 

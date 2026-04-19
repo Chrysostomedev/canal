@@ -18,15 +18,15 @@ import ActionGroup from "@/components/ActionGroup";
 import { useReports } from "../../../hooks/admin/useReports";
 import { InterventionReport, ReportService, ValidateReportPayload } from "../../../services/admin/report.service";
 import { exportToXlsx } from "../../../core/export";
+import { formatDate } from "@/lib/utils";
+
 
 // ══════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════
 
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-};
+// local formatDate removed - using @/lib/utils
+
 
 // ══════════════════════════════════════════════
 // STATUTS
@@ -532,9 +532,9 @@ export default function RapportsPage() {
         type: r.intervention_type === "curatif" ? "Curatif" : "Préventif",
         statut: { validated: "Validé", pending: "En attente", rejected: "Rejeté", submitted: "Soumis" }[r.status ?? "pending"] ?? (r.status ?? "-"),
         note: r.rating ? `${r.rating}/5` : "-",
-        date_debut: r.start_date ? new Date(r.start_date).toLocaleDateString("fr-FR") : "-",
-        date_fin: r.end_date ? new Date(r.end_date).toLocaleDateString("fr-FR") : "-",
-        date_creation: r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "-",
+        date_debut: formatDate(r.start_date),
+        date_fin: formatDate(r.end_date),
+        date_creation: formatDate(r.created_at),
       }));
       exportToXlsx(rows, [
         { header: "ID", key: "id", width: 8 },

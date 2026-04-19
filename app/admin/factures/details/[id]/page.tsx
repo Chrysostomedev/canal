@@ -14,35 +14,16 @@ import StatsCard from "@/components/StatsCard";
 import { resolveUrl } from "@/components/AttachmentViewer";
 
 import { InvoiceService, Invoice } from "../../../../../services/admin/invoice.service";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const formatMontant = (v?: number): string => {
-  if (!v && v !== 0) return "-";
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
-  return `${v.toLocaleString("fr-FR")} FCFA`;
-};
+// local formatters removed - using @/lib/utils
 
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
-const formatDateLong = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPOSANTS
@@ -162,7 +143,8 @@ function RelatedInvoicesList({ invoices, currentInvoiceId }: RelatedInvoicesList
                 <span className={isCurrent ? "text-slate-300" : "text-slate-500"}>
                   {formatDate(inv.invoice_date)}
                 </span>
-                <span className="font-bold">{formatMontant(Number(inv.amount_ttc))}</span>
+                <span className="font-bold">{formatCurrency(Number(inv.amount_ttc))}</span>
+
               </div>
             </Link>
           );
@@ -398,22 +380,26 @@ export default function FactureDetailsPage() {
                   <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">Montant HT</span>
-                      <span className="font-bold text-slate-900">{formatMontant(Number(invoice?.amount_ht))}</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(invoice?.amount_ht)}</span>
+
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">TVA (18%)</span>
-                      <span className="font-bold text-slate-900">{formatMontant(Number(invoice?.tax_amount))}</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(invoice?.tax_amount)}</span>
+
                     </div>
                     <div className="flex justify-between text-base border-t border-slate-200 pt-2">
                       <span className="font-black text-slate-900">Total TTC</span>
-                      <span className="font-black text-slate-900">{formatMontant(Number(invoice?.amount_ttc))}</span>
+                      <span className="font-black text-slate-900">{formatCurrency(invoice?.amount_ttc)}</span>
+
                     </div>
                   </div>
                   {isPaid && (
                     <div className="px-4 py-3 bg-emerald-50 border-t border-emerald-100">
                       <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm mb-2">
                         <CheckCircle2 size={16} />
-                        Payée le {formatDateLong(invoice?.payment_date)}
+                        Payée le {formatDate(invoice?.payment_date, { day: "2-digit", month: "long", year: "numeric" })}
+
                       </div>
                       {invoice?.payment_method && (
                         <p className="text-xs text-emerald-600">Mode : {invoice.payment_method}</p>

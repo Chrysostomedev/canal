@@ -42,6 +42,7 @@ import {
   ManagerDetail,
 } from "../../../../../services/admin/manager.service";
 import axiosInstance from "../../../../../core/axios";
+import { formatDate } from "@/lib/utils";
 
 // ── Palette couleur avatar (identique à GestCard) ─────────────────────────────
 const AVATAR_PALETTES = [
@@ -401,7 +402,7 @@ export default function GestionnaireDetailsPage() {
                             <Hash size={10} /> {log.model_type?.split("\\").pop()}
                           </span>
                           <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                            <Clock size={10} /> {new Date(log.created_at).toLocaleDateString("fr-FR")} à {new Date(log.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                            <Clock size={10} /> {formatDate(log.created_at)}
                           </span>
                         </div>
                       </div>

@@ -15,6 +15,8 @@
  */
 
 import { useState } from "react";
+import PageHeader from "@/components/PageHeader";
+import { formatDate } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import ListCard from "@/components/ListCard";
@@ -125,7 +127,7 @@ export default function Dashboard() {
         { label: "Sujet", value: ticket.subject ?? "-" },
         { label: "Site concerné", value: ticket.site?.nom ?? "-" },
         { label: "Service", value: ticket.service?.name ?? "-" },
-        { label: "Date planifiée", value: ticket.planned_at ?? "-" },
+        { label: "Date planifiée", value: formatDate(ticket.planned_at) },
         {
           label: "Statut",
           value: STATUS_LABELS[ticket.status] ?? ticket.status,
@@ -293,7 +295,7 @@ export default function Dashboard() {
         fields={selectedTicket?.fields ?? []}
         descriptionContent={selectedTicket?.description}
         redirectHref={
-          selectedTicket?.id ? `/admin/tickets/${selectedTicket.id}` : undefined
+          selectedTicket?.id ? `/admin/tickets/${selectedTicket.id}` : "non renseigné"
         }
         redirectLabel="Voir le ticket"
       />

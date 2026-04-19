@@ -21,18 +21,19 @@ import {
 import { providerReportService } from "../../../../services/provider/providerReportService";
 import { providerQuoteService } from "../../../../services/provider/providerQuoteService";
 import { useToast } from "../../../../contexts/ToastContext";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 // ─── Champs formulaire rapport curatif ───────────────────────────────────────
 const reportFields: FieldConfig[] = [
-  {
-    name: "result", label: "Résultat de l'intervention", type: "select", required: true,
-    options: [
-      { label: "Sélectionner…", value: "" },
-      { label: "RAS - Rien à signaler", value: "RAS" },
-      { label: "Anomalie détectée", value: "anomalie" },
-    ], gridSpan: 2,
-  },
-  { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: true, gridSpan: 2, disablePastDates: true },
+  // {
+  //   name: "result", label: "Résultat de l'intervention", type: "select", required: true,
+  //   options: [
+  //     { label: "Sélectionner…", value: "" },
+  //     { label: "RAS - Rien à signaler", value: "RAS" },
+  //     { label: "Anomalie détectée", value: "anomalie" },
+  //   ], gridSpan: 2,
+  // },
+  // { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: true, gridSpan: 2, disablePastDates: true },
   { name: "findings", label: "Observations / Constatations *", type: "rich-text", required: true, gridSpan: 2 },
   { name: "action_taken", label: "Actions menées / Travaux effectués", type: "rich-text", required: false, gridSpan: 2 },
   { name: "attachments", label: "Photos & Documents justificatifs", type: "pdf-upload", maxPDFs: 10, gridSpan: 2 } as any,
@@ -46,16 +47,8 @@ const quoteFields: FieldConfig[] = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmtDate = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-};
-const fmtDateTime = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? iso : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-};
+const fmtDate = formatDate;
+const fmtDateTime = formatDate;
 import { resolveUrl } from "@/components/AttachmentViewer";
 const getUrl = resolveUrl;
 
@@ -122,7 +115,7 @@ export default function ProviderTicketDetailPage() {
     try {
       const data = await providerTicketService.getTicketInfo(ticketId);
       console.log("[ProviderTicketDetail] unified data:", data);
-      
+
       const fullyLoadedTicket = {
         ...(data.ticket ?? {}),
         reports: data.reports || (data.rapport ? [{ ...(data.rapport ?? {}), attachments: data.rapport_attachments ?? [] }] : []),
@@ -314,7 +307,7 @@ export default function ProviderTicketDetailPage() {
                     </div>
                     <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-2.5 min-w-[240px]">
                       {[
-                        { l: "Planifié le", v: fmtDateTime(ticket.planned_at) },
+                        { l: "Signalé le", v: fmtDateTime(ticket.planned_at) },
                         { l: "Échéance", v: fmtDateTime(ticket.due_at) },
                       ].map((r, i) => (
                         <div key={i} className="flex justify-between text-sm">
@@ -438,7 +431,7 @@ export default function ProviderTicketDetailPage() {
                           <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50">
                             <div>
                               <p className="text-sm font-bold text-slate-900">{q.reference ?? `Devis #${q.id}`}</p>
-                              <p className="text-xs text-slate-500 font-medium">{q.total_amount_ttc ? `${q.total_amount_ttc.toLocaleString("fr-FR")} FCFA` : q.amount_ht ? `${q.amount_ht.toLocaleString("fr-FR")} FCFA` : "—"}</p>
+                              <p className="text-xs text-slate-500 font-medium">{q.total_amount_ttc ? formatCurrency(q.total_amount_ttc) : q.amount_ht ? formatCurrency(q.amount_ht) : "—"}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${q.status === "approved" || q.status === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :

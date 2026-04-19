@@ -29,10 +29,14 @@ export function DayCell({
   day, currentMonth = true, events, onClick, onAddClick, onDrop, date,
   canAddEvent = false, onShowMore, onCellClick,
 }: DayCellProps) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPast = date && date < today;
   const isToday = Boolean(date && currentMonth && date.toDateString() === new Date().toDateString());
   const hasEvents = events.length > 0;
-  // Bouton + uniquement sur cellules VIDES du mois courant
-  const showAddButton = currentMonth && canAddEvent && onAddClick && date && !hasEvents;
+
+  // Bouton + uniquement sur cellules VIDES du mois courant ET non passées
+  const showAddButton = currentMonth && canAddEvent && onAddClick && date && !hasEvents && !isPast;
 
   return (
     <div

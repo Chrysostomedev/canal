@@ -29,26 +29,15 @@ import {
 } from "../../../../../services/admin/site.service";
 import { useSites } from "../../../../../hooks/admin/useSites";
 import axiosInstance from "../../../../../core/axios";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
 
 // ═══════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════
 
-const formatMontant = (v: number | null | undefined): string => {
-  if (!v && v !== 0) return "-";
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 !== 0 ? 1 : 0)}M FCFA`;
-  if (v >= 1_000)     return `${(v / 1_000).toFixed(v % 1_000 !== 0 ? 1 : 0)}K FCFA`;
-  return `${v} FCFA`;
-};
+// local formatMontant and formatDate removed - using @/lib/utils
 
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  return time === "00:00" ? date : `${date} à ${time}`;
-};
 
 /**
  * Formate une date ISO pour l'attribut 'value' d'un <input type="date">
@@ -220,7 +209,8 @@ function AssetSidePanel({
     { label: "Désignation",     value: patrimoine.designation  },
     { label: "Site",            value: siteName    },
     { label: "Date d'entrée",   value: formatDate(patrimoine.date_entree) },
-    { label: "Valeur d'entrée", value: formatMontant(patrimoine.valeur_entree) },
+    { label: "Valeur d'entrée", value: formatCurrency(patrimoine.valeur_entree) },
+
   ];
 
   return (
@@ -523,9 +513,10 @@ export default function SiteDetailsPage() {
     {
       header: "Valeur", key: "valeur_entree",
       render: (_: any, row: CompanyAsset) => (
-        <span className="text-sm font-bold text-slate-900">{formatMontant(row.valeur_entree)}</span>
+        <span className="text-sm font-bold text-slate-900">{formatCurrency(row.valeur_entree)}</span>
       ),
     },
+
     {
       header: "Actions", key: "actions",
       render: (_: any, row: CompanyAsset) => (
@@ -651,7 +642,8 @@ export default function SiteDetailsPage() {
 
           {/* ── KPIs ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard label="Coût moyen / site"  value={formatMontant(siteStats?.cout_loyer_moyen)} delta="+0%" trend="up" />
+            <StatsCard label="Coût moyen / site"  value={formatCurrency(siteStats?.cout_loyer_moyen)} delta="+0%" trend="up" />
+
             <StatsCard label="Tickets en cours"   value={siteStats?.tickets_en_cours ?? 0}           delta="+0%" trend="up" />
             <StatsCard label="Tickets clôturés"   value={siteStats?.tickets_clos     ?? 0}           delta="+0%" trend="up" />
             <StatsCard label="Total patrimoines"  value={patrimoines.length}                         delta="+0%" trend="up" />

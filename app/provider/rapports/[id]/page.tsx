@@ -21,9 +21,10 @@ import {
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
   TYPE_LABELS, TYPE_STYLES,
   RESULT_LABELS, RESULT_STYLES,
-  formatDate, formatDateTime, getAttachmentUrl,
+  getAttachmentUrl,
   getSiteName, getProviderName, isEditable,
 } from "../../../../services/provider/providerReportService";
+import { formatDate } from "@/lib/utils";
 import { useProviderReports } from "../../../../hooks/provider/useProviderReports";
 
 // ─── Badges ────────────────────────────────────────────────────────────────────

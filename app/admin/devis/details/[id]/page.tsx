@@ -11,6 +11,8 @@ import {
   Eye, Download, Star, X, MapPin, Briefcase, RefreshCw,
   Calendar, User, DollarSign, AlertCircle,
 } from "lucide-react";
+import { formatDate, formatCurrency } from "@/lib/utils";
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ACTION MODAL (Inlined to avoid build errors)
@@ -133,40 +135,11 @@ function ActionModal({
   );
 }
 
-import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
-
 import { QuoteService, Quote, QuoteHistory } from "../../../../../services/admin/quote.service";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HELPERS FORMATTING
-// ═══════════════════════════════════════════════════════════════════════════
+// Using centralized formatDate and formatCurrency from @/lib/utils
 
-const formatMontant = (v?: number): string => {
-  if (!v && v !== 0) return "-";
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M FCFA`;
-  if (v >= 1_000) return `${Math.round(v / 1_000)}K FCFA`;
-  return `${v.toLocaleString("fr-FR")} FCFA`;
-};
-
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const formatDateShort = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPOSANTS LOCAUX
@@ -301,42 +274,7 @@ function RelatedQuotesList({ quotes, currentQuoteId }: RelatedQuotesListProps) {
 
   return (
     <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-      <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
-        Devis liés au ticket ({quotes.length})
-      </h3>
-      <div className="space-y-3">
-        {quotes.map((quote) => {
-          const isCurrent = quote.id === currentQuoteId;
-          return (
-            <Link
-              key={quote.id}
-              href={`/admin/devis/details/${quote.id}`}
-              className={`block p-4 rounded-xl border transition-all ${isCurrent
-                ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
-                }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-black">{quote.reference}</span>
-                  {isCurrent && (
-                    <span className="text-xs bg-white text-slate-900 px-2 py-0.5 rounded-full font-bold">
-                      Actuel
-                    </span>
-                  )}
-                </div>
-                <StatusBadge status={quote.status} />
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className={isCurrent ? "text-slate-300" : "text-slate-500"}>
-                  {formatDateShort(quote.created_at)}
-                </span>
-                <span className="font-bold">{formatMontant(quote.amount_ttc)}</span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+
     </div>
   );
 }
@@ -480,13 +418,13 @@ export default function DevisDetailsPage() {
   // Pièces jointes PDF — priorité à attachments (avec url pré-construite), fallback sur pdf_paths
   const pdfFiles = (quote?.attachments ?? []).length > 0
     ? (quote!.attachments!).map((a) => ({
-        name: a.url.split("/").pop() ?? "document.pdf",
-        url: a.url,
-      }))
+      name: a.url.split("/").pop() ?? "document.pdf",
+      url: a.url,
+    }))
     : (quote?.pdf_paths ?? []).map((path) => ({
-        name: path.split("/").pop() ?? "devis.pdf",
-        url: QuoteService.getPdfUrl(path),
-      }));
+      name: path.split("/").pop() ?? "devis.pdf",
+      url: QuoteService.getPdfUrl(path),
+    }));
 
   // Historique
   const history = quote?.history ?? [];
@@ -496,8 +434,9 @@ export default function DevisDetailsPage() {
     { label: "Prestataire", value: providerName, delta: "", trend: "up" as const },
     { label: "Site", value: siteName, delta: "", trend: "up" as const },
     { label: "Nombre d'articles", value: quote?.items?.length ?? 0, delta: "", trend: "up" as const },
-    { label: "Montant TTC", value: formatMontant(totalTTC), delta: "", trend: "up" as const },
+    { label: "Montant TTC", value: formatCurrency(totalTTC), delta: "", trend: "up" as const },
   ];
+
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -549,25 +488,25 @@ export default function DevisDetailsPage() {
                 <div className="flex flex-col gap-2 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-medium">Créé le</span>
-                    <span className="font-bold text-slate-900">{formatDateShort(quote?.created_at)}</span>
+                    <span className="font-bold text-slate-900">{formatDate(quote?.created_at)}</span>
                   </div>
                   {isApproved && quote?.approved_at && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-400 font-medium">Approuvé le</span>
-                      <span className="font-bold text-emerald-700">{formatDateShort(quote.approved_at)}</span>
+                      <span className="font-bold text-emerald-700">{formatDate(quote.approved_at)}</span>
                     </div>
                   )}
                   {isRejected && quote?.rejected_at && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-400 font-medium">Rejeté le</span>
-                      <span className="font-bold text-red-700">{formatDateShort(quote.rejected_at)}</span>
+                      <span className="font-bold text-red-700">{formatDate(quote.rejected_at)}</span>
                     </div>
                   )}
                   {isRevision && quote?.revision_requested_at && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-400 font-medium">Révision le</span>
                       <span className="font-bold text-blue-700">
-                        {formatDateShort(quote.revision_requested_at)}
+                        {formatDate(quote.revision_requested_at)}
                       </span>
                     </div>
                   )}
@@ -630,7 +569,8 @@ export default function DevisDetailsPage() {
               {quote?.items && quote.items.length > 0 && (
                 <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
-                    Articles ({quote.items.length})
+                    Details
+                    {/* ({quote.items.length}) */}
                   </h3>
                   <div className="border border-slate-100 rounded-2xl overflow-hidden">
                     <table className="w-full">
@@ -656,11 +596,13 @@ export default function DevisDetailsPage() {
                             <td className="px-4 py-3 text-xs font-medium text-slate-900">{item.designation}</td>
                             <td className="px-2 py-3 text-center text-xs text-slate-500">{item.quantity}</td>
                             <td className="px-4 py-3 text-right text-xs text-slate-600">
-                              {formatMontant(item.unit_price)}
+                              {formatCurrency(item.unit_price)}
                             </td>
+
                             <td className="px-4 py-3 text-right text-xs font-bold text-slate-900">
-                              {formatMontant(item.total_price ?? item.quantity * item.unit_price)}
+                              {formatCurrency(item.total_price ?? item.quantity * item.unit_price)}
                             </td>
+
                           </tr>
                         ))}
                       </tbody>
@@ -668,16 +610,19 @@ export default function DevisDetailsPage() {
                     <div className="bg-slate-50 border-t border-slate-100 px-4 py-3 space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500">Total HT</span>
-                        <span className="font-bold text-slate-900">{formatMontant(totalHT)}</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(totalHT)}</span>
                       </div>
+
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500">TVA (18%)</span>
-                        <span className="font-bold text-slate-900">{formatMontant(taxAmount)}</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(taxAmount)}</span>
                       </div>
+
                       <div className="flex justify-between text-sm border-t border-slate-200 pt-1.5">
                         <span className="font-black text-slate-900">Total TTC</span>
-                        <span className="font-black text-slate-900">{formatMontant(totalTTC)}</span>
+                        <span className="font-black text-slate-900">{formatCurrency(totalTTC)}</span>
                       </div>
+
                     </div>
                   </div>
                 </div>

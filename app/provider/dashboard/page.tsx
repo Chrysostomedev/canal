@@ -30,6 +30,7 @@ import {
   Intervention,
 } from "../../../services/provider/providerDashboardService";
 import { authService } from "../../../services/AuthService";
+import { formatDate } from "@/lib/utils";
 // ✅ AJOUT : hook toast global
 import { useToast } from "../../../contexts/ToastContext";
 // ✅ AJOUT : traduction centralisée des erreurs back
@@ -80,9 +81,9 @@ function toEventItem(i: Intervention) {
     ? "Aujourd'hui"
     : isTomorrow
       ? "Demain"
-      : date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+      : formatDate(date, { day: "2-digit", month: "short" });
 
-  const timeLabel = date.toLocaleTimeString("fr-FR", {
+  const timeLabel = formatDate(date, {
     hour: "2-digit",
     minute: "2-digit",
   });

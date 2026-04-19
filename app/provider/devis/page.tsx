@@ -19,8 +19,9 @@ import { useProviderQuotes } from "../../../hooks/provider/useProviderQuotes";
 import {
   Quote, ALL_STATUSES,
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
-  formatCurrency, formatDate, getPdfUrl,
+  getPdfUrl,
 } from "../../../services/provider/providerQuoteService";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import type { FieldConfig } from "@/components/ReusableForm";
 import { useState, useEffect } from "react";
 import { useToast } from "../../../contexts/ToastContext";

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { TicketService } from "../../../../services/manager/ticket.service";
 import { useToast } from "../../../../contexts/ToastContext";
+import axiosInstance from "../../../../core/axios";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (iso?: string | null) => {
@@ -175,6 +176,9 @@ export default function ManagerTicketDetailPage() {
 
             const ticketWithData = {
                 ...(data.ticket ?? {}),
+                site: data.site ?? data.ticket?.site,
+                asset: data.asset ?? data.ticket?.asset,
+                provider: data.provider ?? data.ticket?.provider,
                 reports: data.reports || (data.rapport ? [data.rapport] : []),
                 attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
             };
@@ -238,9 +242,9 @@ export default function ManagerTicketDetailPage() {
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black border ${STATUS_STYLE[ticket.status] ?? "bg-slate-100 border-slate-300 text-slate-600"}`}>
                                                 {STATUS_LABEL[ticket.status] ?? ticket.status}
                                             </span>
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black border ${ticket.type === "curatif" ? "bg-orange-50 border-orange-200 text-orange-700" : "bg-blue-50 border-blue-200 text-blue-700"}`}>
+                                            {/* <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black border ${ticket.type === "curatif" ? "bg-orange-50 border-orange-200 text-orange-700" : "bg-blue-50 border-blue-200 text-blue-700"}`}>
                                                 {ticket.type === "curatif" ? "Curatif" : "Préventif"}
-                                            </span>
+                                            </span> */}
                                         </div>
                                         <h1 className="text-3xl font-black text-slate-900 tracking-tight">{ticket.subject ?? `Ticket #${ticket.id}`}</h1>
                                         <div className="flex items-center gap-4 flex-wrap text-sm text-slate-500">
@@ -251,7 +255,7 @@ export default function ManagerTicketDetailPage() {
                                     <div className="flex flex-col gap-3 min-w-[220px]">
                                         <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-2">
                                             {[
-                                                { l: "Planifié le", v: fmtDateTime(ticket.planned_at) },
+                                                { l: "Signalé le", v: fmtDateTime(ticket.planned_at) },
                                                 { l: "Échéance", v: fmtDateTime(ticket.due_at) },
                                             ].map((r: any, i: number) => (
                                                 <div key={i} className="flex justify-between text-sm">
@@ -404,7 +408,7 @@ export default function ManagerTicketDetailPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                                    {/* <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
                                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Documents ({docs.length})</h3>
                                         {docs.length > 0 ? (
                                             <div className="space-y-3">
@@ -435,7 +439,7 @@ export default function ManagerTicketDetailPage() {
                                                 <p className="text-sm font-medium">Aucun document</p>
                                             </div>
                                         )}
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </>

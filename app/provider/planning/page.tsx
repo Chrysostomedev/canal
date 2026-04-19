@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ActionGroup from "@/components/ActionGroup";
 import StatsCard from "@/components/StatsCard";
@@ -14,11 +15,10 @@ import { useProviderPlanning } from "../../../hooks/provider/useProviderPlanning
 import {
   STATUS_LABELS,
   STATUS_COLORS,
-  formatDate,
-  formatTime,
   getSiteName,
   getProviderName,
 } from "../../../services/provider/providerPlanningService";
+import { formatDate } from "@/lib/utils";
 import { providerReportService } from "../../../services/provider/providerReportService";
 
 // ─── Stats cards builder - même pattern que la page admin ─────────────────────
@@ -61,9 +61,15 @@ export default function ProviderPlanningPage() {
     plannings, stats, selectedPlanning,
     isLoading, isLoadingStats, error,
     isPanelOpen,
-    openPanel, closePanel,
+    openPanel: baseOpenPanel, closePanel,
     setFilters,
   } = useProviderPlanning();
+
+  const router = useRouter();
+
+  const openPanel = (p: any) => {
+    router.push(`/provider/planning/${p.id}`);
+  };
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isReportFormOpen, setIsReportFormOpen] = useState(false);
@@ -149,11 +155,11 @@ export default function ProviderPlanningPage() {
         { label: "Téléphone", value: selectedPlanning.responsable_phone ?? "-" },
         {
           label: "Date de début",
-          value: `${formatDate(selectedPlanning.date_debut)} à ${formatTime(selectedPlanning.date_debut)}`,
+          value: formatDate(selectedPlanning.date_debut),
         },
         {
           label: "Date de fin",
-          value: `${formatDate(selectedPlanning.date_fin)} à ${formatTime(selectedPlanning.date_fin)}`,
+          value: formatDate(selectedPlanning.date_fin),
         },
         {
           label: "Statut",

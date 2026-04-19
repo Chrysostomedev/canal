@@ -19,11 +19,12 @@
     "incremental": true,
     "baseUrl": ".",
    "paths": {
-  "@/*": ["./app/*"],
-  "@services/*": ["./services/*"],
-  "@core/*": ["./core/*"],
-  "@hooks/*": ["./hooks/*"]
-},
+      "@/lib/*": ["./lib/*"],
+      "@/*": ["./app/*"],
+      "@services/*": ["./services/*"],
+      "@core/*": ["./core/*"],
+      "@hooks/*": ["./hooks/*"]
+    },
     "plugins": [
       {
         "name": "next"

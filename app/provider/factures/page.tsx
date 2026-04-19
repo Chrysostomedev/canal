@@ -23,9 +23,10 @@ import { useProviderInvoices } from "../../../hooks/provider/useProviderInvoices
 import {
   Invoice, ALL_STATUSES,
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
-  formatMontant, formatDate, getPdfUrl,
+  getPdfUrl,
   getProviderName, getSiteName, getReport, toNum,
 } from "../../../services/provider/providerInvoiceService";
+import { formatCurrency as formatMontant, formatDate } from "@/lib/utils";
 
 // ─── Toast ─────────────────────────────────────────────────────────────────────
 // Remplacé par `Toast` global de `@/components/Toast`

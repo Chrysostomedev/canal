@@ -1,5 +1,6 @@
 import axiosInstance from "../../core/axios";
 import { resolveStorageUrl } from "../../lib/url";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 // ─── Types — miroir exact du modèle Laravel Invoice ──────────────────────────
 // Relations chargées par le backend : interventionReport, quote, provider, site, attachments
@@ -158,24 +159,11 @@ export function toNum(v?: number | string | null): number {
   return typeof v === "string" ? parseFloat(v) || 0 : v;
 }
 
-export function formatMontant(v?: number | string | null): string {
-  const n = toNum(v);
-  return `${n.toLocaleString("fr-FR")} FCFA`;
-}
-
-export function formatDate(iso?: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-}
-
-export function formatDateLong(iso?: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit", month: "long", year: "numeric",
-  });
-}
+export { 
+  formatCurrency as formatMontant, 
+  formatDate,
+  formatCurrency 
+};
 
 
 export function getPdfUrl(path: string): string {

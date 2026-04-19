@@ -13,9 +13,9 @@ import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
 import AttachmentViewer from "@/components/AttachmentViewer";
 import { ReportService, InterventionReport } from "../../../../services/admin/report.service";
+import { formatDate } from "@/lib/utils";
 
-const formatDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
+
 
 const STATUS_LABELS: Record<string, string> = {
   submitted: "Soumis",
@@ -92,7 +92,8 @@ export default function AdminReportDetailPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <PageHeader
               title={`Rapport Maintenance #${report.reference || report.id}`}
-              subtitle={`Visite préventive effectuée le ${formatDate(report.start_date)}`}
+              subtitle={`Visite préventive effectuée le ${formatDate(report.start_date, { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}`}
+
             />
             <button
               onClick={() => router.back()}
@@ -153,7 +154,6 @@ export default function AdminReportDetailPage() {
                     <p className="text-xs text-slate-400 font-medium">Analyses et conclusions techniques</p>
                   </div>
                 </div>
-                <PenSquare size={18} className="text-slate-300 hover:text-slate-900 cursor-pointer transition" />
               </div>
               <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium">
                 <div dangerouslySetInnerHTML={{ __html: report.findings || "Aucune observation rédigée." }} />

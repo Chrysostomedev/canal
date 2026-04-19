@@ -1,4 +1,5 @@
 import axiosInstance from "../../core/axios";
+import { formatDate } from "@/lib/utils";
 
 // ─── Types — miroir exact du backend Laravel ──────────────────────────────────
 
@@ -73,16 +74,11 @@ export const STATUS_LABELS: Record<string, string> = {
   realise:    "Réalisé",
 };
 
-export function formatDate(iso?: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-}
+export { formatDate };
 
 export function formatTime(iso?: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString("fr-FR", {
+  return formatDate(iso, {
     hour: "2-digit", minute: "2-digit",
   });
 }

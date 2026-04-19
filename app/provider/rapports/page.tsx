@@ -26,8 +26,9 @@ import {
   STATUS_LABELS, STATUS_STYLES, STATUS_DOT,
   TYPE_LABELS, TYPE_STYLES,
   RESULT_LABELS, RESULT_STYLES,
-  formatDate, getAttachmentUrl, getSiteName, isEditable,
+  getAttachmentUrl, getSiteName, isEditable,
 } from "../../../services/provider/providerReportService";
+import { formatDate } from "@/lib/utils";
 
 // ─── Toast ─────────────────────────────────────────────────────────────────────
 // Remplacé par `Toast` global de `@/components/Toast`
@@ -308,8 +309,8 @@ const baseFields: FieldConfig[] = [
       { label: "Anomalie détectée", value: "anomalie" },
     ], gridSpan: 2
   },
-  { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: false, gridSpan: 2, disablePastDates: true },
-  { name: "findings", label: "Observations / Constatations *", type: "rich-text", required: true, gridSpan: 2 as 2 },
+  // { name: "period", label: "Période de l'intervention (Début - Fin)", type: "date-range", required: false, gridSpan: 2, disablePastDates: true },
+  { name: "findings", label: "Observations / Constatations ", type: "rich-text", required: true, gridSpan: 2 as 2 },
   { name: "action_taken", label: "Actions menées / Travaux effectués", type: "rich-text", required: false, gridSpan: 2 as 2 },
   {
     name: "attachments", label: "Photos & Documents justificatifs (PDF, images)",

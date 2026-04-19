@@ -121,14 +121,14 @@ export default function GestionnairesPage() {
       const rawPhone = formData.phone as string | undefined;
       const cleanPhone = rawPhone
         ? rawPhone.replace(/[\s\-().]/g, "").trim() || undefined
-        : undefined;
+        : "non renseigné";
 
       await ManagerService.createManager({
         first_name: formData.first_name,
         last_name:  formData.last_name,
         email:      formData.email,
         phone:      cleanPhone,
-        password:   formData.password || undefined,
+        password:   formData.password || "non renseigné",
       });
       showFlash("success", "Gestionnaire créé avec succès");
       setIsCreateModalOpen(false);

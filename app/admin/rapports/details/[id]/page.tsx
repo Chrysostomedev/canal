@@ -15,15 +15,15 @@ import StatsCard from "@/components/StatsCard";
 
 import { ReportService, InterventionReport, ValidateReportPayload } from "../../../../../services/admin/report.service";
 import { resolveUrl } from "@/components/AttachmentViewer";
+import { formatDate } from "@/lib/utils";
+
 
 // ═══════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════
 
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-};
+// local formatDate removed - using @/lib/utils
+
 
 // ═══════════════════════════════════════════════
 // COMPOSANTS LOCAUX
@@ -155,12 +155,12 @@ function ValidateModal({
               >
                 RAS
               </button>
-              <button
-                onClick={() => setResult("ANOMALIE")}
-                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${result === "ANOMALIE" ? "bg-white text-red-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
-              >
-                ANOMALIE
-              </button>
+                <button
+                  onClick={() => setResult("ANOMALIE")}
+                  className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${result === "ANOMALIE" ? "bg-white text-red-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                >
+                  ANOMALIE
+                </button>
             </div>
           </div>
 

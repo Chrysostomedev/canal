@@ -1,5 +1,6 @@
 import axiosInstance from "../../core/axios";
 import { resolveStorageUrl } from "../../lib/url";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 // ─── Types miroir exact du backend Laravel ────────────────────────────────────
 
@@ -115,19 +116,7 @@ export const STATUS_DOT: Record<string, string> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export function formatCurrency(amount?: number | null): string {
-  if (amount == null) return "—";
-  return new Intl.NumberFormat("fr-FR", {
-    style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0,
-  }).format(amount) + " FCFA";
-}
-
-export function formatDate(iso?: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-}
+export { formatCurrency, formatDate };
 
 
 export function getPdfUrl(path: string): string {

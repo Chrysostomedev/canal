@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { SidebarProvider } from "./components/Sidebar";
 import { LanguageProvider } from "../contexts/LanguageContext";
+import { FormatProvider } from "../contexts/FormatContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,12 +44,15 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <LanguageProvider>
-            <SidebarProvider>
-              {children}
-            </SidebarProvider>
+            <FormatProvider>
+              <SidebarProvider>
+                {children}
+              </SidebarProvider>
+            </FormatProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

@@ -14,6 +14,7 @@ import {
   Mail, Phone, User, Languages,
   Zap, Radio, Users, Loader2,
 } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import PageHeader from "@/components/PageHeader";
@@ -244,7 +245,7 @@ function SettingsSidePanel({
                           <p className="text-[10px] text-slate-400 truncate mt-0.5">{log.action}</p>
                         </div>
                         <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap shrink-0">
-                          {new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(log.created_at)).replace(",", " à")}
+                          {formatDate(log.created_at)}
                         </span>
                       </div>
                     ))

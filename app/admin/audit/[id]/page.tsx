@@ -9,6 +9,7 @@ import {
 import axiosInstance from "../../../../core/axios";
 import Navbar from "@/components/Navbar";
 import Paginate from "@/components/Paginate";
+import { formatDate } from "@/lib/utils";
 
 const ACTION_STYLES: Record<string, string> = {
   created: "bg-emerald-50 text-emerald-700 border border-emerald-100",
@@ -141,11 +142,7 @@ export default function AuditUserDetailPage() {
                   {/* Date horodatée */}
                   <div className="text-right shrink-0">
                     <p className="text-xs font-bold text-slate-700">
-                      {new Date(log.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
-                    </p>
-                    <p className="text-[10px] text-slate-400 flex items-center gap-1 justify-end mt-0.5">
-                      <Clock size={10} />
-                      {new Date(log.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                      {formatDate(log.created_at)}
                     </p>
                   </div>
                 </div>

@@ -8,14 +8,15 @@ import DataTable from "@/components/DataTable";
 import PageHeader from "@/components/PageHeader";
 import ReusableForm from "@/components/ReusableForm";
 import type { FieldConfig } from "@/components/ReusableForm";
-import { Eye, X, Copy, Check, Tag, Clock, MapPin, Wrench, AlertTriangle, CheckCircle2, RefreshCw, AlertCircle, ChevronLeft, ChevronRight, FileText } from "lucide-react";
-
+import { Ticket, isPendingAdminAction, TICKET_STATUS } from "../../../services/provider/providerTicketService";
+import { formatDate, formatCurrency, formatHeures, formatNumber } from "@/lib/utils";
+import { useToast } from "../../../contexts/ToastContext";
 import { useProviderTickets } from "../../../hooks/provider/useProviderTickets";
 import { useProviderReports } from "../../../hooks/provider/useProviderReports";
-import { useToast } from "../../../contexts/ToastContext";
-import { Ticket, isPendingAdminAction, TICKET_STATUS } from "../../../services/provider/providerTicketService";
+import { AlertCircle, AlertTriangle, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Copy, Eye, FileText, MapPin, RefreshCw, Tag, Wrench, X } from "lucide-react";
 
 // ─── Champs formulaire Rapport ────────────────────────────────────────────────
+
 const reportFields: FieldConfig[] = [
   {
     name: "result", label: "Résultat de l'intervention", type: "select", required: true,
@@ -43,17 +44,6 @@ const reportFields: FieldConfig[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const formatHeures = (h: number | null | undefined) =>
-  h != null ? `${h}h` : "-";
-
-const formatDate = (iso?: string | null): string => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  const date = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  return time === "00:00" ? date : `${date} à ${time}`;
-};
 
 // ─── Statuts — valeurs exactes retournées par le back ────────────────────────
 
@@ -328,7 +318,8 @@ export default function ProviderTicketsPage() {
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const kpis1 = [
-    { label: "Coût moyen / ticket", value: stats?.cout_moyen_par_ticket ?? 0, isCurrency: true, delta: "", trend: "up" as const },
+    { label: "Coût moyen / ticket", value: formatCurrency(stats?.cout_moyen_par_ticket ?? 0), delta: "", trend: "up" as const },
+
     // AVANt
     // APRÈS
     { label: "Total tickets", value: stats?.total ?? 0, delta: "", trend: "up" as const },
