@@ -47,7 +47,7 @@ export interface UseProviderReportsReturn {
   refresh:      () => void;
 }
 
-export function useProviderReports(): UseProviderReportsReturn {
+export function useProviderReports(initialFilters: ReportFilterState = {}): UseProviderReportsReturn {
   const [reports,        setReports]        = useState<InterventionReport[]>([]);
   const [stats,          setStats]          = useState<ReportStats | null>(null);
   const [selectedReport, setSelectedReport] = useState<InterventionReport | null>(null);
@@ -63,7 +63,7 @@ export function useProviderReports(): UseProviderReportsReturn {
   const [isPanelOpen,  setIsPanelOpen]  = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen,   setIsEditOpen]   = useState(false);
-  const [filters,      setFiltersState] = useState<ReportFilterState>({});
+  const [filters,      setFiltersState] = useState<ReportFilterState>(initialFilters);
 
   // ── flash ──────────────────────────────────────────────────────────────────
   const flash = (type: "success" | "error", msg: string) => {
@@ -100,8 +100,8 @@ export function useProviderReports(): UseProviderReportsReturn {
 
   // ── filtrage côté client (fallback si l'API ne filtre pas tout) ───────────
   const filteredReports = reports.filter(r => {
-    if (filters.status && r.status !== filters.status)           return false;
-    if (filters.type   && r.intervention_type !== filters.type)  return false;
+    if (filters.status && r.status !== filters.status) return false;
+    // On ne filtre plus sur le type côté Front pour faire confiance à l'API
     return true;
   });
 

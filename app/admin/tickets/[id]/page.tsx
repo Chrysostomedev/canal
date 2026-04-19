@@ -141,28 +141,40 @@ export default function AdminTicketDetailPage() {
     setLoading(true); setError("");
 
     try {
-      const data = await TicketService.getTicketInfo(ticketId);
-      console.log("[AdminTicketDetail] unified data:", data);
+      // Pour pallier les manques du backend, on fait deux appels :
+      // 1. getTicket(id) : contient les relations site, companyAsset, provider, service
+      // 2. getTicketInfo(id) : contient les rapports et devis
+      const [ticketCore, additionalInfo] = await Promise.all([
+        TicketService.getTicket(ticketId),
+        TicketService.getTicketInfo(ticketId)
+      ]);
+
+      console.log("[AdminTicketDetail] Core data:", ticketCore);
+      console.log("[AdminTicketDetail] Additional info:", additionalInfo);
 
       const ticketWithData = {
-        ...(data.ticket ?? {}),
-        site: data.site ?? data.ticket?.site,
-        asset: data.asset ?? data.ticket?.asset,
-        provider: data.provider ?? data.ticket?.provider,
-        reports: data.reports || (data.rapport ? [data.rapport] : []),
-        attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
+        ...ticketCore,
+        site: ticketCore.site ?? additionalInfo?.site,
+        asset: ticketCore.company_asset ?? ticketCore.companyAsset ?? ticketCore.asset ?? additionalInfo?.company_asset ?? additionalInfo?.companyAsset ?? additionalInfo?.asset,
+        provider: ticketCore.provider ?? additionalInfo?.provider,
+        reports: additionalInfo?.reports || (additionalInfo?.rapport ? [additionalInfo.rapport] : ticketCore.reports || []),
+        attachments: additionalInfo?.ticket_attachments ?? ticketCore.attachments ?? []
       };
 
+      console.log("[AdminTicketDetail] merged ticket:", ticketWithData);
       setTicket(ticketWithData);
 
       // Adaptation aux états existants (tableaux)
-      if (data.devis) {
-        setQuotes([data.devis]);
-        if (data.devis.invoice) {
-          setInvoices([data.devis.invoice]);
+      if (additionalInfo?.devis) {
+        setQuotes([additionalInfo.devis]);
+        if (additionalInfo.devis.invoice) {
+          setInvoices([additionalInfo.devis.invoice]);
         } else {
           setInvoices([]);
         }
+      } else if (additionalInfo?.quotes) {
+        setQuotes(additionalInfo.quotes);
+        setInvoices([]);
       } else {
         setQuotes([]);
         setInvoices([]);
@@ -578,10 +590,12 @@ export default function AdminTicketDetailPage() {
                         { l: "Type", v: ticket.type === "curatif" ? "Curatif" : "Préventif" },
                         { l: "Priorité", v: PRIORITY_LABEL[ticket.priority] ?? ticket.priority },
                         { l: "Statut", v: STATUS_LABEL[ticket.status] ?? ticket.status },
-                        { l: "Site", v: ticket.site?.nom ?? "—" },
-                        { l: "Patrimoine", v: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "—" },
-                        { l: "Service", v: ticket.service?.name ?? "—" },
-                        { l: "Prestataire", v: (ticket.provider as any)?.company_name ?? (ticket.provider as any)?.name ?? "—" },
+                        { l: "Site", v: ticket.site?.nom ?? ticket.site?.name ?? "—" },
+                        { l: "Patrimoine", v: ticket.asset ? `${(ticket.asset as any).designation ?? (ticket.asset as any).nom ?? ""} (${(ticket.asset as any).codification ?? ""})` : "—" },
+                        { l: "Type Actif", v: (ticket.asset as any)?.type?.name ?? (ticket.asset as any)?.type?.nom ?? (ticket.asset as any)?.type ?? "—" },
+                        { l: "Sous-type", v: (ticket.asset as any)?.sub_type?.name ?? (ticket.asset as any)?.sub_type?.nom ?? (ticket.asset as any)?.sub_type ?? "—" },
+                        { l: "Service", v: ticket.service?.name ?? ticket.service?.nom ?? "—" },
+                        { l: "Prestataire", v: (ticket.provider as any)?.company_name ?? (ticket.provider as any)?.name ?? (ticket.provider as any)?.nom ?? "—" },
                         { l: "Coût", v: ticket.cout ? formatCurrency(ticket.cout) : "—" },
                         { l: "Créé le", v: formatDate(ticket.created_at) },
                       ].map((r, i) => (

@@ -332,21 +332,14 @@ function ReportFormPanel({
   const [observations, setObservations] = useState(
     ticket.report?.observations ?? ""
   );
-  const [anomalyAction, setAnomalyAction] = useState<AnomalyAction | "">(
-    ticket.report?.anomaly_action ?? ""
+  const [anomalyDetected, setAnomalyDetected] = useState(
+    ticket.status === "anomalie"
   );
   const [showDevisModal, setShowDevisModal] = useState(false);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [devisSubmitted, setDevisSubmitted] = useState(false);
 
   const isRejected = ticket.status === "rejeté";
-
-  const handleRadioChange = (val: AnomalyAction) => {
-    setAnomalyAction(val);
-    if (val === "devis") {
-      setShowDevisModal(true);
-    }
-  };
 
   const handleDevisSubmit = (data: any) => {
     setShowDevisModal(false);
@@ -355,8 +348,12 @@ function ReportFormPanel({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!observations || !anomalyAction) return;
-    onSubmit({ observations, anomaly_action: anomalyAction, pdf_file: pdfFile });
+    if (!observations) return;
+    onSubmit({
+      findings: observations,
+      anomaly_detected: anomalyDetected,
+      attachments
+    });
   };
 
   const radioOptions: { value: AnomalyAction; label: string; desc: string; icon: any; color: string }[] = [
@@ -444,104 +441,49 @@ function ReportFormPanel({
             />
           </div>
 
-          {/* Radio - Constat de la visite */}
-          <div className="flex flex-col gap-3">
-            <label className="text-sm font-bold text-slate-900">
-              Constat de la visite <span className="text-red-500">*</span>
-            </label>
-            <div className="space-y-2.5">
-              {radioOptions.map((opt) => {
-                const Icon = opt.icon;
-                const colors = colorMap[opt.color];
-                const selected = anomalyAction === opt.value;
-                return (
-                  <label
-                    key={opt.value}
-                    onClick={() => handleRadioChange(opt.value)}
-                    className={`
-                      flex items-start gap-3.5 p-4 rounded-2xl border-2 cursor-pointer
-                      transition-all duration-150 select-none
-                      ${selected
-                        ? `${colors.bg} ${colors.ring} border-2`
-                        : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
-                      }
-                    `}
-                  >
-                    {/* Custom radio dot */}
-                    <div className={`mt-0.5 w-4.5 h-4.5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all
-                      ${selected ? `${colors.ring}` : "border-slate-300"}`}
-                      style={{ width: 18, height: 18 }}>
-                      {selected && (
-                        <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
-                      )}
-                    </div>
-                    {/* Icon + text */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Icon size={14} className={selected ? colors.text : "text-slate-400"} />
-                        <span className={`text-sm font-bold ${selected ? colors.text : "text-slate-700"}`}>
-                          {opt.label}
-                        </span>
-                      </div>
-                      <p className={`text-xs mt-0.5 leading-relaxed ${selected ? colors.text : "text-slate-400"} opacity-80`}>
-                        {opt.desc}
-                      </p>
-                      {/* Badge "Devis soumis" si devis déjà envoyé */}
-                      {opt.value === "devis" && selected && devisSubmitted && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-orange-600">
-                          <CheckCircle2 size={12} /> Devis soumis avec succès
-                        </div>
-                      )}
-                      {opt.value === "devis" && selected && !devisSubmitted && (
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setShowDevisModal(true); }}
-                          className="mt-2 text-xs font-bold text-orange-600 underline underline-offset-2 hover:text-orange-800 transition"
-                        >
-                          Remplir le formulaire de devis ...
-                        </button>
-                      )}
-                    </div>
-                    <input type="radio" className="hidden" name="anomaly_action"
-                      value={opt.value} checked={selected} onChange={() => { }} />
-                  </label>
-                );
-              })}
-            </div>
+          {/* Checkbox Anomalie */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <Checkbox
+              name="anomaly_detected"
+              label="Anomalie détectée lors de l'entretien ?"
+              defaultChecked={anomalyDetected}
+              onChange={setAnomalyDetected}
+            />
+            <p className="text-[10px] text-slate-400 mt-2 ml-9 leading-relaxed">
+              Cochez cette case si vous avez constaté un dysfonctionnement nécessitant une attention particulière ou un devis.
+            </p>
+            {anomalyDetected && !devisSubmitted && (
+               <button
+                  type="button"
+                  onClick={() => setShowDevisModal(true)}
+                  className="mt-3 ml-9 text-xs font-bold text-orange-600 underline underline-offset-2 hover:text-orange-800 transition"
+                >
+                  Remplir le formulaire de devis ...
+                </button>
+            )}
+            {anomalyDetected && devisSubmitted && (
+              <div className="mt-2 ml-9 flex items-center gap-1.5 text-xs font-bold text-orange-600">
+                <CheckCircle2 size={12} /> Devis soumis avec succès
+              </div>
+            )}
           </div>
 
-          {/* PDF */}
+          {/* Upload Fichiers */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-slate-900">Rapport PDF (optionnel)</label>
-            <label className={`flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed cursor-pointer
-              transition hover:border-slate-400 hover:bg-slate-50
-              ${pdfFile ? "border-slate-400 bg-slate-50" : "border-slate-200"}`}>
-              <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-                <FileText size={16} className="text-red-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                {pdfFile
-                  ? <><p className="text-xs font-bold text-slate-900 truncate">{pdfFile.name}</p>
-                    <p className="text-[10px] text-slate-400">Cliquez pour remplacer</p></>
-                  : <><p className="text-xs font-semibold text-slate-600">Glissez ou cliquez pour uploader</p>
-                    <p className="text-[10px] text-slate-400">PDF · Max 10 Mo</p></>
-                }
-              </div>
-              {pdfFile && (
-                <button type="button" onClick={(e) => { e.preventDefault(); setPdfFile(null); }}
-                  className="p-1.5 hover:bg-slate-200 rounded-lg transition">
-                  <X size={14} className="text-slate-500" />
-                </button>
-              )}
-              <input type="file" accept=".pdf" className="hidden"
-                onChange={e => setPdfFile(e.target.files?.[0] ?? null)} />
-            </label>
+            <label className="text-sm font-bold text-slate-900">Pièces jointes (Photos, PDF, Office)</label>
+            <PdfUpload
+              name="attachments"
+              maxPDFs={10}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,image/*"
+              placeholder="Cliquez pour ajouter des photos ou documents"
+              onChange={setAttachments}
+            />
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting || !observations || !anomalyAction || (anomalyAction === "devis" && !devisSubmitted)}
+            disabled={submitting || !observations || (anomalyDetected && !devisSubmitted)}
             className="w-full py-4 rounded-2xl bg-slate-900 text-white text-sm font-black
               hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed
               flex items-center justify-center gap-2"
@@ -698,17 +640,17 @@ export default function ProviderEntretienPage() {
 
   const {
     reports, filteredReports, stats,
-    loading, statsLoading, submitting, // 👈 AJOUT ICI
+    loading, statsLoading, submitting,
     error, submitSuccess, submitError,
     filters, setFilters,
     createReport, exportXlsx, refresh
-  } = useProviderReports();
+  } = useProviderReports({ type: "preventif" });
 
   useEffect(() => { if (submitSuccess) toast.success(submitSuccess); }, [submitSuccess]);
   useEffect(() => { if (submitError) toast.error(submitError); }, [submitError]);
 
-  // Forcer le filtre préventif au montage — cette page ne montre que les entretiens préventifs
-  useEffect(() => { setFilters({ type: "preventif" }); }, []);
+  // Filtre préventif déjà passé en paramètre du hook ci-dessus
+  // useEffect(() => { setFilters({ type: "preventif" }); }, []);
 
   const [dateRange, setDateRange] = useState<import("react-day-picker").DateRange | undefined>(undefined);
   const handleDateRange = (range: import("react-day-picker").DateRange | undefined) => {
@@ -742,66 +684,22 @@ export default function ProviderEntretienPage() {
   // Un rapport d'entretien préventif : result + dates + description + observations + photos
   // Le ticket_id et intervention_type sont gérés automatiquement côté backend (planning)
   const newReportFields: FieldConfig[] = [
-    //  ca soit etre presectionné preventif et grisé si possible gere ca 
     {
-      name: "intervention_type",
-      label: "Type",
-      type: "select",
-      required: true,
-      disabled: true, // 👈 AJOUT
-      options: [
-        { label: "préventif", value: "preventif" },
-        { label: "curatif", value: "curatif" },
-      ],
+      name: "anomaly_detected", label: "Anomalie détectée ?", type: "checkbox",
     },
     {
-      name: "result",
-      label: "Résultat de la visite",
-      type: "select",
-      required: true,
-      options: [
-        { label: "RAS - Rien à signaler", value: "RAS" },
-        { label: "Anomalie détectée", value: "anomalie" },
-      ],
-      icon: <CheckCircle2 size={18} />,
+      name: "action_taken", label: "Description / Travaux effectués",
+      type: "rich-text", gridSpan: 2, placeholder: "Détaillez les actions menées lors de cet entretien..."
     },
     {
-      name: "start_date",
-      label: "Date de début",
-      type: "date",
-      required: true,
-      disablePastDates: true,
-      icon: <CalendarDays size={18} />,
+      name: "findings", label: "Observations / Anomalies constatées",
+      type: "rich-text", gridSpan: 2,
     },
     {
-      name: "end_date",
-      label: "Date de fin",
-      type: "date",
-      required: false,
-      disablePastDates: true,
-      icon: <CalendarDays size={18} />,
-    },
-    {
-      name: "action_taken",
-      label: "Travaux effectués / Actions menées",
-      type: "rich-text",
-      required: true,
-      gridSpan: 2,
-    },
-    {
-      name: "findings",
-      label: "Observations / Anomalies constatées",
-      type: "rich-text",
-      required: false,
-      gridSpan: 2,
-    },
-    {
-      name: "attachments",
-      label: "Photos justificatives",
-      type: "image-upload",
-      required: false,
-      maxImages: 5,
-      gridSpan: 2,
+      name: "attachments", label: "Documents et Photos justificatives",
+      type: "pdf-upload", maxPDFs: 10, gridSpan: 2,
+      accept: ".pdf,.doc,.docx,.xls,.xlsx,image/*",
+      placeholder: "Cliquez pour ajouter des photos, PDF ou documents Office"
     },
   ];
 
@@ -827,7 +725,7 @@ export default function ProviderEntretienPage() {
 
   const actions = [
     { label: "Exporter", icon: Download, onClick: exportXlsx, variant: "secondary" as const },
-    { label: "Nouveau rapport", icon: PlusCircle, onClick: openNewReport, variant: "primary" as const },
+    // { label: "Nouveau rapport", icon: PlusCircle, onClick: openNewReport, variant: "primary" as const },
   ];
 
   const handleSubmitReport = async (formData: any) => {
@@ -982,13 +880,11 @@ export default function ProviderEntretienPage() {
         isSubmitting={submitting}
         onSubmit={async (values) => {
           const success = await createReport({
-            ticket_id: 0, // sera ignoré côté backend pour les entretiens préventifs
             intervention_type: "preventif",
-            result: values.result as "RAS" | "anomalie",
-            start_date: values.start_date as string,
-            end_date: values.end_date as string || undefined,
+            anomaly_detected: !!values.anomaly_detected,
             action_taken: values.action_taken as string || undefined,
             findings: values.findings as string || undefined,
+            attachments: values.attachments,
           });
           if (success) setIsNewReportOpen(false);
         }}

@@ -91,7 +91,7 @@ export default function AdminReportDetailPage() {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <PageHeader
-              title={`Rapport Maintenance #${report.reference || report.id}`}
+              title={`Rapport de viste preventive ${report.reference || report.id}`}
               subtitle={`Visite préventive effectuée le ${formatDate(report.start_date, { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}`}
 
             />
@@ -106,9 +106,7 @@ export default function AdminReportDetailPage() {
               <span className={`px-4 py-2 rounded-2xl border text-xs font-black uppercase tracking-widest ${STATUS_STYLES[report.status || "pending"] || "bg-slate-50 text-slate-600"}`}>
                 {STATUS_LABELS[report.status || "pending"] || report.status}
               </span>
-              <button className="p-3 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition shadow-sm">
-                <Download size={18} />
-              </button>
+
             </div>
           </div>
         </div>
@@ -163,12 +161,9 @@ export default function AdminReportDetailPage() {
             {/* Attachments Section */}
             <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm space-y-6">
               <div className="flex items-center gap-3 border-b border-slate-50 pb-5">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white">
-                  <Eye size={20} />
-                </div>
+
                 <div>
-                  <h3 className="text-lg font-black text-slate-900">Documentation Visuelle</h3>
-                  <p className="text-xs text-slate-400 font-medium whitespace-nowrap">GALERIE INTERVENTIONS</p>
+                  <h3 className="text-lg font-black text-slate-900">Pièces jointes</h3>
                 </div>
               </div>
               <div className="text-black">
@@ -236,15 +231,14 @@ export default function AdminReportDetailPage() {
             {report.rating && (
               <div className="bg-amber-400/10 rounded-[32px] p-8 border border-amber-400/20 space-y-4">
                 <div className="flex items-center gap-2">
-                  <Star size={18} className="text-amber-500 fill-amber-500" />
-                  <h3 className="text-xs font-black text-amber-700 uppercase tracking-widest">Avis Client</h3>
+                  <h3 className="text-xs font-black text-amber-700 uppercase tracking-widest">Note</h3>
                 </div>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} size={18} className={s <= (report.rating || 0) ? "text-amber-500 fill-amber-500" : "text-amber-200"} />
                   ))}
                 </div>
-                <p className="text-sm text-amber-900 font-medium leading-relaxed italic">"{report.comment || report.manager_comment || "Pas de commentaire."}"</p>
+                <p className="text-sm text-amber-900 font-medium leading-relaxed italic">"{report.findings || report.findings || "Pas de commentaire."}"</p>
               </div>
             )}
 

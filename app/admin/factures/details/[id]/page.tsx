@@ -108,51 +108,51 @@ interface RelatedInvoicesListProps {
   currentInvoiceId: number;
 }
 
-function RelatedInvoicesList({ invoices, currentInvoiceId }: RelatedInvoicesListProps) {
-  if (invoices.length <= 1) return null;
+// function RelatedInvoicesList({ invoices, currentInvoiceId }: RelatedInvoicesListProps) {
+//   if (invoices.length <= 1) return null;
 
-  return (
-    <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-      <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
-        Factures liées ({invoices.length})
-      </h3>
-      <div className="space-y-3">
-        {invoices.map((inv) => {
-          const isCurrent = inv.id === currentInvoiceId;
-          return (
-            <Link
-              key={inv.id}
-              href={`/admin/factures/details/${inv.id}`}
-              className={`block p-4 rounded-xl border transition-all ${isCurrent
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
-                }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-black">{inv.reference}</span>
-                  {isCurrent && (
-                    <span className="text-xs bg-white text-slate-900 px-2 py-0.5 rounded-full font-bold">
-                      Actuelle
-                    </span>
-                  )}
-                </div>
-                <StatusBadge status={inv.payment_status} />
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className={isCurrent ? "text-slate-300" : "text-slate-500"}>
-                  {formatDate(inv.invoice_date)}
-                </span>
-                <span className="font-bold">{formatCurrency(Number(inv.amount_ttc))}</span>
+//   return (
+//     <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
+//       <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
+//         Factures liées ({invoices.length})
+//       </h3>
+//       <div className="space-y-3">
+//         {invoices.map((inv) => {
+//           const isCurrent = inv.id === currentInvoiceId;
+//           return (
+//             <Link
+//               key={inv.id}
+//               href={`/admin/factures/details/${inv.id}`}
+//               className={`block p-4 rounded-xl border transition-all ${isCurrent
+//                   ? "border-slate-900 bg-slate-900 text-white"
+//                   : "border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md"
+//                 }`}
+//             >
+//               <div className="flex items-center justify-between mb-2">
+//                 <div className="flex items-center gap-3">
+//                   <span className="text-sm font-black">{inv.reference}</span>
+//                   {isCurrent && (
+//                     <span className="text-xs bg-white text-slate-900 px-2 py-0.5 rounded-full font-bold">
+//                       Actuelle
+//                     </span>
+//                   )}
+//                 </div>
+//                 <StatusBadge status={inv.payment_status} />
+//               </div>
+//               <div className="flex items-center justify-between text-xs">
+//                 <span className={isCurrent ? "text-slate-300" : "text-slate-500"}>
+//                   {formatDate(inv.invoice_date)}
+//                 </span>
+//                 <span className="font-bold">{formatCurrency(Number(inv.amount_ttc))}</span>
 
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+//               </div>
+//             </Link>
+//           );
+//         })}
+//       </div>
+//     </div>
+//   );
+// }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PDF PREVIEW MODAL
@@ -274,8 +274,8 @@ export default function FactureDetailsPage() {
           {flash && (
             <div
               className={`px-6 py-4 rounded-2xl text-sm font-semibold ${flash.type === "success"
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
                 }`}
             >
               {flash.message}
@@ -420,7 +420,7 @@ export default function FactureDetailsPage() {
                 </div>
               </div>
 
-              {/* Rapport lié */}
+              {/* Rapport lié
               {invoice?.interventionReport?.description && (
                 <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">
@@ -430,7 +430,7 @@ export default function FactureDetailsPage() {
                     {invoice.interventionReport.description}
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
 
             {/* Colonne droite : PDF + Factures liées + Infos */}
@@ -478,7 +478,7 @@ export default function FactureDetailsPage() {
               </div>
 
               {/* Factures liées */}
-              <RelatedInvoicesList invoices={relatedInvoices} currentInvoiceId={invoiceId} />
+              {/* <RelatedInvoicesList invoices={relatedInvoices} currentInvoiceId={invoiceId} /> */}
 
               {/* Infos prestataire */}
               {invoice?.provider && (

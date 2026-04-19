@@ -103,12 +103,14 @@ export interface UpdateReportPayload extends Partial<Omit<CreateReportPayload, "
 
 export const STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
+  submitted: "Soumis",
   validated: "Validé",
 };
 
 export const STATUS_STYLES: Record<string, string> = {
-  validated: "border-emerald-200 bg-emerald-50 text-emerald-600",
-  pending: "border-amber-200 bg-amber-50 text-amber-600",
+  validated: "border-green-200 bg-green-50 text-green-600",
+  submitted: "border-amber-200 bg-amber-50 text-amber-600",
+  pending:   "border-slate-200 bg-slate-50 text-slate-500",
 };
 
 export const STATUS_DOT: Record<string, string> = {
@@ -269,8 +271,10 @@ export const providerReportService = {
       form.append("result", payload.result);
     if (payload.start_date) form.append("start_date", payload.start_date);
     if (payload.end_date) form.append("end_date", payload.end_date);
-    if (payload.description) form.append("description", payload.description);
+    if (payload.action_taken) form.append("action_taken", payload.action_taken);
     if (payload.findings) form.append("findings", payload.findings);
+    if (payload.anomaly_detected !== undefined)
+      form.append("anomaly_detected", String(payload.anomaly_detected));
 
     if (payload.attachments?.length) {
       payload.attachments.forEach(f => form.append("attachments[]", f));

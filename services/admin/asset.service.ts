@@ -26,6 +26,8 @@ export interface CompanyAsset {
 
   designation:  string;
   codification: string;
+  serial_number?: string | null;
+  product_type_code?: string | null;
   status: "actif" | "inactif" | "hors_usage";
   criticite?: "critique" | "non_critique" | null;
 

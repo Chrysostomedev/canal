@@ -113,22 +113,34 @@ export default function ProviderTicketDetailPage() {
     if (!ticketId) return;
     setLoading(true); setError("");
     try {
-      const data = await providerTicketService.getTicketInfo(ticketId);
-      console.log("[ProviderTicketDetail] unified data:", data);
+      // Pour pallier les manques du backend, on fait deux appels :
+      // 1. getTicketById(id) : contient les relations site, companyAsset, provider, service
+      // 2. getTicketInfo(id) : contient les rapports et devis
+      const [ticketCore, additionalInfo] = await Promise.all([
+        providerTicketService.getTicketById(ticketId),
+        providerTicketService.getTicketInfo(ticketId)
+      ]);
+
+      console.log("[ProviderTicketDetail] Core data:", ticketCore);
+      console.log("[ProviderTicketDetail] Additional info:", additionalInfo);
 
       const fullyLoadedTicket = {
-        ...(data.ticket ?? {}),
-        reports: data.reports || (data.rapport ? [{ ...(data.rapport ?? {}), attachments: data.rapport_attachments ?? [] }] : []),
-        attachments: data.ticket_attachments ?? data.ticket?.attachments ?? []
+        ...ticketCore,
+        site: ticketCore.site ?? additionalInfo?.site,
+        asset: ticketCore.company_asset ?? ticketCore.companyAsset ?? ticketCore.asset ?? additionalInfo?.company_asset ?? additionalInfo?.companyAsset ?? additionalInfo?.asset,
+        provider: ticketCore.provider ?? additionalInfo?.provider,
+        reports: additionalInfo?.reports || (additionalInfo?.rapport ? [{ ...(additionalInfo.rapport ?? {}), attachments: additionalInfo.rapport_attachments ?? [] }] : ticketCore.reports || []),
+        attachments: additionalInfo?.ticket_attachments ?? ticketCore.attachments ?? []
       };
 
+      console.log("[ProviderTicketDetail] merged ticket:", fullyLoadedTicket);
       setTicket(fullyLoadedTicket as any);
 
       // Gestion des devis (conversion d'un seul objet en tableau si nécessaire)
-      if (data.devis) {
-        setQuotes([data.devis]);
-      } else if (data.quotes) {
-        setQuotes(data.quotes);
+      if (additionalInfo?.devis) {
+        setQuotes([additionalInfo.devis]);
+      } else if (additionalInfo?.quotes) {
+        setQuotes(additionalInfo.quotes);
       } else {
         setQuotes([]);
       }
@@ -476,9 +488,12 @@ export default function ProviderTicketDetailPage() {
                         { l: "Type", v: ticket.type === "curatif" ? "Curatif" : "Préventif" },
                         { l: "Priorité", v: PRIORITY_LABEL[ticket.priority] ?? ticket.priority },
                         { l: "Statut", v: STATUS_LABEL[ticket.status] ?? ticket.status },
-                        { l: "Site", v: ticket.site?.nom ?? "—" },
-                        { l: "Patrimoine", v: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "—" },
-                        { l: "Service", v: ticket.service?.name ?? "—" },
+                        { l: "Site", v: ticket.site?.nom ?? ticket.site?.name ?? "—" },
+                        { l: "Patrimoine", v: ticket.asset ? `${(ticket.asset as any).designation ?? (ticket.asset as any).nom ?? ""} (${(ticket.asset as any).codification ?? ""})` : "—" },
+                        { l: "Type Actif", v: (ticket.asset as any)?.type?.name ?? (ticket.asset as any)?.type?.nom ?? (ticket.asset as any)?.type ?? "—" },
+                        { l: "Sous-type", v: (ticket.asset as any)?.sub_type?.name ?? (ticket.asset as any)?.sub_type?.nom ?? (ticket.asset as any)?.sub_type ?? "—" },
+                        { l: "Service", v: ticket.service?.name ?? ticket.service?.nom ?? "—" },
+                        { l: "Prestataire", v: (ticket.provider as any)?.company_name ?? (ticket.provider as any)?.name ?? (ticket.provider as any)?.nom ?? "—" },
                         { l: "Créé le", v: fmtDate(ticket.created_at) },
                       ].map((r, i) => (
                         <div key={i} className="flex items-center justify-between py-3">

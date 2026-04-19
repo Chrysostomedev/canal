@@ -276,7 +276,7 @@ export default function ProviderDashboard() {
             interventions={data?.prochaines_interventions ?? []}
             loading={loading}
             viewAllHref="/provider/planning"
-            cardHref="/provider/planning"
+            cardHref={(inv) => `/provider/planning/${inv.id}`}
           />
         </div>
 

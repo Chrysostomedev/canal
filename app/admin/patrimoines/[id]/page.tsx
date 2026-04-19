@@ -190,6 +190,8 @@ export default function PatrimoineDetailsPage() {
       options: sites.map((s: any) => ({ label: s.nom, value: String(s.id) })),
     },
     { name: "designation", label: "Désignation", type: "text", required: true },
+    { name: "serial_number", label: "N° de Série", type: "text", placeholder: "Ex: SN123456789" },
+    { name: "product_type_code", label: "Code Produit", type: "text", placeholder: "Ex: 03 (2 chiffres)", minLength: 2, maxLength: 2 },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: Object.entries(ST_LABEL).map(([v, l]) => ({ label: l, value: v })),
@@ -259,7 +261,6 @@ export default function PatrimoineDetailsPage() {
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
                 <div className="space-y-3 flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest font-mono">#{asset.id}</span>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border ${ST_STYLE[asset.status] ?? ""}`}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ST_DOT[asset.status] }} />
                       {ST_LABEL[asset.status] ?? asset.status}
@@ -289,15 +290,15 @@ export default function PatrimoineDetailsPage() {
                       <Eye size={14} /> Voir le site
                     </Link>
                   )}
-                    <button onClick={() => { setSelectedTypeId(String(asset.type_company_asset_id ?? "")); setIsEditModalOpen(true); }}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm">
-                      <Pencil size={14} /> Modifier le patrimoine
-                    </button>
-                    <Link href={`/admin/patrimoines/transfert`}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
-                      <ArrowRightLeft size={14} /> Transférer
-                    </Link>
-                  </div>
+                  <button onClick={() => { setSelectedTypeId(String(asset.type_company_asset_id ?? "")); setIsEditModalOpen(true); }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black transition shadow-sm">
+                    <Pencil size={14} /> Modifier le patrimoine
+                  </button>
+                  <Link href={`/admin/patrimoines/transfert`}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
+                    <ArrowRightLeft size={14} /> Transférer
+                  </Link>
+                </div>
               </div>
             ) : (
               <p className="text-slate-400 text-sm text-center py-6">Patrimoine introuvable.</p>
@@ -477,6 +478,8 @@ export default function PatrimoineDetailsPage() {
                         { l: "Sous-type", v: subTypeName },
                         { l: "Site", v: siteName },
                         { l: "Codification", v: asset.codification },
+                        { l: "N° de Série", v: asset.serial_number ?? "-" },
+                        { l: "Code Produit", v: asset.product_type_code ?? "-" },
                         { l: "Statut", v: ST_LABEL[asset.status] ?? asset.status },
                         { l: "Criticité", v: asset.criticite === "critique" ? "Critique" : "Non critique" },
                         { l: "Date d'entrée", v: formatDate(asset.date_entree) },
@@ -556,6 +559,8 @@ export default function PatrimoineDetailsPage() {
             sub_type_company_asset_id: String(asset.sub_type_company_asset_id ?? ""),
             site_id: String(asset.site_id ?? (asset.site as any)?.id ?? ""),
             designation: asset.designation,
+            serial_number: asset.serial_number ?? "",
+            product_type_code: asset.product_type_code ?? "",
             status: asset.status,
             criticite: asset.criticite ?? "non_critique",
             date_entree: fmtDateForInput(asset.date_entree),

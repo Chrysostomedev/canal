@@ -261,7 +261,7 @@ export default function ProviderTicketsPage() {
       ),
     },
     {
-      header: "Planifié le",
+      header: "Signalé le",
       key: "planned_at",
       render: (_: any, row: Ticket) => <span className="text-xs text-slate-500">{formatDate(row.planned_at)}</span>,
     },
@@ -562,7 +562,7 @@ function TicketDetailPanel({
             { icon: <MapPin size={13} />, label: "Site", value: ticket.site?.nom ?? "-" },
             { icon: <Wrench size={13} />, label: "Actif", value: ticket.asset ? `${ticket.asset.designation} (${ticket.asset.codification})` : "-" },
             { icon: <AlertTriangle size={13} />, label: "Service", value: ticket.service?.name ?? "-" },
-            { icon: <Clock size={13} />, label: "Planifié le", value: formatDate(ticket.planned_at) },
+            { icon: <Clock size={13} />, label: "Signalé le", value: formatDate(ticket.planned_at) },
             { icon: <Clock size={13} />, label: "Échéance", value: formatDate(ticket.due_at) },
             { icon: <CheckCircle2 size={13} />, label: "Résolu le", value: formatDate(ticket.resolved_at) },
           ].map(({ icon, label, value }) => (

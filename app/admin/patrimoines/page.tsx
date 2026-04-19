@@ -69,12 +69,14 @@ const exportToExcel = (assets: CompanyAsset[]) => {
   const wb = XLSX.utils.book_new();
   const brandRow = ["▶  CANAL+  |  Export Patrimoine  - " + formatDate(new Date())];
   const headers = [
-    "ID", "Codification", "Désignation", "Famille / Type",
+    "ID", "Codification", "Désignation", "N° de Série", "Code Produit", "Famille / Type",
     "Sous-type", "Site", "Statut", "Criticité",
     "Valeur entrée (FCFA)", "Date entrée",
   ];
   const rows = assets.map(a => [
     a.id, a.codification, a.designation,
+    a.serial_number ?? "-",
+    a.product_type_code ?? "-",
     a.type?.name ?? "-",
     (a as any).sub_type?.name ?? a.subType?.name ?? "-",
     a.site?.nom ?? "-",
@@ -86,7 +88,7 @@ const exportToExcel = (assets: CompanyAsset[]) => {
   const wsData = [brandRow, [], headers, ...rows];
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   ws["!cols"] = [
-    { wch: 6 }, { wch: 18 }, { wch: 32 }, { wch: 20 }, { wch: 20 },
+    { wch: 6 }, { wch: 18 }, { wch: 32 }, { wch: 18 }, { wch: 12 }, { wch: 20 }, { wch: 20 },
     { wch: 24 }, { wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 14 },
   ];
   ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
@@ -273,6 +275,7 @@ function AssetSidePanel({ asset, onClose, onEdit }: {
               { l: "Type", v: asset.type?.name ?? "-" },
               { l: "Sous-type", v: (asset as any).sub_type?.name ?? asset.subType?.name ?? "-" },
               { l: "Site", v: asset.site?.nom ?? "-" },
+              { l: "Code Produit", v: asset.product_type_code ?? "-" },
               { l: "Valeur entrée", v: formatCurrency(asset.valeur_entree) },
               { l: "Date entrée", v: formatDate(asset.date_entree) },
               { l: "Criticité", v: asset.criticite === "critique" ? "Critique" : asset.criticite === "non_critique" ? "Non critique" : "-" },
@@ -813,7 +816,7 @@ export default function PatrimoinesPage() {
       setEditingData(null);
     } catch (err: any) {
       let errorMessage = "Une erreur serveur est survenue.";
-      
+
       if (err?.response?.status === 422 && err.response.data?.errors) {
         const validationErrors = Object.values(err.response.data.errors).flat() as string[];
         const translatedErrors = validationErrors.map(msg => {
@@ -828,7 +831,7 @@ export default function PatrimoinesPage() {
         errorMessage = err.response.data.message;
         const lowerMsg = errorMessage.toLowerCase();
         if (lowerMsg.includes("unique") && lowerMsg.includes("codification")) {
-            errorMessage = "La codification générée doit être unique.";
+          errorMessage = "La codification générée doit être unique.";
         }
       }
 
@@ -895,6 +898,8 @@ export default function PatrimoinesPage() {
       options: sites.map((s: any) => ({ label: s.nom, value: String(s.id) })),
     },
     { name: "designation", label: "Désignation", type: "text", required: true, placeholder: "Que designe ce patrimoine....." },
+    { name: "serial_number", label: "N° de Série", type: "text", placeholder: "Ex: SN123456789" },
+    // { name: "product_type_code", label: "Code Produit", type: "text", placeholder: "Ex: 03 (2 chiffres)", minLength: 2, maxLength: 2 },
     {
       name: "status", label: "Statut", type: "select", required: true,
       options: [
@@ -930,6 +935,14 @@ export default function PatrimoinesPage() {
       render: (_: any, row: CompanyAsset) => (
         <span className="font-semibold text-slate-900 text-sm">{row.designation}</span>
       ),
+    },
+    // {
+    //   header: "N° de Série", key: "serial_number",
+    //   render: (v: any) => <span className="text-sm text-slate-600">{v ?? "-"}</span>,
+    // },
+    {
+      header: "Code Produit", key: "product_type_code",
+      render: (v: any) => <span className="text-xs font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{v ?? "00"}</span>,
     },
     {
       header: "Type", key: "type",
@@ -1126,6 +1139,8 @@ export default function PatrimoinesPage() {
           sub_type_company_asset_id: String(editingData.sub_type_company_asset_id ?? ""),
           site_id: String(editingData.site_id ?? (editingData.site as any)?.id ?? ""),
           designation: editingData.designation,
+          serial_number: editingData.serial_number ?? "",
+          product_type_code: editingData.product_type_code ?? "",
           status: editingData.status,
           criticite: editingData.criticite ?? "non_critique",
           date_entree: fmtDateForInput(editingData.date_entree),
